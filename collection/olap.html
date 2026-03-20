@@ -3,416 +3,366 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OLAP Showdown: ClickHouse vs Druid vs BigQuery vs Redshift</title>
+<title>OLAP Engines Compared — FAANG Interview Guide</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#08090d;--page:#f0f2f8;--surface:#e4e7f0;--surface2:#d8dcea;--border:#c8ccda;--muted:#6a6e7e;--ch:#f90000;--ch-bg:#fff0f0;--dr:#3ea8ff;--dr-bg:#eef6ff;--bq:#4285f4;--bq-bg:#eef2ff;--rs:#ff9900;--rs-bg:#fff6ee;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--purple:#6040a0;--purple-bg:#f2eefb;--mono:'JetBrains Mono',monospace;--serif:'DM Serif Display',serif;--sans:'DM Sans',sans-serif;}
+:root{--ink:#12100e;--page:#f8f6f1;--surface:#eeebe4;--border:#ddd9d0;--muted:#78746a;--ch:#cc0000;--ch-bg:#fff0f0;--dr:#2d8fd4;--dr-bg:#eef6ff;--bq:#3a6fd8;--bq-bg:#eef2ff;--rs:#e07800;--rs-bg:#fff5e8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#a86c00;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;--serif:'DM Serif Display',serif;}
 *{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
 body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
-.hero{background:var(--ink);color:#e0e4f0;padding:72px 24px 56px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 80% 50%,rgba(63,168,255,.06) 0%,transparent 70%);}
-.hero-inner{max-width:960px;margin:0 auto;position:relative;}
-.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#4a4e5e;text-transform:uppercase;margin-bottom:20px;}
-h1{font-family:var(--serif);font-size:clamp(30px,5vw,56px);font-weight:400;font-style:italic;line-height:1.08;letter-spacing:-.5px;margin-bottom:20px;color:#f0f2fa;}
-h1 em{color:#3ea8ff;font-style:normal;}
-.hero-sub{font-size:15px;color:#6a6e7e;max-width:640px;line-height:1.7;margin-bottom:32px;}
-.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
-.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
-.pill-ch{border-color:#f90000;color:#c00;background:rgba(249,0,0,.06);}
-.pill-dr{border-color:#3ea8ff;color:#2080cc;background:rgba(62,168,255,.06);}
-.pill-bq{border-color:#4285f4;color:#2060cc;background:rgba(66,133,244,.06);}
-.pill-rs{border-color:#ff9900;color:#cc7000;background:rgba(255,153,0,.06);}
-.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #14161e;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.hero{background:var(--ink);color:#f0ece4;padding:52px 24px 44px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(255,255,255,.015) 31px);}
+.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#5a5848;text-transform:uppercase;margin-bottom:18px;}
+h1{font-family:var(--serif);font-size:clamp(28px,5vw,54px);line-height:1.05;margin-bottom:16px;color:#f0ece4;}
+h1 .acc{color:#e8b84b;}
+.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
+.eng-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.eng-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;}
+.e-ch{background:var(--ch);color:#fff;}.e-dr{background:var(--dr);color:#fff;}.e-bq{background:var(--bq);color:#fff;}.e-rs{background:var(--rs);color:#fff;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
 .nav::-webkit-scrollbar{display:none;}
-.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#3a3e4e;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
-.nav a:hover{color:#3ea8ff;border-color:#3ea8ff;}
-.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
-section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
-section:last-child{border:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
 .sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
 .sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
-h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-style:italic;line-height:1.15;margin-bottom:18px;}
-h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
-p{color:#3a3d4e;font-size:14.5px;margin-bottom:12px;}
-strong{color:var(--ink);}
-code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
-.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
-.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
-.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
-.db-card.ch::before{background:var(--ch);}.db-card.dr::before{background:var(--dr);}.db-card.bq::before{background:var(--bq);}.db-card.rs::before{background:var(--rs);}
-.db-logo{font-size:22px;margin-bottom:6px;}
-.db-name{font-family:var(--serif);font-size:17px;font-style:italic;margin-bottom:4px;}
-.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
-.db-tagline{font-size:13px;color:#5a5870;line-height:1.55;}
-.db-born{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;}
-.analogy{background:var(--ink);color:#c8ccd8;border-radius:8px;padding:24px 28px;margin:24px 0;}
-.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#4a4e5e;margin-bottom:10px;text-transform:uppercase;}
-.analogy-text{font-size:15px;line-height:1.75;color:#d0d4e0;}
-.analogy-text strong{color:#3ea8ff;}
-.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
-.callout p{font-size:13.5px;margin-bottom:6px;}.callout p:last-child{margin:0;}
-.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
-.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
-.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
-.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
-.cl-purple{background:var(--purple-bg);border-color:var(--purple);color:#2a1a4a;}
+h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,32px);line-height:1.15;margin-bottom:14px;color:var(--ink);}
+h3{font-family:var(--serif);font-size:18px;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
 .cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
-.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8ccd8;border:1px solid #14161e;}
-.codeblock .c{color:#3a3e4e;}.codeblock .k{color:#3ea8ff;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}
-.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
-.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
-.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3d4e;line-height:1.6;}
-.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
-.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
-.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
-.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
-.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;}
-.use-card ul{padding-left:16px;font-size:13px;color:#4a4858;line-height:1.7;}
-.use-card ul li{margin-bottom:4px;}
-.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
-.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;}
-.sd-example-title{font-family:var(--serif);font-size:16px;font-style:italic;color:#f0f2fa;font-weight:400;}
-.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#4a4e5e;border:1px solid #2a2e3e;padding:3px 8px;border-radius:2px;}
-.sd-example-body{padding:20px;}
-.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
-.choice-row:last-child{border:none;}
-.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:120px;flex-shrink:0;padding-top:2px;}
-.choice-val{flex:1;color:#3a3d4e;line-height:1.6;}
-.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
-.b-ch{background:var(--ch-bg);border-color:var(--ch);color:#c00;}.b-dr{background:var(--dr-bg);border-color:var(--dr);color:#1a70cc;}.b-bq{background:var(--bq-bg);border-color:var(--bq);color:#1a50cc;}.b-rs{background:var(--rs-bg);border-color:var(--rs);color:#cc7000;}.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
-.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
-.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.steps{list-style:none;margin:16px 0;counter-reset:s;}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
+.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;}
+.blist{list-style:none;margin:12px 0;}
+.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
+.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
+.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
+.codeblock .c{color:#3e3d36;}.codeblock .k{color:#e8b84b;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}
+.eng-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+@media(max-width:640px){.eng-grid{grid-template-columns:1fr;}}
+.eng-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
+.eng-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.eng-card.ch::before{background:var(--ch);}.eng-card.dr::before{background:var(--dr);}.eng-card.bq::before{background:var(--bq);}.eng-card.rs::before{background:var(--rs);}
+.eng-name{font-family:var(--serif);font-size:18px;margin:10px 0 4px;}
+.eng-card.ch .eng-name{color:var(--ch);}.eng-card.dr .eng-name{color:var(--dr);}.eng-card.bq .eng-name{color:var(--bq);}.eng-card.rs .eng-name{color:var(--rs);}
+.eng-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
+.eng-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
+.eng-k{color:var(--muted);flex-shrink:0;width:100px;}.eng-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
+.eng-v.g{color:var(--green);}.eng-v.a{color:var(--amber);}.eng-v.r{color:var(--red);}
+.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
+.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
+.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}
+.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
 .faq-q:hover{background:var(--surface);}
-.faq-q .tog{font-size:18px;color:#3ea8ff;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
-.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3d4e;line-height:1.75;border-top:1px solid var(--border);}
-.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
-.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#2a2e3e;letter-spacing:2px;}
+.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
+.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
+.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
+.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;line-height:1.65;}
+.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
+.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.dtree-node:last-child{border:none;}
+.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
+.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
+.dtree-a.ch{background:var(--ch-bg);color:var(--ch);border-color:var(--ch);}.dtree-a.dr{background:var(--dr-bg);color:var(--dr);border-color:var(--dr);}.dtree-a.bq{background:var(--bq-bg);color:var(--bq);border-color:var(--bq);}.dtree-a.rs{background:var(--rs-bg);color:var(--rs);border-color:var(--rs);}
+.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
+.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
+.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);line-height:1.65;color:#e8e0d0;font-style:italic;}
+footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
 </style>
 </head>
 <body>
 <div class="hero">
   <div class="hero-inner">
-    <div class="hero-tag">System Design · OLAP Selection · Manish-Almanac</div>
-    <h1>Choosing Your<br><em>OLAP Engine</em></h1>
-    <p class="hero-sub">ClickHouse vs Apache Druid vs BigQuery vs Amazon Redshift — how to pick the right analytical database for every system design scenario, with real examples and every interview follow-up answered.</p>
-    <div class="db-pills">
-      <span class="db-pill pill-ch">ClickHouse</span>
-      <span class="db-pill pill-dr">Apache Druid</span>
-      <span class="db-pill pill-bq">BigQuery</span>
-      <span class="db-pill pill-rs">Redshift</span>
+    <div class="eyebrow">FAANG Interview Prep · Analytics Databases</div>
+    <h1>OLAP Engines<br><span class="acc">Decoded</span></h1>
+    <p class="hero-desc">ClickHouse · Apache Druid · BigQuery · Redshift — every dimension that matters, explained so clearly a layman would get it, with every FAANG follow-up answered.</p>
+    <div class="eng-badges">
+      <span class="eng-badge e-ch">ClickHouse — Columnar Write-Heavy</span>
+      <span class="eng-badge e-dr">Apache Druid — Pre-Aggregation</span>
+      <span class="eng-badge e-bq">BigQuery — Serverless Analytics</span>
+      <span class="eng-badge e-rs">Redshift — Cloud Data Warehouse</span>
     </div>
   </div>
 </div>
 <nav class="nav">
-  <a href="#what">What is OLAP?</a>
-  <a href="#identity">Identity</a>
-  <a href="#internals">How They Work</a>
-  <a href="#comparison">Full Comparison</a>
-  <a href="#examples">System Design</a>
-  <a href="#decision">Decision Tree</a>
-  <a href="#followups">Follow-ups</a>
+  <a href="#what-is-olap">What Is OLAP</a><a href="#columnar">Columnar Storage</a>
+  <a href="#engines">The Engines</a><a href="#internals">How They Work</a>
+  <a href="#dimensions">Every Dimension</a><a href="#when-to-use">When to Use</a>
+  <a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a>
 </nav>
 <div class="wrap">
 
-<section id="what">
-  <div class="sec-tag">00 · The Foundation</div>
-  <h2>What is OLAP and why is it different?</h2>
-  <p>OLAP stands for <strong>Online Analytical Processing</strong>. It's the class of databases built for <em>reading a lot of data to answer complex questions</em>, as opposed to OLTP (Online Transaction Processing) databases which are built for <em>many small reads and writes</em>.</p>
-  <div class="analogy">
-    <div class="analogy-label">OLTP vs OLAP — the supermarket analogy</div>
-    <div class="analogy-text">
-      <strong>OLTP (PostgreSQL, MySQL, DynamoDB):</strong> The cash register. Each transaction is tiny — scan item, charge card, update inventory. Thousands happening simultaneously. Each one must be fast and correct.<br><br>
-      <strong>OLAP (ClickHouse, BigQuery, Druid):</strong> The quarterly business review. The manager asks "which products sold most in the North last Tuesday compared to the same Tuesday last year, broken down by hour?" This query needs to scan millions of rows. No one expects it in 10ms — but they want it in under 2 seconds, not 2 hours.<br><br>
-      <strong>The core difference:</strong> OLTP is optimised for <strong>row access</strong> (get me order #12345). OLAP is optimised for <strong>column scans</strong> (sum all sales values in column X across 10 billion rows). This is why OLAP databases store data column-by-column instead of row-by-row.
-    </div>
+<section id="what-is-olap">
+  <div class="sec-tag">01 · What Is OLAP and Why Does It Exist</div>
+  <h2>OLAP vs OLTP — the fundamental split</h2>
+  <p>Most databases are built for <strong>OLTP</strong> (Online Transaction Processing) — fast individual row reads and writes that power the live product. A user signs up, an order is placed, a message is sent — these are OLTP queries. They affect a few rows at a time and need to be fast (sub-millisecond).</p>
+  <p><strong>OLAP</strong> (Online Analytical Processing) is the opposite. Queries read millions or billions of rows, scan entire columns, compute aggregations: "total revenue per country last quarter," "top 1000 videos in the last hour," "average session duration by device type over 30 days." These queries are slow on OLTP databases but fast on OLAP engines — because they're built completely differently.</p>
+  <div class="callout cl-amber">
+    <div class="cl-lbl">🏪 The Supermarket Analogy</div>
+    <p><strong>OLTP</strong> = The checkout register. Processes one transaction at a time, extremely fast. Does not care about sales trends across all 10,000 products.</p>
+    <p style="margin-top:6px;"><strong>OLAP</strong> = The weekly inventory report. Reads all 10,000 products across all 50 stores, computes which products sold most, what was the average price per category. No individual transaction is urgent. You need the full picture fast.</p>
+    <p style="margin-top:6px;">You would never use the checkout register to produce the inventory report. You need a separate system designed for scanning everything at once.</p>
   </div>
-  <h3>Why Columnar Storage Changes Everything</h3>
   <div class="callout cl-blue">
-    <div class="cl-lbl">The Key Insight</div>
-    <p><strong>Row storage (PostgreSQL):</strong> Each row is stored together on disk. To compute <code>SUM(revenue)</code> across 1 billion rows, you read ALL columns of ALL rows — most of which you don't need.</p>
-    <p><strong>Column storage (ClickHouse/BigQuery):</strong> Each column is stored together. To compute <code>SUM(revenue)</code>, you only read the revenue column. 10x–100x less data read. And integers in the same column compress 10–20x better than mixed row data.</p>
-    <p><strong>Real impact:</strong> A query that takes 10 minutes in PostgreSQL takes 300ms in ClickHouse — on the same data.</p>
+    <div class="cl-lbl">💬 Say This in Your Interview</div>
+    <p><em>"Our OLTP database (Postgres/DynamoDB/Cassandra) handles the live product. But analytical queries — GROUP BY, window functions, aggregations across billions of events — would kill OLTP p99 latency if run directly. We push data to an OLAP engine via CDC or a stream, and run analytics there. The two systems have completely different read/write contracts."</em></p>
   </div>
 </section>
 
-<section id="identity">
-  <div class="sec-tag">01 · Who Are They</div>
-  <h2>The Four OLAP Engines</h2>
-  <div class="db-grid">
-    <div class="db-card ch">
-      <div class="db-logo">🔴</div>
-      <div class="db-name">ClickHouse</div>
-      <div class="db-type">Columnar OLAP · Self-Hosted</div>
-      <div class="db-tagline">The speed demon. Built by Yandex for web analytics. Ingests 500K rows/sec, answers GROUP BY on 100B rows in under 2 seconds. Battle-tested at Cloudflare, Uber, eBay. Self-host or ClickHouse Cloud.</div>
-      <div class="db-born">Born 2016 · Yandex → Apache · MergeTree engine</div>
-    </div>
-    <div class="db-card dr">
-      <div class="db-logo">🔵</div>
-      <div class="db-name">Apache Druid</div>
-      <div class="db-type">Real-Time OLAP · Self-Hosted</div>
-      <div class="db-tagline">The sub-second explorer. Designed for interactive dashboards with &lt;1s query response. Pre-aggregates data at ingest time (rollup). Used by Lyft, Twitter, Netflix for operational analytics.</div>
-      <div class="db-born">Born 2011 · Metamarkets → Apache · Segment-based</div>
-    </div>
-    <div class="db-card bq">
-      <div class="db-logo">🔷</div>
-      <div class="db-name">BigQuery</div>
-      <div class="db-type">Serverless OLAP · Managed GCP</div>
-      <div class="db-tagline">The serverless giant. No clusters to manage. Pay per query. Scales to petabytes automatically. Perfect for data warehouses, data science teams, and ad-hoc exploration. Google's backbone for internal analytics.</div>
-      <div class="db-born">Born 2010 · Google · Dremel paper lineage</div>
-    </div>
-    <div class="db-card rs">
-      <div class="db-logo">🟠</div>
-      <div class="db-name">Amazon Redshift</div>
-      <div class="db-type">MPP Data Warehouse · Managed AWS</div>
-      <div class="db-tagline">The AWS native warehouse. Massive Parallel Processing (MPP), deep S3 integration (Redshift Spectrum), familiar SQL. Best for structured warehouse queries in the AWS ecosystem.</div>
-      <div class="db-born">Born 2012 · Amazon AWS · ParAccel / PostgreSQL lineage</div>
-    </div>
+<section id="columnar">
+  <div class="sec-tag">02 · Columnar Storage — The Core Insight</div>
+  <h2>Why columnar storage makes analytics 100× faster</h2>
+  <p>Every OLAP engine is columnar. Understanding this is the key to understanding everything else about them.</p>
+  <h3>Row storage (OLTP) vs columnar storage (OLAP)</h3>
+  <div class="callout cl-blue">
+    <div class="cl-lbl">📦 The Filing Cabinet vs Spreadsheet Analogy</div>
+    <p><strong>Row storage:</strong> All data for one customer is stored together — name, email, age, city, purchase_count, revenue. Like a filing cabinet where each folder contains everything about one person. Fast to get all info for one person. Slow to answer "what is the average age of all customers" — you must open every folder and extract just the age field.</p>
+    <p style="margin-top:6px;"><strong>Columnar storage:</strong> All ages for all customers are stored together, all cities together, all revenues together. Like a spreadsheet where each column is stored as one contiguous block on disk. To compute average age, you read only the age column — 10× less data to scan. To compute revenue by city, you read only revenue and city — everything else is untouched.</p>
   </div>
+  <h3>Step-by-step: how columnar query execution works</h3>
+  <ol class="steps">
+    <li><div><div class="step-title">Parse the query and identify columns needed</div><div class="step-desc">For <code>SELECT city, SUM(revenue) FROM orders WHERE date &gt; '2026-01-01' GROUP BY city</code>:
+      <ul><li>Columns needed: only <code>city</code>, <code>revenue</code>, <code>date</code> — 3 of potentially 50 columns</li><li>All other columns (customer_name, email, phone, address…) are not touched at all</li><li>I/O savings: if table has 50 columns and you need 3, you read 6% of the data</li></ul></div></div></li>
+    <li><div><div class="step-title">Read column files from disk with compression</div><div class="step-desc">Each column is stored as a separate compressed file on disk.
+      <ul><li>Because all values in a column have the same type, compression is extremely effective</li><li>A column of integers like revenue compresses 10–20× (run-length encoding, delta encoding)</li><li>A column of low-cardinality strings like city compresses 30–50× (dictionary encoding: map "Bangalore"→1, "London"→2, store integers)</li><li>ClickHouse achieves 5–20× compression vs PostgreSQL on the same data</li></ul></div></div></li>
+    <li><div><div class="step-title">Apply vectorised execution (SIMD)</div><div class="step-desc">Modern CPUs have SIMD instructions (Single Instruction Multiple Data) that process multiple values in a single clock cycle.
+      <ul><li>Row stores process one row at a time: read name, read email, read age, move to next row</li><li>Column stores process 16 or 32 integers simultaneously: compute 32 revenue additions in one CPU instruction</li><li>ClickHouse processes 8–32 values per CPU instruction via AVX2/AVX-512 — this is the real reason ClickHouse query throughput is extraordinary</li></ul></div></div></li>
+    <li><div><div class="step-title">Aggregate and return results</div><div class="step-desc">GROUP BY, SUM, COUNT, window functions operate on dense arrays of same-typed data — no pointer chasing, no row parsing.
+      <ul><li>ClickHouse: GROUP BY on 100M rows in 200–500ms</li><li>PostgreSQL row store: same query in 30–120 seconds (sequential scan + per-row processing)</li><li>The columnar advantage is not just I/O — it's CPU cache efficiency: dense arrays fit in CPU L1/L2 cache, enabling near-memory-speed processing</li></ul></div></div></li>
+  </ol>
+</section>
 
-  <h3>How They Fundamentally Differ in Architecture</h3>
-  <div class="callout cl-purple">
-    <div class="cl-lbl">The Critical Architectural Distinction</div>
-    <p><strong>ClickHouse &amp; Druid:</strong> Shared-nothing architecture. Each node stores data and computes. Data is co-located with compute. Extremely fast for co-located queries. Hard to scale compute independently of storage.</p>
-    <p><strong>BigQuery &amp; Redshift Spectrum:</strong> Separate storage from compute. Data lives in object storage (GCS/S3). Compute scales independently. Slower for hot data but infinitely scalable and cheaper for cold data.</p>
+<section id="engines">
+  <div class="sec-tag">03 · The Four Engines</div>
+  <h2>Core identity of each</h2>
+  <div class="eng-grid">
+    <div class="eng-card ch">
+      <div class="eng-name">ClickHouse</div><div class="eng-role">Columnar · Write-heavy OLAP · Self-hosted</div>
+      <div class="eng-row"><span class="eng-k">Best for</span><span class="eng-v">Real-time analytics at high ingest rate</span></div>
+      <div class="eng-row"><span class="eng-k">Ingest speed</span><span class="eng-v g">500K–1M rows/sec per node</span></div>
+      <div class="eng-row"><span class="eng-k">Query latency</span><span class="eng-v g">&lt;1s on 100B rows</span></div>
+      <div class="eng-row"><span class="eng-k">Compression</span><span class="eng-v g">10–20× columnar</span></div>
+      <div class="eng-row"><span class="eng-k">Ops</span><span class="eng-v a">Self-hosted, moderate ops</span></div>
+      <div class="eng-row"><span class="eng-k">FAANG use</span><span class="eng-v">Yandex (built it), Cloudflare, Uber, ByteDance</span></div>
+    </div>
+    <div class="eng-card dr">
+      <div class="eng-name">Apache Druid</div><div class="eng-role">Pre-aggregation · Sub-second · Self-hosted</div>
+      <div class="eng-row"><span class="eng-k">Best for</span><span class="eng-v">Sub-second interactive dashboard queries</span></div>
+      <div class="eng-row"><span class="eng-k">Ingest speed</span><span class="eng-v g">Real-time streaming + batch</span></div>
+      <div class="eng-row"><span class="eng-k">Query latency</span><span class="eng-v g">&lt;500ms interactive</span></div>
+      <div class="eng-row"><span class="eng-k">Compression</span><span class="eng-v g">Bitmap indexes + rollup</span></div>
+      <div class="eng-row"><span class="eng-k">Ops</span><span class="eng-v r">Complex — multiple node types</span></div>
+      <div class="eng-row"><span class="eng-k">FAANG use</span><span class="eng-v">Pinterest, Twitter, Airbnb, Netflix</span></div>
+    </div>
+    <div class="eng-card bq">
+      <div class="eng-name">BigQuery</div><div class="eng-role">Serverless · Managed · Google Cloud</div>
+      <div class="eng-row"><span class="eng-k">Best for</span><span class="eng-v">Ad-hoc queries, ML, no-ops analytics</span></div>
+      <div class="eng-row"><span class="eng-k">Ingest speed</span><span class="eng-v a">Batch + streaming (higher cost)</span></div>
+      <div class="eng-row"><span class="eng-k">Query latency</span><span class="eng-v a">2–30s (slots-dependent)</span></div>
+      <div class="eng-row"><span class="eng-k">Cost model</span><span class="eng-v r">Per TB scanned — can spike</span></div>
+      <div class="eng-row"><span class="eng-k">Ops</span><span class="eng-v g">Zero — fully serverless</span></div>
+      <div class="eng-row"><span class="eng-k">FAANG use</span><span class="eng-v">Google (built it), Spotify, Twitter analytics</span></div>
+    </div>
+    <div class="eng-card rs">
+      <div class="eng-name">Redshift</div><div class="eng-role">Columnar · Managed · AWS ecosystem</div>
+      <div class="eng-row"><span class="eng-k">Best for</span><span class="eng-v">AWS-native BI, data warehouse, SQL analytics</span></div>
+      <div class="eng-row"><span class="eng-k">Ingest speed</span><span class="eng-v a">COPY command batch; Kinesis streaming</span></div>
+      <div class="eng-row"><span class="eng-k">Query latency</span><span class="eng-v a">2–15s typical</span></div>
+      <div class="eng-row"><span class="eng-k">Cost model</span><span class="eng-v a">Node-based or Serverless</span></div>
+      <div class="eng-row"><span class="eng-k">Ops</span><span class="eng-v g">Managed by AWS</span></div>
+      <div class="eng-row"><span class="eng-k">FAANG use</span><span class="eng-v">Amazon internal, Nasdaq, GE Analytics</span></div>
+    </div>
   </div>
 </section>
 
 <section id="internals">
-  <div class="sec-tag">02 · Under the Hood</div>
-  <h2>How Each One Actually Works</h2>
+  <div class="sec-tag">04 · How They Actually Work Inside</div>
+  <h2>Internals that interviewers probe</h2>
 
   <h3>ClickHouse — MergeTree Engine</h3>
-  <div class="codeblock">
-<span class="c">-- ClickHouse's secret: the MergeTree family</span>
+  <p>ClickHouse's core storage engine. Understanding MergeTree is what separates a good answer from a great one.</p>
+  <ol class="steps">
+    <li><div><div class="step-title">Writes go to a MemTable (in-memory buffer)</div><div class="step-desc">Incoming rows accumulate in memory. ClickHouse periodically flushes them to disk as a <em>data part</em> — a sorted, compressed block of rows.
+      <ul><li>Each data part is immutable once written — no in-place updates</li><li>This is why ClickHouse can ingest 500K rows/sec: writes are sequential appends, never random</li><li>Updates in ClickHouse are actually: mark old rows as deleted + insert new rows. Mutations run asynchronously.</li></ul></div></div></li>
+    <li><div><div class="step-title">Background compaction — MergeTree's magic</div><div class="step-desc">Over time, many small data parts accumulate. Background merge process combines small parts into larger ones, sorting and re-compressing.
+      <ul><li>Queries during merge: read from both old parts and new merged part — transparent to the query</li><li>Merge reduces number of files to scan on query, improving query speed over time</li><li>This is the same LSM-tree concept as Cassandra but optimised for reads (column-oriented) rather than just writes</li></ul></div></div></li>
+    <li><div><div class="step-title">Primary index (sparse) enables fast range scans</div><div class="step-desc">ClickHouse stores a <em>sparse index</em> — one index entry per 8192 rows (configurable). Tiny index, fits in RAM.
+      <ul><li>For <code>WHERE event_date = '2026-03-20'</code>: index skips to the right range in milliseconds</li><li>Not row-level index — ClickHouse skips 8192 rows at a time. Within the range, it scans linearly.</li><li>Order by matters: if you ORDER BY (tenant_id, event_date), queries filtering by tenant_id are fast. Queries filtering only by event_date must scan everything.</li></ul></div></div></li>
+    <li><div><div class="step-title">AggregatingMergeTree — for pre-aggregated counts</div><div class="step-desc">Specialised MergeTree variant that merges rows with the same key, combining their aggregate state.
+      <ul><li>Example: two rows (ad_id=123, count=500) and (ad_id=123, count=300) merge to (ad_id=123, count=800)</li><li>ClickHouse does this merging in background without any explicit trigger</li><li>This is how the Top-K system works: Flink writes partial counts to ClickHouse, ClickHouse merges them continuously</li></ul></div></div></li>
+  </ol>
 
-<span class="c">-- Data is stored in "parts" — immutable sorted chunks written at ingest.</span>
-<span class="c">-- Background merge process combines small parts into larger ones (like LSM tree).</span>
-<span class="c">-- Primary key determines sort order within a part → fast range scans.</span>
-<span class="c">-- Sparse primary index: one entry per 8192 rows → tiny index, full scan avoided.</span>
+  <h3>Apache Druid — Pre-aggregation at ingest (Rollup)</h3>
+  <ol class="steps">
+    <li><div><div class="step-title">Ingest-time rollup — aggregate before storing</div><div class="step-desc">Druid's key differentiator: it aggregates data as it ingests.
+      <ul><li>Raw event: {user_id: "u1", video_id: "v42", region: "IN", timestamp: 14:32:47, count: 1}</li><li>Druid rolls up to 1-minute granularity: {video_id: "v42", region: "IN", minute: "14:32", count: 547}</li><li>Many individual events collapse into one row — potentially 100–1000× data reduction</li><li>Trade-off: you lose individual event detail. You cannot answer "did user u1 watch video v42?" after rollup.</li></ul></div></div></li>
+    <li><div><div class="step-title">Segments — immutable, pre-sorted, pre-compressed time slices</div><div class="step-desc">Druid divides data into time-based segments (e.g., one segment per hour per datasource).
+      <ul><li>Each segment is immutable — like ClickHouse parts</li><li>Segments are distributed across Historical nodes, with deep storage (S3) as source of truth</li><li>Query: Broker routes to relevant Historical nodes, merges results</li></ul></div></div></li>
+    <li><div><div class="step-title">Bitmap indexes enable sub-second filter performance</div><div class="step-desc">Druid automatically creates bitmap indexes on all dimensions (region, device, etc.).
+      <ul><li>Bitmap index: for each value of "region" (IN, US, UK…), store a bitset of which rows match</li><li>Filtering "region = IN" = bitwise AND of the IN bitmap with other filters — extremely fast</li><li>This is why Druid excels at dashboard queries with many filters: each filter is a bitwise operation</li></ul></div></div></li>
+  </ol>
 
-<span class="k">CREATE TABLE</span> entity_events_agg (
-    event_date    <span class="n">Date</span>,          <span class="c">-- PARTITION KEY: one part per date</span>
-    event_hour    <span class="n">DateTime</span>,
-    entity_type   <span class="n">LowCardinality(String)</span>,  <span class="c">-- Stored as dict-encoded integers</span>
-    entity_id     <span class="n">String</span>,
-    region        <span class="n">LowCardinality(String)</span>,
-    view_count    <span class="n">UInt64</span>
-) ENGINE = <span class="k">MergeTree</span>()
-  PARTITION BY toYYYYMM(event_date)
-  ORDER BY (entity_type, region, entity_id, event_hour);
-<span class="c">-- ORDER BY = physical sort order = primary key for sparse index</span>
-<span class="c">-- Query: WHERE entity_type='video' AND region='IN' skips 99% of data</span>
-  </div>
-
-  <h3>Apache Druid — Pre-Aggregation at Ingest (Rollup)</h3>
-  <div class="codeblock">
-<span class="c">-- Druid's killer feature: it pre-aggregates data as it ingests</span>
-<span class="c">-- Called "rollup" — reduces data volume before storing</span>
-
-<span class="c">-- Raw events (100M rows):</span>
-user_id=123, video_id=456, timestamp=2026-03-20T14:23:45, region=IN
-
-<span class="c">-- After Druid rollup (grouped by minute + entity + region):</span>
-video_id=456, minute=2026-03-20T14:23, region=IN, count=847
-
-<span class="c">-- Result: 100M raw events → 2M aggregated rows → 50x storage reduction</span>
-<span class="c">-- Trade-off: you lose individual user_id — can't answer "how many unique users?"</span>
-<span class="c">-- Unless you include a HyperLogLog sketch for approximate cardinality</span>
-
-<span class="c">-- This is why Druid queries are sub-second — much of the work is already done</span>
-  </div>
-
-  <h3>BigQuery — Dremel's Columnar Tree</h3>
-  <div class="codeblock">
-<span class="c">-- BigQuery uses a tree of execution nodes (Dremel architecture)</span>
-<span class="c">-- Your query is broken into a tree: root distributes, leaves read columns</span>
-<span class="c">-- Thousands of workers read in parallel from Google's Colossus storage</span>
-
-<span class="c">-- Cost model: you pay for data scanned, not compute time</span>
-<span class="c">-- SELECT * FROM table  →  scans ALL columns  →  expensive</span>
-<span class="c">-- SELECT revenue FROM table  →  scans 1 column  →  cheap</span>
-
-<span class="c">-- Optimisation: partition + cluster your tables</span>
-<span class="k">CREATE TABLE</span> events
-PARTITION BY DATE(event_time)
-CLUSTER BY entity_type, region;
-<span class="c">-- Partition pruning: only scan today's partition</span>
-<span class="c">-- Cluster pruning: only scan video+IN blocks within partition</span>
-<span class="c">-- Combined: query that scans 100TB now scans 50GB → 2000x cheaper</span>
-  </div>
+  <h3>BigQuery — Dremel columnar tree</h3>
+  <ol class="steps">
+    <li><div><div class="step-title">Dremel execution model — distributed tree of workers</div><div class="step-desc">BigQuery uses Google's Dremel engine. A query fans out to thousands of workers in milliseconds.
+      <ul><li>Root server receives query, distributes to intermediate servers, which distribute to leaf servers</li><li>Leaf servers read Colossus (Google's distributed file system) directly — no data movement</li><li>Results aggregate back up the tree</li><li>A query that scans 1 TB can use 2,000 workers simultaneously — each worker reads 0.5 GB</li></ul></div></div></li>
+    <li><div><div class="step-title">Slots — units of compute</div><div class="step-desc">BigQuery measures compute in "slots" — a virtual CPU.
+      <ul><li>On-demand pricing: you don't manage slots — BigQuery allocates automatically, charges per TB scanned</li><li>Reservations pricing: buy a fixed number of slots (e.g., 500 slots) — predictable cost, consistent performance</li><li>A complex query might use 2,000 slots for 3 seconds — that's 6,000 slot-seconds of compute</li></ul></div></div></li>
+    <li><div><div class="step-title">Partitioned and clustered tables for cost control</div><div class="step-desc">Critical for production BigQuery usage:
+      <ul><li><strong>Partition by date:</strong> Query <code>WHERE date = '2026-03-20'</code> reads only that date's partition — 1/365 of the data</li><li><strong>Cluster by column:</strong> Within a partition, data is co-located by cluster column. Filter on cluster column skips most blocks.</li><li>Without partitioning: a query always scans the entire table. At $5/TB, a 1 PB table = $5,000 per query. Always partition.</li></ul></div></div></li>
+  </ol>
 </section>
 
-<section id="comparison">
-  <div class="sec-tag">03 · Full Comparison</div>
-  <h2>Every Dimension That Matters</h2>
-  <table class="comp-table">
-    <thead><tr><th>Dimension</th><th>ClickHouse 🔴</th><th>Druid 🔵</th><th>BigQuery 🔷</th><th>Redshift 🟠</th></tr></thead>
+<section id="dimensions">
+  <div class="sec-tag">05 · Every Dimension That Matters</div>
+  <h2>The full comparison matrix</h2>
+  <table class="matrix">
+    <thead><tr><th>Dimension</th><th>ClickHouse</th><th>Apache Druid</th><th>BigQuery</th><th>Redshift</th></tr></thead>
     <tbody>
-      <tr><td class="row-head">Architecture</td><td>Columnar, shared-nothing</td><td>Columnar, pre-aggregated segments</td><td>Serverless, storage-compute separated</td><td>MPP cluster, semi-managed</td></tr>
-      <tr><td class="row-head">Ingest Speed</td><td><span class="good">500K rows/sec</span> streaming</td><td><span class="good">Streaming + batch</span> real-time rollup</td><td><span class="warn">Batch primary</span> streaming via Pub/Sub</td><td><span class="warn">Batch primary</span> COPY from S3</td></tr>
-      <tr><td class="row-head">Query Latency</td><td><span class="good">300ms–2s</span> on 100B rows</td><td><span class="good">&lt;1s</span> interactive dashboards</td><td><span class="warn">2–60s</span> depends on data scanned</td><td><span class="warn">2–30s</span> for complex queries</td></tr>
-      <tr><td class="row-head">Sub-Second Queries</td><td><span class="warn">Yes for pre-sorted data</span></td><td><span class="good">Yes — that's the whole point</span></td><td><span class="bad">Rarely without caching</span></td><td><span class="bad">No — MPP startup overhead</span></td></tr>
-      <tr><td class="row-head">Storage Cost</td><td><span class="good">Low</span> — self-hosted, great compression</td><td><span class="warn">Medium</span> — segment overhead</td><td><span class="warn">$0.02/GB/month</span> GCS</td><td><span class="warn">$0.024/GB/month</span> Redshift storage</td></tr>
-      <tr><td class="row-head">Compute Cost</td><td><span class="good">Fixed</span> — you own the nodes</td><td><span class="good">Fixed</span> — self-managed</td><td><span class="warn">$5 per TB scanned</span></td><td><span class="warn">Node-hours</span> even when idle</td></tr>
-      <tr><td class="row-head">Ops Burden</td><td><span class="warn">Medium</span> — manage nodes, merges</td><td><span class="bad">High</span> — complex: Zookeeper, deep storage, etc.</td><td><span class="good">Zero</span> — fully serverless</td><td><span class="warn">Medium</span> — managed but not serverless</td></tr>
-      <tr><td class="row-head">Scale Ceiling</td><td>Petabytes (sharded)</td><td>Petabytes</td><td><span class="good">Truly unlimited</span></td><td>~Petabyte with RA3</td></tr>
-      <tr><td class="row-head">SQL Compatibility</td><td>ClickHouse SQL (non-standard)</td><td>Druid SQL + native JSON</td><td>Standard SQL</td><td>PostgreSQL-compatible</td></tr>
-      <tr><td class="row-head">Streaming Ingest</td><td><span class="good">Native</span> Kafka engine</td><td><span class="good">Native</span> real-time ingestion</td><td><span class="warn">Via Dataflow/Pub/Sub</span></td><td><span class="bad">Not native</span> — batch COPY</td></tr>
-      <tr><td class="row-head">Cloud Lock-in</td><td><span class="good">None</span> — open source</td><td><span class="good">None</span> — open source</td><td><span class="bad">GCP only</span></td><td><span class="bad">AWS only</span></td></tr>
-      <tr><td class="row-head">Best For</td><td>High-frequency event analytics</td><td>Sub-second operational dashboards</td><td>Ad-hoc exploration, data science</td><td>Structured DW in AWS ecosystem</td></tr>
-      <tr><td class="row-head">Used By</td><td>Cloudflare, Uber, eBay</td><td>Lyft, Twitter, Netflix</td><td>Twitter, Spotify, The Trade Desk</td><td>NYSE, Yelp, McDonald's</td></tr>
+      <tr><td class="rh">Storage model</td><td>Columnar MergeTree. Each column in separate compressed file. Sparse primary index.</td><td>Columnar segments with bitmap indexes. Pre-aggregated rollup at ingest.</td><td>Capacitor columnar format on Colossus (Google's GFS). Dremel execution.</td><td>Columnar, zone maps (min/max per 1MB block). Sorted by SORTKEY for fast range scans.</td></tr>
+      <tr><td class="rh">Ingest speed</td><td><span class="dot g"></span>500K–1M rows/sec via Kafka engine or HTTP insert. Native Kafka consumer built in.</td><td><span class="dot g"></span>Real-time streaming via Kafka (Middle Manager). Native streaming + batch.</td><td><span class="dot a"></span>Batch (load jobs) preferred. Streaming inserts: 1 GB/s but 10× more expensive.</td><td><span class="dot a"></span>COPY command from S3 is fast (batch). Kinesis Firehose for streaming (ingestion lag).</td></tr>
+      <tr><td class="rh">Query latency</td><td><span class="dot g"></span>&lt;1s on 100B rows for simple aggregations. Vectorised SIMD execution. Sub-100ms for pre-aggregated data.</td><td><span class="dot g"></span>&lt;500ms interactive — fastest for dashboard queries. Pre-aggregation makes queries fast even at petabyte scale.</td><td><span class="dot a"></span>2–30s depending on data scanned, slot availability, and query complexity.</td><td><span class="dot a"></span>2–15s for well-tuned queries. Requires SORTKEY and DISTKEY design — wrong keys = slow.</td></tr>
+      <tr><td class="rh">Cost model</td><td><span class="dot g"></span>Instance-based (EC2/bare metal). Predictable. Very cheap per TB at scale. ClickHouse Cloud also available.</td><td><span class="dot a"></span>Instance-based. Multiple node types (Historical, Broker, Coordinator) — complex sizing.</td><td><span class="dot r"></span>$5/TB scanned (on-demand). Predictable with reservations ($1,800–$2,400/slot/month). Partitioning is critical for cost control.</td><td><span class="dot a"></span>Node-based (RA3 nodes decouple compute/storage). Serverless option. Generally less expensive than BigQuery for steady workloads.</td></tr>
+      <tr><td class="rh">Ops complexity</td><td><span class="dot a"></span>Self-managed. Single binary — simple deployment. Replication, sharding need configuration. ClickHouse Cloud option.</td><td><span class="dot r"></span>High. Multiple node types (Coordinator, Overlord, Broker, Historical, MiddleManager) — complex cluster management.</td><td><span class="dot g"></span>Zero — fully serverless. No capacity planning, no patching. Just query.</td><td><span class="dot g"></span>Managed by AWS. Less ops than self-hosted, but requires SORTKEY/DISTKEY tuning.</td></tr>
+      <tr><td class="rh">SQL support</td><td>SQL with extensions (ARRAY, Map, AggregateFunction types). Missing: full joins on large tables, UPDATES.</td><td>SQL (Druid SQL) or native JSON-based API. Limited SQL compared to standard — no joins across datasources.</td><td>Standard SQL (ANSI). Best SQL support of the four. Window functions, ML via BQML, geospatial, JSON.</td><td>PostgreSQL-compatible SQL. Full ANSI SQL. Joins work well if DISTKEY matches join key.</td></tr>
+      <tr><td class="rh">Updates / deletes</td><td>Mutations (async ALTER TABLE UPDATE). Expensive — avoid frequent updates. Design for append-only.</td><td>Not supported natively. To update: reindex the segment. Druid is designed for immutable time-series.</td><td>DML updates/deletes supported but scan the whole partition — expensive. Use MERGE for upserts.</td><td>UPDATE/DELETE supported. Tombstone-based — old rows remain until VACUUM. Similar to Postgres.</td></tr>
+      <tr><td class="rh">Real-time capability</td><td>Near real-time via Kafka engine — data visible in 1–2 seconds. ReplacingMergeTree for deduplication.</td><td>True real-time via streaming ingestion. Data queryable in &lt;1 second. This is Druid's strongest differentiator.</td><td>Streaming inserts visible in seconds but 10× more expensive than batch loads. Most teams batch-load hourly.</td><td>Not designed for real-time. Typically batch-loaded every 5–60 minutes from S3.</td></tr>
     </tbody>
   </table>
-
-  <h3>Cost at Scale — Real Numbers</h3>
-  <div class="callout cl-amber">
-    <div class="cl-lbl">BigQuery vs ClickHouse at Top-K Scale</div>
-    <p>Assume: 500K events/sec → 43B events/day → 100 bytes per row after aggregation → ~4.3TB of aggregated data written per day. Analytical queries run 1,000 times/day each scanning ~500GB.</p>
-    <p><strong>BigQuery:</strong> 1,000 queries × 500GB × $5/TB = <strong>$2,500/day</strong> in query costs alone. Plus storage: 4.3TB × 30 days × $0.02 = $2,580/month.</p>
-    <p><strong>ClickHouse (10 nodes, 16-core, 64GB each, AWS r6i.4xlarge):</strong> 10 × $1.00/hr × 24hr = <strong>$240/day</strong>. Handles all 1,000 queries easily. Same queries, same data, ~10x cheaper at this scale.</p>
-    <p><strong>BigQuery wins for:</strong> Unpredictable, bursty, data-science workloads where you'd otherwise pay for idle cluster capacity.</p>
-  </div>
 </section>
 
-<section id="examples">
-  <div class="sec-tag">04 · Applied to Real Systems</div>
-  <h2>Which OLAP Engine for Which System?</h2>
-
-  <div class="sd-example">
-    <div class="sd-example-head">
-      <div class="sd-example-title">Top-K Trending (YouTube / Twitter)</div>
-      <span class="sd-example-tag">HIGH FREQUENCY · 500K EVENTS/SEC</span>
-    </div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">WINNER</div><div class="choice-val"><span class="badge b-ch">ClickHouse ✓</span> Flink flushes aggregated rows every 30s directly into ClickHouse via its Kafka engine. AggregatingMergeTree + columnar storage = "top 10 videos in India last hour" in 300ms on 100B rows. Streaming ingest is native — no extra pipeline.</div></div>
-      <div class="choice-row"><div class="choice-label">WHY NOT DRUID</div><div class="choice-val"><span class="badge b-a">Druid ⚠</span> Druid's rollup would actually work well here — but the operational complexity (ZooKeeper, Historical nodes, Broker nodes, Coordinator, Overlord) is far higher than ClickHouse. For Top-K specifically, ClickHouse's window functions and GROUP BY are cleaner.</div></div>
-      <div class="choice-row"><div class="choice-label">WHY NOT BIGQUERY</div><div class="choice-val"><span class="badge b-r">BigQuery ✗</span> At 43B writes/day, BigQuery Storage Write API costs would be significant. And the 2–5s query latency makes "what's trending right now" feel slow. ClickHouse is 10x cheaper and 10x faster for this specific workload.</div></div>
-      <div class="choice-row"><div class="choice-label">QUERIES ENABLED</div><div class="choice-val">Historical Top-K ("what was #1 last Tuesday?") · Trend analysis hour-over-hour · Breakdown by device/region · Rank history for a specific entity — all in &lt;2s.</div></div>
-    </div>
-  </div>
-
-  <div class="sd-example">
-    <div class="sd-example-head">
-      <div class="sd-example-title">Ride-Sharing Analytics (Uber)</div>
-      <span class="sd-example-tag">OPERATIONAL DASHBOARDS</span>
-    </div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">REAL-TIME OPS</div><div class="choice-val"><span class="badge b-dr">Druid ✓</span> Uber uses Druid for operational dashboards: "How many rides completed in the last 5 minutes by city?" Sub-second queries on streaming data let operations teams react in real time. Druid's rollup pre-aggregates by city+minute, making this near-instant.</div></div>
-      <div class="choice-row"><div class="choice-label">LONG-TERM ANALYTICS</div><div class="choice-val"><span class="badge b-bq">BigQuery ✓</span> Historical analysis: "Compare Q4 ride completion rates by city 2024 vs 2025." Petabytes of historical data, ad-hoc exploration by data scientists, no need for sub-second latency. BigQuery's serverless model is perfect — data scientists don't need to manage clusters.</div></div>
-    </div>
-  </div>
-
-  <div class="sd-example">
-    <div class="sd-example-head">
-      <div class="sd-example-title">Ad Analytics Platform</div>
-      <span class="sd-example-tag">HIGH CARDINALITY · REAL-TIME BILLING</span>
-    </div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">WINNER</div><div class="choice-val"><span class="badge b-ch">ClickHouse ✓</span> Ad click aggregation: entity_id, campaign_id, impression counts, CTR — high write throughput, complex GROUP BY queries, need accurate counts for billing. ClickHouse's exactly-once semantics via Kafka + ReplacingMergeTree prevents double-counting.</div></div>
-      <div class="choice-row"><div class="choice-label">WHY NOT DRUID</div><div class="choice-val"><span class="badge b-r">Druid ✗</span> Druid's rollup loses individual event detail. For billing, you need exact click counts per ad per user. Rollup would lose the granularity needed for fraud detection and accurate billing.</div></div>
-    </div>
-  </div>
-
-  <div class="sd-example">
-    <div class="sd-example-head">
-      <div class="sd-example-title">Data Warehouse / Business Intelligence</div>
-      <span class="sd-example-tag">AD-HOC · DATA SCIENCE</span>
-    </div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">WINNER</div><div class="choice-val"><span class="badge b-bq">BigQuery ✓</span> For a BI team running diverse queries across petabytes of historical data with unpredictable patterns, BigQuery's serverless model wins. No cluster to right-size, pay only for what you query. Connects natively to Looker, Tableau, dbt.</div></div>
-      <div class="choice-row"><div class="choice-label">AWS EQUIVALENT</div><div class="choice-val"><span class="badge b-rs">Redshift ✓</span> Same use case but in the AWS ecosystem. Redshift Spectrum lets you query data directly in S3 without loading it. Deep integration with Glue, EMR, QuickSight. If you're all-in on AWS, Redshift + Spectrum is the natural choice.</div></div>
-    </div>
-  </div>
+<section id="when-to-use">
+  <div class="sec-tag">06 · When to Use Each</div>
+  <h2>Real system design examples</h2>
+  <h3>ClickHouse — high-frequency writes + fast aggregation</h3>
+  <ul class="blist">
+    <li><strong>Top-K trending (our system):</strong> Flink writes 50K aggregated count rows/sec. ClickHouse ingests via Kafka engine natively. Query "top 10 videos in India last hour" = 200ms on 100B rows. No other OLAP engine matches this ingest+query combination.</li>
+    <li><strong>Ad click analytics:</strong> 10K clicks/sec, each click is one row event. ClickHouse ingests via Kafka, aggregates by ad_id and time window. Advertisers query "my ad performance last 24 hours" — sub-second response.</li>
+    <li><strong>Observability / APM:</strong> Cloudflare processes 30M DNS queries/sec — all logged to ClickHouse. Engineers query "how many 5xx errors from IP range X in last 5 minutes" — answers in &lt;1 second.</li>
+    <li><strong>User behaviour analytics:</strong> ByteDance (TikTok) uses ClickHouse for product analytics. Every user action (swipe, play, like, skip) is one row. A/B test analysis, funnel queries, retention cohorts — all ClickHouse.</li>
+  </ul>
+  <h3>Apache Druid — sub-second interactive dashboards</h3>
+  <ul class="blist">
+    <li><strong>Business intelligence dashboards:</strong> Operations team needs a dashboard that responds in &lt;500ms to every filter change (date range, region, device type). Druid pre-aggregates at ingest — filter changes just flip bitmap indexes. No other OLAP engine is this fast for interactive exploration.</li>
+    <li><strong>Real-time anomaly detection:</strong> Data is visible in Druid in &lt;1 second. Dashboard shows "current minute revenue vs expected" — Druid handles both the real-time ingest and the historical baseline query in the same system.</li>
+    <li><strong>Pinterest Ads analytics:</strong> Advertisers need to see their campaign performance update in real time as users interact with pins. Druid's streaming ingestion + rollup makes this possible at Pinterest's scale.</li>
+    <li><strong>When NOT to use Druid:</strong> Complex multi-join queries across large datasets; when you need to retain raw event granularity; when ops complexity is a concern (Druid clusters are hard to manage).</li>
+  </ul>
+  <h3>BigQuery — ad-hoc exploration, ML, no-ops</h3>
+  <ul class="blist">
+    <li><strong>Data science exploration:</strong> A data scientist needs to run 20 different exploratory queries on last year's data. They don't know the queries in advance. BigQuery: spin up, run queries, pay only for what you scan. No infrastructure to manage, no index to design.</li>
+    <li><strong>ML training data:</strong> BigQuery ML (BQML) lets you train models directly in SQL without moving data. Spotify uses BigQuery to train their recommendation models on listening history — petabytes of data, no data pipeline needed.</li>
+    <li><strong>Cross-team analytics at Google scale:</strong> Multiple teams query the same data. BigQuery handles concurrency automatically — 2,000 concurrent queries with automatic slot allocation.</li>
+    <li><strong>When NOT to use BigQuery:</strong> When you need &lt;1 second query latency consistently; when you have very high-frequency streaming ingest; when you're not on GCP and don't want cloud vendor lock-in.</li>
+  </ul>
+  <h3>Redshift — AWS-native data warehouse</h3>
+  <ul class="blist">
+    <li><strong>AWS-native workloads:</strong> You're already heavily on AWS (S3, Kinesis, Glue). Redshift Spectrum can query S3 directly without loading. Glue automatically catalogs your data. The ecosystem integration is seamless.</li>
+    <li><strong>Traditional BI with standard SQL:</strong> Teams familiar with PostgreSQL SQL, using Tableau or Looker. Redshift's PostgreSQL-compatible SQL and JDBC/ODBC connectors work with every BI tool out of the box.</li>
+    <li><strong>When NOT to use Redshift:</strong> High-frequency writes (Redshift is batch-oriented); when you need Druid-style sub-second interactive queries; when you're on GCP (BigQuery is the obvious choice).</li>
+  </ul>
 </section>
 
 <section id="decision">
-  <div class="sec-tag">05 · The Decision Framework</div>
-  <h2>How to Pick in an Interview</h2>
-  <div class="codeblock">
-<span class="c">// OLAP selection decision tree</span>
-
-<span class="k">Step 1:</span> What is your query latency requirement?
-  <span class="g">&lt;1s interactive dashboard</span>   → Druid (pre-aggregation is its superpower)
-  <span class="g">1–5s analytical queries</span>     → ClickHouse
-  <span class="n">5–60s ad-hoc exploration</span>    → BigQuery or Redshift
-  <span class="r">Minutes ok (batch reports)</span> → Any
-
-<span class="k">Step 2:</span> What is your ingest pattern?
-  <span class="g">High-frequency streaming (Kafka, 100K+/sec)</span>
-    → ClickHouse (native Kafka engine) or Druid (streaming ingest)
-  <span class="n">Periodic batch loads</span>
-    → BigQuery (batch load API) or Redshift (COPY from S3)
-
-<span class="k">Step 3:</span> Do you need exact counts vs approximate?
-  <span class="g">Exact (billing, fraud, compliance)</span>
-    → ClickHouse or BigQuery (no rollup = no loss)
-  <span class="n">Approximate ok (trending, dashboards)</span>
-    → Druid with rollup + HyperLogLog
-
-<span class="k">Step 4:</span> What are your ops constraints?
-  <span class="g">Small team, no infra experts</span>
-    → BigQuery (serverless) or Redshift (managed)
-  <span class="n">Team has infra capacity, cost matters at scale</span>
-    → ClickHouse or Druid
-
-<span class="k">Step 5:</span> Cloud commitment?
-  <span class="g">Cloud-agnostic</span>   → ClickHouse or Druid
-  <span class="n">GCP committed</span>    → BigQuery
-  <span class="r">AWS committed</span>    → Redshift
-  </div>
-
-  <div class="use-grid">
-    <div class="use-card">
-      <div class="use-card-head" style="color:#c00">🔴 ClickHouse is perfect for…</div>
-      <ul><li>High-frequency event analytics (Top-K, ad clicks)</li><li>Need streaming ingest + fast queries</li><li>Self-managed, cost-sensitive at scale</li><li>Time-series with complex aggregations</li></ul>
-    </div>
-    <div class="use-card">
-      <div class="use-card-head" style="color:#1a70cc">🔵 Druid is perfect for…</div>
-      <ul><li>Sub-second operational dashboards</li><li>High-cardinality dimensions (millions of unique values)</li><li>Pre-aggregation acceptable (approx counts ok)</li><li>Real-time + historical unified queries</li></ul>
-    </div>
-    <div class="use-card">
-      <div class="use-card-head" style="color:#1a50cc">🔷 BigQuery is perfect for…</div>
-      <ul><li>Petabyte-scale data warehouse</li><li>Data science, ML training data, ad-hoc</li><li>Bursty, unpredictable query patterns</li><li>Team without infra/ops capacity</li></ul>
-    </div>
-    <div class="use-card">
-      <div class="use-card-head" style="color:#cc7000">🟠 Redshift is perfect for…</div>
-      <ul><li>Structured ETL pipelines in AWS</li><li>Traditional BI/reporting workloads</li><li>Deep integration with AWS ecosystem</li><li>Familiar PostgreSQL-compatible SQL</li></ul>
-    </div>
+  <div class="sec-tag">07 · Decision Tree</div>
+  <h2>Pick your OLAP engine in 60 seconds</h2>
+  <div class="dtree">
+    <div class="dtree-node"><div class="dtree-q">Do you need high-frequency streaming ingest (&gt;100K rows/sec) AND fast aggregation queries? (ad clicks, event tracking, Top-K)</div><div class="dtree-a ch">→ ClickHouse</div></div>
+    <div class="dtree-node"><div class="dtree-q">Do you need sub-second interactive dashboard queries with many filters changing in real time? (ops dashboards, ad analytics)</div><div class="dtree-a dr">→ Apache Druid</div></div>
+    <div class="dtree-node"><div class="dtree-q">Do you want zero infrastructure ops, ad-hoc exploration, ML integration, and you're on GCP?</div><div class="dtree-a bq">→ BigQuery</div></div>
+    <div class="dtree-node"><div class="dtree-q">Are you AWS-native with existing S3/Glue/Kinesis setup, and need a managed columnar warehouse?</div><div class="dtree-a rs">→ Redshift</div></div>
+    <div class="dtree-node"><div class="dtree-q">Already on AWS, want serverless with simpler pricing than on-demand BigQuery?</div><div class="dtree-a rs">→ Redshift Serverless</div></div>
   </div>
 </section>
 
 <section id="followups">
-  <div class="sec-tag">06 · Interview Follow-up Playbook</div>
-  <h2>Every Hard Follow-up, Answered</h2>
+  <div class="sec-tag">08 · Every Hard Follow-up</div>
+  <h2>Questions interviewers always ask</h2>
 
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggle(this)">Why can't I just use PostgreSQL for analytics? It has window functions and GROUP BY.<span class="tog">+</span></div>
-    <div class="faq-a"><strong>You can — until you can't.</strong> PostgreSQL is fine for analytics up to ~100GB and simple aggregations. But at billions of rows, a single <code>GROUP BY</code> on PostgreSQL requires a full sequential scan reading every column. ClickHouse on the same data reads only the columns you reference, compresses integers 10–20x, and parallelises across all CPU cores.<br><br>Benchmark: <code>SELECT entity_type, SUM(view_count) FROM events WHERE event_date = today() GROUP BY entity_type</code> — PostgreSQL on 1B rows: ~8 minutes. ClickHouse: ~400ms. Same query, same data. That's why OLAP exists.</div>
-  </div>
+  <div class="faq"><div class="faq-q" onclick="toggle(this)">Why not use PostgreSQL for analytics? It has window functions and GROUP BY.<span class="faq-tog">+</span></div><div class="faq-a">
+    <p>PostgreSQL can handle analytics on small datasets. The problem emerges at scale:</p>
+    <ul>
+      <li><strong>Row storage is fundamentally wrong for column scans:</strong> <code>SELECT COUNT(*) FROM events WHERE date = today()</code> on 100M rows — PostgreSQL reads every column of every row (even unused ones) due to row-oriented storage. ClickHouse reads only the date column — 50× less I/O on a table with 50 columns.</li>
+      <li><strong>MVCC overhead on analytical queries:</strong> PostgreSQL must check visibility for every row it scans (is this row visible to my transaction?). On 100M rows, this adds 10–30% CPU overhead. ClickHouse has no MVCC.</li>
+      <li><strong>No vectorised execution:</strong> PostgreSQL processes one row at a time through a tree of plan nodes. ClickHouse processes 8,192 rows per batch using SIMD instructions — 50–100× more CPU-efficient for aggregations.</li>
+      <li><strong>Competing with live workload:</strong> Running a long analytical query on the OLTP PostgreSQL blocks autovacuum, consumes I/O, and spikes p99 latency for real users. Always separate OLAP from OLTP.</li>
+    </ul>
+  </div></div>
 
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggle(this)">ClickHouse says it can ingest 500K rows/sec. How does that work with Kafka?<span class="tog">+</span></div>
-    <div class="faq-a"><strong>ClickHouse has a native Kafka engine — you define a Kafka table and ClickHouse becomes a consumer.</strong><br><br><code>CREATE TABLE kafka_events ENGINE = Kafka SETTINGS kafka_broker_list = 'kafka:9092', kafka_topic_list = 'events', kafka_format = 'JSONEachRow';</code><br><br>Then a Materialized View continuously reads from the Kafka table and inserts into your main MergeTree table. ClickHouse batches these inserts internally — it doesn't write each message individually. Batches of thousands of rows are written as a single "part" to disk, keeping write amplification low. The result: Kafka → ClickHouse pipeline with 30-60 second latency and 500K rows/sec throughput.</div>
-  </div>
+  <div class="faq"><div class="faq-q" onclick="toggle(this)">ClickHouse claims 500K rows/sec ingest. How does that work with Kafka?<span class="faq-tog">+</span></div><div class="faq-a">
+    <p>ClickHouse has a native <strong>Kafka Table Engine</strong> that acts as a built-in Kafka consumer.</p>
+    <ol>
+      <li>You create a Kafka table pointing at your Kafka topic (broker address, topic name, consumer group, format).</li>
+      <li>You create a destination MergeTree table where data will be stored.</li>
+      <li>You create a Materialised View that connects the Kafka table to the MergeTree table — this is the insert trigger.</li>
+      <li>ClickHouse continuously polls Kafka, batches messages (default: 65,536 rows or 1 second, whichever comes first), and inserts into MergeTree atomically.</li>
+    </ol>
+    <p style="margin-top:8px;"><strong>Why this is fast:</strong> Batched inserts write entire sorted data parts to disk sequentially — no random I/O. Each batch is one atomic disk write per column. With 500K rows/sec at ~100 bytes per row = 50 MB/sec sequential write — well within NVMe SSD capacity.</p>
+    <p style="margin-top:8px;"><strong>Exactly-once guarantee:</strong> ClickHouse commits the Kafka offset only after the insert succeeds. If ClickHouse crashes mid-insert, it re-reads from the last committed offset — at-least-once semantics. Use ReplacingMergeTree with deduplication key to handle duplicate inserts.</p>
+  </div></div>
 
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggle(this)">What's the difference between Druid's rollup and ClickHouse's AggregatingMergeTree?<span class="tog">+</span></div>
-    <div class="faq-a"><strong>Both pre-aggregate — but at different points in the pipeline and with different flexibility.</strong><br><br><strong>Druid rollup</strong> happens at ingest time. Raw events with the same dimensions within the same time granularity are collapsed into a single aggregate row. You define rollup at table creation. If you didn't include a dimension at ingest, you can never query by it. This achieves 50–100x storage reduction but is irreversible.<br><br><strong>ClickHouse AggregatingMergeTree</strong> aggregates during background merge. Raw data is initially stored, then merged and aggregated in the background. You keep the full resolution until merged. More flexible, but storage reduction comes later and is less extreme than Druid's rollup.<br><br><strong>The choice:</strong> Known, fixed query patterns with approximate counts OK → Druid rollup. Need full granularity or exact counts → ClickHouse AggregatingMergeTree.</div>
-  </div>
+  <div class="faq"><div class="faq-q" onclick="toggle(this)">What is Druid rollup and how is it different from ClickHouse AggregatingMergeTree?<span class="faq-tog">+</span></div><div class="faq-a">
+    <p>Both pre-aggregate data, but at different stages and with different trade-offs:</p>
+    <ul>
+      <li><strong>Druid rollup — at ingest time:</strong> Data is aggregated as it enters Druid. Raw events are combined into coarser time buckets (e.g., 1-minute granularity) before being stored. You configure rollup granularity upfront — you lose raw event detail permanently. 1B raw clicks become 10M rolled-up rows. Storage is 100× smaller, queries are 100× faster. But you can never answer "what did user_id X do at 14:32:47" after rollup.</li>
+      <li><strong>ClickHouse AggregatingMergeTree — at background merge time:</strong> Raw data is stored initially. Background merge process combines rows with identical keys, merging their aggregate state (SUM, MAX, HyperLogLog sketch). Raw data exists temporarily — row-level queries work until merged. After merge, rows with same key are combined. More flexible than Druid rollup — you can always query raw data before it's merged.</li>
+    </ul>
+    <p style="margin-top:8px;"><strong>Which to choose:</strong> Druid rollup is more aggressive — better for when you know your query granularity in advance and want maximum compression. ClickHouse AggregatingMergeTree is more flexible — data is stored raw initially, merged asynchronously, and you can query at different granularities.</p>
+  </div></div>
 
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggle(this)">BigQuery charges per TB scanned. How do you control costs in a large team?<span class="tog">+</span></div>
-    <div class="faq-a"><strong>Four cost control techniques used at production scale:</strong><br><br><strong>1. Partition pruning:</strong> Always filter on the partition column (usually date). <code>WHERE event_date = '2026-03-20'</code> scans only one day's partition instead of all-time data. Mandatory in every query policy.<br><br><strong>2. Column selection:</strong> Never <code>SELECT *</code>. Each column selected costs proportional to its size. <code>SELECT event_type, COUNT(*)</code> is 10x cheaper than <code>SELECT *</code> on the same rows.<br><br><strong>3. Clustering:</strong> Cluster tables by high-cardinality filter columns. BigQuery skips irrelevant blocks within a partition when the filter matches a clustered column.<br><br><strong>4. Materialized Views / cached results:</strong> Common dashboard queries are cached for 24 hours. BigQuery caches identical queries automatically at no cost. Materialised Views pre-compute and store expensive aggregations.<br><br><strong>5. Reservations:</strong> Buy BigQuery slots (fixed compute) for predictable workloads instead of paying per query.</div>
-  </div>
+  <div class="faq"><div class="faq-q" onclick="toggle(this)">BigQuery charges per TB scanned. How do you control costs in production?<span class="faq-tog">+</span></div><div class="faq-a">
+    <p>BigQuery cost control is a real engineering concern. The four levers:</p>
+    <ul>
+      <li><strong>Partition pruning:</strong> Always add <code>WHERE _PARTITIONDATE = '2026-03-20'</code> or use partition columns in filters. Without this, every query scans the entire table. A 1 PB table with daily partitions: filtering one day = 1/365 of cost.</li>
+      <li><strong>Clustering:</strong> <code>CLUSTER BY user_id</code> co-locates rows with the same user_id in the same blocks. A query filtering by user_id skips 90%+ of blocks. Combined with partitioning, you can reduce scan to &lt;1% of total data.</li>
+      <li><strong>BI Engine / materialised views:</strong> Pre-compute common aggregations as materialised views. Dashboard queries hit the view (tiny) not the raw table (huge). BI Engine caches frequently-run query results in RAM — subsequent identical queries cost nothing.</li>
+      <li><strong>Reservations:</strong> Switch from on-demand to flat-rate reservations once you have predictable query volume. $1,800–$2,400/slot/month with 500 slots is predictable vs unpredictable per-TB charges. Break-even is roughly when you scan 400+ TB/month.</li>
+    </ul>
+    <p style="margin-top:8px;"><strong>Common interview answer:</strong> "In production, all BigQuery tables are partitioned by date and clustered by the most common filter dimension. We use materialised views for dashboard queries. Monthly cost monitoring with alerts when a query scans &gt;10 TB unexpectedly."</p>
+  </div></div>
 
-  <div class="faq-item">
-    <div class="faq-q" onclick="toggle(this)">In the Top-K system, why is ClickHouse used instead of Cassandra for analytics?<span class="tog">+</span></div>
-    <div class="faq-a"><strong>Cassandra and ClickHouse serve fundamentally different query profiles.</strong><br><br><strong>Cassandra (warm store in Top-K):</strong> "Give me all hourly counts for entity X in region IN over the last 30 days" — a narrow range scan within one partition. Fast because it reads very little data. Good for: backfilling Redis, known entity lookups.<br><br><strong>ClickHouse (OLAP layer in Top-K):</strong> "Give me the top 10 entities globally across all regions for the last 7 days, broken down by device, with hour-over-hour change" — a full table scan across billions of rows with complex aggregation. Cassandra would do a full cluster scan for this query — every node would need to respond. ClickHouse scans only relevant columns and returns the answer in 500ms.<br><br><strong>Rule of thumb:</strong> Cassandra is for "fetch a specific partition." ClickHouse is for "aggregate across many partitions." They're complementary, not competitive.</div>
-  </div>
+  <div class="faq"><div class="faq-q" onclick="toggle(this)">In the Top-K system, why use ClickHouse instead of Cassandra for analytics?<span class="faq-tog">+</span></div><div class="faq-a">
+    <p>They serve completely different query contracts — this is a crucial distinction:</p>
+    <ul>
+      <li><strong>Cassandra serves the operational read path:</strong> "Give me all hourly counts for entity X in region IN over the last 7 days" = partition key lookup + range scan on clustering key. Fast, pre-defined access pattern. Cannot do GROUP BY, cannot scan all entities to find top ones, cannot do complex aggregations.</li>
+      <li><strong>ClickHouse serves the analytical read path:</strong> "What were the top 10 videos in India last Tuesday between 6–8pm, broken down by device type, and how does that compare to the same period last week?" — this requires full columnar scan + GROUP BY + window functions + join across time periods. ClickHouse handles this in 2–3 seconds on 100B rows. Cassandra would timeout or require 10+ minutes of scatter-gather across all partitions.</li>
+    </ul>
+    <p style="margin-top:8px;">The same event stream (Kafka) feeds both. Flink writes to Cassandra (for operational real-time reads) AND to a Kafka output topic that ClickHouse consumes (for analytics). They receive the same data but answer different questions at different time horizons.</p>
+    <p style="margin-top:8px;"><strong>Summary:</strong> Cassandra = fast, narrow, pre-planned queries on current data. ClickHouse = flexible, deep, analytical queries on historical data. Both necessary; neither can replace the other.</p>
+  </div></div>
+
+  <div class="faq"><div class="faq-q" onclick="toggle(this)">ClickHouse vs Druid — when does Druid's sub-second speed matter more than ClickHouse's ingest speed?<span class="faq-tog">+</span></div><div class="faq-a">
+    <p>The decision comes down to the latency requirement and whether you need raw events:</p>
+    <ul>
+      <li><strong>Choose Druid when:</strong> You need &lt;500ms guaranteed for interactive dashboards with arbitrary filter combinations. A business user changes the date range slider and expects the chart to update instantly. Druid's bitmap indexes on every dimension make this possible. ClickHouse's &lt;1s is often good enough, but not always.</li>
+      <li><strong>Choose ClickHouse when:</strong> You have high-frequency ingest (&gt;100K rows/sec), need to retain raw event granularity (user-level queries), need flexible ad-hoc SQL, or want simpler operational management. ClickHouse's single binary vs Druid's 5-node-type cluster is a significant ops advantage.</li>
+      <li><strong>The Druid tax:</strong> Druid's rollup destroys raw event granularity. If you ever need "did this specific user see this specific ad?", Druid after rollup cannot answer this. ClickHouse retains raw events until they're merged.</li>
+    </ul>
+    <p style="margin-top:8px;"><strong>Real-world trend:</strong> Many teams that previously used Druid are migrating to ClickHouse + pre-aggregated materialised views — they get 95% of Druid's query speed with ClickHouse's simpler ops and better SQL support.</p>
+  </div></div>
+
 </section>
 
+<div class="oneliner">
+  <div class="lbl">The one rule to remember</div>
+  <blockquote>"ClickHouse: extreme ingest + fast aggregation, self-hosted. Druid: sub-second interactive dashboards, pre-aggregates at ingest. BigQuery: serverless analytics, pay per TB, zero ops. Redshift: AWS-native data warehouse. All four are columnar — the difference is when they aggregate, how they manage ops, and what they cost."</blockquote>
 </div>
-<div class="footer">OLAP · CLICKHOUSE · DRUID · BIGQUERY · REDSHIFT · MANISH-ALMANAC</div>
-<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
-</html>
+</div>
+<footer>OLAP · CLICKHOUSE · DRUID · BIGQUERY · REDSHIFT · MANISH-ALMANAC</footer>
+<script>function toggle(el){var item=el.parentElement;var isOpen=item.classList.contains('open');document.querySelectorAll('.faq.open').forEach(function(f){f.classList.remove('open');});if(!isOpen)item.classList.add('open');}</script>
+</body></html>
