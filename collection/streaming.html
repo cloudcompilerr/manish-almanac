@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stream Processing Showdown: Kafka vs Flink vs Kinesis vs Spark Streaming</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#080c14;--page:#f2f4f8;--surface:#e6eaf2;--surface2:#d8dcec;--border:#c8cdd8;--muted:#6870880;
+--kf:#000000;--kf-bg:#f0f0f0;--fl:#e35400;--fl-bg:#fff4ef;--ki:#ff9900;--ki-bg:#fff8ee;--ss:#e25100;--ss-bg:#fff3ee;
+--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--teal:#0a7070;--teal-bg:#edf6f6;
+--mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#dde0ec;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(255,255,255,.008) 80px,rgba(255,255,255,.008) 81px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#3a3e50;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--sans);font-size:clamp(30px,5vw,56px);font-weight:800;line-height:1.05;letter-spacing:-1.5px;margin-bottom:20px;color:#eef0f8;}
+h1 em{color:#f77f3a;font-style:normal;}
+.hero-sub{font-size:15px;color:#5a5e70;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.pill-kf{border-color:#666;color:#666;background:rgba(0,0,0,.05);}
+.pill-fl{border-color:#e35400;color:#c04400;background:rgba(227,84,0,.06);}
+.pill-ki{border-color:#ff9900;color:#cc7000;background:rgba(255,153,0,.06);}
+.pill-ss{border-color:#e25100;color:#b04000;background:rgba(226,81,0,.06);}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #101420;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#2a2e40;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#f77f3a;border-color:#f77f3a;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#7a7e90;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--sans);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;letter-spacing:-.5px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3d50;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.kf::before{background:#333;}.db-card.fl::before{background:var(--fl);}.db-card.ki::before{background:var(--ki);}.db-card.ss::before{background:var(--ss);}
+.db-logo{font-size:22px;margin-bottom:6px;}
+.db-name{font-family:var(--sans);font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px;}
+.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#7a7e90;margin-bottom:10px;text-transform:uppercase;}
+.db-tagline{font-size:13px;color:#5a5e70;line-height:1.55;}
+.db-born{font-family:var(--mono);font-size:9px;color:#7a7e90;margin-top:8px;}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:24px 0;}
+.role-card{border-radius:8px;padding:20px;border:1px solid var(--border);}
+.role-card.transport{background:#f8f0e8;border-color:#d8b88a;}
+.role-card.processing{background:#e8f4f0;border-color:#8ac8b0;}
+.role-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+.role-body{font-size:13.5px;color:#3a3d50;line-height:1.65;}
+.analogy{background:var(--ink);color:#c8ccd8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#3a3e50;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d0d4e0;}
+.analogy-text strong{color:#f77f3a;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-teal{background:var(--teal-bg);border-color:var(--teal);color:#0a2a2a;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8ccd8;border:1px solid #101420;}
+.codeblock .c{color:#2a2e40;}.codeblock .k{color:#f77f3a;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8a06a;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}.codeblock .t{color:#7ab8e0;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#7a7e90;}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3d50;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.sd-example-title{font-family:var(--sans);font-size:16px;font-weight:700;color:#eef0f8;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#3a3e50;border:1px solid #1a1e30;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#7a7e90;width:120px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3d50;line-height:1.6;}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
+.b-kf{background:#f0f0f0;border-color:#999;color:#444;}.b-fl{background:var(--fl-bg);border-color:var(--fl);color:#c04400;}.b-ki{background:var(--ki-bg);border-color:var(--ki);color:#cc7000;}.b-ss{background:var(--ss-bg);border-color:var(--ss);color:#b04000;}.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.faq-q:hover{background:var(--surface);}
+.faq-q .tog{font-size:18px;color:#f77f3a;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
+.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3d50;line-height:1.75;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
+.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
+.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
+.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;}
+.use-card ul{padding-left:16px;font-size:13px;color:#4a4e60;line-height:1.7;}
+.use-card ul li{margin-bottom:4px;}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#1a1e30;letter-spacing:2px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">System Design · Stream Processing · Manish-Almanac</div>
+    <h1>Stream Processing<br><em>Decoded</em></h1>
+    <p class="hero-sub">Kafka vs Apache Flink vs Amazon Kinesis vs Spark Streaming — understand the roles, the differences, and exactly how to use each in a FAANG-level system design interview. With real examples and every follow-up answered.</p>
+    <div class="db-pills">
+      <span class="db-pill pill-kf">Apache Kafka</span>
+      <span class="db-pill pill-fl">Apache Flink</span>
+      <span class="db-pill pill-ki">Amazon Kinesis</span>
+      <span class="db-pill pill-ss">Spark Streaming</span>
+    </div>
+  </div>
+</div>
+<nav class="nav">
+  <a href="#roles">Transport vs Processing</a>
+  <a href="#identity">Identity</a>
+  <a href="#kafka-deep">Kafka Deep</a>
+  <a href="#processing">Processing Engines</a>
+  <a href="#comparison">Full Comparison</a>
+  <a href="#examples">System Design</a>
+  <a href="#decision">Decision Tree</a>
+  <a href="#followups">Follow-ups</a>
+</nav>
+<div class="wrap">
+
+<section id="roles">
+  <div class="sec-tag">00 · The Critical Distinction</div>
+  <h2>Transport vs Processing — they're not the same thing</h2>
+  <p>The biggest mistake candidates make is treating Kafka, Flink, Kinesis, and Spark Streaming as competing alternatives. <strong>They're not.</strong> They play fundamentally different roles in a streaming architecture.</p>
+  <div class="role-grid">
+    <div class="role-card transport">
+      <div class="role-title" style="color:#8a6020">🚌 Transport / Message Bus</div>
+      <div class="role-body"><strong>Kafka, Kinesis, Pulsar</strong><br><br>Like a highway — vehicles (messages) enter, travel through, and exit. The highway stores vehicles temporarily so producers don't have to wait for consumers to be ready. It decouples producers from consumers.<br><br>Key properties: durable storage, ordered delivery within partition, multiple consumers reading the same message independently, replay old messages.</div>
+    </div>
+    <div class="role-card processing">
+      <div class="role-title" style="color:#1a6a4a">⚙️ Stream Processor</div>
+      <div class="role-body"><strong>Flink, Spark Streaming, Kafka Streams</strong><br><br>Like a factory that processes vehicles as they pass through — counting them, sorting them, combining them with data from other sources, detecting anomalies. The processor does the actual computation.<br><br>Key properties: stateful computation, windowing (tumbling, sliding, session), joins across streams, exactly-once semantics, fault tolerance with checkpoints.</div>
+    </div>
+  </div>
+  <div class="callout cl-teal">
+    <div class="cl-lbl">The correct mental model for Top-K</div>
+    <p><strong>Kafka</strong> = the highway. Events from users flow in, get durably stored, and multiple consumers can read them independently and at their own pace.</p>
+    <p><strong>Flink</strong> = the factory. Consumes from Kafka, applies the Count-Min Sketch, maintains the local heap, and every 30 seconds flushes the Top-K results to Redis and Cassandra.</p>
+    <p>You <strong>always use a transport layer AND a processing layer</strong> together. They're complementary, not competitive.</p>
+  </div>
+</section>
+
+<section id="identity">
+  <div class="sec-tag">01 · Who Are They</div>
+  <h2>The Four Technologies</h2>
+  <div class="db-grid">
+    <div class="db-card kf">
+      <div class="db-logo">⬛</div>
+      <div class="db-name">Apache Kafka</div>
+      <div class="db-type">Distributed Message Bus</div>
+      <div class="db-tagline">The gold standard for event streaming. Durable, ordered, replayable. Processes trillions of events/day at LinkedIn, Netflix, Uber. The backbone of nearly every modern data platform.</div>
+      <div class="db-born">Born 2011 · LinkedIn → Apache · Log-structured storage</div>
+    </div>
+    <div class="db-card fl">
+      <div class="db-logo">🔶</div>
+      <div class="db-name">Apache Flink</div>
+      <div class="db-type">Stateful Stream Processor</div>
+      <div class="db-tagline">The stream processing heavyweight. True streaming (not micro-batch), exactly-once semantics, millisecond latency, complex windowing, stateful operations. Used by Uber, Alibaba, Apple for real-time pipelines.</div>
+      <div class="db-born">Born 2014 · TU Berlin → Apache · Dataflow model</div>
+    </div>
+    <div class="db-card ki">
+      <div class="db-logo">🟠</div>
+      <div class="db-name">Amazon Kinesis</div>
+      <div class="db-type">Managed Event Streaming (AWS)</div>
+      <div class="db-tagline">Kafka's managed AWS alternative. Zero ops, auto-scaling shards, deep AWS integration (Lambda, S3, Redshift). Perfect if you're all-in AWS and don't want to manage a Kafka cluster.</div>
+      <div class="db-born">Born 2013 · Amazon AWS · Shard-based partitioning</div>
+    </div>
+    <div class="db-card ss">
+      <div class="db-logo">✦</div>
+      <div class="db-name">Spark Streaming</div>
+      <div class="db-type">Micro-Batch Stream Processor</div>
+      <div class="db-tagline">Streaming built on Spark's batch engine. Uses micro-batches (seconds) rather than true streaming. Best when you already use Spark for batch ETL and want a unified pipeline. Not ideal for millisecond-latency requirements.</div>
+      <div class="db-born">Born 2013 · UC Berkeley → Apache · Micro-batch model</div>
+    </div>
+  </div>
+</section>
+
+<section id="kafka-deep">
+  <div class="sec-tag">02 · Transport Layer Deep Dive</div>
+  <h2>Kafka — Understanding It at Interview Depth</h2>
+  <div class="analogy">
+    <div class="analogy-label">Kafka explained for a complete layman</div>
+    <div class="analogy-text">
+      Imagine a newspaper printing plant. Every morning, thousands of reporters (producers) submit stories. The plant prints millions of copies (events) and distributes them to hundreds of newsstands (partitions). Each newsstand keeps its newspapers for 7 days (retention).<br><br>
+      Any reader (consumer) can pick up a paper from any newsstand, and two readers picking up the same paper both get the full content — the paper isn't destroyed when read. A reader can also go back and re-read papers from last Tuesday (replay).<br><br>
+      <strong>The magic:</strong> Reporters don't wait for readers. Readers don't wait for reporters. The newsstand (Kafka) acts as a durable buffer between them.
+    </div>
+  </div>
+
+  <h3>The Core Kafka Concepts Every Interviewer Expects</h3>
+  <div class="codeblock">
+<span class="c">// Kafka architecture — say these terms correctly in interviews</span>
+
+<span class="k">Topic:</span>       A named stream of events. Like a table in a database.
+              e.g. "user-clicks", "video-views", "payment-events"
+
+<span class="k">Partition:</span>   A topic is split into N partitions for parallelism.
+              Events with the same partition key always go to the same partition.
+              <span class="t">entity_id → hash(entity_id) % N → partition number</span>
+              Within a partition, order is GUARANTEED.
+              Across partitions, order is NOT guaranteed.
+
+<span class="k">Offset:</span>      A sequential ID for each event within a partition.
+              Consumers track their offset — "I've read up to #12,847"
+              This enables replay: "re-read from offset 0"
+
+<span class="k">Consumer Group:</span> A set of consumers that share the work of reading a topic.
+              Each partition is consumed by exactly ONE consumer in a group.
+              Multiple groups can read the same topic independently.
+              <span class="g">→ This is how Flink, ClickHouse, and S3 sink can all read the same Kafka topic</span>
+
+<span class="k">Broker:</span>      A Kafka server node. Usually 3–5 brokers in production.
+              Each partition is replicated across brokers (replication factor = 3).
+              Leader broker accepts writes; followers replicate.
+
+<span class="k">Retention:</span>   How long Kafka keeps events before deleting.
+              Default: 7 days. Can be extended to forever (like a database).
+              <span class="g">This enables replay: Flink crashed? Resume from last committed offset.</span>
+  </div>
+
+  <h3>Kafka vs Kinesis — The Managed vs Self-Managed Decision</h3>
+  <table class="comp-table">
+    <thead><tr><th>Dimension</th><th>Apache Kafka ⬛</th><th>Amazon Kinesis 🟠</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Throughput</td><td><span class="good">Millions/sec</span> per cluster</td><td><span class="warn">1MB/sec or 1000 records/sec</span> per shard</td></tr>
+      <tr><td class="row-head">Latency</td><td><span class="good">Sub-millisecond</span></td><td><span class="warn">70–200ms</span> typical</td></tr>
+      <tr><td class="row-head">Retention</td><td><span class="good">Configurable</span> — days to forever</td><td><span class="warn">24h default</span>, max 7 days (Kinesis Firehose: unlimited)</td></tr>
+      <tr><td class="row-head">Replay</td><td><span class="good">Any offset, any time</span></td><td><span class="warn">Within retention window</span> only</td></tr>
+      <tr><td class="row-head">Partitioning</td><td>Topics → Partitions (flexible count)</td><td>Streams → Shards (auto-scaling available)</td></tr>
+      <tr><td class="row-head">Consumer Groups</td><td><span class="good">Unlimited</span> independent consumer groups</td><td><span class="warn">Limited</span> — 5 consumers per shard by default</td></tr>
+      <tr><td class="row-head">Ops Burden</td><td><span class="bad">High</span> — manage brokers, ZK/KRaft, rebalancing</td><td><span class="good">Zero</span> — fully managed</td></tr>
+      <tr><td class="row-head">Cost Model</td><td>Fixed infra cost (predictable at scale)</td><td>Pay per shard-hour + data volume</td></tr>
+      <tr><td class="row-head">Cloud Lock-in</td><td><span class="good">None</span> — open source, any cloud</td><td><span class="bad">AWS only</span></td></tr>
+      <tr><td class="row-head">AWS Integration</td><td>Manual connectors</td><td><span class="good">Native</span> Lambda triggers, S3 Firehose, Redshift</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="processing">
+  <div class="sec-tag">03 · Processing Layer Deep Dive</div>
+  <h2>Flink vs Spark Streaming — True Streaming vs Micro-Batch</h2>
+
+  <div class="callout cl-amber">
+    <div class="cl-lbl">The Core Difference</div>
+    <p><strong>Apache Flink:</strong> True streaming. Processes each event as it arrives. State is maintained in memory/RocksDB between events. Latency: milliseconds. Results are continuously updated.</p>
+    <p><strong>Spark Streaming (Structured Streaming):</strong> Micro-batch. Collects events for X seconds (e.g., 5s), then processes the batch. Latency: minimum is the batch interval. Simpler programming model, reuses Spark's batch optimisations.</p>
+  </div>
+
+  <div class="analogy">
+    <div class="analogy-label">True streaming vs micro-batch — the toll booth analogy</div>
+    <div class="analogy-text">
+      <strong>True streaming (Flink):</strong> Each car approaches the toll booth and is processed individually as it arrives. The attendant collects, processes, and lets through each car without waiting. Immediate, real-time.<br><br>
+      <strong>Micro-batch (Spark Streaming):</strong> Cars are held at a red light for 5 seconds. Then the light turns green, all cars are processed together as a batch, then the light turns red again. Slightly delayed but can be more efficient for high volumes.
+    </div>
+  </div>
+
+  <h3>Flink's Key Capabilities — What Makes It the FAANG Choice</h3>
+  <div class="codeblock">
+<span class="c">// Flink's three superpowers for system design interviews</span>
+
+<span class="c">// 1. WINDOWING — aggregate events over time</span>
+<span class="k">Tumbling Window</span> (30 seconds):
+  Events from t=0 to t=30 form one window.
+  Window closes at t=30, results emitted, new window starts.
+  <span class="g">Used in Top-K: flush Top-K every 30 seconds to Redis/Cassandra</span>
+
+<span class="k">Sliding Window</span> (1 hour, slides every 5 min):
+  12 overlapping windows active simultaneously.
+  Smoother results but 12x memory and compute.
+  <span class="g">Used for: "trending over last hour" with smooth updates</span>
+
+<span class="k">Session Window</span> (gap timeout: 30 min):
+  Window stays open while user is active, closes after 30min idle.
+  <span class="g">Used for: user session analytics, funnel analysis</span>
+
+<span class="c">// 2. EXACTLY-ONCE SEMANTICS</span>
+<span class="k">The problem:</span>  Flink crashes mid-window. How do you avoid double-counting?
+<span class="k">The solution:</span> Kafka offsets + Flink checkpoints (saved to S3/HDFS)
+  - Every 60 seconds, Flink saves: current state + last Kafka offset consumed
+  - On crash recovery: restore state from checkpoint, re-read Kafka from saved offset
+  - Some events processed twice (between last checkpoint and crash)
+  - Two-phase commit: Flink only commits offset to Kafka AFTER state is checkpointed
+  <span class="g">→ Guaranteed: each event counted exactly once, even after crash</span>
+
+<span class="c">// 3. STATEFUL OPERATIONS — memory across events</span>
+<span class="k">Without state:</span> Each event processed independently (like a stateless function)
+<span class="k">With state:</span>    Flink remembers the running count for entity_id=123 across events
+  State stored in: memory (fast) or RocksDB (durable, larger than RAM)
+  State checkpointed to S3 for fault tolerance
+  <span class="g">Used in Top-K: the Count-Min Sketch and local heap ARE Flink state</span>
+  </div>
+
+  <h3>When to Use Each Processing Engine</h3>
+  <table class="comp-table">
+    <thead><tr><th>Dimension</th><th>Apache Flink 🔶</th><th>Spark Streaming ✦</th><th>Kafka Streams</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Processing Model</td><td><span class="good">True streaming</span></td><td><span class="warn">Micro-batch</span> (1–10s)</td><td><span class="good">True streaming</span></td></tr>
+      <tr><td class="row-head">Latency</td><td><span class="good">Milliseconds</span></td><td><span class="warn">Seconds</span> (batch interval)</td><td><span class="good">Milliseconds</span></td></tr>
+      <tr><td class="row-head">Exactly-Once</td><td><span class="good">Yes</span> — native</td><td><span class="warn">Yes</span> — with idempotent sinks</td><td><span class="good">Yes</span> — within Kafka</td></tr>
+      <tr><td class="row-head">Complexity</td><td><span class="warn">High</span> — dedicated cluster</td><td><span class="warn">Medium</span> — reuses Spark</td><td><span class="good">Low</span> — library, no cluster</td></tr>
+      <tr><td class="row-head">State Management</td><td><span class="good">RocksDB</span>, large state ok</td><td><span class="warn">In-memory</span> — limited state</td><td><span class="good">RocksDB</span> local to app</td></tr>
+      <tr><td class="row-head">Best For</td><td>Complex stateful streaming, low latency</td><td>Already using Spark batch; simple streaming</td><td>Lightweight per-service streaming</td></tr>
+      <tr><td class="row-head">Throughput</td><td>Millions events/sec</td><td>Millions events/sec (in batch)</td><td>Hundreds K/sec per app</td></tr>
+      <tr><td class="row-head">Used By</td><td>Uber, Alibaba, Apple, Netflix</td><td>Databricks customers, Spark shops</td><td>Microservice architectures</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="comparison">
+  <div class="sec-tag">04 · The Full Stack</div>
+  <h2>How They Combine in a Real Architecture</h2>
+
+  <div class="callout cl-blue">
+    <div class="cl-lbl">The standard streaming stack pattern</div>
+    <p><strong>Layer 1 — Producers:</strong> Applications, services, IoT sensors emit events.</p>
+    <p><strong>Layer 2 — Transport (Kafka / Kinesis):</strong> Events are durably stored, decoupling producers from consumers. Multiple downstream consumers read independently.</p>
+    <p><strong>Layer 3 — Stream Processor (Flink / Spark):</strong> Consumes from transport layer, applies business logic (windowing, aggregation, enrichment, filtering), outputs results.</p>
+    <p><strong>Layer 4 — Sinks:</strong> Results written to Redis (hot), Cassandra (warm), ClickHouse (analytics), S3 (cold/archive).</p>
+  </div>
+
+  <div class="codeblock">
+<span class="c">// The Top-K streaming stack — visualised</span>
+
+<span class="n">Mobile/Web Apps</span>
+      │  (HTTP POST /event)
+      ▼
+<span class="k">Event Service</span>  ──(async fire-and-forget)──►  <span class="t">Apache Kafka</span>
+                                                   │
+                              ┌────────────────────┼──────────────────────┐
+                              │                    │                      │
+                              ▼                    ▼                      ▼
+                     <span class="k">Flink Cluster</span>     <span class="t">ClickHouse</span>          <span class="t">S3 Sink</span>
+                   (Count-Min + Heap)   (Kafka Engine)      (Parquet archive)
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+         <span class="n">Redis ZSET</span>    <span class="n">Cassandra</span>    <span class="n">Kafka Output Topic</span>
+         (hot ranking)  (warm counts)  (→ ClickHouse)
+              │
+              ▼
+         <span class="k">Read API</span>  ──►  CDN  ──►  Client (&lt;50ms)
+  </div>
+</section>
+
+<section id="examples">
+  <div class="sec-tag">05 · Applied to Real Systems</div>
+  <h2>System Design Examples</h2>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <div class="sd-example-title">Top-K Trending — Complete Stream Stack</div>
+      <span class="sd-example-tag">500K EVENTS/SEC</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">TRANSPORT</div><div class="choice-val"><span class="badge b-kf">Kafka ✓</span> Partitioned by entity_id — all events for video_123 go to the same partition and same Flink worker. No cross-worker coordination needed for local aggregation. 7-day retention enables Flink to replay on crash without data loss.</div></div>
+      <div class="choice-row"><div class="choice-label">PROCESSING</div><div class="choice-val"><span class="badge b-fl">Flink ✓</span> 30-second tumbling windows. Count-Min Sketch per worker (6KB fixed memory). Local min-heap of top-K=1000. Bloom filter for deduplication. Exactly-once via Kafka offset + S3 checkpoint. Flushes ZINCRBY to Redis + rows to Cassandra every 30s.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY NOT KINESIS</div><div class="choice-val"><span class="badge b-a">Kinesis ⚠</span> Could work in AWS but: 1MB/sec per shard limit means 500K events/sec needs 500 shards minimum. At $0.015/shard-hour × 500 shards × 24h = $180/day just for the shard cost. Kafka on 10 nodes handles same volume for ~$50/day.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY NOT SPARK</div><div class="choice-val"><span class="badge b-a">Spark ⚠</span> Micro-batch model means Top-K results update every 5–10 seconds minimum (batch interval). Flink's true streaming updates the Count-Min Sketch per-event with millisecond latency. For a trending feature, Flink's freshness is materially better.</div></div>
+    </div>
+  </div>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <div class="sd-example-title">Fraud Detection (Payment System)</div>
+      <span class="sd-example-tag">MILLISECOND DECISIONS</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">TRANSPORT</div><div class="choice-val"><span class="badge b-kf">Kafka ✓</span> Payment events partitioned by user_id. Ensures all transactions for a given user go to the same Flink worker — enabling per-user velocity checks without cross-partition joins.</div></div>
+      <div class="choice-row"><div class="choice-label">PROCESSING</div><div class="choice-val"><span class="badge b-fl">Flink ✓</span> Session windows detect: "more than 3 transactions in 60 seconds" or "transaction amount 10x higher than 30-day average." Per-user state (running totals, recent transaction history) stored in RocksDB — survives restarts.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY FLINK NOT SPARK</div><div class="choice-val">Fraud decisions need sub-100ms latency — the payment is in flight waiting for approval. Spark's 5-second micro-batch interval means a fraudulent transaction would be approved before detection. Flink processes each event in ~10ms.</div></div>
+    </div>
+  </div>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <div class="sd-example-title">ETL Pipeline (Data Warehouse Loading)</div>
+      <span class="sd-example-tag">BATCH-FRIENDLY</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">CHOICE</div><div class="choice-val"><span class="badge b-kf">Kafka</span> + <span class="badge" style="background:#f0f4fc;border-color:#888;color:#444">Spark Streaming ✓</span> ETL to data warehouse: Kafka → Spark Structured Streaming → Redshift/BigQuery. Spark's micro-batch is fine here — loading data every 5 minutes into a data warehouse is perfectly acceptable. Reuses existing Spark infrastructure. Spark's DataFrame API makes transformations, schema enforcement, and deduplication easy.</div></div>
+      <div class="choice-row"><div class="choice-label">AWS VERSION</div><div class="choice-val"><span class="badge b-ki">Kinesis Firehose ✓</span> Kinesis Data Firehose auto-delivers to S3, Redshift, OpenSearch. Zero-code ETL for simple pipelines. For AWS shops building data lakes, Firehose + Glue is the zero-ops path.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="decision">
+  <div class="sec-tag">06 · The Decision Framework</div>
+  <h2>How to Pick in an Interview</h2>
+  <div class="codeblock">
+<span class="c">// Streaming technology decision tree</span>
+
+<span class="k">Step 1:</span> What is your latency requirement?
+  <span class="g">Sub-second (fraud detection, real-time alerts)</span>
+    → Kafka + Flink (true streaming)
+  <span class="n">A few seconds is fine (dashboards, aggregations)</span>
+    → Kafka + Flink or Kafka + Spark Streaming
+  <span class="r">Minutes ok (ETL, data warehouse)</span>
+    → Kafka/Kinesis + Spark Structured Streaming
+
+<span class="k">Step 2:</span> Do you need stateful computation?
+  <span class="g">YES (running aggregations, windowed counts, ML scoring)</span>
+    → Flink (best state management: RocksDB + checkpoints)
+  <span class="n">NO (simple filter, transform, route)</span>
+    → Kafka Streams or Kinesis Data Analytics
+
+<span class="k">Step 3:</span> Transport: managed or self-hosted?
+  <span class="g">AWS-first, zero ops</span>         → Kinesis Data Streams
+  <span class="n">Cost-sensitive, high throughput</span> → Apache Kafka
+  <span class="r">Pulsar features needed</span>         → Apache Pulsar
+
+<span class="k">Step 4:</span> Processing: team expertise?
+  <span class="g">Already use Spark for batch ETL</span> → Spark Structured Streaming
+  <span class="n">Need low-latency, complex state</span>  → Apache Flink
+  <span class="r">Simple per-service streaming</span>    → Kafka Streams (library, no cluster)
+
+<span class="k">Always combine transport + processing:</span>
+  Kafka + Flink     = FAANG standard for complex real-time pipelines
+  Kinesis + Lambda  = AWS serverless, simple event-driven
+  Kafka + Spark     = Unified batch + streaming on Databricks/Spark shops
+  </div>
+
+  <div class="use-grid">
+    <div class="use-card">
+      <div class="use-card-head" style="color:#444">⬛ Use Kafka when…</div>
+      <ul><li>High throughput (&gt;100K/sec per topic)</li><li>Long retention / replay needed</li><li>Multiple independent consumers</li><li>Not locked into AWS</li></ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:#c04400">🔶 Use Flink when…</div>
+      <ul><li>Sub-second latency needed</li><li>Complex stateful operations</li><li>Windowed aggregations</li><li>Exactly-once critical (fraud, billing)</li></ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:#cc7000">🟠 Use Kinesis when…</div>
+      <ul><li>AWS-native, zero ops priority</li><li>Moderate throughput</li><li>Lambda integration needed</li><li>Firehose delivery to S3/Redshift</li></ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:#b04000">✦ Use Spark Streaming when…</div>
+      <ul><li>Already have Spark infrastructure</li><li>ETL/data warehouse loading</li><li>Unified batch + streaming code</li><li>Seconds latency is acceptable</li></ul>
+    </div>
+  </div>
+</section>
+
+<section id="followups">
+  <div class="sec-tag">07 · Interview Follow-up Playbook</div>
+  <h2>Every Hard Follow-up, Answered</h2>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">Kafka guarantees at-most-once, at-least-once, or exactly-once?<span class="tog">+</span></div>
+    <div class="faq-a"><strong>All three — depending on how you configure it.</strong><br><br><strong>At-most-once:</strong> Consumer reads message, immediately commits offset, then processes. If processing crashes, the message is lost (offset already advanced).<br><br><strong>At-least-once:</strong> Consumer reads, processes, then commits offset. If processing crashes before commit, message is reprocessed on restart. May be processed twice.<br><br><strong>Exactly-once (EOS):</strong> Requires both idempotent producers (enable.idempotence=true) AND transactional producers + consumers. Kafka ensures each message is written exactly once even with retries. Combined with Flink's two-phase commit, this gives exactly-once end-to-end. Performance overhead: ~20% throughput reduction.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">What happens to in-flight Flink state when a node crashes?<span class="tog">+</span></div>
+    <div class="faq-a"><strong>Flink recovers from its last checkpoint.</strong><br><br>Every 60 seconds (configurable), Flink performs a distributed snapshot: all operator states (Count-Min Sketch, local heap, Bloom filter) are saved to S3. The corresponding Kafka offset consumed up to that point is also saved.<br><br>On crash: Flink restarts from the last successful checkpoint. It resumes reading Kafka from the saved offset. Events between the checkpoint and the crash are replayed from Kafka (this is why Kafka retention matters). State is restored from S3.<br><br>If Flink uses exactly-once mode (two-phase commit), the output (writes to Redis/Cassandra) is also rolled back if the checkpoint was not completed. This prevents double-counting even across crashes.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">How do you handle late-arriving events in Flink?<span class="tog">+</span></div>
+    <div class="faq-a"><strong>Watermarks and allowed lateness.</strong><br><br><strong>The problem:</strong> Events arrive out of order. An event with timestamp t=14:23:45 might arrive at t=14:24:10 (25 seconds late) due to network delays. If the 30-second window for 14:23 already closed and was flushed, what do you do?<br><br><strong>Watermarks:</strong> Flink maintains a "watermark" — its best guess of the current event time. A watermark of t=14:24:00 means "all events with timestamp &lt; 14:24:00 have probably arrived." Windows only close when the watermark passes the window end time.<br><br><strong>Allowed lateness:</strong> Even after a window closes, Flink can wait for late events up to X seconds. Late events trigger a window update (re-emit corrected results). Events arriving after the allowed lateness are either dropped or sent to a side output for separate handling.<br><br>In Top-K, we use a 5-second watermark lag — accepting that our Top-K results may be 5 seconds stale in exchange for near-complete accuracy.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">Why does Kafka partitioning by entity_id matter so much for Top-K?<span class="tog">+</span></div>
+    <div class="faq-a"><strong>It eliminates cross-worker coordination — the fundamental scalability trick.</strong><br><br>If all events for video_123 go to the same Kafka partition, they're consumed by the same Flink worker. That worker maintains the local count for video_123 in its own Count-Min Sketch, entirely in local memory. No network calls needed to coordinate with other workers.<br><br>If video_123's events were spread across multiple partitions, three things would go wrong: (1) Multiple Flink workers would each have a partial count for video_123. (2) To merge them, every worker would need to communicate with every other worker after each event. (3) At 500K events/sec, this coordination traffic would overwhelm the cluster.<br><br>Partitioning by entity_id makes the problem embarrassingly parallel — each worker handles a disjoint subset of entities, does all its computation locally, and the only cross-worker step is the final merge of top-K lists at flush time.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">Can you replace Kafka with a database in the streaming pipeline?<span class="tog">+</span></div>
+    <div class="faq-a"><strong>Technically yes, practically no — and interviewers will probe this.</strong><br><br>You could write events to a PostgreSQL table and have Flink poll it. This is called "Change Data Capture" (CDC) and it works for low-throughput pipelines. But it fails at 500K events/sec because:<br><br>1. Each INSERT is a full row write with WAL logging — massive I/O overhead at scale.<br>2. Polling introduces latency: Flink polls every X seconds, creating inherent lag.<br>3. Ordering guarantees are weak: multiple writers can write with slightly different timestamps.<br>4. Backpressure handling: if Flink falls behind, the database table grows unbounded (no TTL like Kafka retention).<br>5. Multiple consumers: each consumer needs its own polling mechanism and state tracking.<br><br>Kafka is purpose-built for this. Its log-structured storage makes sequential writes extremely fast. Consumers maintain their own offset. Backpressure is handled naturally — consumers just read slower while Kafka buffers the data within retention limits.</div>
+  </div>
+</section>
+
+</div>
+<div class="footer">STREAMING · KAFKA · FLINK · KINESIS · SPARK · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body>
+</html>

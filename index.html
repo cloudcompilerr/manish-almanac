@@ -34,7 +34,7 @@
     <div class="section-divider">My Collection</div>
     <button class="note-row" id="btn_collection">
       <div class="note-icon">📚</div>
-      <div class="note-preview"><div class="note-title">My Collection</div><div class="note-snippet">Count-Min Sketch · Top-K Design · AI Leadership</div></div>
+      <div class="note-preview"><div class="note-title">My Collection</div><div class="note-snippet">Count-Min Sketch · Top-K · Databases · OLAP</div></div>
       <div class="note-date">2 items</div>
     </button>
   </div>
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <div class="coll-header">
     <button class="coll-back" id="btn_coll_back">‹ Notes</button>
     <div class="coll-title">My Collection</div>
-    <div class="coll-count">3 items</div>
+    <div class="coll-count">6 items</div>
   </div>
   <div style="padding:6px 0">
     <button class="note-row" id="btn_coll_cms">
@@ -261,6 +261,36 @@ document.addEventListener('DOMContentLoaded',function(){
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
         <span class="coll-tag">AI / Leadership</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_databases">
+      <div class="note-icon">🗄️</div>
+      <div class="note-preview">
+        <div class="note-title">PostgreSQL vs MongoDB vs DynamoDB vs Cassandra</div>
+        <div class="note-snippet">ACID · sharding · CAP theorem · when to use each with real examples</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Databases</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_olap">
+      <div class="note-icon">📊</div>
+      <div class="note-preview">
+        <div class="note-title">OLAP: ClickHouse vs Druid vs BigQuery</div>
+        <div class="note-snippet">Columnar storage · real-time vs batch · cost · Top-K example</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Analytics DB</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_streaming">
+      <div class="note-icon">🌊</div>
+      <div class="note-preview">
+        <div class="note-title">Stream Processing Decoded</div>
+        <div class="note-snippet">Kafka vs Flink vs Kinesis vs Spark Streaming — transport vs processing</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Streaming</span>
       </div>
     </button>
   </div>

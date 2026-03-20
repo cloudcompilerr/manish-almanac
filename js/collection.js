@@ -7,9 +7,11 @@
    4. Wire the button in initCollection() below
 ═══════════════════════════════════════════════════════ */
 const COLLECTION_DATA = {
-  cms:         { title: 'Count-Min Sketch',        file: 'collection/cms.html',         tag: 'Algorithm' },
-  topk:        { title: 'Top-K End-to-End Design', file: 'collection/topk.html',        tag: 'System Design' },
-  ai_handbook: { title: 'AI Leadership Handbook',  file: 'collection/ai_handbook.html', tag: 'AI / Leadership' }
+  cms:         { title: 'Count-Min Sketch',              file: 'collection/cms.html',         tag: 'Algorithm' },
+  topk:        { title: 'Top-K End-to-End Design',       file: 'collection/topk.html',        tag: 'System Design' },
+  ai_handbook: { title: 'AI Leadership Handbook',        file: 'collection/ai_handbook.html', tag: 'AI / Leadership' },
+  databases:   { title: 'PostgreSQL vs MongoDB vs Dynamo vs Cassandra', file: 'collection/databases.html', tag: 'Databases' },
+  olap:        { title: 'OLAP: ClickHouse vs Druid vs BigQuery', file: 'collection/olap.html', tag: 'Analytics DB' }
 };
 
 function openCollection(){
@@ -60,5 +62,15 @@ function initCollection(){
   if(btopk) btopk.addEventListener('click',function(){openCollItem('topk');});
   var bai=document.getElementById('btn_coll_ai');
   if(bai) bai.addEventListener('click',function(){openCollItem('ai_handbook');});
+  var bdb=document.getElementById('btn_coll_databases');
+  if(bdb) bdb.addEventListener('click',function(){openCollItem('databases');});
+  var bolap=document.getElementById('btn_coll_olap');
+  if(bolap) bolap.addEventListener('click',function(){openCollItem('olap');});
+  var bstream=document.getElementById('btn_coll_streaming');
+  if(bstream) bstream.addEventListener('click',function(){openCollItem('streaming');});
   if(biback) biback.addEventListener('click',closeCollItem);
+  var bdbs=document.getElementById('btn_coll_databases');
+  if(bdbs) bdbs.addEventListener('click',function(){openCollItem('databases');});
+  var bolap=document.getElementById('btn_coll_olap');
+  if(bolap) bolap.addEventListener('click',function(){openCollItem('olap');});
 }
