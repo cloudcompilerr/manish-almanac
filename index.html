@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="css/app.css">
+<title>Notes</title>
+
+</head>
+<body>
+
+<!-- LIST -->
+<div id="list">
+  <div class="app-header">
+    <div class="app-title">Notes</div>
+    <div class="note-count">4 items</div>
+  </div>
+  <div style="padding:6px 0">
+    <button class="note-row" id="btn_coding">
+      <div class="note-icon">☕</div>
+      <div class="note-preview"><div class="note-title">Quick Ref – Java</div><div class="note-snippet">Tap to solve a coding problem…</div></div>
+      <div class="note-date">Now</div>
+    </button>
+    <button class="note-row" id="btn_sd">
+      <div class="note-icon">🏗️</div>
+      <div class="note-preview"><div class="note-title">Quick Ref – System Design</div><div class="note-snippet">Tap to design a system…</div></div>
+      <div class="note-date">Now</div>
+    </button>
+    <button class="note-row" id="btn_debate">
+      <div class="note-icon">⚔️</div>
+      <div class="note-preview"><div class="note-title">LLM Debate Arena</div><div class="note-snippet">Ask all AIs at once — debate, judge, synthesize best answer</div></div>
+      <div class="note-date">New</div>
+    </button>
+    <div class="section-divider">My Collection</div>
+    <button class="note-row" id="btn_collection">
+      <div class="note-icon">📚</div>
+      <div class="note-preview"><div class="note-title">My Collection</div><div class="note-snippet">Count-Min Sketch · Top-K Design · AI Leadership</div></div>
+      <div class="note-date">2 items</div>
+    </button>
+  </div>
+</div>
+
+<!-- TOOL -->
+<div id="tool" class="note-detail">
+  <div class="detail-header">
+    <button class="back-btn" onclick="goBack()">‹ Notes</button>
+    <div class="detail-title" id="dtitle">Quick Ref</div>
+    <button class="gear-btn" onclick="toggleSetup()">⚙️</button>
+  </div>
+
+  <div id="setup" class="setup-box" style="display:none;margin-top:12px">
+    <div class="setup-lbl">🤖 AI Provider</div>
+    <div class="setup-desc">Pick a provider, paste your key. Stored locally in this browser only.</div>
+    <select id="providerSel" onchange="onProviderChange()" style="width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:#fff;color:var(--tp);outline:none;margin-bottom:7px;-webkit-appearance:none;">
+      <option value="anthropic">Anthropic — Claude</option>
+      <option value="openai">OpenAI — GPT</option>
+      <option value="gemini">Google — Gemini</option>
+      <option value="groq">Groq — Llama / Mixtral (fast)</option>
+    </select>
+    <select id="modelSel" style="width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:#fff;color:var(--tp);outline:none;margin-bottom:7px;-webkit-appearance:none;"></select>
+    <div id="keyHint" class="setup-desc" style="margin-bottom:6px">Key from console.anthropic.com</div>
+    <input type="password" id="apikey" placeholder="sk-ant-…" autocomplete="off"/>
+    <button onclick="saveKey()">Save & Close</button>
+  </div>
+
+  <div class="mode-row">
+    <button class="mode-btn on" id="mCoding" onclick="setMode('coding')">☕ Java Coding</button>
+    <button class="mode-btn" id="mSD" onclick="setMode('sd')">🏗️ System Design</button>
+  </div>
+
+  <!-- Provider strip — select LLM for Quick Ref -->
+  <div class="prov-strip" id="provStrip"></div>
+
+  <div class="voice-wrap">
+    <div class="voice-top">
+      <span class="vlbl" id="vlbl">🎙 Speak your coding problem</span>
+      <span class="vtimer" id="vtimer"></span>
+    </div>
+    <div class="mic-wrap">
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎙️</button>
+    </div>
+    <div class="waveform" id="wf">
+      <div class="wb" style="height:5px"></div><div class="wb" style="height:11px"></div>
+      <div class="wb" style="height:19px"></div><div class="wb" style="height:25px"></div>
+      <div class="wb" style="height:19px"></div><div class="wb" style="height:11px"></div>
+      <div class="wb" style="height:5px"></div>
+    </div>
+    <div class="vstatus" id="vs">Tap the mic and speak clearly</div>
+    <div class="tbox" id="tbox" contenteditable="true" spellcheck="false" data-ph="Tap mic to speak…"></div>
+    <div class="vactions">
+      <button class="btn-cl" onclick="clearAll()">Clear</button>
+      <button class="btn-go" id="goBtn" onclick="generate()" disabled>Generate ⚡</button>
+    </div>
+  </div>
+
+  <div class="chips" id="chips">
+    <div class="chip on" data-d="interview" onclick="setDepth(this)">🎯 Interview</div>
+    <div class="chip" data-d="explain" onclick="setDepth(this)">🗣️ Team</div>
+    <div class="chip" data-d="beginner" onclick="setDepth(this)">📖 Beginner</div>
+  </div>
+
+  <div class="sprog" id="sprog"><div class="sbar" id="sbar"></div></div>
+  <div class="thinking" id="thinking"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="ttext" id="ttext">Thinking…</div></div>
+  <div class="rarea" id="rarea"></div>
+</div>
+
+<!-- SPEAK MODE -->
+<div id="sovl">
+  <button class="sovl-close" onclick="closeSM()">✕</button>
+  <div class="sovl-title">📢 How to Explain This</div>
+  <div id="smc"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+
+<script src="js/app.js"></script>
+<script src="js/prompts.js"></script>
+<script src="js/render.js"></script>
+<script src="js/debate.js"></script>
+<script src="js/collection.js"></script>
+<script>
+/* ═══ HOME BUTTONS + INIT ═══ */
+document.addEventListener('DOMContentLoaded',function(){
+  var bc=document.getElementById('btn_coding');
+  var bs=document.getElementById('btn_sd');
+  var bd=document.getElementById('btn_debate');
+  if(bc) bc.addEventListener('click',function(){openTool('coding');});
+  if(bs) bs.addEventListener('click',function(){openTool('sd');});
+  if(bd) bd.addEventListener('click',function(){openDebate();});
+  /* Restore saved provider/model on load */
+  try{
+    var sp=localStorage.getItem('nt_v6_provider');
+    var sm=localStorage.getItem('nt_v6_model');
+    if(sp&&PROVIDERS[sp]){provider=sp;document.getElementById('providerSel').value=sp;}
+    onProviderChange();
+    if(sm&&document.getElementById('modelSel')){document.getElementById('modelSel').value=sm;model=sm;}
+  }catch(e){try{onProviderChange();}catch(e2){}}
+  document.getElementById('tbox').addEventListener('input',chkBtn);
+  initCollection();
+});
+
+
+
+</script>
+
+
+<!-- ═══ DEBATE ARENA PANEL ═══ -->
+<div id="debate">
+  <div class="db-header">
+    <button class="back-btn" id="debateBack">‹ Notes</button>
+    <div class="detail-title">⚔️ LLM Debate Arena</div>
+    <div style="min-width:40px"></div>
+  </div>
+
+  <!-- CONFIG SCREEN -->
+  <div id="db-config" class="db-body">
+    <div class="db-section">
+      <div class="db-lbl">🎯 Expert Domain <span style="font-weight:400;color:var(--ts)">— auto-detected from your question, or pick manually</span></div>
+      <div id="domainRow" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+      <div id="domainRoleCard" style="display:none;background:var(--as);border:1px solid rgba(200,169,110,.3);border-radius:10px;padding:11px 13px;margin-top:4px">
+        <div id="domainRoleIcon" style="font-size:22px;margin-bottom:5px"></div>
+        <div id="domainRoleName" style="font-size:12px;font-weight:700;color:var(--tp);margin-bottom:3px"></div>
+        <div id="domainRoleDesc" style="font-size:11.5px;color:var(--ts);line-height:1.55"></div>
+      </div>
+    </div>
+
+    <div class="db-section">
+            <div class="db-lbl">Select AIs <span style="font-weight:400;color:var(--ts)">— 1 model = solo expert, 2–4 = debate</span></div>
+      <div class="db-provider-grid" id="db-prov-grid">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <div class="db-section">
+      <div class="db-lbl">Judge / Orchestrator</div>
+      <div class="judge-row" id="judgeRow">
+        <div class="judge-chip on" data-j="best">🏆 Strongest model</div>
+        <div class="judge-chip" data-j="majority">🗳️ Majority vote</div>
+        <div class="judge-chip" data-j="meta">🧠 Meta-synthesis</div>
+      </div>
+      <div style="font-size:11px;color:var(--ts);margin-top:4px" id="judgeDesc">The most capable selected model acts as final judge and synthesizer.</div>
+    </div>
+
+    <div class="db-section">
+      <div class="db-lbl">Debate rounds</div>
+      <div class="judge-row" id="roundsRow">
+        <div class="judge-chip on" data-r="1">1 round</div>
+        <div class="judge-chip" data-r="2">2 rounds</div>
+      </div>
+    </div>
+
+    <div class="db-section">
+      <div class="db-lbl">Your question</div>
+      <div class="voice-wrap" style="margin:0 0 0 0">
+        <div class="voice-top">
+          <span class="vlbl" id="db-vlbl">🎙 Speak or type your question</span>
+          <span class="vtimer" id="db-vtimer"></span>
+        </div>
+        <div class="mic-wrap">
+          <button class="mic-btn" id="db-mic-btn" onclick="toggleDbMic()">🎙️</button>
+        </div>
+        <div class="waveform" id="db-wf">
+          <div class="wb" style="height:5px"></div><div class="wb" style="height:11px"></div>
+          <div class="wb" style="height:19px"></div><div class="wb" style="height:25px"></div>
+          <div class="wb" style="height:19px"></div><div class="wb" style="height:11px"></div>
+          <div class="wb" style="height:5px"></div>
+        </div>
+        <div class="vstatus" id="db-vs">Tap the mic and speak clearly</div>
+        <textarea class="db-question tbox" id="db-question" placeholder="Tap mic to speak, or type your question here…" rows="3" style="margin:4px 14px 8px;width:calc(100% - 28px);resize:none;font-family:-apple-system,sans-serif;"></textarea>
+        <div class="vactions" style="padding:0 14px 14px">
+          <button class="btn-cl" onclick="clearDbQuestion()">Clear</button>
+          <button class="db-run btn-go" id="db-run-btn" disabled onclick="runDebate()">⚔️ Start Debate</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="db-results" class="db-body" style="display:none">
+    <div id="db-results-inner"></div>
+    <button class="db-run" style="background:var(--ts);margin-top:8px" onclick="resetDebate()">← New debate</button>
+  </div>
+</div>
+
+
+
+<!-- MY COLLECTION — list panel -->
+<div id="coll-panel">
+  <div class="coll-header">
+    <button class="coll-back" id="btn_coll_back">‹ Notes</button>
+    <div class="coll-title">My Collection</div>
+    <div class="coll-count">3 items</div>
+  </div>
+  <div style="padding:6px 0">
+    <button class="note-row" id="btn_coll_cms">
+      <div class="note-icon">🎯</div>
+      <div class="note-preview">
+        <div class="note-title">Count-Min Sketch</div>
+        <div class="note-snippet">Visual guide — hash tables, frequency estimation, interview Q&amp;A</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Algorithm</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_topk">
+      <div class="note-icon">🏗️</div>
+      <div class="note-preview">
+        <div class="note-title">Top-K End-to-End Design</div>
+        <div class="note-snippet">Kafka · Flink · Redis · Cassandra · ClickHouse · S3 full blueprint</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">System Design</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_ai">
+      <div class="note-icon">🤖</div>
+      <div class="note-preview">
+        <div class="note-title">AI Leadership Handbook</div>
+        <div class="note-snippet">LLM internals · RAG · Agents · MLOps · Director-level interview prep</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">AI / Leadership</span>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- MY COLLECTION — item viewer panel -->
+<div id="coll-item">
+  <div class="ci-header">
+    <button class="ci-back" id="btn_ci_back">‹ Collection</button>
+    <div class="ci-title" id="ci-title">Item</div>
+  </div>
+  <iframe id="ci-iframe" 
+    sandbox="allow-scripts allow-same-origin"
+    style="border:none;width:100%;flex:1;display:block;"
+    src="about:blank"></iframe>
+</div>
+</body>
+</html>

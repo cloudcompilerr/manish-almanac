@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Count-Min Sketch — Visual Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --border: #1e1e2e;
+    --accent: #00e5ff;
+    --accent2: #ff6b6b;
+    --accent3: #a8ff78;
+    --accent4: #ffd166;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --row0: #00e5ff;
+    --row1: #ff6b6b;
+    --row2: #a8ff78;
+    --row3: #ffd166;
+    --row4: #c77dff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,229,255,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 50%, rgba(255,107,107,0.07) 0%, transparent 60%);
+  }
+
+  .hero-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.4s;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--muted);
+    max-width: 600px;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.6s;
+  }
+
+  .scroll-cue {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.8s;
+  }
+
+  /* ---- SECTIONS ---- */
+  .section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+  }
+
+  p {
+    color: #b0b0c8;
+    font-size: 1.05rem;
+    margin-bottom: 1.2rem;
+    max-width: 720px;
+  }
+
+  .highlight {
+    background: rgba(0,229,255,0.1);
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.5rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+    font-size: 1rem;
+    color: var(--text);
+  }
+
+  .highlight strong { color: var(--accent); }
+
+  /* ---- HASH EXPLAINER ---- */
+  .hash-demo {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .hash-demo h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .hash-step {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr auto;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  .hash-step .fn-box {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .hash-step .arrow { color: var(--muted); }
+  .hash-step .val { color: var(--accent4); font-weight: 700; }
+  .hash-step .result { color: var(--accent3); font-weight: 700; }
+
+  .hash-math {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    margin: 1.5rem 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 2;
+  }
+
+  .hash-math .comment { color: var(--muted); }
+  .hash-math .num { color: var(--accent4); }
+  .hash-math .op { color: var(--accent2); }
+  .hash-math .res { color: var(--accent3); }
+
+  /* ---- GRID DEMO ---- */
+  .grid-wrapper {
+    overflow-x: auto;
+    margin: 2rem 0;
+  }
+
+  .cms-grid {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+  }
+
+  .cms-grid th {
+    padding: 0.6rem 1rem;
+    text-align: center;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+  }
+
+  .cms-grid td {
+    padding: 0.7rem 1rem;
+    text-align: center;
+    border: 1px solid var(--border);
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .cms-grid td.row-label {
+    text-align: left;
+    border-left: none;
+    padding-right: 1.5rem;
+    font-size: 0.75rem;
+  }
+
+  .cell-highlight {
+    background: rgba(0,229,255,0.2) !important;
+    color: var(--accent) !important;
+    font-weight: 700;
+  }
+
+  .cell-min {
+    background: rgba(168,255,120,0.2) !important;
+    color: var(--accent3) !important;
+    font-weight: 700;
+  }
+
+  /* ---- INTERACTIVE DEMO ---- */
+  .demo-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .demo-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    align-items: flex-end;
+  }
+
+  .demo-controls label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .demo-controls input, .demo-controls select {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .demo-controls input:focus { border-color: var(--accent); }
+
+  .btn {
+    padding: 0.6rem 1.4rem;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .btn-primary:hover { background: #00c8e0; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+  }
+
+  .btn-secondary:hover { background: rgba(255,107,107,0.1); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+
+  .query-result {
+    display: none;
+    background: rgba(168,255,120,0.08);
+    border: 1px solid rgba(168,255,120,0.3);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin-top: 1.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--accent3);
+  }
+
+  .query-result.visible { display: block; }
+
+  .event-log {
+    max-height: 180px;
+    overflow-y: auto;
+    margin-top: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #0d0d14;
+  }
+
+  .log-item {
+    padding: 0.5rem 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    display: flex;
+    gap: 1rem;
+  }
+
+  .log-item:last-child { border-bottom: none; }
+  .log-item .log-key { color: var(--accent4); }
+  .log-item .log-cols { color: var(--accent); }
+
+  /* ---- PROPERTIES TABLE ---- */
+  .props-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    font-size: 0.9rem;
+  }
+
+  .props-table th {
+    text-align: left;
+    padding: 0.8rem 1rem;
+    border-bottom: 2px solid var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+
+  .props-table td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: #b0b0c8;
+  }
+
+  .props-table td:first-child { color: var(--text); font-weight: 600; }
+  .tag { background: rgba(0,229,255,0.1); color: var(--accent); padding: 0.1rem 0.5rem; border-radius: 4px; font-family: 'Space Mono', monospace; font-size: 0.75rem; }
+
+  /* ---- FAQ ---- */
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .faq-item:hover { border-color: var(--muted); }
+  .faq-item.open { border-color: var(--accent); }
+
+  .faq-q {
+    padding: 1.2rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .faq-icon {
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 1.2rem;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    padding: 0 1.5rem;
+    color: #b0b0c8;
+    font-size: 0.95rem;
+  }
+
+  .faq-item.open .faq-a { max-height: 400px; padding: 0 1.5rem 1.2rem; }
+
+  .faq-a code {
+    background: rgba(0,229,255,0.08);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--accent);
+  }
+
+  .vs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .vs-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+  }
+
+  .vs-card h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .vs-card.a h4 { color: var(--accent); }
+  .vs-card.b h4 { color: var(--accent2); }
+  .vs-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.3rem 0; border-bottom: 1px solid var(--border); color: #b0b0c8; }
+  .vs-row:last-child { border-bottom: none; }
+
+  /* ---- ONE LINER ---- */
+  .oneliner {
+    background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(255,107,107,0.05));
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin: 5rem 2rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .oneliner .label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+
+  .oneliner blockquote {
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--text);
+    font-style: italic;
+  }
+
+  /* ---- ANIMATIONS ---- */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .cms-grid td.animating {
+    animation: pulse 0.5s ease;
+  }
+
+  /* ---- ROW COLORS ---- */
+  .r0 { color: var(--row0); }
+  .r1 { color: var(--row1); }
+  .r2 { color: var(--row2); }
+  .r3 { color: var(--row3); }
+
+  .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">System Design Interview Prep</div>
+  <h1>Count-<span>Min</span><br>Sketch</h1>
+  <p class="hero-sub">The probabilistic data structure that counts millions of events using just kilobytes of memory — and how hash functions make it work.</p>
+  <div class="scroll-cue">↓ SCROLL TO LEARN</div>
+</div>
+
+<!-- SECTION 1: THE PROBLEM -->
+<div class="section">
+  <div class="section-tag">01 — The Problem</div>
+  <h2>Why not just use a counter?</h2>
+  <p>Imagine you're running YouTube. Every second, millions of videos are watched. Your boss asks: <em>"What are the top trending videos right now?"</em></p>
+  <p>A naive HashMap of <code style="color:var(--accent);font-family:'Space Mono',monospace;font-size:0.85rem">video_id → count</code> works fine for 1,000 videos. But YouTube has <strong>800 million videos</strong>. Storing exact counters for all of them = gigabytes of RAM, just for counting.</p>
+  <div class="highlight">
+    <strong>The insight:</strong> For trending, rate-limiting, and frequency analysis, you don't need the <em>exact</em> count. A "slightly-higher-than-truth" estimate is perfectly fine — as long as it's fast and tiny.
+  </div>
+  <p>Count-Min Sketch gives you ~95%+ accurate frequency estimates in a few <strong>kilobytes</strong>, with O(1) inserts and queries.</p>
+</div>
+
+<!-- SECTION 2: HASH FUNCTIONS EXPLAINED -->
+<div class="section">
+  <div class="section-tag">02 — The Key Mechanism</div>
+  <h2>How does a hash function pick a column?</h2>
+  <p>This is the most important thing to understand. A hash function is just a deterministic math machine: <strong>same input → always same output</strong>. It converts any string into a number, then we use modulo (%) to fit it into our grid width.</p>
+
+  <div class="hash-demo">
+    <h3>// Step-by-step: hashing "video_42" into a 6-column grid</h3>
+
+    <div class="hash-math">
+      <span class="comment">// Hash Function 0: a simple polynomial hash</span><br>
+      "video_42" → <span class="comment">add up (character codes × prime powers)</span><br>
+      = <span class="num">118</span>×31⁰ + <span class="num">105</span>×31¹ + <span class="num">100</span>×31² + ... = <span class="num">big number: 8,472,193</span><br>
+      column = <span class="num">8,472,193</span> <span class="op">%</span> <span class="num">6</span> (grid width) = <span class="res">→ Col 3</span>
+      <br><br>
+      <span class="comment">// Hash Function 1: a different seed / multiplier</span><br>
+      "video_42" → same chars, different math → <span class="num">5,291,847</span><br>
+      column = <span class="num">5,291,847</span> <span class="op">%</span> <span class="num">6</span> = <span class="res">→ Col 2</span>
+      <br><br>
+      <span class="comment">// Hash Function 2: yet another seed</span><br>
+      "video_42" → <span class="num">3,104,522</span><br>
+      column = <span class="num">3,104,522</span> <span class="op">%</span> <span class="num">6</span> = <span class="res">→ Col 4</span>
+    </div>
+
+    <p style="font-size:0.9rem;color:var(--muted);margin:0">
+      The <strong style="color:var(--text)">key insight</strong>: the exact number doesn't matter. What matters is that (a) it's always the same for the same input, and (b) different hash functions scatter the same input to different columns.
+    </p>
+  </div>
+
+  <div class="highlight">
+    <strong>Real world analogy:</strong> Think of 3 bouncers at a party, each with their own arbitrary rule for assigning people to table numbers. If you ask "where does Alice sit?", each bouncer gives a different table — but they'll always give the <em>same</em> table for Alice every time you ask.
+  </div>
+</div>
+
+<!-- SECTION 3: THE GRID -->
+<div class="section">
+  <div class="section-tag">03 — The Grid</div>
+  <h2>Count-Min Sketch is just a table of counters</h2>
+  <p>A grid of <strong>depth × width</strong>. Each row has its own independent hash function. The grid starts at all zeros.</p>
+
+  <div class="grid-wrapper">
+    <table class="cms-grid" id="staticGrid">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Col 0</th><th>Col 1</th><th>Col 2</th><th>Col 3</th><th>Col 4</th><th>Col 5</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label"><span class="dot" style="background:var(--row0)"></span><span class="r0">Row 0 (hash_fn_0)</span></td>
+          <td>0</td><td>0</td><td>0</td><td class="cell-highlight">3</td><td>0</td><td>2</td>
+        </tr>
+        <tr>
+          <td class="row-label"><span class="dot" style="background:var(--row1)"></span><span class="r1">Row 1 (hash_fn_1)</span></td>
+          <td>0</td><td>0</td><td class="cell-highlight">4</td><td>0</td><td>1</td><td>0</td>
+        </tr>
+        <tr>
+          <td class="row-label"><span class="dot" style="background:var(--row2)"></span><span class="r2">Row 2 (hash_fn_2)</span></td>
+          <td>2</td><td>0</td><td>0</td><td>1</td><td class="cell-highlight">5</td><td>0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The highlighted cells are where "video_42" incremented. To query: look up those same cells → values are <strong style="color:var(--row0)">3</strong>, <strong style="color:var(--row1)">4</strong>, <strong style="color:var(--row2)">5</strong> → take <strong style="color:var(--accent3)">MIN = 3</strong>. That's our estimate.</p>
+  <p style="font-size:0.9rem;color:var(--muted)">Why is Row2's value (5) higher? Because another video happened to hash to Col 4 in Row 2 — it polluted that counter. The minimum protects us from this pollution.</p>
+</div>
+
+<!-- SECTION 4: INTERACTIVE DEMO -->
+<div class="section">
+  <div class="section-tag">04 — Interactive Demo</div>
+  <h2>Try it yourself</h2>
+  <p>Add events and query frequencies. Watch the grid update in real time.</p>
+
+  <div class="demo-panel">
+    <div class="demo-controls">
+      <div>
+        <label>KEY (e.g. video_42)</label>
+        <input type="text" id="keyInput" placeholder="video_42" value="video_42" style="width:150px">
+      </div>
+      <button class="btn btn-primary" onclick="addEvent()">+ Add Event</button>
+      <button class="btn btn-secondary" onclick="queryKey()">⌖ Query</button>
+      <button class="btn btn-ghost" onclick="resetSketch()">↺ Reset</button>
+    </div>
+
+    <div class="grid-wrapper">
+      <table class="cms-grid" id="liveGrid">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Col 0</th><th>Col 1</th><th>Col 2</th><th>Col 3</th><th>Col 4</th><th>Col 5</th>
+          </tr>
+        </thead>
+        <tbody id="gridBody"></tbody>
+      </table>
+    </div>
+
+    <div class="query-result" id="queryResult"></div>
+
+    <div class="event-log" id="eventLog">
+      <div class="log-item" style="color:var(--muted);font-size:0.75rem;padding:0.8rem 1rem;">Events will appear here...</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 5: PROPERTIES -->
+<div class="section">
+  <div class="section-tag">05 — Key Properties</div>
+  <h2>What to say in your interview</h2>
+
+  <table class="props-table">
+    <thead><tr><th>Property</th><th>Detail</th><th>Implication</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Space</td>
+        <td>O(width × depth) — fixed</td>
+        <td>A few KB regardless of traffic volume</td>
+      </tr>
+      <tr>
+        <td>Time</td>
+        <td>O(depth) per insert/query</td>
+        <td>Essentially O(1) in practice</td>
+      </tr>
+      <tr>
+        <td>Error direction</td>
+        <td>Only overcounts, never undercounts</td>
+        <td><span class="tag">overestimate-only</span> — safe for rate limiting</td>
+      </tr>
+      <tr>
+        <td>Accuracy tuning</td>
+        <td>Wider grid → less error per row</td>
+        <td>More rows → lower failure probability</td>
+      </tr>
+      <tr>
+        <td>Deletion</td>
+        <td>Not supported by default</td>
+        <td>Counters only go up</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight">
+    <strong>The formula:</strong> Width = ⌈e/ε⌉ where ε is acceptable error rate. Depth = ⌈ln(1/δ)⌉ where δ is acceptable failure probability.<br><br>
+    Plain English: "I want &lt;0.1% error with 99% confidence" → ε=0.001, δ=0.01 → Width ≈ 2719, Depth ≈ 5. That's a ~54KB grid.
+  </div>
+</div>
+
+<!-- SECTION 6: COUNTER QUESTIONS -->
+<div class="section">
+  <div class="section-tag">06 — Interview Counter Questions</div>
+  <h2>Questions you'll be asked — answered</h2>
+
+  <div id="faqContainer">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Why not just use a HashMap?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        A HashMap is exact but memory scales with unique items. 100M unique URLs = gigabytes of RAM just for counters. Count-Min Sketch gives you ~95% accuracy in a few <strong>kilobytes</strong>. For trending, rate-limiting, and frequency analysis, "close enough" is perfectly fine — and it's orders of magnitude cheaper.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What if two items always hash to the same column?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        That's a collision — their counts bleed into each other. That's exactly why we use <strong>multiple rows with independent hash functions</strong>. The probability that item A collides with item B in <em>all</em> rows simultaneously drops exponentially with each row added. With 5 rows, it's astronomically unlikely. This is why we take the <code>minimum</code> — it's the least-polluted estimate across all rows.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Can you delete items?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        Standard CMS doesn't support deletion — subtracting could make a count go negative and corrupt the structure. If you need deletion, use <strong>Count-Min Sketch with conservative update</strong> or switch to a <strong>Count Sketch</strong> (allows negative values, slightly different statistical guarantees). In practice, most real-world use cases (trending, rate limiting) don't require deletion.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        How is this different from a Bloom Filter?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        They're cousins — same probabilistic family, different questions.<br><br>
+        <div class="vs-grid">
+          <div class="vs-card a">
+            <h4>BLOOM FILTER</h4>
+            <div class="vs-row"><span>Question</span><span>"Have I seen this?"</span></div>
+            <div class="vs-row"><span>Output</span><span>Boolean (yes/no)</span></div>
+            <div class="vs-row"><span>Use case</span><span>Membership test</span></div>
+          </div>
+          <div class="vs-card b">
+            <h4>COUNT-MIN SKETCH</h4>
+            <div class="vs-row"><span>Question</span><span>"How many times?"</span></div>
+            <div class="vs-row"><span>Output</span><span>Integer count</span></div>
+            <div class="vs-row"><span>Use case</span><span>Frequency estimation</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        When would you NOT use Count-Min Sketch?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        Three cases: (1) When you need <strong>exact counts</strong> — billing, financial transactions, audit logs. (2) When your key space is small enough to fit exactly in RAM. (3) When you need to <strong>enumerate all keys</strong> — CMS can tell you the count for a key you ask about, but it can't tell you what keys exist. For that, you need a different structure.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Where is Count-Min Sketch used in production?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <strong>Redis</strong> uses it for frequency counting in rate limiting. <strong>Twitter/X</strong> uses it for trending hashtag detection. <strong>Networking equipment</strong> uses it to detect high-traffic IPs (DDoS detection). <strong>Database query optimizers</strong> use it to estimate row frequencies for query planning. <strong>CDNs like Akamai</strong> use it to identify hot cache objects.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ONE LINER -->
+<div class="oneliner">
+  <div class="label">The one line to remember</div>
+  <blockquote>"Count-Min Sketch is a fixed-size grid of counters. You hash each event across multiple rows, increment that cell in each row, and query by taking the minimum. It trades perfect accuracy for dramatically lower memory — and it only ever overcounts, never undercounts."</blockquote>
+</div>
+
+<script>
+  // ---- CMS Implementation ----
+  const ROWS = 3;
+  const COLS = 6;
+  let grid = Array.from({length: ROWS}, () => new Array(COLS).fill(0));
+  let logEntries = [];
+
+  // Simple but deterministic hash functions
+  function hash(str, seed) {
+    let h = seed * 2654435761;
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 2654435761);
+    }
+    return Math.abs(h) % COLS;
+  }
+
+  function getColumns(key) {
+    return [hash(key, 1), hash(key, 2), hash(key, 3)];
+  }
+
+  function renderGrid(highlightCols = null, minCol = null, minRow = null) {
+    const body = document.getElementById('gridBody');
+    const rowColors = ['var(--row0)', 'var(--row1)', 'var(--row2)'];
+    const rowNames = ['hash_fn_0', 'hash_fn_1', 'hash_fn_2'];
+    let html = '';
+    for (let r = 0; r < ROWS; r++) {
+      html += `<tr>`;
+      html += `<td class="row-label"><span class="dot" style="background:${rowColors[r]}"></span><span style="color:${rowColors[r]}">${rowNames[r]}</span></td>`;
+      for (let c = 0; c < COLS; c++) {
+        let cls = '';
+        if (highlightCols && highlightCols[r] === c) {
+          cls = r === minRow && c === highlightCols[r] && minRow !== null ? 'cell-min' : 'cell-highlight';
+        }
+        html += `<td class="${cls}" id="cell-${r}-${c}">${grid[r][c]}</td>`;
+      }
+      html += `</tr>`;
+    }
+    body.innerHTML = html;
+  }
+
+  function addEvent() {
+    const key = document.getElementById('keyInput').value.trim() || 'video_42';
+    const cols = getColumns(key);
+    for (let r = 0; r < ROWS; r++) {
+      grid[r][cols[r]]++;
+    }
+    renderGrid(cols);
+
+    // Animate
+    setTimeout(() => {
+      for (let r = 0; r < ROWS; r++) {
+        const cell = document.getElementById(`cell-${r}-${cols[r]}`);
+        if (cell) {
+          cell.classList.add('animating');
+          setTimeout(() => cell.classList.remove('animating'), 500);
+        }
+      }
+    }, 10);
+
+    // Log
+    const entry = { key, cols: cols.map((c, r) => `Row${r}→Col${c}`).join(' · ') };
+    logEntries.unshift(entry);
+    if (logEntries.length > 20) logEntries.pop();
+    renderLog();
+
+    document.getElementById('queryResult').classList.remove('visible');
+  }
+
+  function queryKey() {
+    const key = document.getElementById('keyInput').value.trim() || 'video_42';
+    const cols = getColumns(key);
+    const vals = cols.map((c, r) => grid[r][c]);
+    const minVal = Math.min(...vals);
+    const minRow = vals.indexOf(minVal);
+
+    renderGrid(cols, cols[minRow], minRow);
+
+    const res = document.getElementById('queryResult');
+    res.innerHTML = `Query: "<strong>${key}</strong>" → Cells: [${vals.join(', ')}] → MIN = <strong>${minVal}</strong> (estimated count)`;
+    res.classList.add('visible');
+  }
+
+  function resetSketch() {
+    grid = Array.from({length: ROWS}, () => new Array(COLS).fill(0));
+    logEntries = [];
+    renderGrid();
+    document.getElementById('queryResult').classList.remove('visible');
+    document.getElementById('eventLog').innerHTML = '<div class="log-item" style="color:var(--muted);font-size:0.75rem;padding:0.8rem 1rem;">Events will appear here...</div>';
+  }
+
+  function renderLog() {
+    const log = document.getElementById('eventLog');
+    log.innerHTML = logEntries.map(e =>
+      `<div class="log-item">
+        <span>+ added</span>
+        <span class="log-key">"${e.key}"</span>
+        <span class="log-cols">${e.cols}</span>
+      </div>`
+    ).join('');
+  }
+
+  // Allow Enter key
+  document.getElementById('keyInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addEvent();
+  });
+
+  // ---- FAQ ----
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // Init
+  renderGrid();
+</script>
+
+</body>
+</html>

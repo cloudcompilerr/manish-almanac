@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top-K: Complete End-to-End System Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;900&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0c0d14;
+  --page: #f4f3ee;
+  --surface: #eeede6;
+  --surface2: #e6e4db;
+  --border: #d4d2c8;
+  --border2: #c0bdb0;
+
+  --red:    #c0392b;
+  --amber:  #c47d11;
+  --green:  #1a7a4a;
+  --blue:   #1a4f8a;
+  --purple: #5a3e8a;
+  --teal:   #1a6b6b;
+
+  --red-bg:    #fdf0ee;
+  --amber-bg:  #fdf6e8;
+  --green-bg:  #edf8f2;
+  --blue-bg:   #edf2fb;
+  --purple-bg: #f4f0fb;
+  --teal-bg:   #edf6f6;
+
+  --text: #1a1b26;
+  --muted: #7a7870;
+  --mono: 'JetBrains Mono', monospace;
+  --body: 'Outfit', sans-serif;
+  --head: 'Fraunces', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--ink);
+  color: #e8e6df;
+  padding: 64px 24px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px);
+}
+.hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #8a8070;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: #5a5850; }
+h1 {
+  font-family: var(--head);
+  font-size: clamp(34px, 5.5vw, 62px);
+  font-weight: 900;
+  line-height: 1.03;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+  color: #f0ede4;
+}
+h1 .accent { color: #e8b84b; }
+.hero-desc {
+  font-size: 15px;
+  color: #8a8070;
+  max-width: 620px;
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.meta-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  border: 1px solid #2e2d26;
+  border-radius: 3px;
+  color: #7a7868;
+  letter-spacing: .5px;
+}
+.meta-chip.lit { border-color: #5a4e20; color: #e8b84b; background: rgba(232,184,75,.06); }
+
+/* ── NAV ── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--ink);
+  border-bottom: 1px solid #1e1d18;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 20px;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav a {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #5a5850;
+  text-decoration: none;
+  padding: 14px 14px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: .18s;
+}
+.nav a:hover { color: #e8b84b; border-color: #e8b84b; }
+
+/* ── LAYOUT ── */
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+section { padding: 56px 0 36px; border-bottom: 2px solid var(--border); }
+section:last-child { border: none; }
+
+/* ── TYPOGRAPHY ── */
+.sec-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sec-tag::before { content: ''; width: 20px; height: 1px; background: var(--border2); }
+h2 {
+  font-family: var(--head);
+  font-size: clamp(22px, 3.5vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.5px;
+  line-height: 1.15;
+  margin-bottom: 18px;
+  color: var(--ink);
+}
+h3 {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 32px 0 10px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+h4 {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 16px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+p { color: #3a3830; font-size: 14.5px; margin-bottom: 12px; }
+strong { color: var(--ink); }
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--blue);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 13.5px;
+  border-left: 3px solid;
+  line-height: 1.65;
+}
+.callout p { font-size: 13.5px; margin-bottom: 6px; }
+.callout p:last-child { margin: 0; }
+.cl-blue   { background: var(--blue-bg);   border-color: var(--blue);   color: #1a2a4a; }
+.cl-amber  { background: var(--amber-bg);  border-color: var(--amber);  color: #3a2a08; }
+.cl-green  { background: var(--green-bg);  border-color: var(--green);  color: #0a2a1a; }
+.cl-red    { background: var(--red-bg);    border-color: var(--red);    color: #3a0a08; }
+.cl-purple { background: var(--purple-bg); border-color: var(--purple); color: #2a1a4a; }
+.cl-teal   { background: var(--teal-bg);   border-color: var(--teal);   color: #0a2a2a; }
+.cl-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  opacity: .7;
+}
+
+/* ── CODE BLOCK ── */
+.codeblock {
+  background: var(--ink);
+  border-radius: 6px;
+  padding: 20px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 2;
+  overflow-x: auto;
+  margin: 14px 0;
+  color: #c8c4b8;
+  border: 1px solid #1e1d18;
+}
+.codeblock .c  { color: #3e3d36; }
+.codeblock .k  { color: #e8b84b; }
+.codeblock .s  { color: #8bc4a0; }
+.codeblock .n  { color: #e8946a; }
+.codeblock .t  { color: #7aaee0; }
+.codeblock .m  { color: #d07090; }
+.codeblock .o  { color: #b0a890; }
+
+/* ════════════════════════════════════
+   THE BIG ARCHITECTURE DIAGRAM
+════════════════════════════════════ */
+.arch-canvas {
+  background: var(--ink);
+  border-radius: 8px;
+  padding: 32px 24px;
+  margin: 24px 0;
+  overflow-x: auto;
+  border: 1px solid #1e1d18;
+}
+.arch-canvas-inner { min-width: 840px; }
+
+/* Lane labels */
+.lanes { display: grid; grid-template-columns: 80px 1fr; gap: 0; }
+.lane-labels { display: flex; flex-direction: column; gap: 0; padding-top: 8px; }
+.lane-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #3a3830;
+  writing-mode: horizontal-tb;
+  padding: 18px 0;
+  border-bottom: 1px solid #1e1d18;
+  text-align: right;
+  padding-right: 12px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* The main flow grid */
+.flow-grid { display: flex; flex-direction: column; gap: 0; }
+.flow-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  gap: 0;
+  border-bottom: 1px solid #1a1a16;
+  min-height: 88px;
+}
+.flow-row:last-child { border: none; }
+
+/* Individual component box */
+.fbox {
+  flex-shrink: 0;
+  background: #161614;
+  border: 1px solid #2a2924;
+  border-radius: 6px;
+  padding: 10px 14px;
+  text-align: center;
+  transition: border-color .2s;
+  cursor: default;
+  min-width: 100px;
+}
+.fbox:hover { border-color: #e8b84b; }
+.fbox .fi { font-size: 18px; margin-bottom: 3px; }
+.fbox .fn {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: #c8c4b0;
+  line-height: 1.3;
+}
+.fbox .ft { font-family: var(--mono); font-size: 9px; color: #4a4840; margin-top: 2px; }
+
+.fbox.col-r  { border-color: rgba(192,57,43,.4);  background: rgba(192,57,43,.06); }
+.fbox.col-a  { border-color: rgba(196,125,17,.4); background: rgba(196,125,17,.06); }
+.fbox.col-g  { border-color: rgba(26,122,74,.4);  background: rgba(26,122,74,.06); }
+.fbox.col-b  { border-color: rgba(26,79,138,.4);  background: rgba(26,79,138,.06); }
+.fbox.col-p  { border-color: rgba(90,62,138,.4);  background: rgba(90,62,138,.06); }
+.fbox.col-t  { border-color: rgba(26,107,107,.4); background: rgba(26,107,107,.06); }
+
+/* Arrows */
+.arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 4px;
+  gap: 2px;
+  min-width: 44px;
+}
+.arrow-line { height: 2px; width: 36px; background: #2a2924; position: relative; }
+.arrow-line::after { content:'▶'; position:absolute; right:-5px; top:-6px; font-size:8px; color:#3a3830; }
+.arrow-label { font-family: var(--mono); font-size: 8px; color: #3a3830; white-space: nowrap; text-align: center; }
+
+/* Down arrow */
+.down-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: #3a3830;
+  gap: 1px;
+}
+.down-line { width: 1px; height: 12px; background: #2a2924; }
+
+/* branching from Kafka */
+.branch-wrap { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+/* ════════════════════════════════════
+   COMPONENT DEEP-DIVE CARDS
+════════════════════════════════════ */
+.component-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media(max-width:640px){ .component-grid { grid-template-columns: 1fr; } }
+
+.comp-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.comp-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.cc-red::before    { background: var(--red); }
+.cc-amber::before  { background: var(--amber); }
+.cc-green::before  { background: var(--green); }
+.cc-blue::before   { background: var(--blue); }
+.cc-purple::before { background: var(--purple); }
+.cc-teal::before   { background: var(--teal); }
+
+.cc-name { font-family: var(--head); font-size: 16px; font-weight: 700; margin: 8px 0 4px; }
+.cc-role { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.cc-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 12px; padding: 6px 0; border-top: 1px solid var(--surface); }
+.cc-key { color: var(--muted); width: 100px; flex-shrink: 0; }
+.cc-val { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; }
+.cc-val.g { color: var(--green); }
+.cc-val.r { color: var(--red); }
+.cc-val.a { color: var(--amber); }
+
+/* ════════════════════════════════════
+   OLAP SECTION
+════════════════════════════════════ */
+.olap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
+@media(max-width:600px){ .olap-grid { grid-template-columns: 1fr; } }
+
+.olap-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px;
+}
+.olap-name { font-family: var(--head); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.olap-type { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--muted); margin-bottom: 10px; }
+.olap-rows { display: flex; flex-direction: column; gap: 5px; }
+.olap-row { display: flex; justify-content: space-between; font-size: 12px; }
+.olap-k { color: var(--muted); }
+.olap-v { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+
+/* ════════════════════════════════════
+   DATA FLOW TABLE
+════════════════════════════════════ */
+.flow-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+.flow-table thead th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  background: var(--surface);
+}
+.flow-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: #3a3830;
+}
+.flow-table tbody tr:hover td { background: var(--surface); }
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.b-g  { background: var(--green-bg);  border-color: var(--green);  color: var(--green); }
+.b-a  { background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber); }
+.b-r  { background: var(--red-bg);    border-color: var(--red);    color: var(--red); }
+.b-b  { background: var(--blue-bg);   border-color: var(--blue);   color: var(--blue); }
+.b-p  { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+.b-t  { background: var(--teal-bg);   border-color: var(--teal);   color: var(--teal); }
+
+/* ════════════════════════════════════
+   SCHEMA BLOCKS
+════════════════════════════════════ */
+.schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media(max-width:580px){ .schema-grid { grid-template-columns: 1fr; } }
+
+.schema-block {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.schema-header {
+  background: var(--ink);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.schema-title { font-family: var(--mono); font-size: 11px; color: #c8c4b0; }
+.schema-type  { font-family: var(--mono); font-size: 9px; color: #4a4840; }
+.schema-body { padding: 12px 16px; }
+.schema-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--surface); font-family: var(--mono); font-size: 11px; }
+.schema-row:last-child { border: none; }
+.sc-col { color: var(--ink); flex: 1; }
+.sc-type { color: var(--blue); font-size: 10px; }
+.sc-pk { font-size: 8px; color: var(--amber); border: 1px solid var(--amber); padding: 1px 4px; border-radius: 2px; }
+.sc-idx { font-size: 8px; color: var(--green); border: 1px solid var(--green); padding: 1px 4px; border-radius: 2px; }
+.sc-sort { font-size: 8px; color: var(--purple); border: 1px solid var(--purple); padding: 1px 4px; border-radius: 2px; }
+.sc-dist { font-size: 8px; color: var(--red); border: 1px solid var(--red); padding: 1px 4px; border-radius: 2px; }
+
+/* ════════════════════════════════════
+   TRADE-OFF MATRIX
+════════════════════════════════════ */
+.matrix { width: 100%; border-collapse: collapse; margin: 20px 0; }
+.matrix th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+}
+.matrix td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  vertical-align: top;
+  color: #3a3830;
+}
+.matrix .row-head { font-family: var(--mono); font-size: 11px; font-weight: 500; background: var(--surface); color: var(--ink); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot.g { background: var(--green); }
+.dot.a { background: var(--amber); }
+.dot.r { background: var(--red); }
+
+/* ════════════════════════════════════
+   TIMELINE / SEQUENCE
+════════════════════════════════════ */
+.timeline { position: relative; padding-left: 32px; margin: 20px 0; }
+.timeline::before { content:''; position:absolute; left:10px; top:0; bottom:0; width:1px; background:var(--border); }
+.tl-item { position: relative; margin-bottom: 24px; }
+.tl-item::before {
+  content:'';
+  position:absolute;
+  left:-26px;
+  top:4px;
+  width:10px; height:10px;
+  border-radius:50%;
+  border:2px solid var(--border2);
+  background:var(--page);
+}
+.tl-item.active::before { background: var(--amber); border-color: var(--amber); }
+.tl-time { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.tl-title { font-weight: 600; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
+.tl-desc { font-size: 13px; color: #5a5848; }
+
+/* ════════════════════════════════════
+   FAQ
+════════════════════════════════════ */
+.faq-item { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+.faq-q {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  user-select: none;
+  transition: background .15s;
+}
+.faq-q:hover { background: var(--surface); }
+.faq-q .tog { font-size: 18px; color: var(--amber); flex-shrink: 0; margin-left: 12px; transition: transform .2s; font-family: var(--mono); }
+.faq-a {
+  display: none;
+  padding: 18px;
+  background: var(--surface);
+  font-size: 13.5px;
+  color: #3a3830;
+  line-height: 1.75;
+  border-top: 1px solid var(--border);
+}
+.faq-item.open .faq-a { display: block; }
+.faq-item.open .tog { transform: rotate(45deg); }
+
+/* ════════════════════════════════════
+   DIVIDERS
+════════════════════════════════════ */
+.rule { height: 1px; background: var(--border); margin: 24px 0; }
+
+.footer {
+  background: var(--ink);
+  text-align: center;
+  padding: 36px 20px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #3a3830;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">End-to-End System Design</div>
+    <h1>Top-K <span class="accent">Complete</span><br>Design Blueprint</h1>
+    <p class="hero-desc">
+      Full system — from raw event to API response. Every component connected, every storage layer justified,
+      OLAP integrated. Enough depth to answer any follow-up at Director level.
+    </p>
+    <div class="hero-meta">
+      <span class="meta-chip lit">YouTube · Twitter · Instagram · Confluence</span>
+      <span class="meta-chip">Kafka → Flink → Redis → Cassandra → ClickHouse → API</span>
+      <span class="meta-chip">Count-Min Sketch · Min-Heap · ZSET</span>
+      <span class="meta-chip">500K events/sec scale</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#overview">Overview</a>
+  <a href="#ingestion">Ingestion</a>
+  <a href="#processing">Processing</a>
+  <a href="#hot-store">Hot Store</a>
+  <a href="#warm-store">Warm Store</a>
+  <a href="#olap">OLAP</a>
+  <a href="#cold-store">Cold Store</a>
+  <a href="#read-path">Read Path</a>
+  <a href="#schemas">Schemas</a>
+  <a href="#tradeoffs">Trade-offs</a>
+  <a href="#followups">Follow-ups</a>
+</nav>
+
+<div class="wrap">
+
+<!-- ══════════════════════════════════
+     SECTION 0: REQUIREMENTS
+══════════════════════════════════ -->
+<section id="overview">
+  <div class="sec-tag">00 · Before You Draw Anything</div>
+  <h2>Requirements & Scale Assumptions</h2>
+
+  <p>An interviewer at Director level expects you to <strong>drive the requirements phase</strong>, not wait for it. Here is what to establish before drawing a single box.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+    <div>
+      <h4>Functional Requirements</h4>
+      <table class="flow-table">
+        <tbody>
+          <tr><td><strong>FR1</strong></td><td>Return Top-K entities (videos/hashtags/docs) by count</td></tr>
+          <tr><td><strong>FR2</strong></td><td>Support multiple time windows: last 1h, 24h, 7d</td></tr>
+          <tr><td><strong>FR3</strong></td><td>Support regional Top-K (IN, US, Global)</td></tr>
+          <tr><td><strong>FR4</strong></td><td>Unique-user deduplication (for "views" not "clicks")</td></tr>
+          <tr><td><strong>FR5</strong></td><td>Historical Top-K queries (what was #1 last Tuesday?)</td></tr>
+          <tr><td><strong>FR6</strong></td><td>Analytics: count breakdown by hour, device, region</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h4>Non-Functional Requirements</h4>
+      <table class="flow-table">
+        <tbody>
+          <tr><td><strong>NFR1</strong></td><td>Read latency: p99 &lt; 50ms</td></tr>
+          <tr><td><strong>NFR2</strong></td><td>Write throughput: 500K events/sec</td></tr>
+          <tr><td><strong>NFR3</strong></td><td>Freshness: Top-K updated within 30–60s</td></tr>
+          <tr><td><strong>NFR4</strong></td><td>Availability: 99.9% (reads); eventual consistency OK</td></tr>
+          <tr><td><strong>NFR5</strong></td><td>Approximate counts acceptable (±1%) for trending</td></tr>
+          <tr><td><strong>NFR6</strong></td><td>Historical analytics queries: &lt; 2s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout cl-amber">
+    <div class="cl-lbl">📐 Scale Math (say this first)</div>
+    <strong>500K events/sec</strong> → 43B events/day → ~180 bytes/event raw → <strong>~7.7 TB/day raw</strong>.
+    Aggregated (entity + window + count) shrinks to ~100GB/day in Cassandra.
+    OLAP (ClickHouse) after columnar compression: ~20GB/day. Redis hot set: only the current window's sorted sets — a few hundred MB.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     THE BIG DIAGRAM
+══════════════════════════════════ -->
+<section>
+  <div class="sec-tag">01 · The Complete Picture</div>
+  <h2>Full System Architecture</h2>
+  <p>Read this diagram row by row. Each row is a logical tier. Arrows show data flow direction. Every connection is explained in subsequent sections.</p>
+
+  <div class="arch-canvas">
+    <div class="arch-canvas-inner">
+      <div style="font-family:var(--mono);font-size:9px;color:#3a3830;margin-bottom:16px;letter-spacing:2px;text-transform:uppercase">── COMPLETE TOP-K DATA FLOW ──────────────────────────────────────────────────────</div>
+
+      <!-- ROW 1: CLIENTS -->
+      <div style="margin-bottom:2px;font-family:var(--mono);font-size:9px;color:#3a3830;letter-spacing:2px">CLIENTS</div>
+      <div class="flow-row">
+        <div class="fbox col-r"><div class="fi">📱</div><div class="fn">Mobile App</div><div class="ft">iOS/Android</div></div>
+        <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">event</div></div>
+        <div class="fbox col-r"><div class="fi">🖥</div><div class="fn">Web Client</div><div class="ft">Browser</div></div>
+        <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">event</div></div>
+        <div class="fbox col-r"><div class="fi">🔌</div><div class="fn">API Gateway</div><div class="ft">Rate limit / auth</div></div>
+        <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">route</div></div>
+        <div class="fbox col-r"><div class="fi">⚡</div><div class="fn">Event Service</div><div class="ft">App servers</div></div>
+        <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">async fire</div></div>
+        <div class="fbox col-a" style="min-width:130px"><div class="fi">🌊</div><div class="fn">Apache Kafka</div><div class="ft">Partitioned by entity_id</div></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-right:0;padding:0 0 0 600px">
+        <div class="down-arrow"><div class="down-line"></div><div>consume</div></div>
+      </div>
+
+      <!-- ROW 2: STREAM PROCESSING -->
+      <div style="margin-bottom:2px;font-family:var(--mono);font-size:9px;color:#3a3830;letter-spacing:2px">STREAM PROCESSING</div>
+      <div class="flow-row" style="justify-content:flex-end;gap:8px">
+        <div style="flex:1;display:flex;align-items:center;gap:8px;justify-content:flex-end">
+          <div class="fbox col-a" style="min-width:130px"><div class="fi">🌊</div><div class="fn">Kafka (replay)</div><div class="ft">S3 long-term sink</div></div>
+          <div class="arrow" style="transform:scaleX(-1)"><div class="arrow-line"></div><div class="arrow-label">archive</div></div>
+          <div class="fbox col-g" style="min-width:140px"><div class="fi">⚙️</div><div class="fn">Apache Flink</div><div class="ft">CMS + local heap</div></div>
+          <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">flush 30s</div></div>
+          <div class="fbox col-g"><div class="fi">🔍</div><div class="fn">Dedup Layer</div><div class="ft">Bloom filter</div></div>
+          <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">clean counts</div></div>
+          <div class="fbox col-g"><div class="fi">📐</div><div class="fn">Aggregator</div><div class="ft">Merge local heaps</div></div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;padding:0 10px">
+        <div class="down-arrow"><div class="down-line"></div><div>raw events</div></div>
+        <div class="down-arrow"><div class="down-line"></div><div>write counts</div></div>
+        <div class="down-arrow"><div class="down-line"></div><div>write counts</div></div>
+      </div>
+
+      <!-- ROW 3: STORAGE LAYER -->
+      <div style="margin-bottom:2px;font-family:var(--mono);font-size:9px;color:#3a3830;letter-spacing:2px">STORAGE LAYER</div>
+      <div class="flow-row" style="gap:8px;justify-content:space-between">
+        <div class="fbox col-r" style="min-width:120px"><div class="fi">🗄️</div><div class="fn">S3 / GCS</div><div class="ft">Raw event lake<br>Parquet/Avro</div></div>
+        <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">ETL</div></div>
+        <div class="fbox col-b" style="min-width:130px"><div class="fi">📊</div><div class="fn">ClickHouse</div><div class="ft">OLAP · MergeTree<br>Historical TopK</div></div>
+        <div class="arrow"><div class="arrow-line"></div></div>
+        <div class="fbox col-b" style="min-width:120px"><div class="fi">📦</div><div class="fn">Cassandra</div><div class="ft">Warm counts<br>30-day window</div></div>
+        <div class="arrow"><div class="arrow-line"></div></div>
+        <div class="fbox col-p" style="min-width:130px"><div class="fi">🔥</div><div class="fn">Redis Cluster</div><div class="ft">ZSET · hot window<br>Top-K sorted set</div></div>
+        <div class="arrow"><div class="arrow-line"></div></div>
+        <div class="fbox col-p"><div class="fi">⚡</div><div class="fn">Cache Layer</div><div class="ft">CDN / App cache<br>60s TTL</div></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;padding:0">
+        <div class="down-arrow"><div class="down-line"></div><div>read</div></div>
+        <div style="width:50px"></div>
+      </div>
+
+      <!-- ROW 4: READ PATH -->
+      <div style="margin-bottom:2px;font-family:var(--mono);font-size:9px;color:#3a3830;letter-spacing:2px">READ PATH</div>
+      <div class="flow-row" style="justify-content:flex-end;gap:8px">
+        <div class="fbox col-p"><div class="fi">📡</div><div class="fn">Read API</div><div class="ft">GET /top-k</div></div>
+        <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">serve</div></div>
+        <div class="fbox col-p"><div class="fi">🌍</div><div class="fn">CDN Edge</div><div class="ft">Cloudflare/Fastly</div></div>
+        <div class="arrow"><div class="arrow-line"></div><div class="arrow-label">deliver</div></div>
+        <div class="fbox col-r"><div class="fi">📱</div><div class="fn">Client</div><div class="ft">&lt;50ms p99</div></div>
+      </div>
+
+      <div style="margin-top:16px;font-family:var(--mono);font-size:8px;color:#2a2922;display:flex;gap:24px;flex-wrap:wrap">
+        <span>🟠 Kafka = message bus</span>
+        <span>🟢 Flink = stream compute</span>
+        <span>🔵 Cassandra + ClickHouse = durability + analytics</span>
+        <span>🟣 Redis = hot ranking</span>
+        <span>🔴 S3 = source of truth</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 2: INGESTION
+══════════════════════════════════ -->
+<section id="ingestion">
+  <div class="sec-tag">02 · Write Path Starts Here</div>
+  <h2>Event Ingestion Layer</h2>
+  <p>Every user action generates an event. The ingestion layer's job is to accept it, acknowledge it immediately, and hand it off durably — without blocking the user experience.</p>
+
+  <h3>Event Payload Design</h3>
+  <div class="codeblock">
+<span class="c">// Every event is minimal — fat events waste Kafka bandwidth</span>
+{
+  <span class="s">"entity_id"</span>:    <span class="s">"vid_abc123"</span>,       <span class="c">// what was interacted with</span>
+  <span class="s">"entity_type"</span>:  <span class="s">"video"</span>,             <span class="c">// video | hashtag | doc | product</span>
+  <span class="s">"event_type"</span>:   <span class="s">"view"</span>,              <span class="c">// view | like | share | click</span>
+  <span class="s">"user_id"</span>:      <span class="s">"usr_789xyz"</span>,        <span class="c">// for deduplication</span>
+  <span class="s">"session_id"</span>:   <span class="s">"ses_001"</span>,           <span class="c">// for session-level dedup</span>
+  <span class="s">"region"</span>:       <span class="s">"IN"</span>,                <span class="c">// for regional Top-K</span>
+  <span class="s">"device"</span>:       <span class="s">"mobile"</span>,            <span class="c">// for analytics breakdown</span>
+  <span class="s">"timestamp_ms"</span>: <span class="n">1742378400000</span>        <span class="c">// epoch ms — never trust client clock alone</span>
+}
+<span class="c">// Payload: ~180 bytes JSON, ~80 bytes Avro (2x compression)</span>
+<span class="c">// 500K/sec × 80 bytes = 40 MB/sec into Kafka — well within its capacity</span>
+  </div>
+
+  <h3>Kafka Configuration</h3>
+  <div class="component-grid">
+    <div class="comp-card cc-amber">
+      <div class="cc-name">Kafka Topic Design</div>
+      <div class="cc-role">One topic per entity type, partitioned by entity_id hash</div>
+      <div class="cc-row"><span class="cc-key">Topic</span><span class="cc-val">events.videos</span></div>
+      <div class="cc-row"><span class="cc-key">Partitions</span><span class="cc-val g">32 (scale to 128)</span></div>
+      <div class="cc-row"><span class="cc-key">Partition key</span><span class="cc-val">entity_id hash</span></div>
+      <div class="cc-row"><span class="cc-key">Retention</span><span class="cc-val">7 days</span></div>
+      <div class="cc-row"><span class="cc-key">Replication</span><span class="cc-val g">3</span></div>
+      <div class="cc-row"><span class="cc-key">Throughput</span><span class="cc-val g">500K msg/sec</span></div>
+    </div>
+    <div class="comp-card cc-amber">
+      <div class="cc-name">Why Partition by entity_id</div>
+      <div class="cc-role">Same entity → same partition → same Flink worker → no cross-worker coordination</div>
+      <div class="cc-row"><span class="cc-key">Result</span><span class="cc-val">Local counting only</span></div>
+      <div class="cc-row"><span class="cc-key">No need for</span><span class="cc-val g">Distributed locks</span></div>
+      <div class="cc-row"><span class="cc-key">No need for</span><span class="cc-val g">Cross-shard joins</span></div>
+      <div class="cc-row"><span class="cc-key">Hot partition?</span><span class="cc-val a">Salt viral entities</span></div>
+      <div class="cc-row"><span class="cc-key">Guarantee</span><span class="cc-val">Ordered per entity</span></div>
+      <div class="cc-row"><span class="cc-key">Serialisation</span><span class="cc-val">Avro + Schema Registry</span></div>
+    </div>
+  </div>
+
+  <div class="callout cl-green">
+    <div class="cl-lbl">🔑 The Async Boundary — Most Important Design Decision</div>
+    <p>The Event Service writes to Kafka and immediately returns <code>HTTP 200</code> to the client. <strong>The counting logic never touches the user's request path.</strong> This means a Flink crash, Redis slowdown, or Cassandra outage has zero impact on user experience. Kafka absorbs the load spike during viral events (10x traffic) and the downstream processors catch up at their own pace.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 3: STREAM PROCESSING
+══════════════════════════════════ -->
+<section id="processing">
+  <div class="sec-tag">03 · The Engine Room</div>
+  <h2>Stream Processing: Apache Flink</h2>
+  <p>Flink is where all the intelligence lives. Each Flink worker handles one Kafka partition, meaning it sees all events for a specific subset of entities. No coordination needed.</p>
+
+  <h3>What Each Flink Worker Does (per 30-second window)</h3>
+
+  <div class="timeline">
+    <div class="tl-item active">
+      <div class="tl-time">t=0 … t=30s</div>
+      <div class="tl-title">Step 1 — Deduplication via Bloom Filter</div>
+      <div class="tl-desc">For each incoming event, check Bloom filter keyed by <code>user_id + entity_id + window_id</code>. If present → discard (duplicate view). If absent → add to filter and proceed. Bloom filter uses ~1GB of memory per worker for 100M unique pairs. Accepts 0.1% false positive rate (slight undercounting, never overcounting).</div>
+    </div>
+    <div class="tl-item active">
+      <div class="tl-time">Concurrent</div>
+      <div class="tl-title">Step 2 — Count-Min Sketch Increment</div>
+      <div class="tl-desc">For each valid event, increment the CMS: hash <code>entity_id</code> with 5 hash functions → increment 5 cells in the local 5×272 grid. Memory: ~6KB regardless of how many entities are seen. This tracks approximate counts without storing a counter per entity.</div>
+    </div>
+    <div class="tl-item active">
+      <div class="tl-time">Concurrent</div>
+      <div class="tl-title">Step 3 — Local Min-Heap Update</div>
+      <div class="tl-desc">Maintain a min-heap of size K (e.g., K=1000 to be safe). When a count is incremented, query CMS for that entity's current estimate. If estimate > heap root → replace root, re-heapify in O(log K). Heap always holds the local top-1000 entities.</div>
+    </div>
+    <div class="tl-item active">
+      <div class="tl-time">t=30s</div>
+      <div class="tl-title">Step 4 — Window Flush</div>
+      <div class="tl-desc">Flush the local heap's K items to: (1) Redis ZINCRBY for the sorted set, (2) Cassandra for durable aggregation, (3) Kafka output topic for ClickHouse ingestion. The flush ships at most K=1000 items regardless of how many total events were processed. This is the scalability trick.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Fault recovery</div>
+      <div class="tl-title">Step 5 — Checkpoint to S3</div>
+      <div class="tl-desc">Flink checkpoints its full state (CMS grid, heap, Bloom filter, Kafka offset) to S3 every 60 seconds. On crash, it resumes from last checkpoint, re-reads from Kafka from the saved offset. "At-least-once" semantics: some events may be double-counted across the checkpoint boundary. Acceptable for Top-K.</div>
+    </div>
+  </div>
+
+  <div class="codeblock">
+<span class="c"># Flink pseudo-logic per window</span>
+
+<span class="k">class</span> <span class="t">TopKWindowFunction</span>:
+    <span class="k">def</span> <span class="t">__init__</span>(self, k=<span class="n">1000</span>, epsilon=<span class="n">0.01</span>, delta=<span class="n">0.01</span>):
+        self.cms    = CountMinSketch(epsilon, delta)   <span class="c"># ~6 KB fixed memory</span>
+        self.heap   = MinHeap(k)                       <span class="c"># O(K) memory</span>
+        self.bloom  = BloomFilter(capacity=<span class="n">100_000_000</span>, fp_rate=<span class="n">0.001</span>)
+        self.window_id = current_window()
+
+    <span class="k">def</span> <span class="t">process</span>(self, event):
+        dedup_key = f<span class="s">"{event.user_id}:{event.entity_id}:{self.window_id}"</span>
+        <span class="k">if</span> self.bloom.contains(dedup_key):
+            <span class="k">return</span>                                  <span class="c"># duplicate, skip</span>
+        self.bloom.add(dedup_key)
+
+        self.cms.increment(event.entity_id)            <span class="c"># O(d) — 5 hash ops</span>
+        estimated_count = self.cms.query(event.entity_id)
+
+        <span class="k">if</span> self.heap.size < self.heap.k <span class="k">or</span> estimated_count > self.heap.peek_min():
+            self.heap.upsert(event.entity_id, estimated_count)  <span class="c"># O(log K)</span>
+
+    <span class="k">def</span> <span class="t">on_window_close</span>(self):
+        top_k_items = self.heap.get_all()              <span class="c"># max K=1000 items</span>
+        self.flush_to_redis(top_k_items)               <span class="c"># ZINCRBY for each</span>
+        self.flush_to_cassandra(top_k_items)           <span class="c"># upsert aggregation</span>
+        self.flush_to_kafka_output(top_k_items)        <span class="c"># → ClickHouse ingestion</span>
+        self.reset()
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 4: HOT STORE — REDIS
+══════════════════════════════════ -->
+<section id="hot-store">
+  <div class="sec-tag">04 · Hot Tier · &lt;1ms Reads</div>
+  <h2>Redis: The Hot Store</h2>
+  <p>Redis is the read-path backbone. It stores pre-computed, continuously updated sorted sets. Every read request for Top-K hits Redis first — and usually only Redis.</p>
+
+  <h3>Key Structure (Naming Convention)</h3>
+  <div class="codeblock">
+<span class="c"># Pattern: topk:{entity_type}:{region}:{window}</span>
+
+topk:video:GLOBAL:1h        <span class="c">→ global top videos in last 1 hour</span>
+topk:video:IN:1h            <span class="c">→ India-specific top videos, last 1 hour</span>
+topk:video:US:24h           <span class="c">→ US top videos, last 24 hours</span>
+topk:hashtag:GLOBAL:1h      <span class="c">→ global trending hashtags</span>
+topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</span>
+
+<span class="c"># Each key is a sorted set. Score = count. Member = entity_id.</span>
+<span class="c"># Number of keys = 3 regions × 3 windows × N entity types = ~30 ZSET keys</span>
+<span class="c"># Each ZSET holds at most K=1000 members (pruned by Flink's local heap output)</span>
+  </div>
+
+  <h3>Redis Operations</h3>
+  <div class="codeblock">
+<span class="c"># WRITE — called by Flink every 30 seconds per worker</span>
+<span class="k">ZINCRBY</span> topk:video:IN:1h <span class="n">847</span> vid_abc123
+<span class="c"># Atomically adds 847 to vid_abc123's score. O(log N). N = items in this ZSET.</span>
+<span class="c"># If vid_abc123 doesn't exist, creates it with score 847.</span>
+
+<span class="c"># READ — Top-10 with scores for the API</span>
+<span class="k">ZREVRANGEBYSCORE</span> topk:video:IN:1h +inf -inf <span class="k">WITHSCORES LIMIT</span> <span class="n">0 10</span>
+<span class="c"># Returns: ["vid_xyz","9241038","vid_abc","7832091",...] — O(log N + 10)</span>
+<span class="c"># At sub-millisecond speed. N = 1000 max items in ZSET.</span>
+
+<span class="c"># EXPIRY — sliding window management</span>
+<span class="k">EXPIRE</span> topk:video:IN:1h <span class="n">3600</span>      <span class="c"># 1-hour TTL. Auto-purge.</span>
+<span class="k">EXPIRE</span> topk:video:IN:24h <span class="n">86400</span>     <span class="c"># 24-hour TTL.</span>
+
+<span class="c"># PRUNING — keep ZSET bounded at K=1000 items</span>
+<span class="k">ZREMRANGEBYRANK</span> topk:video:IN:1h <span class="n">0</span> <span class="n">-1001</span>   <span class="c"># Remove rank 0 to (N-1001), keep top 1000</span>
+<span class="c"># Called by Flink after each flush to bound memory usage</span>
+  </div>
+
+  <div class="component-grid">
+    <div class="comp-card cc-purple">
+      <div class="cc-name">Redis Cluster Config</div>
+      <div class="cc-role">Sharded for write throughput, replicated for read availability</div>
+      <div class="cc-row"><span class="cc-key">Topology</span><span class="cc-val">6 nodes (3 primary + 3 replica)</span></div>
+      <div class="cc-row"><span class="cc-key">Sharding</span><span class="cc-val">Hash slots by key prefix</span></div>
+      <div class="cc-row"><span class="cc-key">Memory</span><span class="cc-val g">~4 GB per ZSET set total</span></div>
+      <div class="cc-row"><span class="cc-key">Read from</span><span class="cc-val g">Replica (offload primary)</span></div>
+      <div class="cc-row"><span class="cc-key">Persistence</span><span class="cc-val a">RDB snapshots (not AOF)</span></div>
+      <div class="cc-row"><span class="cc-key">Eviction</span><span class="cc-val">allkeys-lru</span></div>
+    </div>
+    <div class="comp-card cc-purple">
+      <div class="cc-name">Redis Internal Structure</div>
+      <div class="cc-role">How ZSET works under the hood — for follow-up questions</div>
+      <div class="cc-row"><span class="cc-key">Structure</span><span class="cc-val">Skip list + Hash map</span></div>
+      <div class="cc-row"><span class="cc-key">Skip list</span><span class="cc-val">O(log N) range queries</span></div>
+      <div class="cc-row"><span class="cc-key">Hash map</span><span class="cc-val">O(1) score lookup by member</span></div>
+      <div class="cc-row"><span class="cc-key">ZINCRBY</span><span class="cc-val">Hash lookup + skip re-insert</span></div>
+      <div class="cc-row"><span class="cc-key">ZREVRANGE</span><span class="cc-val">Skip list traversal O(K)</span></div>
+      <div class="cc-row"><span class="cc-key">Why not B-tree</span><span class="cc-val g">Skip list allows O(1) updates</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 5: WARM STORE — CASSANDRA
+══════════════════════════════════ -->
+<section id="warm-store">
+  <div class="sec-tag">05 · Warm Tier · Durable Counts</div>
+  <h2>Cassandra: The Warm Store</h2>
+  <p>Redis is volatile — TTL expires and the data is gone. Cassandra is the <strong>durable, queryable store of aggregated counts</strong>. It holds 30–90 days of hourly aggregations per entity. It's used to: backfill Redis on restart, power longer-window Top-K queries, and feed ClickHouse for OLAP.</p>
+
+  <h3>Why Cassandra (not PostgreSQL)?</h3>
+  <div class="callout cl-blue">
+    <div class="cl-lbl">Architecture Rationale</div>
+    <p><strong>Write pattern:</strong> Flink writes ~50K rows/sec (one row per entity per window flush). Cassandra handles millions of writes/sec with linear horizontal scaling. PostgreSQL would be write-bottlenecked.</p>
+    <p><strong>Read pattern:</strong> "Give me all hourly counts for entity X over the last 30 days" — a partition-local range scan in Cassandra. Very fast when data is co-located by partition key.</p>
+    <p><strong>No joins needed:</strong> Counts are pre-aggregated. No complex relational queries. Cassandra's limited query model is not a constraint here.</p>
+  </div>
+
+  <div class="schema-grid">
+    <div class="schema-block">
+      <div class="schema-header">
+        <span class="schema-title">entity_counts</span>
+        <span class="schema-type">CASSANDRA TABLE</span>
+      </div>
+      <div class="schema-body">
+        <div class="schema-row"><span class="sc-col">entity_type</span><span class="sc-type">TEXT</span><span class="sc-pk">PK</span><span class="sc-dist">DIST</span></div>
+        <div class="schema-row"><span class="sc-col">region</span><span class="sc-type">TEXT</span><span class="sc-pk">PK</span></div>
+        <div class="schema-row"><span class="sc-col">window_bucket</span><span class="sc-type">TIMESTAMP</span><span class="sc-pk">CK</span><span class="sc-sort">SORT↓</span></div>
+        <div class="schema-row"><span class="sc-col">entity_id</span><span class="sc-type">TEXT</span><span class="sc-pk">CK</span></div>
+        <div class="schema-row"><span class="sc-col">count</span><span class="sc-type">COUNTER</span></div>
+        <div class="schema-row"><span class="sc-col">unique_users</span><span class="sc-type">COUNTER</span></div>
+        <div class="schema-row"><span class="sc-col">updated_at</span><span class="sc-type">TIMESTAMP</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="callout cl-teal" style="margin:0 0 12px">
+        <div class="cl-lbl">Partition Strategy</div>
+        <p>Partition key = <code>(entity_type, region)</code>. All videos in India land in one partition — fast range scans by time. Clustering key = <code>(window_bucket DESC, entity_id)</code> so latest data reads first.</p>
+      </div>
+      <div class="codeblock" style="font-size:11px;line-height:1.8">
+<span class="c">-- Get top entities for backfill</span>
+<span class="k">SELECT</span> entity_id, <span class="k">SUM</span>(count)
+<span class="k">FROM</span> entity_counts
+<span class="k">WHERE</span> entity_type=<span class="s">'video'</span>
+  <span class="k">AND</span> region=<span class="s">'IN'</span>
+  <span class="k">AND</span> window_bucket >= now() - <span class="n">1h</span>
+<span class="k">ORDER BY</span> count <span class="k">DESC LIMIT</span> <span class="n">1000</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 6: OLAP — CLICKHOUSE
+══════════════════════════════════ -->
+<section id="olap">
+  <div class="sec-tag">06 · Analytics Layer · The OLAP Power</div>
+  <h2>ClickHouse: OLAP for Deep Analytics</h2>
+
+  <p>Redis answers "what is Top-K right now?" Cassandra answers "what was the count for X in window Y?"
+  <strong>ClickHouse answers everything else</strong> — historical Top-K, breakdowns by region+device+time, trend analysis, anomaly detection, and business intelligence. This is what turns raw counts into insights.</p>
+
+  <div class="callout cl-blue">
+    <div class="cl-lbl">Why ClickHouse, not Redshift or BigQuery?</div>
+    <p><strong>ClickHouse is the OLAP choice for high-frequency aggregation workloads.</strong> Its columnar MergeTree engine can ingest 500K rows/sec and answer GROUP BY COUNT queries on billions of rows in under 2 seconds. It compresses count columns by 10–20x (integers compress very well column-wise). BigQuery/Redshift are managed and easier to operate but have higher query latency for sub-second needs. For Twitter/YouTube scale, ClickHouse is the answer.</p>
+  </div>
+
+  <h3>How Data Gets Into ClickHouse</h3>
+  <div class="timeline">
+    <div class="tl-item active">
+      <div class="tl-time">Path 1 — Streaming (preferred)</div>
+      <div class="tl-title">Kafka → ClickHouse Kafka Engine</div>
+      <div class="tl-desc">ClickHouse has a native Kafka table engine. It consumes from the Flink output topic (<code>topk.aggregated</code>) directly. As Flink flushes every 30s, ClickHouse ingests those aggregated rows in near-real-time. No separate ETL pipeline needed. Latency: 30–60 seconds behind live.</div>
+    </div>
+    <div class="tl-item active">
+      <div class="tl-time">Path 2 — Batch (for raw events)</div>
+      <div class="tl-title">S3 → ClickHouse S3 Table Function</div>
+      <div class="tl-desc">The raw event Parquet files in S3 can be queried directly via <code>SELECT … FROM s3('s3://bucket/events/…', 'Parquet')</code> or imported nightly for full historical analysis. Used for ML feature extraction, audit reports, and backfilling.</div>
+    </div>
+  </div>
+
+  <h3>ClickHouse Schema (MergeTree)</h3>
+  <div class="schema-grid">
+    <div class="schema-block">
+      <div class="schema-header">
+        <span class="schema-title">entity_events_agg</span>
+        <span class="schema-type">CLICKHOUSE · AggregatingMergeTree</span>
+      </div>
+      <div class="schema-body">
+        <div class="schema-row"><span class="sc-col">event_date</span><span class="sc-type">Date</span><span class="sc-sort">PART</span></div>
+        <div class="schema-row"><span class="sc-col">event_hour</span><span class="sc-type">DateTime</span><span class="sc-pk">ORDER</span></div>
+        <div class="schema-row"><span class="sc-col">entity_type</span><span class="sc-type">LowCardinality(String)</span><span class="sc-pk">ORDER</span></div>
+        <div class="schema-row"><span class="sc-col">entity_id</span><span class="sc-type">String</span><span class="sc-pk">ORDER</span></div>
+        <div class="schema-row"><span class="sc-col">region</span><span class="sc-type">LowCardinality(String)</span><span class="sc-pk">ORDER</span></div>
+        <div class="schema-row"><span class="sc-col">device</span><span class="sc-type">LowCardinality(String)</span></div>
+        <div class="schema-row"><span class="sc-col">view_count</span><span class="sc-type">UInt64</span></div>
+        <div class="schema-row"><span class="sc-col">unique_users</span><span class="sc-type">AggregateFunction(uniq, String)</span></div>
+        <div class="schema-row"><span class="sc-col">engagement_score</span><span class="sc-type">Float32</span></div>
+      </div>
+    </div>
+    <div class="schema-block">
+      <div class="schema-header">
+        <span class="schema-title">topk_snapshots</span>
+        <span class="schema-type">CLICKHOUSE · ReplacingMergeTree</span>
+      </div>
+      <div class="schema-body">
+        <div class="schema-row"><span class="sc-col">snapshot_time</span><span class="sc-type">DateTime</span><span class="sc-pk">ORDER</span></div>
+        <div class="schema-row"><span class="sc-col">entity_type</span><span class="sc-type">LowCardinality(String)</span><span class="sc-pk">ORDER</span></div>
+        <div class="schema-row"><span class="sc-col">region</span><span class="sc-type">LowCardinality(String)</span><span class="sc-pk">ORDER</span></div>
+        <div class="schema-row"><span class="sc-col">rank</span><span class="sc-type">UInt16</span></div>
+        <div class="schema-row"><span class="sc-col">entity_id</span><span class="sc-type">String</span></div>
+        <div class="schema-row"><span class="sc-col">score</span><span class="sc-type">UInt64</span></div>
+        <div class="schema-row"><span class="sc-col">window_hours</span><span class="sc-type">UInt8</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>What ClickHouse Enables (That Redis/Cassandra Cannot)</h3>
+
+  <div class="codeblock">
+<span class="c">-- 1. Historical Top-K: "What were the top 10 videos last Tuesday 6pm?"</span>
+<span class="k">SELECT</span> entity_id, <span class="k">SUM</span>(view_count) <span class="k">AS</span> total
+<span class="k">FROM</span> entity_events_agg
+<span class="k">WHERE</span> entity_type = <span class="s">'video'</span>
+  <span class="k">AND</span> region = <span class="s">'IN'</span>
+  <span class="k">AND</span> event_hour <span class="k">BETWEEN</span> <span class="s">'2026-03-10 17:00'</span> <span class="k">AND</span> <span class="s">'2026-03-10 19:00'</span>
+<span class="k">GROUP BY</span> entity_id
+<span class="k">ORDER BY</span> total <span class="k">DESC LIMIT</span> <span class="n">10</span>
+<span class="c">-- Runs in ~300ms on 10B rows due to columnar scan + ORDER BY optimisation</span>
+
+<span class="c">-- 2. Breakdown: "Top hashtag by mobile vs desktop users this week"</span>
+<span class="k">SELECT</span> entity_id, device, <span class="k">SUM</span>(view_count)
+<span class="k">FROM</span> entity_events_agg
+<span class="k">WHERE</span> entity_type = <span class="s">'hashtag'</span>
+  <span class="k">AND</span> event_date >= today() - <span class="n">7</span>
+<span class="k">GROUP BY</span> entity_id, device
+<span class="k">ORDER BY</span> <span class="n">3</span> <span class="k">DESC LIMIT</span> <span class="n">20</span>
+
+<span class="c">-- 3. Trend: "How fast is #WorldCup growing hour over hour?"</span>
+<span class="k">SELECT</span>
+  event_hour,
+  <span class="k">SUM</span>(view_count) <span class="k">AS</span> hourly,
+  hourly - lagInFrame(hourly) <span class="k">OVER</span> (<span class="k">ORDER BY</span> event_hour) <span class="k">AS</span> delta
+<span class="k">FROM</span> entity_events_agg
+<span class="k">WHERE</span> entity_id = <span class="s">'#WorldCup'</span>
+  <span class="k">AND</span> event_date = today()
+<span class="k">GROUP BY</span> event_hour
+<span class="k">ORDER BY</span> event_hour
+
+<span class="c">-- 4. What was rank of vid_abc over the last 7 days? (from snapshots table)</span>
+<span class="k">SELECT</span> snapshot_time, rank, score
+<span class="k">FROM</span> topk_snapshots
+<span class="k">WHERE</span> entity_id = <span class="s">'vid_abc123'</span>
+  <span class="k">AND</span> window_hours = <span class="n">1</span>
+  <span class="k">AND</span> snapshot_time >= now() - <span class="k">INTERVAL</span> <span class="n">7</span> <span class="k">DAY</span>
+<span class="k">ORDER BY</span> snapshot_time
+  </div>
+
+  <div class="olap-grid">
+    <div class="olap-card">
+      <div class="olap-name">ClickHouse</div>
+      <div class="olap-type">PRIMARY OLAP CHOICE</div>
+      <div class="olap-rows">
+        <div class="olap-row"><span class="olap-k">Ingest</span><span class="olap-v">500K rows/sec</span></div>
+        <div class="olap-row"><span class="olap-k">Query</span><span class="olap-v">&lt;2s on 100B rows</span></div>
+        <div class="olap-row"><span class="olap-k">Compression</span><span class="olap-v">10–20x columnar</span></div>
+        <div class="olap-row"><span class="olap-k">Self-hosted</span><span class="olap-v">Yes (full control)</span></div>
+        <div class="olap-row"><span class="olap-k">Best for</span><span class="olap-v">High-freq aggregation</span></div>
+      </div>
+    </div>
+    <div class="olap-card">
+      <div class="olap-name">Apache Druid</div>
+      <div class="olap-type">ALTERNATIVE — SUB-SECOND OLAP</div>
+      <div class="olap-rows">
+        <div class="olap-row"><span class="olap-k">Ingest</span><span class="olap-v">Real-time streaming</span></div>
+        <div class="olap-row"><span class="olap-k">Query</span><span class="olap-v">&lt;500ms interactive</span></div>
+        <div class="olap-row"><span class="olap-k">Architecture</span><span class="olap-v">Segment-based</span></div>
+        <div class="olap-row"><span class="olap-k">Self-hosted</span><span class="olap-v">Yes (complex ops)</span></div>
+        <div class="olap-row"><span class="olap-k">Best for</span><span class="olap-v">Dashboard queries</span></div>
+      </div>
+    </div>
+    <div class="olap-card">
+      <div class="olap-name">BigQuery / Redshift</div>
+      <div class="olap-type">MANAGED CLOUD ALTERNATIVE</div>
+      <div class="olap-rows">
+        <div class="olap-row"><span class="olap-k">Ingest</span><span class="olap-v">Batch / streaming</span></div>
+        <div class="olap-row"><span class="olap-k">Query</span><span class="olap-v">2–10s typical</span></div>
+        <div class="olap-row"><span class="olap-k">Ops overhead</span><span class="olap-v">Low (managed)</span></div>
+        <div class="olap-row"><span class="olap-k">Cost model</span><span class="olap-v">Per TB scanned</span></div>
+        <div class="olap-row"><span class="olap-k">Best for</span><span class="olap-v">Ad-hoc reports</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout cl-amber">
+    <div class="cl-lbl">🎤 How to Position OLAP in the Interview</div>
+    <p>"Redis handles our real-time Top-K reads — sub-millisecond, always fresh. But there's a whole class of questions Redis can't answer: historical ranking, time-series trend analysis, multi-dimensional breakdown by region/device/time. That's where ClickHouse comes in. It's our analytics brain — powered by the same event stream as Redis, but with a different read contract: we tolerate 30–60 seconds of lag in exchange for arbitrary historical queries at petabyte scale in under 2 seconds. Every product team, data scientist, and ML engineer queries ClickHouse. Only the real-time API hits Redis."</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 7: COLD STORE — S3
+══════════════════════════════════ -->
+<section id="cold-store">
+  <div class="sec-tag">07 · Cold Tier · Infinite Retention</div>
+  <h2>S3 / Object Store: The Source of Truth</h2>
+  <p>Every event is written to S3. No exceptions. This is your insurance policy — if Cassandra or ClickHouse data is corrupted or a bug causes wrong counting, you can re-derive everything from S3.</p>
+
+  <div class="component-grid">
+    <div class="comp-card cc-red">
+      <div class="cc-name">S3 Layout</div>
+      <div class="cc-role">Partitioned for efficient batch reads</div>
+      <div class="cc-row"><span class="cc-key">Path</span><span class="cc-val">events/type=video/date=2026-03/hour=14/</span></div>
+      <div class="cc-row"><span class="cc-key">Format</span><span class="cc-val">Parquet + Snappy</span></div>
+      <div class="cc-row"><span class="cc-key">File size</span><span class="cc-val g">128MB–1GB (Spark optimal)</span></div>
+      <div class="cc-row"><span class="cc-key">Retention</span><span class="cc-val">3+ years</span></div>
+      <div class="cc-row"><span class="cc-key">Cost (7.7TB/day)</span><span class="cc-val a">~$7/day at $0.023/GB</span></div>
+      <div class="cc-row"><span class="cc-key">Who writes</span><span class="cc-val">Kafka S3 Sink connector</span></div>
+    </div>
+    <div class="comp-card cc-red">
+      <div class="cc-name">Use Cases for S3</div>
+      <div class="cc-role">Everything that doesn't need real-time</div>
+      <div class="cc-row"><span class="cc-key">ML training</span><span class="cc-val">Recommendation models</span></div>
+      <div class="cc-row"><span class="cc-key">Audit</span><span class="cc-val">Regulatory compliance</span></div>
+      <div class="cc-row"><span class="cc-key">Backfill</span><span class="cc-val">Rebuild Cassandra/ClickHouse</span></div>
+      <div class="cc-row"><span class="cc-key">Batch jobs</span><span class="cc-val">Spark weekly reports</span></div>
+      <div class="cc-row"><span class="cc-key">Ad-hoc</span><span class="cc-val">Athena / Spark SQL</span></div>
+      <div class="cc-row"><span class="cc-key">Who reads</span><span class="cc-val">Data engineers, ML</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 8: READ PATH
+══════════════════════════════════ -->
+<section id="read-path">
+  <div class="sec-tag">08 · Serving The Answer</div>
+  <h2>Read Path: From Client to Response</h2>
+
+  <h3>Request Routing Logic</h3>
+  <div class="codeblock">
+<span class="k">GET</span> /api/v1/top-k?type=video&region=IN&window=1h&k=10
+
+<span class="c">// Read API decision tree:</span>
+<span class="k">function</span> <span class="t">getTopK</span>(type, region, window, k):
+
+  <span class="c">// 1. Check CDN edge cache (Cloudflare) — TTL=60s</span>
+  <span class="c">//    Cache key: "topk:{type}:{region}:{window}:{k}"</span>
+  <span class="c">//    Hit rate: ~95%+ in steady state → response in ~5ms globally</span>
+  cache_key = f<span class="s">"topk:{type}:{region}:{window}:{k}"</span>
+  result = cdn_cache.get(cache_key)
+  <span class="k">if</span> result: <span class="k">return</span> result                           <span class="c">// 5ms</span>
+
+  <span class="c">// 2. Check in-process app cache — TTL=30s</span>
+  result = local_cache.get(cache_key)
+  <span class="k">if</span> result: <span class="k">return</span> result                           <span class="c">// 0.1ms</span>
+
+  <span class="c">// 3. Redis ZREVRANGE — the real-time answer</span>
+  redis_key = f<span class="s">"topk:{type}:{region}:{window}"</span>
+  result = redis.zrevrangebyscore(redis_key, <span class="s">"+inf"</span>, <span class="s">"-inf"</span>,
+                                  withscores=<span class="k">True</span>, limit=k)
+  <span class="k">if</span> result: <span class="k">return</span> enrich_and_cache(result)         <span class="c">// 0.5ms</span>
+
+  <span class="c">// 4. Fallback: Cassandra (Redis TTL expired, cold restart)</span>
+  <span class="c">//    Re-derive top-K for this window from Cassandra counts</span>
+  result = cassandra.query_top_k(type, region, window, k)
+  <span class="k">if</span> result: redis.restore(redis_key, result)         <span class="c">// Warm Redis back up</span>
+  <span class="k">return</span> result                                        <span class="c">// 10–50ms</span>
+
+  <span class="c">// 5. ClickHouse: for historical windows not in Cassandra</span>
+  <span class="k">return</span> clickhouse.historical_top_k(type, region, window, k)  <span class="c">// ~500ms</span>
+  </div>
+
+  <h3>API Response Contract</h3>
+  <div class="codeblock">
+<span class="c">// Response: enriched with metadata, not just entity_ids</span>
+{
+  <span class="s">"window"</span>: <span class="s">"1h"</span>,
+  <span class="s">"region"</span>: <span class="s">"IN"</span>,
+  <span class="s">"generated_at"</span>: <span class="s">"2026-03-19T14:30:00Z"</span>,
+  <span class="s">"freshness_seconds"</span>: <span class="n">42</span>,           <span class="c">// how stale is this result</span>
+  <span class="s">"items"</span>: [
+    { <span class="s">"rank"</span>: <span class="n">1</span>, <span class="s">"entity_id"</span>: <span class="s">"vid_abc"</span>, <span class="s">"score"</span>: <span class="n">9241038</span>, <span class="s">"delta_pct"</span>: <span class="n">+12.4</span> },
+    { <span class="s">"rank"</span>: <span class="n">2</span>, <span class="s">"entity_id"</span>: <span class="s">"vid_xyz"</span>, <span class="s">"score"</span>: <span class="n">7832091</span>, <span class="s">"delta_pct"</span>:  <span class="n">-2.1</span> }
+  ]
+}
+<span class="c">// delta_pct = % change vs previous window — computed by comparing two ZSET reads</span>
+<span class="c">// Entity metadata (title, thumbnail) fetched from a separate entity service</span>
+  </div>
+
+  <div class="callout cl-green">
+    <div class="cl-lbl">Latency Budget Breakdown</div>
+    <p>CDN hit (95% of requests): <strong>5ms</strong> | App cache hit (4%): <strong>0.1ms</strong> | Redis hit (0.9%): <strong>~1ms</strong> | Cassandra fallback (0.1%): <strong>30ms</strong> | ClickHouse historical: <strong>500ms</strong>. Weighted p99 ≈ <strong>8ms</strong> — well within the 50ms SLA.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 9: SCHEMAS SUMMARY
+══════════════════════════════════ -->
+<section id="schemas">
+  <div class="sec-tag">09 · Data Contracts</div>
+  <h2>All Schemas at a Glance</h2>
+
+  <table class="flow-table">
+    <thead>
+      <tr>
+        <th>Store</th>
+        <th>Table / Key</th>
+        <th>What It Holds</th>
+        <th>Retention</th>
+        <th>Query Type</th>
+        <th>Latency</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge b-a">Kafka</span></td>
+        <td><code>events.{type}</code></td>
+        <td>Raw events, ordered by entity_id partition</td>
+        <td>7 days</td>
+        <td>Stream consume</td>
+        <td>N/A</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-p">Redis</span></td>
+        <td><code>topk:{type}:{region}:{window}</code></td>
+        <td>Sorted set of K=1000 entities by score. Current window only.</td>
+        <td>TTL = window</td>
+        <td>ZREVRANGE (point)</td>
+        <td>&lt;1ms</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-b">Cassandra</span></td>
+        <td><code>entity_counts</code></td>
+        <td>Hourly aggregated counts per entity per region. All entities.</td>
+        <td>90 days</td>
+        <td>Range scan by time</td>
+        <td>5–20ms</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-t">ClickHouse</span></td>
+        <td><code>entity_events_agg</code></td>
+        <td>Columnar hourly aggregations. Supports GROUP BY, windowed analytics.</td>
+        <td>3+ years</td>
+        <td>Analytical GROUP BY</td>
+        <td>300ms–2s</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-t">ClickHouse</span></td>
+        <td><code>topk_snapshots</code></td>
+        <td>Periodic Top-K snapshot (every 30m). Used for rank history queries.</td>
+        <td>1 year</td>
+        <td>Point / range</td>
+        <td>50–200ms</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-r">S3</span></td>
+        <td><code>events/type/date/hour/</code></td>
+        <td>Raw Parquet event files. Source of truth. Every field preserved.</td>
+        <td>Forever</td>
+        <td>Spark / Athena batch</td>
+        <td>Seconds–minutes</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 10: TRADE-OFFS MATRIX
+══════════════════════════════════ -->
+<section id="tradeoffs">
+  <div class="sec-tag">10 · Design Choices</div>
+  <h2>Trade-off Matrix</h2>
+  <p>Every senior interview tests whether you know what you gave up. Use this table to drive that conversation.</p>
+
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>Our Choice</th>
+        <th>What We Gained</th>
+        <th>What We Accepted</th>
+        <th>When to Switch</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="row-head">Counting accuracy</td>
+        <td>Count-Min Sketch</td>
+        <td><span class="dot g"></span>Fixed memory regardless of N entities</td>
+        <td><span class="dot a"></span>±1% overcounting. Never undercounts.</td>
+        <td>Switch to exact HashMap if exact counts legally required (billing, ads)</td>
+      </tr>
+      <tr>
+        <td class="row-head">Real-time store</td>
+        <td>Redis ZSET</td>
+        <td><span class="dot g"></span>Sub-ms reads; atomic ZINCRBY; native TTL</td>
+        <td><span class="dot a"></span>Memory-bound; volatile on restart without persistence</td>
+        <td>Add Cassandra fallback (already done). Redis Cluster for scale.</td>
+      </tr>
+      <tr>
+        <td class="row-head">Consistency</td>
+        <td>Eventual (at-least-once)</td>
+        <td><span class="dot g"></span>High throughput; fault tolerant; simple</td>
+        <td><span class="dot a"></span>Counts may be double-counted across Flink checkpoint boundaries</td>
+        <td>Exactly-once Flink + Kafka transactions for financial accuracy</td>
+      </tr>
+      <tr>
+        <td class="row-head">OLAP choice</td>
+        <td>ClickHouse</td>
+        <td><span class="dot g"></span>500K rows/sec ingest; 2s queries on 100B rows; cheap storage</td>
+        <td><span class="dot a"></span>Operational overhead vs managed (BigQuery). No ACID transactions.</td>
+        <td>BigQuery/Redshift if ops team is small or already in cloud ecosystem</td>
+      </tr>
+      <tr>
+        <td class="row-head">Window type</td>
+        <td>Tumbling (30s flush)</td>
+        <td><span class="dot g"></span>Simple; low memory; easy checkpoint</td>
+        <td><span class="dot a"></span>Count resets at boundary; "trending" feels jumpy</td>
+        <td>Sliding window in Flink for smooth trend curves (e.g., true Twitter trending)</td>
+      </tr>
+      <tr>
+        <td class="row-head">Deduplication</td>
+        <td>Bloom filter</td>
+        <td><span class="dot g"></span>~1GB for 100M pairs; fast O(1) lookup</td>
+        <td><span class="dot a"></span>0.1% false positive → rare under-count</td>
+        <td>Exact set (Redis SET or HBase) if unique-user guarantee is a product promise</td>
+      </tr>
+      <tr>
+        <td class="row-head">Warm store</td>
+        <td>Cassandra</td>
+        <td><span class="dot g"></span>High write throughput; linear scale; counter columns</td>
+        <td><span class="dot a"></span>No joins; limited query flexibility; complex ops</td>
+        <td>PostgreSQL if scale &lt;10K writes/sec and you want richer queries</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 11: FOLLOW-UPS
+══════════════════════════════════ -->
+<section id="followups">
+  <div class="sec-tag">11 · Follow-up Playbook</div>
+  <h2>Every Hard Follow-up, Answered</h2>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">How does OLAP (ClickHouse) fit with the real-time path — isn't there overlap?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>They serve completely different consumers and query contracts — there is no overlap.</strong><br><br>
+      <strong>Redis</strong> answers: "What are the top 10 videos right now?" — called by the API on every user page load. Latency &lt;1ms. Data freshness: 30–60 seconds. Data depth: only current window, only top-K items. <em>Real-time product feature.</em><br><br>
+      <strong>ClickHouse</strong> answers: "What was the hourly breakdown of #WorldCup trending by region and device over the past 7 days?" — called by dashboards, analysts, ML pipelines. Latency: 300ms–2s. Data depth: every entity, every hour, every dimension, for years. <em>Analytics and intelligence layer.</em><br><br>
+      The same event stream (Kafka) feeds both. Flink writes aggregated rows to a Kafka output topic. ClickHouse consumes this topic via its Kafka engine. Redis receives ZINCRBY calls. Both are updated within 30–60 seconds, but used for entirely different purposes.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">If Redis crashes and restarts, how do you recover the sorted sets?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Three-layer recovery strategy:</strong><br><br>
+      <strong>1. Redis persistence (AOF/RDB):</strong> Redis can be configured to write an AOF (Append-Only File) or periodic RDB snapshot to disk. On restart, it replays the log or loads the snapshot. Trade-off: AOF adds ~10% write overhead. RDB loses data since last snapshot. For Top-K, RDB every 5 minutes is acceptable.<br><br>
+      <strong>2. Cassandra backfill:</strong> If Redis starts cold (no AOF), the Read API detects a miss and triggers a Cassandra query to rehydrate the sorted set. This is the Cassandra fallback in the read path. Takes 30–60 seconds to warm up fully.<br><br>
+      <strong>3. Flink re-flush:</strong> Flink flushes every 30 seconds anyway. Even without any recovery mechanism, Redis will be fully repopulated within 30 seconds of restarting, as Flink's next window close will write all top-K items. The 30-second gap is acceptable for a trending feature.<br><br>
+      <strong>In practice:</strong> Redis Cluster with replicas (3 primaries + 3 replicas) means a single node failure has zero downtime — the replica is promoted immediately. Only a full cluster failure requires backfill.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">How do you handle the "hot key" problem — one viral video getting 100x traffic?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>This is a hot partition problem at both Kafka and Redis levels.</strong><br><br>
+      <strong>Kafka hot partition:</strong> All events for vid_viral land on one partition → one Flink worker is overwhelmed.<br>
+      Solution: <em>Key salting.</em> Append a random suffix: <code>vid_viral#0</code> through <code>vid_viral#7</code>. Events are spread across 8 partitions. The Flink aggregator receives 8 partial counts and sums them: <code>final_count = SUM(count_0..7)</code>. This requires a second-stage aggregation step (another Flink job or the flush aggregator handles the merge).<br><br>
+      <strong>Redis hot key:</strong> Millions of ZINCRBY calls on <code>topk:video:GLOBAL:1h</code> all hitting one Redis shard.<br>
+      Solution: <em>Write sharding.</em> Flink writes to <code>topk:video:GLOBAL:1h:shard_{0..7}</code>. A background job (or Lua script) merges these into the canonical <code>topk:video:GLOBAL:1h</code> every 10 seconds. Reads always hit the merged key.<br><br>
+      <strong>Proactive detection:</strong> Monitor Flink worker lag and Redis key write rate. If one key exceeds 50K writes/sec, automatically enable sharding for that key. This is a configuration flag, not a code change.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">Why use both Cassandra AND ClickHouse? Isn't that redundant?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>They are optimised for opposite access patterns and cannot substitute each other.</strong><br><br>
+      <table class="flow-table" style="margin:0">
+        <thead><tr><th></th><th>Cassandra</th><th>ClickHouse</th></tr></thead>
+        <tbody>
+          <tr><td>Write model</td><td>High-throughput row writes (50K/sec)</td><td>Batch columnar ingestion</td></tr>
+          <tr><td>Read model</td><td>Point + narrow range by partition key</td><td>Full table scans, GROUP BY, window functions</td></tr>
+          <tr><td>Joins</td><td>Not supported</td><td>Full SQL joins</td></tr>
+          <tr><td>Query flexibility</td><td>Very limited (must pre-define access patterns)</td><td>Arbitrary SQL analytics</td></tr>
+          <tr><td>Primary purpose</td><td>Redis fallback, backfill, durable counts</td><td>Historical analysis, BI, ML features</td></tr>
+        </tbody>
+      </table>
+      <br>
+      <strong>The key distinction:</strong> Cassandra is an <em>operational database</em> optimised for the write path and specific lookups. ClickHouse is an <em>analytical database</em> optimised for reading lots of data to answer complex questions. In the simplest terms: Cassandra keeps your system running; ClickHouse makes your data useful.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">How would you implement "Top K in sliding window" (not tumbling)?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Sliding windows are more accurate for "trending now" but costlier.</strong><br><br>
+      <strong>Flink approach:</strong> Define a sliding window of size 1 hour, sliding every 5 minutes. Flink maintains multiple overlapping window states simultaneously. Memory = (window_size / slide_interval) × state_per_window = 12 × heap_memory. CPU cost also 12x compared to tumbling.<br><br>
+      <strong>Approximate sliding window with weighted decay:</strong> Instead of a true sliding window, apply exponential decay to counts:<br>
+      <code>score = α × new_count + (1 - α) × previous_score</code><br>
+      where α is tuned to the desired half-life (e.g., α=0.1 for 1-hour effective window). Flink applies this formula on every flush. The Redis sorted set holds the decayed scores. New content rises fast; old content fades naturally.<br><br>
+      <strong>ClickHouse complement:</strong> For historical sliding windows, ClickHouse's <code>windowFunnel</code> and <code>runningDifference</code> functions can compute sliding window aggregations on demand over historical data — giving you the precise sliding window answer with a few seconds of compute time.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">How do you use ClickHouse snapshots to power a "rank history" feature?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>The topk_snapshots table is specifically designed for this.</strong><br><br>
+      A background job runs every 30 minutes and reads Redis's ZREVRANGE → inserts the full ranked list into ClickHouse's <code>topk_snapshots</code> table with a timestamp. This creates a time-series of Top-K rankings.<br><br>
+      Now you can answer: "When did #WorldCup first enter the Top-10?" → <code>SELECT MIN(snapshot_time) WHERE entity_id='#WorldCup' AND rank &lt;= 10</code><br>
+      "How long did vid_abc hold the #1 position?" → Sum the duration of consecutive snapshots where rank=1.<br>
+      "What was the rank trajectory of vid_abc over the last 7 days?" → SELECT snapshot_time, rank WHERE entity_id='vid_abc' ORDER BY snapshot_time — returns a time series you can graph.<br><br>
+      This is a feature that makes the product genuinely useful for content creators ("your video peaked at #3 for 4 hours on Tuesday") and is impossible to derive from Redis alone since Redis only holds current state.
+    </div>
+  </div>
+
+</section>
+
+</div><!-- end wrap -->
+
+<div class="footer">TOP-K · COMPLETE SYSTEM DESIGN · KAFKA · FLINK · REDIS · CASSANDRA · CLICKHOUSE · S3 · DIRECTOR LEVEL</div>
+
+<script>
+function toggle(el) {
+  el.parentElement.classList.toggle('open');
+}
+</script>
+</body>
+</html>
