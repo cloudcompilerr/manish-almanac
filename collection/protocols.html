@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Protocols: REST vs gRPC vs GraphQL vs WebSocket vs SSE vs Long Polling</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;
+  --rest:#1a4f8a;--rest-bg:#edf2fb;
+  --grpc:#1a7a4a;--grpc-bg:#edf8f2;
+  --gql:#a0208a;--gql-bg:#faedf8;
+  --ws:#b8720a;--ws-bg:#fdf6e8;
+  --sse:#1287b1;--sse-bg:#eaf6fb;
+  --lp:#6040a0;--lp-bg:#f2eefb;
+  --red:#c0392b;--red-bg:#fdf0ee;
+  --green:#1a7a4a;--green-bg:#edf8f2;
+  --amber:#b8720a;--amber-bg:#fdf6e8;
+  --blue:#1a4f8a;--blue-bg:#edf2fb;
+  --mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.pill-rest{border-color:var(--rest);color:var(--rest);background:rgba(26,79,138,.08);}
+.pill-grpc{border-color:var(--grpc);color:var(--grpc);background:rgba(26,122,74,.08);}
+.pill-gql{border-color:var(--gql);color:var(--gql);background:rgba(160,32,138,.08);}
+.pill-ws{border-color:var(--ws);color:var(--ws);background:rgba(184,114,10,.08);}
+.pill-sse{border-color:var(--sse);color:var(--sse);background:rgba(18,135,177,.08);}
+.pill-lp{border-color:var(--lp);color:var(--lp);background:rgba(96,64,160,.08);}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+h4{font-size:13px;font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:820px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+/* Protocol identity cards */
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.rest::before{background:var(--rest);}
+.db-card.grpc::before{background:var(--grpc);}
+.db-card.gql::before{background:var(--gql);}
+.db-card.ws::before{background:var(--ws);}
+.db-card.sse::before{background:var(--sse);}
+.db-card.lp::before{background:var(--lp);}
+.db-logo{font-size:22px;margin-bottom:6px;}
+.db-name{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:4px;}
+.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
+.db-tagline{font-size:13px;color:#5a5848;line-height:1.55;}
+.db-born{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;}
+/* Analogy block */
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+/* Callouts */
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+/* Comparison table */
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+/* System design examples */
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.sd-example-title{font-family:var(--serif);font-size:16px;color:#f0ece4;font-weight:700;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6a6458;border:1px solid #2e2c28;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:130px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3830;line-height:1.6;}
+/* Badges */
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
+.b-rest{background:var(--rest-bg);border-color:var(--rest);color:var(--rest);}
+.b-grpc{background:var(--grpc-bg);border-color:var(--grpc);color:var(--grpc);}
+.b-gql{background:var(--gql-bg);border-color:var(--gql);color:var(--gql);}
+.b-ws{background:var(--ws-bg);border-color:var(--ws);color:var(--ws);}
+.b-sse{background:var(--sse-bg);border-color:var(--sse);color:var(--sse);}
+.b-lp{background:var(--lp-bg);border-color:var(--lp);color:var(--lp);}
+.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+/* FAQ */
+.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.faq-q:hover{background:var(--surface);}
+.faq-q .tog{font-size:18px;color:#e8b84b;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
+.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3830;line-height:1.75;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
+.faq-a ul{padding-left:18px;margin:8px 0;}.faq-a li{margin-bottom:6px;}
+/* Concept grid */
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+/* Step block */
+.step-block{background:#fff;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.step-block-header{background:var(--ink);color:#e8e4dc;padding:13px 18px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.sb-icon{font-size:16px;}
+.step-block-body{padding:0;}
+.step-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);min-width:46px;display:flex;align-items:flex-start;justify-content:center;padding:16px 6px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;border-right:1px solid var(--border);}
+.step-content{padding:14px 18px;flex:1;}
+.step-q{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:6px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:9px 13px;border-radius:5px;font-size:13px;line-height:1.65;}
+.opt-yes{background:#edf8f2;border:1px solid #b8ddc8;}
+.opt-no{background:#fdf6e8;border:1px solid #e8c870;}
+.opt-mid{background:#edf2fb;border:1px solid #b8c8e8;}
+.opt-any{background:#f4f0fb;border:1px solid #c8b8e8;}
+.opt-arrow{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;min-width:130px;}
+.opt-yes .opt-arrow{color:#1a7a4a;}
+.opt-no .opt-arrow{color:#b8720a;}
+.opt-mid .opt-arrow{color:#1a4f8a;}
+.opt-any .opt-arrow{color:#5a3c9a;}
+.opt-text{flex:1;color:#3a3830;}
+/* Use-card grid */
+.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
+.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
+.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.use-card ul{padding-left:16px;font-size:13px;color:#4a4838;line-height:1.7;}
+.use-card ul li{margin-bottom:4px;}
+/* Combo pattern cards */
+.combo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:20px 0;}
+.combo-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;}
+.combo-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:8px 8px 0 0;}
+.combo-card.c1::before{background:linear-gradient(90deg,var(--rest),var(--ws));}
+.combo-card.c2::before{background:linear-gradient(90deg,var(--rest),var(--sse));}
+.combo-card.c3::before{background:linear-gradient(90deg,var(--grpc),var(--grpc));}
+.combo-card.c4::before{background:linear-gradient(90deg,var(--gql),var(--ws));}
+.combo-card.c5::before{background:linear-gradient(90deg,var(--rest),var(--lp));}
+.combo-card.c6::before{background:linear-gradient(90deg,var(--rest),var(--grpc));}
+.combo-title{font-family:var(--serif);font-size:15px;font-weight:700;margin-bottom:6px;color:var(--ink);}
+.combo-formula{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px;}
+.combo-body{font-size:13px;color:#5a5848;line-height:1.65;margin-bottom:10px;}
+.combo-used{font-family:var(--mono);font-size:10px;color:var(--muted);}
+/* Footer */
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+/* Responsive */
+@media(max-width:560px){
+  .concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}
+  .opt-arrow{min-width:80px;}.choice-label{width:80px;}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">System Design · API Design · Manish-Almanac</div>
+    <h1>API Protocols<br><em>Decoded</em></h1>
+    <p class="hero-sub">REST vs gRPC vs GraphQL vs WebSocket vs SSE vs Long Polling — every dimension that matters in a FAANG interview, explained from first principles. Includes when they complement each other, real system design examples, and every follow-up answered.</p>
+    <div class="db-pills">
+      <span class="db-pill pill-rest">REST</span>
+      <span class="db-pill pill-grpc">gRPC</span>
+      <span class="db-pill pill-gql">GraphQL</span>
+      <span class="db-pill pill-ws">WebSocket</span>
+      <span class="db-pill pill-sse">SSE</span>
+      <span class="db-pill pill-lp">Long Polling</span>
+    </div>
+  </div>
+</div>
+
+<nav class="nav">
+  <a href="#mental-model">Mental Model</a>
+  <a href="#request-response">Request-Response</a>
+  <a href="#realtime">Real-Time</a>
+  <a href="#comparison">Full Comparison</a>
+  <a href="#combos">Combos</a>
+  <a href="#examples">System Design</a>
+  <a href="#decision">Decision Tree</a>
+  <a href="#followups">Follow-ups</a>
+</nav>
+
+<div class="wrap">
+
+<!-- ══ 00 MENTAL MODEL ══ -->
+<section id="mental-model">
+  <div class="sec-tag">00 · Start Here</div>
+  <h2>The mental model before memorising anything</h2>
+
+  <p>Most candidates treat REST, WebSocket, gRPC, and GraphQL as competing options. They're not — they solve <strong>different communication problems</strong>. Before picking any protocol, answer one question:</p>
+
+  <div class="callout cl-amber">
+    <div class="cl-lbl">The single question that matters</div>
+    <p><strong>Who initiates communication, and how often does data change?</strong></p>
+    <p>Client asks once, server replies once → <strong>Request-Response</strong> (REST, gRPC, GraphQL)</p>
+    <p>Server needs to push data to client without the client asking → <strong>Server Push</strong> (SSE, WebSocket, Long Polling)</p>
+    <p>Client and server need to talk simultaneously, continuously → <strong>Bidirectional</strong> (WebSocket, gRPC streaming)</p>
+  </div>
+
+  <div class="analogy">
+    <div class="analogy-label">The restaurant analogy — for a complete layman</div>
+    <div class="analogy-text">
+      <strong>REST</strong> is a waiter who takes your order, goes to the kitchen, and comes back with exactly what you asked for. Simple, stateless, everyone knows the rules.<br><br>
+      <strong>gRPC</strong> is a waiter using a walkie-talkie with the kitchen using a shared codebook. Faster, more efficient, but both sides need the same codebook (Protobuf schema).<br><br>
+      <strong>GraphQL</strong> is a waiter who lets you design your own plate. "I want 3 items from dish A and 2 from dish B, in one trip." You get exactly what you asked for — nothing more, nothing less.<br><br>
+      <strong>WebSocket</strong> is a phone call — once connected, both sides can speak at any moment without hanging up and redialling.<br><br>
+      <strong>SSE</strong> is a radio broadcast — the server talks continuously to all listeners, but listeners can't transmit back on the same channel.<br><br>
+      <strong>Long Polling</strong> is repeatedly calling the kitchen and asking "is my order ready yet?" — the kitchen keeps you on hold until it is, then hangs up. You immediately call back.
+    </div>
+  </div>
+
+  <h3>The Two Families</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Request-Response</div>
+      <div class="concept-def"><strong>Client sends a request, server replies, connection closes.</strong> Each interaction is independent. The server has no memory of previous requests unless you send a session token.<br><span style="color:#5a5848;font-size:12.5px;">Members: REST, gRPC (unary), GraphQL Query/Mutation. HTTP/1.1, HTTP/2, HTTP/3 are the transports.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Persistent / Push</div>
+      <div class="concept-def"><strong>Connection stays open. Server can push data without the client asking.</strong> Crucial for real-time features: live feeds, notifications, chat, collaborative editing.<br><span style="color:#5a5848;font-size:12.5px;">Members: WebSocket (bidirectional), SSE (server→client only), Long Polling (simulated push), gRPC streaming.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 01 REQUEST-RESPONSE PROTOCOLS ══ -->
+<section id="request-response">
+  <div class="sec-tag">01 · Request-Response Family</div>
+  <h2>REST, gRPC, and GraphQL — the three ways to ask</h2>
+
+  <div class="db-grid">
+    <div class="db-card rest">
+      <div class="db-logo">🌐</div>
+      <div class="db-name">REST</div>
+      <div class="db-type">HTTP · Stateless · Resource-Oriented</div>
+      <div class="db-tagline">The universal default. Every HTTP client speaks it. Resources are nouns (URLs), actions are verbs (GET/POST/PUT/DELETE). No special tooling needed. The right choice until it isn't.</div>
+      <div class="db-born">Born 2000 · Roy Fielding's PhD thesis · HTTP/1.1 + HTTP/2</div>
+    </div>
+    <div class="db-card grpc">
+      <div class="db-logo">⚡</div>
+      <div class="db-name">gRPC</div>
+      <div class="db-type">HTTP/2 · Binary · Contract-First</div>
+      <div class="db-tagline">Google's internal RPC framework. Define your API in a .proto file — both sides generate code from it. Binary encoding (Protobuf) makes it 5–10x smaller and faster than JSON REST. Built for internal service-to-service calls.</div>
+      <div class="db-born">Born 2015 · Google · HTTP/2 + Protobuf</div>
+    </div>
+    <div class="db-card gql">
+      <div class="db-logo">◈</div>
+      <div class="db-name">GraphQL</div>
+      <div class="db-type">HTTP · Query Language · Client-Driven</div>
+      <div class="db-tagline">Facebook's answer to REST's over-fetching problem. The client describes exactly what data it needs in a typed query. One endpoint, infinite flexibility. Ideal when different clients (mobile/web/partner) need different shapes of the same data.</div>
+      <div class="db-born">Born 2015 · Facebook · HTTP/1.1 + HTTP/2</div>
+    </div>
+  </div>
+
+  <h3>REST — How It Actually Works</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Resources & Verbs</div>
+      <div class="concept-def"><strong>REST maps actions to HTTP methods and nouns to URLs.</strong><br>
+        <code>GET /users/123</code> → fetch user<br>
+        <code>POST /users</code> → create user<br>
+        <code>PUT /users/123</code> → replace user<br>
+        <code>PATCH /users/123</code> → partial update<br>
+        <code>DELETE /users/123</code> → delete user<br>
+        <span style="color:#5a5848;font-size:12.5px;">The URL is the resource (noun). The HTTP method is the action (verb). This separation is REST's core design principle.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Stateless</div>
+      <div class="concept-def"><strong>Every request must contain everything the server needs to process it.</strong> The server stores no session between requests. Identity always comes from a token in the header — never assumed from context.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Statelessness makes REST trivially horizontally scalable — any server can handle any request. No sticky sessions needed.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">HTTP Caching</div>
+      <div class="concept-def"><strong>GET requests are cacheable by default</strong> — CDNs, browsers, and proxies can cache them. This is one of REST's biggest advantages over gRPC and GraphQL.<br><code>Cache-Control: max-age=3600</code> tells every layer to cache for 1 hour.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ A public REST API with GET responses cached at Cloudflare reduces origin traffic by 95%+. gRPC and GraphQL cannot use HTTP caching natively.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Status Codes</div>
+      <div class="concept-def"><strong>HTTP status codes carry semantic meaning every client understands natively:</strong><br>
+        <code>200</code> OK · <code>201</code> Created · <code>204</code> No Content<br>
+        <code>400</code> Bad Request · <code>401</code> Unauthorised · <code>403</code> Forbidden · <code>404</code> Not Found<br>
+        <code>429</code> Rate Limited · <code>500</code> Server Error · <code>503</code> Unavailable<br>
+        <span style="color:#5a5848;font-size:12.5px;">Every HTTP client, load balancer, and monitoring tool understands these codes. GraphQL always returns 200 — errors are in the response body, invisible to infrastructure.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Over-Fetching</div>
+      <div class="concept-def"><strong>REST's biggest weakness: you get what the endpoint returns, not what you need.</strong><br><code>GET /users/123</code> returns all 40 fields. Your mobile app only needed name and avatar.<br><span style="color:#b83030;font-size:12.5px;">⚠️ On mobile with limited bandwidth, over-fetching wastes data and slows rendering. This is exactly why Facebook invented GraphQL.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Under-Fetching</div>
+      <div class="concept-def"><strong>REST's second weakness: one endpoint rarely returns all the data you need.</strong><br>To show a user's profile with their posts and followers: <code>GET /users/123</code> + <code>GET /users/123/posts</code> + <code>GET /users/123/followers</code> — 3 round trips.<br><span style="color:#b83030;font-size:12.5px;">⚠️ On mobile, each extra round trip adds 50–200ms. Waterfall requests add up fast. GraphQL solves this with a single query.</span></div>
+    </div>
+  </div>
+
+  <h3>gRPC — How It Actually Works</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Protocol Buffers</div>
+      <div class="concept-def"><strong>gRPC uses Protobuf — a binary serialisation format — instead of JSON.</strong> You define your data schema in a <code>.proto</code> file. Both client and server generate code from it automatically.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Binary is 5–10x smaller than equivalent JSON. Parsing binary is 5–10x faster than parsing JSON text. At 1M requests/sec, this matters enormously.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">HTTP/2 Multiplexing</div>
+      <div class="concept-def"><strong>gRPC runs on HTTP/2, which multiplexes multiple requests over a single TCP connection.</strong> With HTTP/1.1 REST, each request needs its own connection (or connection pooling). HTTP/2 sends hundreds of requests simultaneously over one connection.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Huge advantage for service-to-service calls where you're making thousands of RPCs per second between the same two services.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Streaming Modes</div>
+      <div class="concept-def"><strong>gRPC supports 4 modes — REST only supports request-response:</strong><br>
+        <strong>Unary</strong> — one request, one response (like REST)<br>
+        <strong>Server streaming</strong> — one request, stream of responses (like SSE)<br>
+        <strong>Client streaming</strong> — stream of requests, one response (uploading chunks)<br>
+        <strong>Bidirectional streaming</strong> — both sides stream simultaneously (like WebSocket)<br>
+        <span style="color:#5a5848;font-size:12.5px;">Real example: Google Maps sends your location as a client stream, receives route updates as a server stream — all over one gRPC bidirectional connection.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Schema Contract</div>
+      <div class="concept-def"><strong>The .proto file is a strict API contract between client and server.</strong> Both sides must use the same schema. Adding a field is backwards-compatible; removing one breaks older clients.<br><span style="color:#b83030;font-size:12.5px;">⚠️ gRPC requires code generation on every schema change. REST and GraphQL don't. This is operational overhead — significant for teams with many services.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Browser Support</div>
+      <div class="concept-def"><strong>Browsers cannot call gRPC directly.</strong> HTTP/2 trailers (which gRPC uses) are not exposed by browser APIs. You need gRPC-Web (a proxy layer) or gRPC-Gateway (which translates to REST).<br><span style="color:#b83030;font-size:12.5px;">⚠️ This is why gRPC is almost exclusively used for internal service-to-service communication, not for public-facing APIs.</span></div>
+    </div>
+  </div>
+
+  <h3>GraphQL — How It Actually Works</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Single Endpoint</div>
+      <div class="concept-def"><strong>GraphQL has one endpoint: <code>POST /graphql</code>.</strong> The query in the request body describes exactly what data to return. No URL routing, no versioning headaches — the schema evolves by adding fields (never removing).<br><span style="color:#5a5848;font-size:12.5px;">This is how Facebook, GitHub, Shopify, and Twitter serve data to their apps — one endpoint, infinite flexibility.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Query vs Mutation</div>
+      <div class="concept-def"><strong>Query</strong> = read (like GET). <strong>Mutation</strong> = write (like POST/PUT/DELETE). <strong>Subscription</strong> = real-time push (like WebSocket).<br>
+        <code>query { user(id:"123") { name, avatar, followerCount } }</code><br>
+        <code>mutation { createPost(input:{...}) { id, createdAt } }</code><br>
+        <span style="color:#5a5848;font-size:12.5px;">Subscriptions use WebSocket under the hood — GraphQL is a query language on top of a transport, not a transport itself.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">N+1 Problem</div>
+      <div class="concept-def"><strong>GraphQL's biggest pitfall: a single query can trigger hundreds of database calls.</strong><br>Query for 100 posts, each needing its author → 1 query for posts + 100 queries for authors = 101 DB calls.<br><span style="color:#b83030;font-size:12.5px;">⚠️ Fix: DataLoader (batches and deduplicates database calls). Every GraphQL implementation needs it or performance degrades to unusable.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Introspection</div>
+      <div class="concept-def"><strong>GraphQL APIs are self-documenting.</strong> Clients can query the schema itself to discover all available types, fields, and operations — no separate Swagger/OpenAPI needed.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Tools like GraphiQL and Apollo Studio give developers interactive playgrounds. New team members explore the API without reading docs.</span><br><span style="color:#b83030;font-size:12.5px;">⚠️ Disable introspection in production — it exposes your entire data model to attackers.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Caching Problem</div>
+      <div class="concept-def"><strong>GraphQL uses POST for queries — HTTP caching doesn't work natively.</strong> CDNs only cache GET requests. Every GraphQL query hits your origin.<br><span style="color:#5a5848;font-size:12.5px;">Workarounds: Persisted Queries (assign each query a hash, send hash as GET), Apollo CDN caching, or Cloudflare Workers. More complexity than REST's built-in GET caching.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 REAL-TIME PROTOCOLS ══ -->
+<section id="realtime">
+  <div class="sec-tag">02 · Real-Time Family</div>
+  <h2>WebSocket, SSE, and Long Polling — the three ways to push</h2>
+
+  <div class="callout cl-blue">
+    <div class="cl-lbl">Why REST can't do real-time</div>
+    <p>REST is pull-only: <strong>the client must ask</strong> before the server can respond. For a chat app, polling every second means thousands of empty responses. For a live dashboard, you'd poll 60 times/minute per user. At 100K users, that's 6M requests/minute for mostly empty data.</p>
+    <p><strong>Real-time protocols invert this: the server pushes data the moment it's available.</strong> No polling, no wasted requests, no latency from the polling interval.</p>
+  </div>
+
+  <div class="db-grid">
+    <div class="db-card ws">
+      <div class="db-logo">🔌</div>
+      <div class="db-name">WebSocket</div>
+      <div class="db-type">Full-Duplex · Persistent · TCP</div>
+      <div class="db-tagline">A persistent bidirectional connection over a single TCP socket. Once the HTTP handshake upgrades to WS, both client and server can send messages at any time, simultaneously. The gold standard for true real-time: chat, multiplayer games, collaborative editing.</div>
+      <div class="db-born">Born 2011 · RFC 6455 · HTTP Upgrade handshake</div>
+    </div>
+    <div class="db-card sse">
+      <div class="db-logo">📡</div>
+      <div class="db-name">Server-Sent Events</div>
+      <div class="db-type">Server→Client Only · HTTP · Auto-Reconnect</div>
+      <div class="db-tagline">A simple HTTP connection that stays open. The server pushes text events whenever it wants. The client cannot send data back on this connection. Simpler than WebSocket, works with HTTP/2 multiplexing, and auto-reconnects on disconnect.</div>
+      <div class="db-born">Born 2006 · W3C Standard · HTTP/1.1 + HTTP/2</div>
+    </div>
+    <div class="db-card lp">
+      <div class="db-logo">🔄</div>
+      <div class="db-name">Long Polling</div>
+      <div class="db-type">Simulated Push · HTTP · Request-Response</div>
+      <div class="db-tagline">Client sends a request. Server holds it open until data is available or a timeout occurs. Client immediately sends a new request. Simulates real-time over plain HTTP — no special protocol needed. The legacy fallback when WebSocket isn't available.</div>
+      <div class="db-born">Born ~2000s · No official standard · Plain HTTP</div>
+    </div>
+  </div>
+
+  <h3>WebSocket — How It Actually Works</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">The Upgrade Handshake</div>
+      <div class="concept-def"><strong>WebSocket starts as an HTTP request, then upgrades to a persistent TCP connection.</strong><br>
+        Client sends: <code>GET /ws HTTP/1.1, Upgrade: websocket</code><br>
+        Server responds: <code>101 Switching Protocols</code><br>
+        Now: raw TCP frames flow in both directions — no HTTP overhead per message.<br>
+        <span style="color:#5a5848;font-size:12.5px;">Why HTTP start? Firewalls and proxies block arbitrary TCP but allow HTTP port 80/443. The upgrade trick bypasses firewall restrictions.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Full-Duplex</div>
+      <div class="concept-def"><strong>Both client and server can send messages at any moment, simultaneously, over the same connection.</strong> No waiting for the other side. No request-response cycle.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ This is why WebSocket is used for chat (user sends and receives simultaneously), multiplayer games (constant position updates both directions), and collaborative editing (every keystroke sent immediately).</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Framing</div>
+      <div class="concept-def"><strong>WebSocket sends data as frames, not HTTP requests.</strong> Each frame has a tiny 2–10 byte header (opcode, mask, length) vs HTTP's 200–800 byte headers per request.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ A chat message sent via WebSocket costs ~10 bytes overhead. Via HTTP polling: 300–800 bytes of headers per poll even when empty. At 1M active users, this difference is measured in gigabits per second.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">State & Scaling</div>
+      <div class="concept-def"><strong>WebSocket connections are stateful and sticky — the connection lives on a specific server.</strong> If that server dies, all its connections drop. Clients must reconnect.<br><span style="color:#b83030;font-size:12.5px;">⚠️ You cannot load-balance WebSocket with standard round-robin. You need sticky sessions (by user_id) or a pub/sub broker (Redis, Kafka) so any server can push to any user regardless of which server they're connected to.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Heartbeats</div>
+      <div class="concept-def"><strong>Idle WebSocket connections get killed by proxies and NAT gateways after 30–90 seconds.</strong> Solution: ping/pong heartbeat every 20–30 seconds. Server sends a ping frame, client echoes a pong. No pong = connection dead, clean up and notify.<br><span style="color:#5a5848;font-size:12.5px;">Every production WebSocket implementation needs heartbeat logic. Without it, you get ghost connections — the server thinks the client is connected but the client is gone.</span></div>
+    </div>
+  </div>
+
+  <h3>SSE — How It Actually Works</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">The Wire Format</div>
+      <div class="concept-def"><strong>SSE is a plain HTTP response that never ends.</strong> Content-Type is <code>text/event-stream</code>. The server sends newline-delimited text events:<br>
+        <code>data: {"type":"view","count":1247}\n\n</code><br>
+        <code>data: {"type":"view","count":1248}\n\n</code><br>
+        <span style="color:#5a5848;font-size:12.5px;">Two consecutive newlines signal the end of one event. The browser's EventSource API parses this automatically and fires events at your JavaScript handler.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Auto-Reconnect</div>
+      <div class="concept-def"><strong>The browser's EventSource automatically reconnects after a disconnect.</strong> The server sends an event ID with each event. On reconnect, the browser sends <code>Last-Event-ID</code> header — the server can replay missed events.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ This makes SSE dramatically simpler to operate than WebSocket. No custom reconnect logic needed on the client. Works out of the box.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">HTTP/2 Multiplexing</div>
+      <div class="concept-def"><strong>Over HTTP/2, multiple SSE streams share one TCP connection.</strong> With HTTP/1.1, browsers limit connections per domain (typically 6). If you have 6 SSE streams, you've used all connections. HTTP/2 multiplexes hundreds over one connection.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Use HTTP/2 for SSE at scale. HTTP/1.1 SSE has a hard limit of ~6 concurrent streams per browser per domain.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">One Direction Only</div>
+      <div class="concept-def"><strong>SSE is server-to-client only.</strong> The client cannot send data back on the same connection. For any client action (user sends a message, acknowledges a notification), you make a separate REST/HTTP POST call.<br><span style="color:#5a5848;font-size:12.5px;">This is the key difference from WebSocket. In most notification/feed systems this is fine — client-to-server actions are already REST calls.</span></div>
+    </div>
+  </div>
+
+  <h3>Long Polling — How It Actually Works</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">The Mechanism</div>
+      <div class="concept-def"><strong>Step by step:</strong><br>
+        1. Client sends <code>GET /messages?since=1234</code><br>
+        2. Server checks if new messages exist. If yes → respond immediately. If no → <strong>hold the connection open</strong><br>
+        3. When a message arrives, server responds with it<br>
+        4. Client receives response, <strong>immediately sends a new request</strong><br>
+        5. Repeat forever<br>
+        <span style="color:#5a5848;font-size:12.5px;">Timeout: if no data after 30 seconds, server responds with 204 No Content. Client retries. This prevents proxy timeouts.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">vs Regular Polling</div>
+      <div class="concept-def"><strong>Regular polling</strong>: client asks every N seconds regardless. Empty responses waste bandwidth and add N seconds of latency.<br><strong>Long polling</strong>: client asks once, server responds only when there's data. Near-zero latency, zero empty responses.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Long polling is near-real-time with standard HTTP. No WebSocket, no special protocol. Works everywhere HTTP works.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Scalability Challenge</div>
+      <div class="concept-def"><strong>Long polling holds server threads/connections open while waiting.</strong> With 100K concurrent users each holding a long poll connection, you need 100K open connections on your servers — consuming file descriptors and memory even when idle.<br><span style="color:#b83030;font-size:12.5px;">⚠️ Mitigate with async event loops (Node.js, Go goroutines, Nginx) that handle thousands of open connections on a single thread. Traditional thread-per-request servers (Java/Rails) cannot scale long polling.</span></div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">When Still Used</div>
+      <div class="concept-def"><strong>Long polling is the fallback when WebSocket is unavailable</strong> (corporate firewalls blocking WS) or for systems where you need guaranteed delivery with replay.<br><span style="color:#5a5848;font-size:12.5px;">Real usage: Slack originally used long polling before WebSocket. Some mobile apps in restricted networks still use it. XMPP Bosh protocol is long polling. Most modern systems use WebSocket or SSE instead.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 03 FULL COMPARISON ══ -->
+<section id="comparison">
+  <div class="sec-tag">03 · Side by Side</div>
+  <h2>Every dimension that matters in an interview</h2>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>REST 🌐</th>
+        <th>gRPC ⚡</th>
+        <th>GraphQL ◈</th>
+        <th>WebSocket 🔌</th>
+        <th>SSE 📡</th>
+        <th>Long Poll 🔄</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="row-head">Communication</td>
+        <td>Request-Response</td>
+        <td>RPC + Streaming</td>
+        <td>Request-Response</td>
+        <td>Bidirectional</td>
+        <td>Server→Client</td>
+        <td>Simulated Push</td>
+      </tr>
+      <tr>
+        <td class="row-head">Transport</td>
+        <td>HTTP/1.1, HTTP/2</td>
+        <td>HTTP/2 only</td>
+        <td>HTTP/1.1, HTTP/2</td>
+        <td>TCP (after upgrade)</td>
+        <td>HTTP/1.1, HTTP/2</td>
+        <td>HTTP/1.1, HTTP/2</td>
+      </tr>
+      <tr>
+        <td class="row-head">Data Format</td>
+        <td>JSON, XML, anything</td>
+        <td>Protobuf (binary)</td>
+        <td>JSON</td>
+        <td>Any (text or binary)</td>
+        <td>Text (UTF-8)</td>
+        <td>JSON, anything</td>
+      </tr>
+      <tr>
+        <td class="row-head">Latency</td>
+        <td><span class="warn">1 RTT per request</span></td>
+        <td><span class="good">~1 RTT, multiplexed</span></td>
+        <td><span class="warn">1 RTT per query</span></td>
+        <td><span class="good">Sub-ms after connect</span></td>
+        <td><span class="good">Sub-ms after connect</span></td>
+        <td><span class="warn">~1 RTT when data ready</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">Payload Size</td>
+        <td><span class="warn">Large (JSON + HTTP headers)</span></td>
+        <td><span class="good">5–10x smaller than REST</span></td>
+        <td><span class="warn">Similar to REST</span></td>
+        <td><span class="good">Tiny frame headers</span></td>
+        <td><span class="good">Small (text events)</span></td>
+        <td><span class="warn">HTTP headers per request</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">HTTP Caching</td>
+        <td><span class="good">Full support (GET)</span></td>
+        <td><span class="bad">None</span></td>
+        <td><span class="bad">None natively</span></td>
+        <td><span class="bad">None</span></td>
+        <td><span class="warn">Limited</span></td>
+        <td><span class="bad">None effectively</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">Browser Support</td>
+        <td><span class="good">Universal</span></td>
+        <td><span class="bad">Needs gRPC-Web proxy</span></td>
+        <td><span class="good">Universal (HTTP)</span></td>
+        <td><span class="good">All modern browsers</span></td>
+        <td><span class="good">All modern browsers</span></td>
+        <td><span class="good">Universal</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">Stateful?</td>
+        <td><span class="good">Stateless</span></td>
+        <td><span class="warn">Stream is stateful</span></td>
+        <td><span class="good">Stateless (queries)</span></td>
+        <td><span class="bad">Stateful connection</span></td>
+        <td><span class="bad">Stateful connection</span></td>
+        <td><span class="warn">Quasi-stateful</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">Load Balancing</td>
+        <td><span class="good">Trivial</span></td>
+        <td><span class="good">L7 with gRPC-aware LB</span></td>
+        <td><span class="good">Trivial</span></td>
+        <td><span class="bad">Sticky sessions needed</span></td>
+        <td><span class="bad">Sticky sessions needed</span></td>
+        <td><span class="warn">Manageable</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">Schema / Contract</td>
+        <td><span class="warn">Optional (OpenAPI)</span></td>
+        <td><span class="good">Mandatory .proto</span></td>
+        <td><span class="good">Typed schema</span></td>
+        <td><span class="bad">None by default</span></td>
+        <td><span class="bad">None by default</span></td>
+        <td><span class="bad">None by default</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">Tooling / Ecosystem</td>
+        <td><span class="good">Massive</span></td>
+        <td><span class="warn">Good, growing</span></td>
+        <td><span class="good">Rich (Apollo, Relay)</span></td>
+        <td><span class="warn">Good</span></td>
+        <td><span class="warn">Lightweight</span></td>
+        <td><span class="warn">Basic</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">Best For</td>
+        <td>Public APIs, CRUD</td>
+        <td>Internal services</td>
+        <td>Multi-client APIs</td>
+        <td>Chat, games, collab</td>
+        <td>Feeds, notifications</td>
+        <td>Legacy/fallback</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══ 04 COMBOS ══ -->
+<section id="combos">
+  <div class="sec-tag">04 · Where They Complement Each Other</div>
+  <h2>Protocols that work together — not against each other</h2>
+
+  <p>The biggest interview insight: <strong>real systems use multiple protocols simultaneously</strong>. The request-response and real-time families solve different problems and are designed to be combined. Here are the six most common patterns you'll see and need to justify in interviews.</p>
+
+  <div class="combo-grid">
+
+    <div class="combo-card c1">
+      <div class="combo-title">REST + WebSocket</div>
+      <div class="combo-formula">REST for actions · WebSocket for events</div>
+      <div class="combo-body">REST handles all mutations (send message, create post, update status). WebSocket delivers the real-time events (new message received, presence change, typing indicator). The REST call triggers the server-side change; WebSocket broadcasts the result to affected users.</div>
+      <div class="combo-used">Used by: Slack, Discord, WhatsApp Web, Notion</div>
+    </div>
+
+    <div class="combo-card c2">
+      <div class="combo-title">REST + SSE</div>
+      <div class="combo-formula">REST for writes · SSE for live updates</div>
+      <div class="combo-body">User submits actions via REST (POST /start-analysis). Server acknowledges immediately with a job ID. SSE stream delivers progress updates as the job runs. Simpler than WebSocket because the client never needs to send mid-stream. Classic for progress bars, live dashboards, AI streaming responses.</div>
+      <div class="combo-used">Used by: GitHub Actions, Vercel deployments, OpenAI API (streaming tokens), monitoring dashboards</div>
+    </div>
+
+    <div class="combo-card c3">
+      <div class="combo-title">REST (external) + gRPC (internal)</div>
+      <div class="combo-formula">REST at the edge · gRPC between services</div>
+      <div class="combo-body">Public API exposed as REST — universal browser support, HTTP caching, familiar to all clients. Internal microservice calls use gRPC — 5–10x smaller payloads, strict typed contracts, HTTP/2 multiplexing. An API Gateway (like Envoy or Kong) translates REST→gRPC at the boundary.</div>
+      <div class="combo-used">Used by: Google, Uber, Netflix, most FAANG internal architectures</div>
+    </div>
+
+    <div class="combo-card c4">
+      <div class="combo-title">GraphQL + WebSocket</div>
+      <div class="combo-formula">GraphQL Queries/Mutations + GraphQL Subscriptions</div>
+      <div class="combo-body">GraphQL queries and mutations travel over HTTP for reads and writes. GraphQL Subscriptions use WebSocket under the hood for real-time updates. One unified schema — the client uses the same GraphQL types and vocabulary for both. Apollo Client handles both transports automatically.</div>
+      <div class="combo-used">Used by: GitHub (GraphQL API + subscriptions), Hasura, Shopify Storefront API</div>
+    </div>
+
+    <div class="combo-card c5">
+      <div class="combo-title">REST + Long Polling (legacy)</div>
+      <div class="combo-formula">REST everywhere · Long polling as fallback</div>
+      <div class="combo-body">When WebSocket or SSE is blocked by corporate firewalls or unsupported by old clients, long polling bridges the gap. Standard REST for all actions; long polling for the notification channel. Socket.io does exactly this — it tries WebSocket first, falls back to long polling automatically.</div>
+      <div class="combo-used">Used by: Socket.io fallback, legacy enterprise apps, restricted network environments</div>
+    </div>
+
+    <div class="combo-card c6">
+      <div class="combo-title">gRPC Bidirectional Streaming</div>
+      <div class="combo-formula">One protocol, four modes</div>
+      <div class="combo-body">For pure service-to-service real-time, gRPC bidirectional streaming replaces both REST and WebSocket. Both sides stream simultaneously over a single HTTP/2 connection. Used for location tracking (client streams GPS, server streams route), audio/video processing, real-time ML inference pipelines.</div>
+      <div class="combo-used">Used by: Google Maps, real-time ML pipelines, internal FAANG service meshes</div>
+    </div>
+
+  </div>
+
+  <div class="callout cl-green">
+    <div class="cl-lbl">The Interview Sound Bite</div>
+    <p><strong>"In most production systems I would use REST for the request-response layer and pair it with either SSE or WebSocket for the real-time layer — depending on whether the client needs to send data back on the same connection. REST handles mutations; the real-time channel delivers server-initiated events. gRPC replaces REST for internal service-to-service calls where latency and throughput matter."</strong></p>
+  </div>
+</section>
+
+<!-- ══ 05 SYSTEM DESIGN EXAMPLES ══ -->
+<section id="examples">
+  <div class="sec-tag">05 · Applied to Real Systems</div>
+  <h2>Which protocol wins in which system?</h2>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <div class="sd-example-title">Chat App (Slack / WhatsApp)</div>
+      <span class="sd-example-tag">BIDIRECTIONAL · REAL-TIME</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row">
+        <div class="choice-label">SEND MESSAGE</div>
+        <div class="choice-val"><span class="badge b-rest">REST ✓</span> <code>POST /messages</code> — client sends message, server persists it, returns message ID + timestamp. REST because: idempotency key prevents duplicates on retry, HTTP status codes signal delivery failure clearly, easy to rate-limit with standard middleware.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">RECEIVE MESSAGES</div>
+        <div class="choice-val"><span class="badge b-ws">WebSocket ✓</span> Server pushes new messages to all room members the moment they arrive. Bidirectional needed: client also sends typing indicators and read receipts back on the same connection. Sub-10ms delivery vs 1–5 second polling lag.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">PRESENCE / TYPING</div>
+        <div class="choice-val"><span class="badge b-ws">WebSocket ✓</span> "Alice is typing…" — client sends typing events over the WebSocket every keystroke. Server fans out to all members via pub/sub (Redis). Low-overhead frames, no HTTP headers per event.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">INTERNAL SERVICES</div>
+        <div class="choice-val"><span class="badge b-grpc">gRPC ✓</span> Message Service → Notification Service → Presence Service: all internal. Protobuf contracts prevent schema drift. HTTP/2 multiplexing handles thousands of RPCs/sec between services without connection explosion.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">WHY NOT ALL WS</div>
+        <div class="choice-val"><span class="badge b-a">Tradeoff ⚠</span> WebSocket for everything seems elegant but: WS mutations can't use HTTP caching, rate limiting is harder, retry logic needs custom implementation, and load balancing requires sticky sessions. REST for writes + WS for events is the industry standard split.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <div class="sd-example-title">Top-K Trending Dashboard (YouTube / Twitter)</div>
+      <span class="sd-example-tag">SERVER PUSH · READ-HEAVY</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row">
+        <div class="choice-label">LIVE RANKINGS</div>
+        <div class="choice-val"><span class="badge b-sse">SSE ✓</span> Dashboard shows top 10 videos updating every 30 seconds. SSE stream pushes updates from Flink flush events. Client never sends data back — perfect SSE fit. Auto-reconnect handles network hiccups transparently. HTTP/2 multiplexes thousands of concurrent dashboard viewers.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">INITIAL DATA LOAD</div>
+        <div class="choice-val"><span class="badge b-rest">REST ✓</span> <code>GET /top-k?window=1h&region=IN</code> loads the initial ranked list. Cacheable at CDN edge (60s TTL). 95% of requests served from cache — SSE stream only delivers delta updates after the initial load.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">WHY NOT WEBSOCKET</div>
+        <div class="choice-val"><span class="badge b-a">Overkill ⚠</span> The dashboard is read-only — users never push data back. WebSocket's bidirectional capability is wasted. SSE is simpler: no handshake upgrade, works through HTTP/2 proxies without special configuration, auto-reconnects, and uses standard HTTP connections that load balancers understand natively.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">WHY NOT POLLING</div>
+        <div class="choice-val"><span class="badge b-r">Inefficient ✗</span> At 30s poll interval and 100K concurrent users: 100K requests every 30s = 3,333 requests/sec, most returning the same data. SSE uses a persistent connection per user — 0 requests until data changes. Orders of magnitude less origin traffic.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <div class="sd-example-title">Mobile App API (Instagram / Uber)</div>
+      <span class="sd-example-tag">MULTI-CLIENT · BANDWIDTH-SENSITIVE</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row">
+        <div class="choice-label">WEB APP API</div>
+        <div class="choice-val"><span class="badge b-rest">REST ✓</span> Desktop browser with good connectivity. REST with HTTP/2 is fast, cacheable, and familiar. No over-fetching problem at this scale — one REST response per screen is acceptable.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">MOBILE APP API</div>
+        <div class="choice-val"><span class="badge b-gql">GraphQL ✓</span> Mobile on 4G/5G with limited bandwidth. GraphQL lets the app fetch exactly the fields it needs — no wasted data. One query fetches feed + stories + story counts instead of 3 REST calls. Instagram's move to GraphQL reduced API response sizes by 30–50%.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">PARTNER API</div>
+        <div class="choice-val"><span class="badge b-rest">REST ✓</span> Third-party developer integrations use REST. Universal support, simple to understand, extensive documentation. GraphQL's flexibility is a liability here — partners need a stable, versioned contract, not an evolving schema.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">DRIVER LOCATION (Uber)</div>
+        <div class="choice-val"><span class="badge b-ws">WebSocket ✓</span> Driver app streams GPS location every 2 seconds. Rider app receives driver position updates in real-time. Both directions active simultaneously — classic WebSocket scenario. gRPC bidirectional streaming works equally well for this internal use case.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <div class="sd-example-title">Notification System (Apple Push / Firebase)</div>
+      <span class="sd-example-tag">FAN-OUT · MOBILE PUSH</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row">
+        <div class="choice-label">WEB NOTIFICATIONS</div>
+        <div class="choice-val"><span class="badge b-sse">SSE ✓</span> Browser tab receives notifications via SSE stream. User doesn't send acknowledgements in the same connection — REST POST for "mark as read". Simple, reconnects automatically, works with HTTP/2.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">MOBILE PUSH</div>
+        <div class="choice-val"><span class="badge b-rest">REST ✓</span> Your server calls APNs (Apple) or FCM (Firebase) REST APIs to push notifications to iOS/Android. The OS maintains its own persistent connection to Apple/Google — you just trigger it via REST. Your app never holds a WebSocket open in the background.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">INTERNAL FAN-OUT</div>
+        <div class="choice-val"><span class="badge b-grpc">gRPC ✓</span> Notification Service fans out to User Service, Device Service, and APNs Gateway all via gRPC. Hundreds of millions of notifications/day means every millisecond and byte of payload overhead compounds. Protobuf binary encoding + HTTP/2 multiplexing handles the load.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <div class="sd-example-title">Collaborative Editing (Google Docs / Notion)</div>
+      <span class="sd-example-tag">CRDT · REAL-TIME · MULTI-USER</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row">
+        <div class="choice-label">EDITS</div>
+        <div class="choice-val"><span class="badge b-ws">WebSocket ✓</span> Every keystroke is an operation (insert/delete + position). Operations are sent over WebSocket immediately. Server applies OT (Operational Transformation) or CRDT to merge concurrent edits from multiple users. The merged result is broadcast back to all connected users via the same WebSocket.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">CURSOR POSITIONS</div>
+        <div class="choice-val"><span class="badge b-ws">WebSocket ✓</span> "Alice is editing paragraph 3" — cursor broadcast via WebSocket at ~10 events/sec. Ephemeral — not persisted. WebSocket's low per-frame overhead makes this affordable even for documents with 50 simultaneous editors.</div>
+      </div>
+      <div class="choice-row">
+        <div class="choice-label">DOCUMENT SAVE</div>
+        <div class="choice-val"><span class="badge b-rest">REST ✓</span> Periodic snapshot of document state sent via REST POST. Idempotent, retryable, separate from the real-time stream. REST for durability; WebSocket for real-time sync.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 06 DECISION TREE ══ -->
+<section id="decision">
+  <div class="sec-tag">06 · The Decision Framework</div>
+  <h2>How to pick in an interview — in 60 seconds</h2>
+
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Protocol Selection — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Does the server need to push data to the client without the client asking?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text">You need a real-time protocol. Go to Step 2. REST alone cannot solve this.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Request-Response is sufficient. Go to Step 4 to pick between REST, gRPC, and GraphQL.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Does the client also need to send data back on the same real-time connection?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>WebSocket.</strong> Chat messages, cursor positions, game inputs, collaborative edits — bidirectional continuous communication. Pair with REST for mutations that need HTTP semantics (retries, idempotency).</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text"><strong>SSE</strong> (preferred) or <strong>Long Polling</strong> (fallback). Live feeds, notifications, progress bars, dashboards — server pushes, client only reads. SSE is simpler and HTTP/2-native. Long Polling if SSE is unavailable.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Is this for browser clients or internal service-to-service?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Browser →</span><span class="opt-text"><strong>WebSocket or SSE.</strong> Both have native browser APIs (WebSocket API, EventSource API). No proxy needed.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Service-to-Service →</span><span class="opt-text"><strong>gRPC bidirectional streaming</strong> — all the benefits of gRPC (binary, typed, multiplexed) plus both sides can stream. Google Maps, real-time ML inference pipelines.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">04</div><div class="step-content">
+        <div class="step-q">Is this a public API, internal service, or multi-client API?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Public API →</span><span class="opt-text"><strong>REST.</strong> Universal support, HTTP caching, familiar to all developers, simple to rate limit and monitor. Default until you have a specific reason to deviate.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Internal services →</span><span class="opt-text"><strong>gRPC.</strong> Binary Protobuf (5–10x smaller), HTTP/2 multiplexing, strict typed contracts. Ideal for service meshes where latency and throughput compound across hundreds of microservices.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Multi-client (web + mobile + partners) →</span><span class="opt-text"><strong>GraphQL.</strong> Different clients need different data shapes. One schema, client-driven queries, no over-fetching on mobile bandwidth. Requires DataLoader to avoid N+1.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">05</div><div class="step-content">
+        <div class="step-q">Do you have strict performance or bandwidth requirements?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Performance critical →</span><span class="opt-text"><strong>gRPC over REST</strong> for service-to-service. Binary vs JSON: 5–10x payload reduction. At 1M RPC/sec between services, the difference is measurable in infra costs and latency percentiles.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Standard requirements →</span><span class="opt-text"><strong>REST is fine.</strong> With HTTP/2 and proper JSON compression (gzip/brotli), REST performance is excellent for the vast majority of systems. Don't optimise prematurely.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <h3>The Rules You Must Know</h3>
+  <div class="use-grid">
+    <div class="use-card">
+      <div class="use-card-head" style="color:var(--rest)">🌐 Always use REST when…</div>
+      <ul>
+        <li>Building a public-facing API</li>
+        <li>Need HTTP caching (GET responses)</li>
+        <li>Clients are diverse (browsers, mobile, partners)</li>
+        <li>Team is small, simplicity matters</li>
+        <li>CRUD operations with standard semantics</li>
+      </ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:var(--grpc)">⚡ Always use gRPC when…</div>
+      <ul>
+        <li>Service-to-service internal calls</li>
+        <li>High-throughput, latency-sensitive RPCs</li>
+        <li>Need strong schema contract between teams</li>
+        <li>Polyglot microservices (code gen handles language)</li>
+        <li>Streaming between services (bidirectional)</li>
+      </ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:var(--gql)">◈ Always use GraphQL when…</div>
+      <ul>
+        <li>Multiple client types with different data needs</li>
+        <li>Mobile bandwidth is constrained</li>
+        <li>Rapidly evolving product with frequent data shape changes</li>
+        <li>BFF (Backend-for-Frontend) pattern</li>
+        <li>Developer experience is a priority</li>
+      </ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:var(--ws)">🔌 Always use WebSocket when…</div>
+      <ul>
+        <li>Chat or messaging (bidirectional)</li>
+        <li>Multiplayer games or real-time collaboration</li>
+        <li>Both client AND server need to push continuously</li>
+        <li>Sub-100ms latency for every event</li>
+        <li>Persistent session with many small messages</li>
+      </ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:var(--sse)">📡 Always use SSE when…</div>
+      <ul>
+        <li>Server pushes, client only reads</li>
+        <li>Live dashboards, feeds, notifications</li>
+        <li>AI streaming responses (token-by-token)</li>
+        <li>Progress bars for long-running jobs</li>
+        <li>Simpler alternative to WebSocket</li>
+      </ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:var(--lp)">🔄 Long Polling only when…</div>
+      <ul>
+        <li>WebSocket and SSE are unavailable (firewalls)</li>
+        <li>Legacy client support required</li>
+        <li>Using Socket.io (handles fallback automatically)</li>
+        <li>Low update frequency (&lt;1/min) where polling gap is fine</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 07 FOLLOW-UPS ══ -->
+<section id="followups">
+  <div class="sec-tag">07 · Interview Follow-up Playbook</div>
+  <h2>Every hard follow-up, answered</h2>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">How do you scale WebSocket to millions of concurrent connections?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>The core challenge:</strong> WebSocket connections are stateful and live on a specific server. Standard round-robin load balancing breaks — if user A is connected to server 1 and sends a message to user B connected to server 3, server 1 can't directly push to user B.<br><br>
+      <strong>The solution — pub/sub message bus:</strong>
+      <ul>
+        <li>Every server subscribes to a Redis Pub/Sub channel or Kafka topic</li>
+        <li>When server 1 needs to push to user B (connected to server 3), it publishes to the shared channel</li>
+        <li>Server 3 is subscribed, receives the message, and pushes it to user B's WebSocket connection</li>
+        <li>Any server can reach any user — no sticky sessions required for message delivery</li>
+      </ul>
+      <strong>Connection count:</strong> A single server with an async event loop (Node.js, Go, Nginx) can handle 100K–1M concurrent WebSocket connections. C10M is achievable with tuned Linux kernel settings (file descriptor limits, socket buffer sizes).<br><br>
+      <strong>Load balancing:</strong> Use sticky sessions (consistent hash by user_id) so a user's connection always routes to the same server — reduces pub/sub overhead. Failover: client reconnects to any available server on disconnect.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">REST vs gRPC — which is faster and by how much?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>In benchmarks, gRPC is typically 5–10x faster than JSON REST for equivalent payloads.</strong><br><br>
+      <strong>Why Protobuf is faster than JSON:</strong>
+      <ul>
+        <li><strong>Size:</strong> JSON is human-readable text. "created_at": "2026-03-20T14:23:45Z" is 37 bytes. Protobuf field 5 = timestamp = 8 bytes. 4–5x smaller is typical.</li>
+        <li><strong>Parsing:</strong> JSON parsing is string scanning and Unicode handling. Protobuf parsing is integer-indexed field lookup. 5–10x faster deserialization.</li>
+        <li><strong>HTTP/2 multiplexing:</strong> gRPC reuses one TCP connection for all RPCs between two services. HTTP/1.1 REST requires a connection per request or connection pooling.</li>
+      </ul>
+      <strong>Real-world numbers (Google's internal benchmarks):</strong> gRPC serialization is ~7x faster than JSON, payloads are ~3.5x smaller, leading to ~2–4x fewer CPU cycles per RPC.<br><br>
+      <strong>When the difference matters:</strong> At 10K RPC/sec between services, the CPU savings from Protobuf are measurable in infra cost. At 100 RPC/sec, use REST — the operational simplicity outweighs any performance gain.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">GraphQL solves over-fetching — but doesn't it create its own performance problems?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Yes — GraphQL solves bandwidth but creates three new challenges:</strong><br><br>
+      <strong>1. N+1 queries (the biggest one):</strong> A query for 100 posts each needing their author resolves by calling getAuthor() 100 times. Without DataLoader, this is 101 database calls instead of 2.<br>
+      Fix: DataLoader batches all getAuthor() calls that occur in the same tick into one <code>SELECT * FROM users WHERE id IN (1,2,3...100)</code>.<br><br>
+      <strong>2. Query complexity attacks:</strong> A malicious client sends a deeply nested query: posts → comments → authors → posts → comments → authors → (∞). Without depth limiting, this triggers exponential resolver calls.<br>
+      Fix: Query depth limit (max 10 levels), query complexity scoring (each field costs points, reject queries over a budget), query whitelisting in production (only allow known queries).<br><br>
+      <strong>3. No HTTP caching:</strong> GraphQL uses POST — CDNs don't cache POST. Every query hits your origin.<br>
+      Fix: Persisted Queries — hash each known query, send the hash as a GET parameter. CDN caches the response. Only novel/uncached queries reach the origin.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">SSE vs WebSocket — when exactly do you pick SSE?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Pick SSE when the data flow is one-directional and you want HTTP-native simplicity.</strong><br><br>
+      <strong>SSE wins over WebSocket when:</strong>
+      <ul>
+        <li>Client only reads — never sends data on the real-time channel (notifications, feeds, dashboards, AI token streaming)</li>
+        <li>You need automatic reconnection with event replay — SSE's <code>Last-Event-ID</code> mechanism gives you this for free; WebSocket requires custom client logic</li>
+        <li>HTTP/2 is available — SSE over HTTP/2 multiplexes thousands of streams over one TCP connection, solving HTTP/1.1's 6-connection limit</li>
+        <li>Your infrastructure doesn't support WebSocket upgrades (some corporate proxies block it)</li>
+        <li>You want standard HTTP monitoring, logging, and load balancing without special WebSocket-aware tooling</li>
+      </ul>
+      <strong>WebSocket wins when:</strong>
+      <ul>
+        <li>Client sends data frequently on the real-time channel (chat, collaborative editing, games, cursor positions)</li>
+        <li>Sub-frame latency matters — WebSocket frames are slightly lower overhead than SSE's HTTP text envelope</li>
+        <li>You need binary data (WebSocket supports binary frames natively; SSE is text-only)</li>
+      </ul>
+      <strong>The practical test:</strong> Draw an arrow for your data flow. If the arrow points server→client only, use SSE. If arrows go both directions, use WebSocket.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">How does gRPC handle versioning when you change your .proto schema?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Protobuf has designed-in backwards compatibility rules — but you must follow them religiously.</strong><br><br>
+      <strong>Safe changes (backwards and forwards compatible):</strong>
+      <ul>
+        <li>Adding a new field — old clients ignore it, new clients read it</li>
+        <li>Changing a field name — field numbers are what Protobuf uses on the wire, not names</li>
+        <li>Adding a new RPC method — old clients don't call it</li>
+      </ul>
+      <strong>Breaking changes (never do these in production):</strong>
+      <ul>
+        <li>Changing a field's number (field number = wire identity; changing it means old clients misread your data)</li>
+        <li>Changing a field's type (int32 → string will corrupt data in-flight)</li>
+        <li>Removing a required field (old clients still send it; new server rejects it)</li>
+        <li>Removing an RPC method that clients are calling</li>
+      </ul>
+      <strong>The strategy for major changes:</strong> Create a new package version (<code>package myapi.v2</code>). Run v1 and v2 in parallel. Migrate clients to v2 gradually. Retire v1 only after all clients have migrated. This is identical to REST's <code>/v1/</code> vs <code>/v2/</code> URL versioning.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">What's the difference between REST idempotency and GraphQL mutation safety?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Idempotency means: calling the operation multiple times has the same effect as calling it once.</strong><br><br>
+      <strong>REST's HTTP methods have defined idempotency semantics:</strong>
+      <ul>
+        <li><code>GET, HEAD, OPTIONS</code> — safe (no side effects) and idempotent</li>
+        <li><code>PUT, DELETE</code> — idempotent (doing it twice = same result as once)</li>
+        <li><code>POST</code> — neither safe nor idempotent (creates a new resource each call)</li>
+        <li><code>PATCH</code> — not inherently idempotent (depends on implementation)</li>
+      </ul>
+      <strong>For POST idempotency:</strong> Use an Idempotency-Key header (unique UUID per request). Server stores the key → result mapping. If same key arrives twice, return the stored result instead of executing again. Stripe, Stripe, and most payment APIs require this.<br><br>
+      <strong>GraphQL mutations:</strong> All mutations use POST — no built-in idempotency. You must implement idempotency keys manually in your mutation resolvers if needed (e.g., payment mutations). This is GraphQL's operational weakness vs REST's verb semantics.<br><br>
+      <strong>Why it matters in interviews:</strong> Payment processing, order creation, and any mutation where double-execution has real consequences needs explicit idempotency handling regardless of protocol.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">How do you secure WebSocket connections?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>WebSocket has no built-in authentication — you must implement it explicitly.</strong><br><br>
+      <strong>Step 1 — Use WSS (WebSocket Secure):</strong> Always use <code>wss://</code> (TLS), never <code>ws://</code>. Same as HTTPS vs HTTP. Your certificate covers both.<br><br>
+      <strong>Step 2 — Authenticate at connection time:</strong> The HTTP Upgrade request is a standard HTTP request — you can read headers and cookies. Send a JWT or session token in the <code>Authorization</code> header or as a query parameter on the initial <code>wss://</code> URL. Validate before accepting the upgrade.<br><br>
+      <strong>Step 3 — Authorise at message time:</strong> Validate that the connected user has permission for every message they send. Don't assume that because they connected legitimately, all their subsequent messages are authorised.<br><br>
+      <strong>Step 4 — Rate limit messages:</strong> Unlike HTTP where rate limiting is standard middleware, WebSocket bypasses your HTTP layer. Implement per-connection message rate limiting at the WebSocket handler level. Without it, one client can flood your server with messages.<br><br>
+      <strong>Step 5 — Handle token expiry:</strong> JWTs expire. If a user's token expires mid-session, the server needs to close the WebSocket and force re-authentication. Implement token refresh via a REST call; send the new token over the WebSocket or reconnect with the new token.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggle(this)">In the Uber system design, why use both REST and WebSocket — why not just WebSocket for everything?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Using WebSocket for everything seems elegant but creates real problems:</strong><br><br>
+      <strong>1. HTTP semantics matter:</strong> REST gives you status codes (400 bad request, 402 payment required, 409 conflict) that load balancers, monitoring tools, and clients all understand natively. Over WebSocket, you'd invent custom error codes — invisible to your infrastructure.<br><br>
+      <strong>2. Idempotency and retries:</strong> When a user books a ride, you need idempotency guarantees. REST POST with an Idempotency-Key is standardised. WebSocket message delivery is at-most-once by default — you'd need to build your own ack/retry layer.<br><br>
+      <strong>3. Caching:</strong> Fare estimates, driver profiles, and static data are cacheable. REST GET responses are cached at CDN and browser level automatically. WebSocket has no caching layer.<br><br>
+      <strong>4. Load balancing:</strong> REST requests are stateless — any server handles any request. WebSocket connections are stateful — they need sticky sessions or a message bus. Running everything over WebSocket means every service needs WebSocket-aware infrastructure.<br><br>
+      <strong>5. Operational tooling:</strong> HTTP logs, traces, and metrics are supported by every monitoring tool out of the box. WebSocket message-level observability requires custom instrumentation.<br><br>
+      <strong>The correct split:</strong> WebSocket for what genuinely needs real-time bidirectional communication (location, status updates). REST for everything transactional (booking, payment, profile). The complexity-to-benefit ratio is much better.
+    </div>
+  </div>
+</section>
+
+</div>
+<div class="footer">PROTOCOLS · REST · GRPC · GRAPHQL · WEBSOCKET · SSE · LONG POLLING · MANISH-ALMANAC</div>
+
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body>
+</html>
