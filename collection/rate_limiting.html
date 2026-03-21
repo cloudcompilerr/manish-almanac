@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rate Limiting & Throttling</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.pill-pg{border-color:#336791;color:#336791;background:rgba(51,103,145,.08);}
+.pill-mg{border-color:#13aa52;color:#13aa52;background:rgba(19,170,82,.08);}
+.pill-dy{border-color:#ff9900;color:#cc7a00;background:rgba(255,153,0,.08);}
+.pill-ca{border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08);}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+h4{font-size:13px;font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}
+.db-card.mg::before{background:var(--mg);}
+.db-card.dy::before{background:var(--dy);}
+.db-card.ca::before{background:var(--ca);}
+.db-logo{font-size:22px;margin-bottom:6px;}
+.db-name{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:4px;}
+.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
+.db-tagline{font-size:13px;color:#5a5848;line-height:1.55;}
+.db-born{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}
+.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;border:1px solid #1e1c18;}
+.codeblock .c{color:#3e3d36;}.codeblock .k{color:#e8b84b;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}.codeblock .t{color:#7aaee0;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
+.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
+.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.use-card ul{padding-left:16px;font-size:13px;color:#4a4838;line-height:1.7;}
+.use-card ul li{margin-bottom:4px;}
+.shard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0;}
+.shard-card{background:var(--ink);border-radius:8px;padding:20px;color:#c8c4b8;}
+.shard-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.shard-name{font-family:var(--serif);font-size:16px;font-weight:700;color:#e8b84b;margin-bottom:8px;}
+.shard-body{font-size:12.5px;line-height:1.65;color:#a8a49c;}
+.shard-verdict{margin-top:10px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:3px;display:inline-block;}
+.sv-easy{background:rgba(26,122,74,.2);color:#5ac882;}.sv-med{background:rgba(184,114,10,.2);color:#e8943a;}.sv-hard{background:rgba(192,57,43,.2);color:#e87868;}
+.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.faq-q:hover{background:var(--surface);}
+.faq-q .tog{font-size:18px;color:#e8b84b;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
+.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3830;line-height:1.75;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.sd-example-title{font-family:var(--serif);font-size:16px;color:#f0ece4;font-weight:700;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6a6458;border:1px solid #2e2c28;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:120px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3830;line-height:1.6;}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
+.b-pg{background:var(--pg-bg);border-color:var(--pg);color:var(--pg);}.b-mg{background:var(--mg-bg);border-color:var(--mg);color:var(--mg);}.b-dy{background:var(--dy-bg);border-color:var(--dy);color:#b06000;}.b-ca{background:var(--ca-bg);border-color:var(--ca);color:var(--ca);}.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+
+.step-block{background:#fff;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.step-block-header{background:var(--ink);color:#e8e4dc;padding:13px 18px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.sb-icon{font-size:16px;}
+.step-block-body{padding:0;}
+.step-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);min-width:46px;display:flex;align-items:flex-start;justify-content:center;padding:16px 6px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;border-right:1px solid var(--border);}
+.step-content{padding:14px 18px;flex:1;}
+.step-q{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:6px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:9px 13px;border-radius:5px;font-size:13px;line-height:1.65;}
+.opt-yes{background:#edf8f2;border:1px solid #b8ddc8;}
+.opt-no{background:#fdf6e8;border:1px solid #e8c870;}
+.opt-mid{background:#edf2fb;border:1px solid #b8c8e8;}
+.opt-any{background:#f4f0fb;border:1px solid #c8b8e8;}
+.opt-arrow{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;min-width:120px;}
+.opt-yes .opt-arrow{color:#1a7a4a;}
+.opt-no .opt-arrow{color:#b8720a;}
+.opt-mid .opt-arrow{color:#1a4f8a;}
+.opt-any .opt-arrow{color:#5a3c9a;}
+.opt-text{flex:1;color:#3a3830;}
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+@media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
+
+
+
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+    <h1>Rate Limiting & Throttling<br><em>Token bucket, leaky bucket, sliding window — every algorithm explained with distributed implementation patterns and real system design examples.</em></h1>
+    <p class="hero-sub">Token bucket, leaky bucket, sliding window — every algorithm explained with distributed implementation patterns and real system design examples.</p>
+    <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Token Bucket</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">Sliding Window</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">Redis INCR</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Leaky Bucket</span></div>
+  </div>
+</div>
+<nav class="nav"><a href="#why">Why Rate Limit</a><a href="#algorithms">Algorithms</a><a href="#distributed">Distributed</a><a href="#examples">System Design</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a></nav>
+<div class="wrap">
+
+<section id="why">
+  <div class="sec-tag">00 · Why Rate Limiting</div>
+  <h2>What breaks without it</h2>
+  <p>Without rate limiting: one bad actor (or a bug in a client) sends 100K requests/second to your API. Your database collapses. Every other user is impacted. Rate limiting is the first line of defence — it protects your system from both malicious abuse and accidental overload.</p>
+  <div class="callout cl-amber">
+    <div class="cl-lbl">Real examples of why this matters</div>
+    <p><strong>Stripe:</strong> Charges per API call. A bug in customer code loops 10K calls/sec. Without rate limiting: customer pays $10K/sec unexpectedly AND Stripe's infra is impacted.</p>
+    <p><strong>Twitter API:</strong> 300 requests per 15-minute window per user. Prevents scrapers from harvesting all tweets while ensuring legitimate app developers can build.</p>
+    <p><strong>Payment APIs:</strong> Max 10 login attempts per minute per IP. Prevents brute-force credential stuffing attacks.</p>
+  </div>
+</section>
+
+<section id="algorithms">
+  <div class="sec-tag">01 · The Four Algorithms</div>
+  <h2>Token bucket, leaky bucket, fixed window, sliding window log</h2>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Token Bucket</div>
+      <div class="concept-def"><strong>A bucket holds up to N tokens. Tokens refill at rate R per second. Each request consumes 1 token. No tokens = rejected.</strong><br>
+        Example: bucket capacity=100, refill rate=10/sec. A burst of 100 requests is allowed immediately (uses all tokens). Then max 10/sec until refilled.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Allows bursts up to bucket size. Smooth average rate enforcement. Memory: O(1) per user (just store token count + last refill time).</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Allows requests at exactly the boundary — two full bursts are possible at the start and end of a window.</span><br>
+        <span style="color:#5a5848;font-size:12.5px;">Used by: AWS API Gateway, Stripe, most REST API rate limiters. <strong>The industry standard algorithm.</strong></span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Leaky Bucket</div>
+      <div class="concept-def"><strong>Requests enter a queue (the bucket). They are processed at a fixed rate (the leak). If the queue is full, requests are dropped.</strong><br>
+        Example: process 10 requests/sec regardless of how many arrive. Smooths out bursts entirely.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Perfectly smooth outbound rate. No bursts. Protects downstream services from traffic spikes.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Bursts are queued, not served fast — legitimate spikes experience latency, not rejection. If queue fills, recent requests are dropped even if earlier ones were slow.</span><br>
+        <span style="color:#5a5848;font-size:12.5px;">Used by: traffic shaping in networking, protecting database connection pools.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Fixed Window</div>
+      <div class="concept-def"><strong>Count requests per fixed time window (e.g., per minute). Reset counter at window boundary.</strong><br>
+        Example: 100 requests/minute. Counter at 14:03:00 resets at 14:04:00.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Simplest to implement. <code>INCR counter:user:minute:1403</code> in Redis.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ <strong>Boundary attack</strong>: 100 requests at 14:03:59 + 100 requests at 14:04:01 = 200 requests in 2 seconds (both within their respective windows). Actual rate is 2x the limit at the window boundary.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Sliding Window Log</div>
+      <div class="concept-def"><strong>Store a timestamp log of every request. For each new request, count logs in the last N seconds. Reject if count exceeds limit.</strong><br>
+        Redis: <code>ZADD log:user:123 {timestamp} {timestamp}</code>. <code>ZREMRANGEBYSCORE log 0 (now-window)</code>. <code>ZCARD log</code> = request count.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Perfectly accurate. No boundary attack. Truly enforces the rolling window.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Memory: O(requests) per user. At 1000 req/min and 1M users, that is 1 billion log entries. Only practical for low-rate, critical endpoints (login, payment).</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Sliding Window Counter</div>
+      <div class="concept-def"><strong>Hybrid: fixed window counters with interpolation to approximate sliding window. Best of both.</strong><br>
+        Store counter for current window and previous window. Weighted estimate:<br>
+        <code>count = prev_window * (1 - elapsed/window_size) + curr_window</code><br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ O(1) memory. Accurate enough (Cloudflare uses this — they found &lt;0.003% of requests are incorrectly rate-limited). The practical production choice.</span><br>
+        <span style="color:#5a5848;font-size:12.5px;">Used by: Cloudflare, most high-scale rate limiting systems.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="distributed">
+  <div class="sec-tag">02 · Distributed Rate Limiting</div>
+  <h2>How to rate limit across 100 app servers</h2>
+  <div class="callout cl-blue">
+    <div class="cl-lbl">The core challenge</div>
+    <p>Each app server sees only its fraction of total traffic. If you rate-limit locally (100 req/min per server × 100 servers = 10,000 req/min global), your rate limit means nothing. You need a shared counter that all servers update atomically.</p>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Redis INCR Pattern</div><div class="concept-def"><strong>The standard approach: shared Redis counter with atomic increment.</strong><br>
+      <code>MULTI</code><br>
+      <code>INCR ratelimit:{user_id}:{window}</code><br>
+      <code>EXPIRE ratelimit:{user_id}:{window} 60</code><br>
+      <code>EXEC</code><br>
+      If result &gt; limit → reject with 429. Redis's single-threaded INCR is atomic — no race conditions.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Simple, correct, fast (&lt;1ms). Works for token bucket too: Lua script atomically checks and decrements token count.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Redis Lua Script</div><div class="concept-def"><strong>For token bucket — atomically check and decrement in one round trip.</strong><br>
+      <code>local tokens = redis.call('GET', KEYS[1])</code><br>
+      <code>if tokens and tonumber(tokens) > 0 then</code><br>
+      <code>  redis.call('DECR', KEYS[1]); return 1</code><br>
+      <code>else return 0 end</code><br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Lua scripts execute atomically in Redis — no race between check and decrement. Libraries like redis-rate-limiter use exactly this.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Local Approximate<br>+ Sync</div><div class="concept-def"><strong>Each server maintains a local counter, periodically syncing to Redis.</strong><br>
+      Each server allows up to limit/N requests locally (N = server count). Every 100ms, sync actual count to Redis and refresh local quota.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Reduces Redis calls by 100x. Much more scalable for high-throughput APIs.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Up to 100ms window where slightly over-limit requests are allowed. Acceptable for most use cases.</span></div></div>
+  </div>
+</section>
+
+<section id="examples">
+  <div class="sec-tag">03 · System Design Examples</div>
+  <h2>Rate limiting in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">API Gateway Rate Limiting</div><span class="sd-example-tag">MULTI-DIMENSIONAL</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PER USER</div><div class="choice-val"><span class="badge b-g">Token Bucket ✓</span> 1000 req/min per authenticated user. Key: <code>ratelimit:user:{id}:minute</code>. Allows legitimate burst traffic (developer hitting API in a loop) while preventing abuse.</div></div>
+      <div class="choice-row"><div class="choice-label">PER IP</div><div class="choice-val"><span class="badge b-g">Sliding Window ✓</span> 100 req/min per IP for unauthenticated requests. Stops credential stuffing (many login attempts from same IP). Key: <code>ratelimit:ip:{hash(ip)}:minute</code>. Hash the IP to avoid storing raw IPs (privacy).</div></div>
+      <div class="choice-row"><div class="choice-label">PER ENDPOINT</div><div class="choice-val">Different limits per endpoint: <code>POST /login</code> = 5/min, <code>GET /feed</code> = 300/min, <code>POST /payment</code> = 10/min. The sensitivity of the endpoint determines the limit.</div></div>
+      <div class="choice-row"><div class="choice-label">RESPONSE HEADERS</div><div class="choice-val">Always return: <code>X-RateLimit-Limit: 1000</code>, <code>X-RateLimit-Remaining: 743</code>, <code>X-RateLimit-Reset: 1742383200</code>. Clients use these to back off gracefully before hitting 429.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Notification System</div><span class="sd-example-tag">SPAM PREVENTION</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PER USER/CHANNEL</div><div class="choice-val">Max 2 SMS per user per 10 minutes. Max 5 emails per user per hour. Max 10 push notifications per user per day. Multi-dimensional limits using separate Redis counters per dimension: <code>ratelimit:sms:{user}:10min</code>.</div></div>
+      <div class="choice-row"><div class="choice-label">GLOBAL SEND RATE</div><div class="choice-val">Email provider (SendGrid) limits to 100K emails/hour. Token bucket at the sender level: fill 100K tokens/hour, each email consumes 1. If empty → queue for next hour window rather than dropping.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="decision">
+  <div class="sec-tag">04 · Decision Tree</div>
+  <h2>Which algorithm to pick</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Rate Limiting Algorithm Selection</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Do you need to allow bursts?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (burst OK) →</span><span class="opt-text"><strong>Token Bucket.</strong> Accumulates tokens when idle, releases in bursts. Standard for REST APIs. Stripe, AWS, Twilio all use token bucket.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (strict smooth rate) →</span><span class="opt-text"><strong>Leaky Bucket.</strong> Enforces exactly R requests/second with no bursting. Use for protecting downstream services that can only handle a fixed rate.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">How important is precision vs simplicity?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Precision critical →</span><span class="opt-text"><strong>Sliding Window Log.</strong> Perfectly accurate but O(req) memory per user. Only use for high-value low-rate endpoints (login, payment, account creation).</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Balanced →</span><span class="opt-text"><strong>Sliding Window Counter.</strong> 0.003% inaccuracy, O(1) memory. Production choice for most high-scale systems. Cloudflare's approach.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Simplicity first →</span><span class="opt-text"><strong>Fixed Window.</strong> Single Redis INCR. Boundary attack is acceptable if limits are conservative (set limit 2x lower to account for the boundary doubling).</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">What is the enforcement layer?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">API Gateway →</span><span class="opt-text">Rate limit at the gateway (Kong, AWS API Gateway, Envoy). Centralized, language-agnostic, enforced before traffic hits your services.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Application level →</span><span class="opt-text">Redis-backed middleware in your service. More granular (can access business logic for tiered limits). Used for per-feature or per-plan limits.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Service mesh →</span><span class="opt-text">Istio/Envoy sidecar proxies enforce rate limits between services. Used for internal service-to-service rate limiting in microservice architectures.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups">
+  <div class="sec-tag">05 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle rate limiting for distributed clients — e.g., a user calling from multiple devices?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Rate limit on the authenticated user identity (user_id from JWT), not on the device or IP.</strong><br><br>The user_id is consistent across all their devices. The Redis key <code>ratelimit:user:{user_id}:{window}</code> is incremented by every request regardless of which device or IP it comes from. This means a user signing in on phone + laptop + tablet all share the same quota — preventing circumvention by using multiple devices.<br><br>IP-based limiting is additive and separate — it is used for unauthenticated endpoints (login page, signup) to prevent automated attacks before authentication.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What happens if the rate limit store (Redis) goes down?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>You have two choices and you must pick one explicitly — there is no "right answer," only a trade-off.</strong><br><br><strong>Fail open (allow all traffic)</strong>: If Redis is unavailable, do not rate limit. 100% of requests are served. Risk: abuse during the outage window. Appropriate when: availability is more important than abuse prevention (most consumer APIs).<br><br><strong>Fail closed (reject all traffic)</strong>: If Redis is unavailable, reject with 429 or 503. No abuse during outage. Risk: legitimate users are blocked. Appropriate when: abuse has high cost (payment APIs, authentication endpoints).<br><br><strong>In practice</strong>: Use local fallback counters. Each app server tracks its own count. If Redis is down, enforce limit/N per server (N = server count). Slightly inaccurate but functional. Redis sentinel/cluster with automatic failover ensures outages are rare and brief.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you implement tiered rate limits (free vs pro vs enterprise)?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Store the user's tier in their JWT or a fast lookup cache, then apply tier-specific limits.</strong><br><br>
+  Approach:<br>
+  1. JWT contains <code>"tier": "pro"</code> — decoded at the rate limit middleware with zero extra lookups.<br>
+  2. Tier → limit mapping stored in config: <code>{"free": 100, "pro": 1000, "enterprise": 100000}</code><br>
+  3. Rate limit key includes tier for isolation: <code>ratelimit:{tier}:{user_id}:{window}</code><br><br>
+  Why include tier in the key: so upgrading from free to pro immediately gives the new limit without needing to reset the counter. The free counter is simply no longer checked.<br><br>
+  For enterprise customers with custom limits: store their limit in Redis itself: <code>ratelimit:config:{user_id}</code> = their custom limit. Fallback to tier default if not set.</div></div>
+</section>
+</div>
+<div class="footer">RATE LIMITING · TOKEN BUCKET · SLIDING WINDOW · REDIS · THROTTLING · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body>
+</html>

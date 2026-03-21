@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caching: Redis, Memcached & CDN</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.pill-pg{border-color:#336791;color:#336791;background:rgba(51,103,145,.08);}
+.pill-mg{border-color:#13aa52;color:#13aa52;background:rgba(19,170,82,.08);}
+.pill-dy{border-color:#ff9900;color:#cc7a00;background:rgba(255,153,0,.08);}
+.pill-ca{border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08);}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+h4{font-size:13px;font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}
+.db-card.mg::before{background:var(--mg);}
+.db-card.dy::before{background:var(--dy);}
+.db-card.ca::before{background:var(--ca);}
+.db-logo{font-size:22px;margin-bottom:6px;}
+.db-name{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:4px;}
+.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
+.db-tagline{font-size:13px;color:#5a5848;line-height:1.55;}
+.db-born{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}
+.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;border:1px solid #1e1c18;}
+.codeblock .c{color:#3e3d36;}.codeblock .k{color:#e8b84b;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}.codeblock .t{color:#7aaee0;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
+.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
+.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.use-card ul{padding-left:16px;font-size:13px;color:#4a4838;line-height:1.7;}
+.use-card ul li{margin-bottom:4px;}
+.shard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0;}
+.shard-card{background:var(--ink);border-radius:8px;padding:20px;color:#c8c4b8;}
+.shard-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.shard-name{font-family:var(--serif);font-size:16px;font-weight:700;color:#e8b84b;margin-bottom:8px;}
+.shard-body{font-size:12.5px;line-height:1.65;color:#a8a49c;}
+.shard-verdict{margin-top:10px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:3px;display:inline-block;}
+.sv-easy{background:rgba(26,122,74,.2);color:#5ac882;}.sv-med{background:rgba(184,114,10,.2);color:#e8943a;}.sv-hard{background:rgba(192,57,43,.2);color:#e87868;}
+.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.faq-q:hover{background:var(--surface);}
+.faq-q .tog{font-size:18px;color:#e8b84b;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
+.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3830;line-height:1.75;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.sd-example-title{font-family:var(--serif);font-size:16px;color:#f0ece4;font-weight:700;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6a6458;border:1px solid #2e2c28;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:120px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3830;line-height:1.6;}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
+.b-pg{background:var(--pg-bg);border-color:var(--pg);color:var(--pg);}.b-mg{background:var(--mg-bg);border-color:var(--mg);color:var(--mg);}.b-dy{background:var(--dy-bg);border-color:var(--dy);color:#b06000;}.b-ca{background:var(--ca-bg);border-color:var(--ca);color:var(--ca);}.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+
+.step-block{background:#fff;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.step-block-header{background:var(--ink);color:#e8e4dc;padding:13px 18px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.sb-icon{font-size:16px;}
+.step-block-body{padding:0;}
+.step-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);min-width:46px;display:flex;align-items:flex-start;justify-content:center;padding:16px 6px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;border-right:1px solid var(--border);}
+.step-content{padding:14px 18px;flex:1;}
+.step-q{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:6px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:9px 13px;border-radius:5px;font-size:13px;line-height:1.65;}
+.opt-yes{background:#edf8f2;border:1px solid #b8ddc8;}
+.opt-no{background:#fdf6e8;border:1px solid #e8c870;}
+.opt-mid{background:#edf2fb;border:1px solid #b8c8e8;}
+.opt-any{background:#f4f0fb;border:1px solid #c8b8e8;}
+.opt-arrow{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;min-width:120px;}
+.opt-yes .opt-arrow{color:#1a7a4a;}
+.opt-no .opt-arrow{color:#b8720a;}
+.opt-mid .opt-arrow{color:#1a4f8a;}
+.opt-any .opt-arrow{color:#5a3c9a;}
+.opt-text{flex:1;color:#3a3830;}
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+@media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
+
+
+
+.tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.tier-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.tier-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.tier-card.hot::before{background:var(--red);}
+.tier-card.warm::before{background:var(--amber);}
+.tier-card.cold::before{background:var(--blue);}
+.tier-card.cdn::before{background:var(--green);}
+
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+    <h1>Caching<br><em>Redis, Memcached & CDN</em></h1>
+    <p class="hero-sub">Every caching strategy, eviction policy, Redis data structure, and invalidation pattern — explained from first principles with real system design examples.</p>
+    <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">Redis</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Memcached</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">Cache-Aside</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Write-Through</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:rgba(96,64,160,.08)">Eviction</span><span class="db-pill" style="border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08)">CDN</span></div>
+  </div>
+</div>
+<nav class="nav"><a href="#why">Why Cache</a><a href="#hierarchy">Hierarchy</a><a href="#strategies">Write Strategies</a><a href="#eviction">Eviction</a><a href="#redis">Redis Deep Dive</a><a href="#examples">System Design</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a></nav>
+<div class="wrap">
+
+<section id="why">
+  <div class="sec-tag">00 · Why Caching Exists</div>
+  <h2>The single reason every system needs a cache</h2>
+  <p>A database read on a cold system takes 1–10ms. A cache hit takes 0.1–1ms. At 100K requests/sec, that difference is the line between a system that works and one that collapses. But caching is not just about speed — it is about <strong>protecting your database from traffic it was never designed to handle</strong>.</p>
+  <div class="analogy">
+    <div class="analogy-label">The library analogy — for a complete layman</div>
+    <div class="analogy-text">
+      A library (database) has every book ever written. But fetching any book takes a librarian 10 minutes. So you keep the 100 most popular books on a desk beside you (cache). When someone asks for a book, you check your desk first. 99% of the time it's there — instant. Only 1% of requests require the 10-minute librarian trip.<br><br>
+      <strong>The cache hit rate is everything.</strong> A 99% hit rate means your database handles 1% of original traffic. A 90% hit rate means 10% — still 10x less. A 50% hit rate barely helps at all.
+    </div>
+  </div>
+  <div class="callout cl-amber">
+    <div class="cl-lbl">The interview framing</div>
+    <p>Never say "I'll add a cache" without answering: <strong>(1) What exactly gets cached?</strong> (2) What is the cache key? (3) When does it get invalidated? (4) What is the consistency trade-off? Interviewers give no credit for "add Redis" — they want the strategy.</p>
+  </div>
+</section>
+
+<section id="hierarchy">
+  <div class="sec-tag">01 · Cache Hierarchy</div>
+  <h2>The four layers — where caching lives</h2>
+  <div class="tier-grid">
+    <div class="tier-card cdn">
+      <div class="db-logo">🌍</div>
+      <div class="db-name">CDN Edge Cache</div>
+      <div class="db-type">Nearest PoP · HTTP · Global</div>
+      <div class="db-tagline">Caches static assets and cacheable API responses at 200+ edge nodes worldwide. Serves from &lt;10ms anywhere. Absorbs 90–99% of static traffic before it touches your servers.</div>
+      <div class="db-born">Cloudflare · Fastly · Akamai · AWS CloudFront</div>
+    </div>
+    <div class="tier-card hot">
+      <div class="db-logo">🔥</div>
+      <div class="db-name">Application Cache</div>
+      <div class="db-type">In-Process · RAM · Single Node</div>
+      <div class="db-tagline">In-memory cache inside the application process (Guava Cache, Caffeine, Python dict). Sub-microsecond access. No network hop. Limited to one server's RAM. Not shared across instances.</div>
+      <div class="db-born">Caffeine (Java) · Guava · Python functools.lru_cache</div>
+    </div>
+    <div class="tier-card warm">
+      <div class="db-logo">⚡</div>
+      <div class="db-name">Distributed Cache</div>
+      <div class="db-type">Shared · Network · Multi-Node</div>
+      <div class="db-tagline">Shared cache accessible by all app servers. Sub-millisecond over LAN. Survives server restarts. The default choice for any horizontally-scaled system — all app instances share the same view.</div>
+      <div class="db-born">Redis · Memcached · AWS ElastiCache · Aerospike</div>
+    </div>
+    <div class="tier-card cold">
+      <div class="db-logo">🗄️</div>
+      <div class="db-name">Database Buffer Pool</div>
+      <div class="db-type">Internal · OS Page Cache · Transparent</div>
+      <div class="db-tagline">PostgreSQL/MySQL's internal page cache. Frequently accessed pages stay in RAM automatically. You don't control it directly — but proper indexing ensures hot data stays cached here.</div>
+      <div class="db-born">PostgreSQL shared_buffers · InnoDB buffer pool · OS page cache</div>
+    </div>
+  </div>
+</section>
+
+<section id="strategies">
+  <div class="sec-tag">02 · Write Strategies</div>
+  <h2>The four write patterns — this is what interviewers test</h2>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Cache-Aside<br><span style="font-size:10px;font-weight:400;color:#6a6458">(Lazy Loading)</span></div>
+      <div class="concept-def"><strong>Application manages the cache explicitly. Most common pattern.</strong><br>
+        Read: check cache → if miss, read DB → write result to cache → return.<br>
+        Write: write to DB → <em>invalidate or update</em> cache entry.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Only caches data that is actually requested. Cache can survive a restart (just misses until warmed). Resilient — cache failure doesn't break reads.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Cache miss penalty: 3 operations instead of 1. Race condition: two threads can miss simultaneously, both read DB, both write cache (use distributed lock or short TTL).</span><br>
+        <span style="color:#5a5848;font-size:12.5px;">Used by: most read-heavy systems — social feeds, product pages, user profiles.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Write-Through</div>
+      <div class="concept-def"><strong>Every write goes to cache AND database synchronously before returning.</strong><br>
+        Write: write cache → write DB → return success.<br>
+        Read: always hits cache (always fresh).<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Cache is always consistent with DB. No stale reads. No cache miss on subsequent reads.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Write latency = cache write + DB write (two hops). Caches data that may never be read (write-heavy systems waste cache space).</span><br>
+        <span style="color:#5a5848;font-size:12.5px;">Used by: systems where reads must be fresh — financial dashboards, inventory systems.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Write-Behind<br><span style="font-size:10px;font-weight:400;color:#6a6458">(Write-Back)</span></div>
+      <div class="concept-def"><strong>Write to cache immediately, persist to DB asynchronously in the background.</strong><br>
+        Write: write cache → return success → background job flushes to DB.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Fastest write latency — single cache write. Batches DB writes (10x fewer DB operations). Great for high-write-frequency data (view counters, like counts).</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Data loss risk: if cache crashes before flush, writes are lost. Not safe for financial data. Complex recovery logic needed.</span><br>
+        <span style="color:#5a5848;font-size:12.5px;">Used by: counters, analytics, non-critical state. Redis itself uses write-back for AOF persistence.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Refresh-Ahead<br><span style="font-size:10px;font-weight:400;color:#6a6458">(Read-Through)</span></div>
+      <div class="concept-def"><strong>Cache automatically refreshes hot entries before they expire, predicting future reads.</strong><br>
+        Cache layer intercepts reads. On miss: fetches from DB, caches, returns. Proactively re-fetches keys nearing expiry if they were recently accessed.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ No cache miss latency for hot data. Application code never touches DB directly — clean separation.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ May cache stale data if prediction is wrong. Requires a separate refresh thread/process.</span><br>
+        <span style="color:#5a5848;font-size:12.5px;">Used by: read-through cache libraries (Ehcache, Spring Cache), Redis with background refresh logic.</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Cache Invalidation — The Hardest Problem in Caching</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">TTL (Time-to-Live)</div>
+      <div class="concept-def"><strong>Every cache entry expires after N seconds.</strong> Simplest approach. After expiry, next read re-fetches from DB.<br>
+        <code>SET user:123 {json} EX 3600</code> — expires in 1 hour.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ No invalidation logic needed. Self-healing — stale data auto-purges.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Data is stale for up to TTL seconds after an update. TTL too short = many misses. TTL too long = stale data shown to users.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Event-Driven<br>Invalidation</div>
+      <div class="concept-def"><strong>When data changes, explicitly delete or update the cache entry.</strong><br>
+        User updates profile → <code>DEL user:123</code> in Redis → next read re-fetches fresh data.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Immediately consistent. No stale window.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Cache and DB writes must be atomic — if cache delete succeeds but DB write fails (or vice versa), you have inconsistency. Use transactional outbox pattern or delete-after-DB-commit.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Cache Stampede<br><span style="font-size:10px;font-weight:400;color:#6a6458">(Thundering Herd)</span></div>
+      <div class="concept-def"><strong>A popular key expires → thousands of simultaneous requests all miss → all hit the DB simultaneously → DB falls over.</strong><br>
+        Scenario: trending video cached with 10-minute TTL. At expiry, 50K requests/sec all miss simultaneously.<br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ The cache that was protecting your DB is now the reason your DB dies.</span><br>
+        <strong>Fixes:</strong><br>
+        • <strong>Mutex lock</strong>: first thread to miss acquires a lock, fetches DB, populates cache. Others wait, then read from cache.<br>
+        • <strong>Probabilistic early expiry</strong>: slightly before TTL, a fraction of requests proactively refresh.<br>
+        • <strong>Jitter</strong>: randomise TTL (±10%) so not all keys expire simultaneously.<br>
+        • <strong>Stale-while-revalidate</strong>: return stale value immediately, refresh in background.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="eviction">
+  <div class="sec-tag">03 · Eviction Policies</div>
+  <h2>What gets removed when the cache is full</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">LRU<br>(Least Recently Used)</div><div class="concept-def"><strong>Evict the entry that was accessed longest ago.</strong> Implemented as a doubly-linked list + hashmap. O(1) get and put. Most common default.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Works well when recency correlates with future access. A user just viewed their profile — it should stay cached.</span><br><span style="color:#b83030;font-size:12.5px;">⚠ A single large sequential scan (backup job reading all users) pollutes the cache with one-time data, evicting actually-hot entries.</span><br><span style="color:#5a5848;font-size:12.5px;">Redis default policy: allkeys-lru. Used by: most web application caches.</span></div></div>
+    <div class="concept-row"><div class="concept-term">LFU<br>(Least Frequently Used)</div><div class="concept-def"><strong>Evict the entry accessed fewest times total.</strong> Tracks a frequency counter per key. O(1) with a min-heap + frequency buckets (complex implementation).<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Better for workloads with stable hot keys (celebrity user profiles, popular products). Resists cache pollution from one-time scans.</span><br><span style="color:#b83030;font-size:12.5px;">⚠ New keys start with frequency=1 — they get evicted immediately even if they'll be accessed 1M times tomorrow. Requires frequency decay to handle shifting popularity.</span></div></div>
+    <div class="concept-row"><div class="concept-term">TTL-Based</div><div class="concept-def"><strong>Evict entries whose TTL has expired.</strong> Passive expiry (evict on access if expired) + active expiry (background sweep). Redis uses both.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Natural fit for session caches, API response caches where staleness has a defined bound.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Redis Policies</div><div class="concept-def"><strong>Redis has 8 eviction policies. The most important:</strong><br>
+      <code>noeviction</code> — return error when full (safest, but breaks writes)<br>
+      <code>allkeys-lru</code> — LRU across all keys (most common)<br>
+      <code>volatile-lru</code> — LRU only among keys with TTL set<br>
+      <code>allkeys-lfu</code> — LFU across all keys (Redis 4+)<br>
+      <code>allkeys-random</code> — random eviction (surprisingly effective for uniform workloads)<br>
+      <span style="color:#5a5848;font-size:12.5px;">Set via <code>maxmemory-policy</code> config. Always set <code>maxmemory</code> or Redis will consume all available RAM.</span>
+    </div></div>
+  </div>
+</section>
+
+<section id="redis">
+  <div class="sec-tag">04 · Redis Deep Dive</div>
+  <h2>Redis data structures — the right tool for each problem</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">String</div><div class="concept-def"><strong>Binary-safe value up to 512MB. The catch-all type.</strong><br>
+      Use for: JSON blobs, HTML fragments, counters, session tokens.<br>
+      <code>SET user:123 "{name:Alice}" EX 3600</code><br>
+      <code>INCR pageview:home</code> — atomic counter, no race condition.<br>
+      <span style="color:#5a5848;font-size:12.5px;">INCR/DECR are atomic — the only safe way to do distributed counters without locks.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Hash</div><div class="concept-def"><strong>Field-value map within one key. Ideal for objects.</strong><br>
+      <code>HSET user:123 name Alice age 30 city Bangalore</code><br>
+      <code>HGET user:123 name</code> — fetch one field without deserializing the whole object.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ More memory-efficient than separate string keys per field. Update one field without reading/writing the entire object. Used by: user profiles, shopping carts.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Sorted Set (ZSET)</div><div class="concept-def"><strong>Set of unique members, each with a float score. Ordered by score. O(log N) operations.</strong><br>
+      <code>ZADD leaderboard 9241038 user:alice</code><br>
+      <code>ZREVRANGE leaderboard 0 9 WITHSCORES</code> — top 10 with scores.<br>
+      <code>ZINCRBY leaderboard 847 vid:abc</code> — atomic increment.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ The backbone of Top-K, leaderboards, rate limiting windows, priority queues. Used by: Top-K system, gaming leaderboards, Twitter trending.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Set</div><div class="concept-def"><strong>Unordered collection of unique strings. O(1) add/remove/lookup.</strong><br>
+      <code>SADD online:users user:123 user:456</code><br>
+      <code>SISMEMBER online:users user:123</code> — is user online?<br>
+      <code>SUNION followers:alice followers:bob</code> — union of sets.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Used for: online presence, unique visitors per day, tag systems, friend intersections (SINTER).</span></div></div>
+    <div class="concept-row"><div class="concept-term">List</div><div class="concept-def"><strong>Doubly-linked list. O(1) push/pop from both ends.</strong><br>
+      <code>LPUSH feed:user:123 post:789</code> — prepend to feed.<br>
+      <code>LRANGE feed:user:123 0 19</code> — fetch first 20 items.<br>
+      <code>BRPOP queue:emails 30</code> — blocking pop (simple message queue).<br>
+      <span style="color:#5a5848;font-size:12.5px;">Used for: activity feeds, simple task queues, recent items lists. BRPOP pattern = lightweight job queue without Kafka overhead.</span></div></div>
+    <div class="concept-row"><div class="concept-term">HyperLogLog</div><div class="concept-def"><strong>Probabilistic cardinality estimator. Counts unique items using ~12KB regardless of cardinality.</strong><br>
+      <code>PFADD unique:visitors:2026-03-21 user:123 user:456</code><br>
+      <code>PFCOUNT unique:visitors:2026-03-21</code> — returns ~100M unique visitors using 12KB RAM. Error rate: ±0.81%.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Count 1 billion unique visitors using 12KB. A HashSet for the same would need ~8GB. Used by: DAU metrics, unique video views, distinct IP counting.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Pub/Sub &amp; Streams</div><div class="concept-def"><strong>Pub/Sub: fire-and-forget broadcasting. Streams: persistent, replayable event log (mini Kafka).</strong><br>
+      <code>PUBLISH notifications:user:123 "New message from Alice"</code><br>
+      <code>XADD events * type view entity_id vid_abc</code> — append to stream.<br>
+      <code>XREAD COUNT 100 STREAMS events 0</code> — read from stream.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Pub/Sub: real-time notifications between app servers. Streams: durable event log for small-scale streaming (not a Kafka replacement at scale).</span></div></div>
+  </div>
+
+  <h3>Redis Cluster vs Sentinel — When to Use Each</h3>
+  <div class="comp-table-wrap">
+  <table class="comp-table">
+    <thead><tr><th>Dimension</th><th>Redis Sentinel</th><th>Redis Cluster</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Purpose</td><td>High availability (HA) — automatic failover</td><td>Horizontal scaling + HA</td></tr>
+      <tr><td class="row-head">Data distribution</td><td>All data on primary + replicas (full copy)</td><td>Sharded across 16,384 hash slots</td></tr>
+      <tr><td class="row-head">Scaling</td><td>Scale reads via replicas; writes on one primary</td><td>Scale writes across multiple primaries</td></tr>
+      <tr><td class="row-head">Max data</td><td>Single primary's RAM (~100s GB)</td><td>Sum of all primaries' RAM (TBs)</td></tr>
+      <tr><td class="row-head">Multi-key ops</td><td><span class="good">All supported</span></td><td><span class="warn">Only if keys on same slot (use hash tags)</span></td></tr>
+      <tr><td class="row-head">Complexity</td><td>Simple — just 3 sentinel nodes</td><td>Complex — resharding, gossip protocol</td></tr>
+      <tr><td class="row-head">Use when</td><td>Dataset fits in one server's RAM</td><td>Dataset exceeds one server's RAM or need write scale-out</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="examples">
+  <div class="sec-tag">05 · System Design Examples</div>
+  <h2>Caching decisions in real systems</h2>
+
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Twitter / X — Social Feed</div><span class="sd-example-tag">READ-HEAVY · FAN-OUT</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">FEED CACHE</div><div class="choice-val"><span class="badge b-g">Redis List ✓</span> Each user's pre-computed feed stored as a Redis List (LPUSH on new tweet, LRANGE for reads). Cache-aside with TTL=24h. 99% of feed reads are cache hits — the DB never sees them. Key: <code>feed:user:{id}</code>.</div></div>
+      <div class="choice-row"><div class="choice-label">TWEET CONTENT</div><div class="choice-val"><span class="badge b-g">Redis String ✓</span> Individual tweet JSON cached as a String with TTL=1h. Celebrity tweets get longer TTL (>24h) because they're read millions of times. Key: <code>tweet:{id}</code>.</div></div>
+      <div class="choice-row"><div class="choice-label">TRENDING</div><div class="choice-val"><span class="badge b-g">Redis ZSET ✓</span> Hashtag counts in a sorted set. <code>ZINCRBY trending:1h #WorldCup 1</code> per event. <code>ZREVRANGE trending:1h 0 9</code> returns top 10. Sub-millisecond at any scale.</div></div>
+      <div class="choice-row"><div class="choice-label">INVALIDATION</div><div class="choice-val">User deletes a tweet → <code>DEL tweet:{id}</code> + rebuild affected feeds. TTL as safety net for stale data. Eventual consistency is acceptable — seeing a deleted tweet for 1 minute is tolerable for Twitter's use case.</div></div>
+    </div>
+  </div>
+
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">E-Commerce — Product Catalog</div><span class="sd-example-tag">WRITE-RARE · READ-HEAVY</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PRODUCT PAGE</div><div class="choice-val"><span class="badge b-g">CDN + Redis ✓</span> Static product HTML cached at CDN edge (TTL=10min). Inventory count cached in Redis String with TTL=30s. CDN handles 95% of product page traffic. Redis handles inventory checks without hitting DB.</div></div>
+      <div class="choice-row"><div class="choice-label">INVENTORY</div><div class="choice-val"><span class="badge b-g">Redis DECR ✓</span> <code>DECRBY inventory:{sku} {qty}</code> — atomic decrement. If result &lt; 0, rollback: <code>INCRBY inventory:{sku} {qty}</code> and reject order. No DB needed for inventory check during purchase flow.</div></div>
+      <div class="choice-row"><div class="choice-label">FLASH SALE</div><div class="choice-val">During a flash sale (10K requests/sec for one SKU), cache stampede risk is extreme. Solution: Redis lock (<code>SET lock:{sku} 1 NX EX 5</code>) + pre-warm cache 5 minutes before sale. Only the lock-holder refreshes the cache; others read stale value briefly.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="decision">
+  <div class="sec-tag">06 · Decision Framework</div>
+  <h2>How to talk about caching in an interview</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Caching Strategy — Answer These in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">What is the read-to-write ratio?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Read-heavy (&gt;10:1) →</span><span class="opt-text"><strong>Cache aggressively.</strong> Cache-aside or read-through. High cache hit rate justifies complexity. Most social, e-commerce, and media systems fall here.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Write-heavy →</span><span class="opt-text"><strong>Cache carefully.</strong> Write-behind for non-critical counters. Cache invalidation complexity may outweigh benefit. Consider whether caching actually helps.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Can you tolerate stale data? For how long?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Yes (seconds/minutes OK) →</span><span class="opt-text"><strong>TTL-based invalidation.</strong> Simple, no code coupling. Social feed, product descriptions, user profiles — all tolerate seconds of staleness.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">No (must be fresh) →</span><span class="opt-text"><strong>Event-driven invalidation + write-through.</strong> Financial balances, inventory counts, seat availability — must be consistent. Use shorter TTL as safety net too.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">What is your data structure need?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Simple key-value →</span><span class="opt-text"><strong>Memcached</strong> (simpler, multi-threaded, pure LRU) or <strong>Redis String</strong>. Memcached is faster for simple string caching with multiple CPU cores.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Rich structures (sorted sets, counters, lists) →</span><span class="opt-text"><strong>Redis.</strong> No contest. Sorted sets for leaderboards, atomic INCR for counters, Lists for queues, HyperLogLog for cardinality.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Persistence needed →</span><span class="opt-text"><strong>Redis with AOF/RDB.</strong> Memcached is pure in-memory — no persistence. Redis can persist to disk and survive restarts.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">04</div><div class="step-content">
+        <div class="step-q">What is the data size and access pattern?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Small hot dataset (&lt;100GB) →</span><span class="opt-text"><strong>Redis Sentinel.</strong> All data fits on one primary. Simple HA with automatic failover. No sharding complexity.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Large dataset or high write throughput →</span><span class="opt-text"><strong>Redis Cluster.</strong> Horizontal sharding across multiple primaries. Scale both data size and write throughput. More operational complexity.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups">
+  <div class="sec-tag">07 · Interview Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">Redis is single-threaded — how does it handle 1M requests/sec?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Redis's event loop is single-threaded for command processing, but that is actually its strength, not its weakness.</strong><br><br>Since commands execute serially, there are no lock contention or deadlock issues. Redis commands are in-memory operations taking microseconds — the bottleneck is never CPU, it is always network I/O. Redis 6+ added multithreaded I/O for reading/writing the network buffers, while keeping command execution single-threaded. Result: 1–10M operations/sec on a single instance depending on command complexity and payload size.<br><br>When you need more throughput: Redis Cluster shards load across multiple independent single-threaded instances. 10 nodes = ~10M ops/sec aggregate throughput.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle cache consistency in a microservices architecture?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>This is one of the hardest distributed systems problems. Three patterns, in order of complexity:</strong><br><br><strong>1. TTL + eventual consistency</strong>: Each service caches with a short TTL (30s–5min). Stale data is guaranteed to expire. Simple, no coordination. Works for most social/media use cases where slight staleness is acceptable.<br><br><strong>2. Event-driven invalidation</strong>: When Service A updates user data, it publishes a <code>UserUpdated</code> event to Kafka. Service B consumes the event and deletes/updates its cache. Consistent eventually. Risk: if the event is lost, cache stays stale indefinitely — mitigate with TTL as backup.<br><br><strong>3. Cache ownership</strong>: Each data domain is owned by one service. Other services must call that service's API to read data — they cannot cache it themselves. Eliminates invalidation problem entirely at the cost of added latency on every cross-service read.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between Redis and Memcached? When do you pick each?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Memcached is a simpler, faster, multi-threaded string cache. Redis is a full data structure server.</strong><br><br><strong>Pick Memcached when:</strong> You need pure key-value string caching, you have a multi-core server and want to saturate all cores (Memcached is truly multi-threaded), you do not need persistence or replication, and you want the absolute simplest operational footprint.<br><br><strong>Pick Redis when:</strong> You need any data structure beyond strings (sorted sets, lists, hashes), you need atomic operations (INCR, LPUSH), you need persistence (AOF/RDB for crash recovery), you need Pub/Sub or Streams, or you need built-in replication and cluster mode.<br><br><strong>In practice at FAANG:</strong> Redis has won. The operational overhead of maintaining two different cache systems (Redis for rich structures, Memcached for simple caching) is rarely worth the marginal performance difference. Most teams standardize on Redis for everything.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does Redis persistence work — RDB vs AOF?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Redis has two persistence mechanisms that can be used independently or together.</strong><br><br><strong>RDB (Redis Database Backup)</strong>: Point-in-time snapshot written to disk periodically (every N seconds if M keys changed). Fast to restore — single compact binary file. Risk: data since last snapshot is lost on crash. Used for: disaster recovery, backups, cache warm-up after restart.<br><br><strong>AOF (Append-Only File)</strong>: Every write command is appended to a log file. On restart, Redis replays the log. Three fsync options: always (safest, slowest), every second (good balance — max 1 second data loss), never (OS decides, fastest). AOF rewrite periodically compacts the log. Used for: when you cannot afford data loss.<br><br><strong>Recommendation</strong>: Use both for critical data — RDB for fast restarts + AOF for durability. For pure cache use cases where data can be reconstructed from the DB, disable persistence entirely for maximum performance.</div></div>
+</section>
+
+</div>
+<div class="footer">CACHING · REDIS · MEMCACHED · EVICTION · INVALIDATION · CDN · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body>
+</html>

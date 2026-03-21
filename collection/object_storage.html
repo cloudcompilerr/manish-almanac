@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Object Storage: S3 & Blob Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.pill-pg{border-color:#336791;color:#336791;background:rgba(51,103,145,.08);}
+.pill-mg{border-color:#13aa52;color:#13aa52;background:rgba(19,170,82,.08);}
+.pill-dy{border-color:#ff9900;color:#cc7a00;background:rgba(255,153,0,.08);}
+.pill-ca{border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08);}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+h4{font-size:13px;font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}
+.db-card.mg::before{background:var(--mg);}
+.db-card.dy::before{background:var(--dy);}
+.db-card.ca::before{background:var(--ca);}
+.db-logo{font-size:22px;margin-bottom:6px;}
+.db-name{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:4px;}
+.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
+.db-tagline{font-size:13px;color:#5a5848;line-height:1.55;}
+.db-born{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}
+.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;border:1px solid #1e1c18;}
+.codeblock .c{color:#3e3d36;}.codeblock .k{color:#e8b84b;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}.codeblock .t{color:#7aaee0;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
+.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
+.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.use-card ul{padding-left:16px;font-size:13px;color:#4a4838;line-height:1.7;}
+.use-card ul li{margin-bottom:4px;}
+.shard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0;}
+.shard-card{background:var(--ink);border-radius:8px;padding:20px;color:#c8c4b8;}
+.shard-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.shard-name{font-family:var(--serif);font-size:16px;font-weight:700;color:#e8b84b;margin-bottom:8px;}
+.shard-body{font-size:12.5px;line-height:1.65;color:#a8a49c;}
+.shard-verdict{margin-top:10px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:3px;display:inline-block;}
+.sv-easy{background:rgba(26,122,74,.2);color:#5ac882;}.sv-med{background:rgba(184,114,10,.2);color:#e8943a;}.sv-hard{background:rgba(192,57,43,.2);color:#e87868;}
+.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.faq-q:hover{background:var(--surface);}
+.faq-q .tog{font-size:18px;color:#e8b84b;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
+.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3830;line-height:1.75;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.sd-example-title{font-family:var(--serif);font-size:16px;color:#f0ece4;font-weight:700;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6a6458;border:1px solid #2e2c28;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:120px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3830;line-height:1.6;}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
+.b-pg{background:var(--pg-bg);border-color:var(--pg);color:var(--pg);}.b-mg{background:var(--mg-bg);border-color:var(--mg);color:var(--mg);}.b-dy{background:var(--dy-bg);border-color:var(--dy);color:#b06000;}.b-ca{background:var(--ca-bg);border-color:var(--ca);color:var(--ca);}.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+
+.step-block{background:#fff;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.step-block-header{background:var(--ink);color:#e8e4dc;padding:13px 18px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.sb-icon{font-size:16px;}
+.step-block-body{padding:0;}
+.step-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);min-width:46px;display:flex;align-items:flex-start;justify-content:center;padding:16px 6px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;border-right:1px solid var(--border);}
+.step-content{padding:14px 18px;flex:1;}
+.step-q{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:6px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:9px 13px;border-radius:5px;font-size:13px;line-height:1.65;}
+.opt-yes{background:#edf8f2;border:1px solid #b8ddc8;}
+.opt-no{background:#fdf6e8;border:1px solid #e8c870;}
+.opt-mid{background:#edf2fb;border:1px solid #b8c8e8;}
+.opt-any{background:#f4f0fb;border:1px solid #c8b8e8;}
+.opt-arrow{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;min-width:120px;}
+.opt-yes .opt-arrow{color:#1a7a4a;}
+.opt-no .opt-arrow{color:#b8720a;}
+.opt-mid .opt-arrow{color:#1a4f8a;}
+.opt-any .opt-arrow{color:#5a3c9a;}
+.opt-text{flex:1;color:#3a3830;}
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+@media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
+
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Object Storage<br><em>S3 & Blob Store</em></h1>
+  <p class="hero-sub">S3 vs block vs file storage, multipart uploads, pre-signed URLs, storage classes, and CDN integration — everything for media and data lake system designs.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">S3 / GCS</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Multipart Upload</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Pre-Signed URLs</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Storage Classes</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">CDN Origin</span></div>
+</div></div>
+<nav class="nav"><a href="#what">Storage Types</a><a href="#internals">S3 Internals</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a></nav>
+<div class="wrap">
+<section id="what">
+  <div class="sec-tag">00 · What Is Object Storage</div>
+  <h2>S3 vs Block Storage vs File Storage</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Object Storage (S3)</div><div class="concept-def"><strong>Stores data as flat objects — each object is a file with a key (path), value (bytes), and metadata.</strong> No directory hierarchy (though keys can have slashes to simulate it).<br>
+      Access: HTTP GET/PUT. Each object immutable after write. Unlimited scale. Cheap ($0.023/GB/month).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Unlimited scale. Cheap. HTTP accessible from anywhere. Perfect for: images, videos, logs, backups, data lakes. Used by: Netflix (video), Instagram (photos), Dropbox (files).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ High latency for small random reads (~50–200ms). No in-place updates. No filesystem semantics (no rename, no locking).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Block Storage (EBS)</div><div class="concept-def"><strong>Raw storage volumes attached to a VM. The OS sees it as a disk — format with any filesystem.</strong><br>
+      Sub-millisecond latency. Random reads/writes. Required for databases (PostgreSQL, MySQL need a filesystem).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Low latency. Random access. Required for any software that needs a real filesystem (databases, OS volumes).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Attached to one instance at a time. Fixed capacity (must resize manually). Expensive ($0.10/GB/month vs S3's $0.023).</span></div></div>
+    <div class="concept-row"><div class="concept-term">File Storage (EFS/NFS)</div><div class="concept-def"><strong>Shared filesystem mounted by multiple instances simultaneously. Files, directories, locking semantics.</strong><br>
+      Multiple EC2 instances can read/write the same files concurrently.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Shared access across instances. POSIX filesystem. No refactoring of existing code that uses files.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Higher latency than block storage. More expensive. Rarely needed in modern cloud-native designs (S3 has replaced most file storage use cases).</span></div></div>
+  </div>
+</section>
+
+<section id="internals">
+  <div class="sec-tag">01 · S3 Internals</div>
+  <h2>How S3 actually works under the hood</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Consistency Model</div><div class="concept-def"><strong>S3 provides strong read-after-write consistency for all operations (since December 2020).</strong><br>
+      After a successful PUT, subsequent GET will return the new object. After DELETE, subsequent GET returns 404. No more "eventually consistent" surprises.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ You can safely read immediately after writing. No need for artificial delays or consistency workarounds.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Multipart Upload</div><div class="concept-def"><strong>For files &gt;100MB: upload in parallel chunks, then assemble.</strong><br>
+      1. Initiate: <code>POST /object?uploads</code> → returns uploadId<br>
+      2. Upload parts: <code>PUT /object?partNumber=1&uploadId=X</code> (each part ≥5MB)<br>
+      3. Complete: <code>POST /object?uploadId=X</code> with list of part ETags<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Parallel uploads (5–10x faster for large files). Resume interrupted uploads. Each part is independently verified with MD5. Required for files &gt;5GB (single PUT limit).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Pre-Signed URLs</div><div class="concept-def"><strong>Temporarily grant a user direct access to an S3 object without exposing your credentials.</strong><br>
+      Server generates a signed URL valid for N seconds: <code>aws s3 presign s3://bucket/video.mp4 --expires-in 3600</code><br>
+      User uses URL directly to upload or download — bypasses your server entirely.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Client uploads directly to S3 — your server never sees the bytes. Offloads bandwidth and CPU. Standard pattern for all file upload systems (Instagram, Dropbox, Google Drive).</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">Flow: Client → GET /upload-url → Server → Pre-signed URL → Client PUT directly to S3 → Client notifies Server of completion.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Storage Classes</div><div class="concept-def"><strong>Different cost/access speed tiers for different data lifecycle stages:</strong><br>
+      <code>Standard</code>: frequently accessed, ~$0.023/GB/month, &lt;100ms access<br>
+      <code>Standard-IA</code>: infrequent access, ~$0.0125/GB/month, retrieval fee per GB<br>
+      <code>Glacier Instant</code>: archive, ~$0.004/GB/month, millisecond retrieval<br>
+      <code>Glacier Deep Archive</code>: long-term archive, ~$0.00099/GB/month, 12-hour retrieval<br>
+      <span style="color:#5a5848;font-size:12.5px;">Use Lifecycle Policies to automatically transition objects: new uploads → Standard → after 30 days → IA → after 1 year → Glacier. Common for log files and video archives.</span></div></div>
+  </div>
+</section>
+
+<section id="examples">
+  <div class="sec-tag">02 · System Design Examples</div>
+  <h2>Object storage in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Instagram — Photo Upload Flow</div><span class="sd-example-tag">MEDIA UPLOAD</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">UPLOAD</div><div class="choice-val">Client requests pre-signed URL from API server. API server generates URL scoped to that user's bucket path, valid for 5 minutes. Client uploads directly to S3 — API server never receives image bytes. Reduces server bandwidth by 100%.</div></div>
+      <div class="choice-row"><div class="choice-label">PROCESSING</div><div class="choice-val">S3 PUT triggers a Lambda (or SQS notification → EC2 worker). Worker: resize to 3 resolutions (thumbnail/feed/full), apply filters, extract EXIF metadata, write processed versions back to S3, update DB with S3 keys.</div></div>
+      <div class="choice-row"><div class="choice-label">DELIVERY</div><div class="choice-val">All S3 objects served through CloudFront CDN. CDN caches at 200+ edge locations. User in Tokyo gets the image from Tokyo edge, not from S3 in us-east-1. ~10ms delivery globally vs ~200ms from origin.</div></div>
+      <div class="choice-row"><div class="choice-label">LIFECYCLE</div><div class="choice-val">Stories expire after 24h: S3 Object expiry policy automatically deletes after 24h. Old posts after 1 year → transition to S3 Infrequent Access (saves ~45% storage cost). Deleted posts → immediate Object Delete + CDN invalidation.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups">
+  <div class="sec-tag">03 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle large file uploads reliably over unreliable mobile connections?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Multipart upload with client-side resumable upload logic.</strong><br><br>
+  1. Client splits file into 5–10MB chunks before starting the upload.<br>
+  2. Client requests a multipart upload ID from your server. Server calls S3 to initiate and returns the uploadId.<br>
+  3. Client uploads chunks in parallel (3–5 simultaneous chunks for speed). Each chunk is independent — a failed chunk can be retried without restarting the whole upload.<br>
+  4. Client tracks which chunks succeeded locally (localStorage or a server-side record).<br>
+  5. If connection drops mid-upload, client resumes from the last successful chunk on reconnect.<br>
+  6. When all chunks are confirmed, client notifies your server, which calls S3's CompleteMultipartUpload.<br><br>
+  Tools: AWS SDK has built-in multipart upload with retry logic. tus.io is an open protocol for resumable uploads. Used by: Google Drive, Dropbox, YouTube for all video uploads.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you design a Dropbox-like file sync system?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Core challenge: efficiently sync only changed parts of large files across devices.</strong><br><br>
+  <strong>Chunked storage</strong>: files are split into 4–8MB content-addressed chunks. Each chunk is identified by its SHA-256 hash. Only changed chunks need to be uploaded on modification.<br><br>
+  <strong>Delta sync</strong>: if you edit a 1GB file by changing one paragraph, only the 2–3 chunks containing that paragraph change. Only those chunks are uploaded. File metadata (which chunk IDs comprise the file) is updated. Other devices download only the new chunks.<br><br>
+  <strong>Deduplication</strong>: if two users upload identical files, the chunks are deduplicated — stored once, referenced by both. Dropbox saved ~2PB of storage via deduplication.<br><br>
+  <strong>Conflict handling</strong>: if two devices modify the same file while offline, both versions are kept — user sees "conflicted copy" and manually resolves. Alternatively: vector clocks to track causality and auto-merge text files (like Google Docs CRDT).</div></div>
+</section></div>
+<div class="footer">OBJECT STORAGE · S3 · GCS · MULTIPART UPLOAD · PRE-SIGNED URLs · CDN · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>

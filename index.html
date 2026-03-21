@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <div class="coll-header">
     <button class="coll-back" id="btn_coll_back">‹ Notes</button>
     <div class="coll-title">My Collection</div>
-    <div class="coll-count">7 items</div>
+    <div class="coll-count">17 items</div>
   </div>
   <div style="padding:6px 0">
     <button class="note-row" id="btn_coll_cms">
@@ -301,6 +301,107 @@ document.addEventListener('DOMContentLoaded',function(){
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
         <span class="coll-tag">Protocols</span>
+      </div>
+    </button>
+
+    <button class="note-row" id="btn_coll_caching">
+      <div class="note-icon">🔥</div>
+      <div class="note-preview">
+        <div class="note-title">Caching Deep Dive</div>
+        <div class="note-snippet">Redis · Memcached · Eviction · Invalidation · Cache Stampede</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Caching</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_consistent_hashing">
+      <div class="note-icon">🔵</div>
+      <div class="note-preview">
+        <div class="note-title">Consistent Hashing</div>
+        <div class="note-snippet">Hash Ring · Virtual Nodes · Hot Spots · Redis Cluster · Cassandra</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Partitioning</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_rate_limiting">
+      <div class="note-icon">⏱️</div>
+      <div class="note-preview">
+        <div class="note-title">Rate Limiting & Throttling</div>
+        <div class="note-snippet">Token Bucket · Sliding Window · Redis INCR · Distributed Limiting</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Rate Limiting</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_distributed_systems">
+      <div class="note-icon">⚙️</div>
+      <div class="note-preview">
+        <div class="note-title">Distributed Systems Fundamentals</div>
+        <div class="note-snippet">CAP · Raft · Saga · 2PC · Redlock · Vector Clocks · Idempotency</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Distributed Sys</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_load_balancing">
+      <div class="note-icon">⚖️</div>
+      <div class="note-preview">
+        <div class="note-title">Load Balancing & Proxies</div>
+        <div class="note-snippet">L4/L7 · Nginx · Envoy · Circuit Breaker · API Gateway · Service Mesh</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Infra</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_search">
+      <div class="note-icon">🔍</div>
+      <div class="note-preview">
+        <div class="note-title">Search & Elasticsearch</div>
+        <div class="note-snippet">Inverted Index · BM25 · ES Architecture · Typeahead · Vector Search</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Search</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_object_storage">
+      <div class="note-icon">🗄️</div>
+      <div class="note-preview">
+        <div class="note-title">Object Storage: S3 & Blob Store</div>
+        <div class="note-snippet">S3 vs Block vs File · Multipart Upload · Pre-Signed URLs · Storage Classes</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Storage</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_message_queues">
+      <div class="note-icon">📬</div>
+      <div class="note-preview">
+        <div class="note-title">Message Queues: SQS & RabbitMQ</div>
+        <div class="note-snippet">SQS · RabbitMQ · DLQ · Fan-Out · Queue vs Stream · At-Least-Once</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Queues</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_cdn_edge">
+      <div class="note-icon">🌍</div>
+      <div class="note-preview">
+        <div class="note-title">CDN & Edge Computing</div>
+        <div class="note-snippet">Cloudflare · CloudFront · HLS · DASH · Adaptive Bitrate · Edge Compute</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">CDN</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_observability">
+      <div class="note-icon">📊</div>
+      <div class="note-preview">
+        <div class="note-title">Monitoring & Observability</div>
+        <div class="note-snippet">Metrics · Logs · Traces · SLO · Error Budget · Golden Signals · Prometheus</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Observability</span>
       </div>
     </button>
   </div>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search: Elasticsearch & Inverted Index</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.pill-pg{border-color:#336791;color:#336791;background:rgba(51,103,145,.08);}
+.pill-mg{border-color:#13aa52;color:#13aa52;background:rgba(19,170,82,.08);}
+.pill-dy{border-color:#ff9900;color:#cc7a00;background:rgba(255,153,0,.08);}
+.pill-ca{border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08);}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+h4{font-size:13px;font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}
+.db-card.mg::before{background:var(--mg);}
+.db-card.dy::before{background:var(--dy);}
+.db-card.ca::before{background:var(--ca);}
+.db-logo{font-size:22px;margin-bottom:6px;}
+.db-name{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:4px;}
+.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
+.db-tagline{font-size:13px;color:#5a5848;line-height:1.55;}
+.db-born{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}
+.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;border:1px solid #1e1c18;}
+.codeblock .c{color:#3e3d36;}.codeblock .k{color:#e8b84b;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}.codeblock .t{color:#7aaee0;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
+.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
+.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.use-card ul{padding-left:16px;font-size:13px;color:#4a4838;line-height:1.7;}
+.use-card ul li{margin-bottom:4px;}
+.shard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0;}
+.shard-card{background:var(--ink);border-radius:8px;padding:20px;color:#c8c4b8;}
+.shard-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.shard-name{font-family:var(--serif);font-size:16px;font-weight:700;color:#e8b84b;margin-bottom:8px;}
+.shard-body{font-size:12.5px;line-height:1.65;color:#a8a49c;}
+.shard-verdict{margin-top:10px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:3px;display:inline-block;}
+.sv-easy{background:rgba(26,122,74,.2);color:#5ac882;}.sv-med{background:rgba(184,114,10,.2);color:#e8943a;}.sv-hard{background:rgba(192,57,43,.2);color:#e87868;}
+.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.faq-q:hover{background:var(--surface);}
+.faq-q .tog{font-size:18px;color:#e8b84b;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
+.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3830;line-height:1.75;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.sd-example-title{font-family:var(--serif);font-size:16px;color:#f0ece4;font-weight:700;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6a6458;border:1px solid #2e2c28;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:120px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3830;line-height:1.6;}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
+.b-pg{background:var(--pg-bg);border-color:var(--pg);color:var(--pg);}.b-mg{background:var(--mg-bg);border-color:var(--mg);color:var(--mg);}.b-dy{background:var(--dy-bg);border-color:var(--dy);color:#b06000;}.b-ca{background:var(--ca-bg);border-color:var(--ca);color:var(--ca);}.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+
+.step-block{background:#fff;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.step-block-header{background:var(--ink);color:#e8e4dc;padding:13px 18px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.sb-icon{font-size:16px;}
+.step-block-body{padding:0;}
+.step-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);min-width:46px;display:flex;align-items:flex-start;justify-content:center;padding:16px 6px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;border-right:1px solid var(--border);}
+.step-content{padding:14px 18px;flex:1;}
+.step-q{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:6px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:9px 13px;border-radius:5px;font-size:13px;line-height:1.65;}
+.opt-yes{background:#edf8f2;border:1px solid #b8ddc8;}
+.opt-no{background:#fdf6e8;border:1px solid #e8c870;}
+.opt-mid{background:#edf2fb;border:1px solid #b8c8e8;}
+.opt-any{background:#f4f0fb;border:1px solid #c8b8e8;}
+.opt-arrow{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;min-width:120px;}
+.opt-yes .opt-arrow{color:#1a7a4a;}
+.opt-no .opt-arrow{color:#b8720a;}
+.opt-mid .opt-arrow{color:#1a4f8a;}
+.opt-any .opt-arrow{color:#5a3c9a;}
+.opt-text{flex:1;color:#3a3830;}
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+@media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
+
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Search<br><em>Elasticsearch & Inverted Index</em></h1>
+  <p class="hero-sub">How search works from first principles — inverted index, BM25 relevance, Elasticsearch architecture, typeahead design, and vector search.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Elasticsearch</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Inverted Index</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">BM25</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Typeahead</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Vector Search</span></div>
+</div></div>
+<nav class="nav"><a href="#intuition">Why Search</a><a href="#inverted">Inverted Index</a><a href="#elasticsearch">ES Architecture</a><a href="#typeahead">Typeahead</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a></nav>
+<div class="wrap">
+<section id="intuition">
+  <div class="sec-tag">00 · Core Intuition</div>
+  <h2>Why a database cannot do what a search engine does</h2>
+  <p>A SQL database index finds exact values fast: <code>WHERE user_id = 123</code>. But <code>WHERE body LIKE '%distributed systems%'</code> requires a full table scan — every row, every time. At 1 billion documents, that takes minutes. A search engine can answer this in milliseconds because it inverts the problem entirely.</p>
+  <div class="analogy">
+    <div class="analogy-label">The book index analogy</div>
+    <div class="analogy-text">
+      A database is a book read cover-to-cover to find a word. Slow.<br><br>
+      A search engine is a book with an index at the back: "distributed systems → pages 12, 47, 203, 891." You go directly to those pages. That back-of-book index is an <strong>inverted index</strong> — and it is the entire secret of how search works.
+    </div>
+  </div>
+</section>
+
+<section id="inverted">
+  <div class="sec-tag">01 · Inverted Index</div>
+  <h2>The data structure that powers every search engine</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">How It Works</div><div class="concept-def"><strong>An inverted index maps each unique term to the list of documents containing it.</strong><br>
+      Documents: Doc1="Redis is fast", Doc2="Redis scales well", Doc3="Kafka is fast"<br>
+      Inverted index:<br>
+      <code>redis   → [Doc1, Doc2]</code><br>
+      <code>fast    → [Doc1, Doc3]</code><br>
+      <code>is      → [Doc1, Doc3]</code><br>
+      <code>scales  → [Doc2]</code><br>
+      Query "redis fast" → intersection of [Doc1,Doc2] and [Doc1,Doc3] → <strong>Doc1</strong> (contains both terms)</div></div>
+    <div class="concept-row"><div class="concept-term">Posting List</div><div class="concept-def"><strong>For each term, the index stores not just document IDs but positions and frequencies.</strong><br>
+      <code>redis → [(Doc1, freq:1, pos:[0]), (Doc2, freq:1, pos:[0])]</code><br>
+      Position enables phrase queries: "redis cluster" requires "redis" and "cluster" to be adjacent.<br>
+      Frequency enables relevance scoring — a document mentioning "redis" 20 times ranks higher than one mentioning it once.</div></div>
+    <div class="concept-row"><div class="concept-term">Text Analysis Pipeline</div><div class="concept-def"><strong>Before indexing, text passes through an analysis pipeline that normalises it.</strong><br>
+      1. <strong>Tokenization</strong>: "Redis is Fast!" → ["Redis", "is", "Fast"]<br>
+      2. <strong>Lowercasing</strong>: → ["redis", "is", "fast"]<br>
+      3. <strong>Stop word removal</strong>: → ["redis", "fast"] (removes "is")<br>
+      4. <strong>Stemming/Lemmatization</strong>: "running" → "run", "faster" → "fast"<br>
+      <span style="color:#5a5848;font-size:12.5px;">The same pipeline must run at query time. "Running Redis" → ["run", "redis"] → matches documents containing "run" or "redis" in any form.</span></div></div>
+    <div class="concept-row"><div class="concept-term">TF-IDF / BM25</div><div class="concept-def"><strong>Relevance scoring: not all matches are equal.</strong><br>
+      <strong>TF (Term Frequency)</strong>: how often does the term appear in this document? More occurrences = more relevant.<br>
+      <strong>IDF (Inverse Document Frequency)</strong>: how rare is the term across all documents? "the" appears everywhere — low IDF, low importance. "Kafka" appears rarely — high IDF, high importance.<br>
+      <strong>BM25</strong>: modern improvement over TF-IDF used by Elasticsearch. Prevents very long documents from dominating just because they mention a term more times.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Elasticsearch uses BM25 by default. You can boost specific fields (title matches worth 3x body matches).</span></div></div>
+  </div>
+</section>
+
+<section id="elasticsearch">
+  <div class="sec-tag">02 · Elasticsearch Architecture</div>
+  <h2>How ES scales to billions of documents</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Index → Shards</div><div class="concept-def"><strong>An Elasticsearch index is split into N primary shards. Each shard is a complete, independent Lucene index.</strong><br>
+      Index "tweets" with 5 shards: each shard holds ~20% of documents. Queries fan out to all 5 shards in parallel, results merged by the coordinator.<br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Shard count is set at creation and cannot be changed (except via reindex). Over-sharding (too many small shards) is as harmful as under-sharding (too few large ones). Rule of thumb: aim for 10–50GB per shard.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Replication</div><div class="concept-def"><strong>Each primary shard has N replica shards on different nodes.</strong><br>
+      Writes: go to primary, primary replicates to replicas.<br>
+      Reads: can be served by primary or any replica — distributes read load.<br>
+      Node failure: replica promoted to primary automatically.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Replicas both provide HA and increase read throughput. 5 shards × 2 replicas = 15 Lucene indexes total across the cluster.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Near Real-Time<br>(NRT) Search</div><div class="concept-def"><strong>Newly indexed documents are searchable within ~1 second, not immediately.</strong><br>
+      Lucene writes to an in-memory buffer → every 1 second, refreshed to a new segment (searchable) → eventually merged into larger segments.<br>
+      <span style="color:#5a5848;font-size:12.5px;">This is why Elasticsearch is "near real-time" not "real-time." To force immediate visibility: <code>?refresh=true</code> on indexing — forces a refresh but hurts write throughput. Only use for critical flows.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Lucene Segments</div><div class="concept-def"><strong>Lucene (the underlying library) writes data in immutable segments.</strong><br>
+      New documents → write buffer → periodic flush → new immutable segment. Background merges combine small segments into larger ones (like Cassandra SSTables, like ClickHouse parts).<br>
+      <span style="color:#5a5848;font-size:12.5px;">Deletes are soft-deletes (marked, not removed) until a merge happens. This is why delete-heavy workloads require periodic forced merges to reclaim space.</span></div></div>
+  </div>
+</section>
+
+<section id="typeahead">
+  <div class="sec-tag">03 · Typeahead / Autocomplete</div>
+  <h2>Design: search-as-you-type at FAANG scale</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Prefix Trie</div><div class="concept-def"><strong>A tree where each node is a character. Every path from root to leaf is a word. O(L) lookup for a prefix of length L — regardless of vocabulary size.</strong><br>
+      To find all words starting with "redis": traverse to node 'r'→'e'→'d'→'i'→'s', return all words in subtree.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Fast prefix lookup. Memory-efficient with shared prefixes. Used by: Google Suggest backend, IDE autocomplete.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Storing popularity scores in a trie and returning top-K results requires augmenting each node with a max-heap — complex. Sharding a trie across machines is non-trivial.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Elasticsearch<br>Completion Suggester</div><div class="concept-def"><strong>Built-in completion suggester using an in-memory FST (Finite State Transducer) — more memory-efficient than a trie.</strong><br>
+      Index time: store completion field with weight (popularity score).<br>
+      Query: <code>suggest: {prefix: "red", field: "title.completion", size: 5}</code><br>
+      Returns top-5 completions by weight instantly.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Easy to implement on top of existing ES infrastructure. Handles millions of suggestions in milliseconds.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Redis ZSET Approach</div><div class="concept-def"><strong>Store all prefixes as ZSET members scored by popularity. For "redis", store "r", "re", "red", "redi", "redis" all pointing to the suggestion with its popularity score.</strong><br>
+      <code>ZRANGEBYLEX suggestions "[redis" "[redisÿ" LIMIT 0 5</code><br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Extremely fast (sub-ms). Works well for known vocabulary (hashtags, product names). Easy to update popularity in real time with ZINCRBY.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Storage: O(L × V) where L is avg word length and V is vocabulary size. For a 10M-word vocabulary, this becomes large.</span></div></div>
+  </div>
+</section>
+
+<section id="examples">
+  <div class="sec-tag">04 · System Design Examples</div>
+  <h2>Search in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Twitter Search</div><span class="sd-example-tag">500M TWEETS/DAY</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">WRITE PATH</div><div class="choice-val">New tweet → Kafka → Indexing Service → Elasticsearch. The Kafka buffer decouples tweet volume from ES indexing rate. ES indexes ~6K tweets/sec sustained. NRT lag: ~1 second before searchable.</div></div>
+      <div class="choice-row"><div class="choice-label">SEARCH</div><div class="choice-val"><span class="badge b-g">Elasticsearch ✓</span> Full-text BM25 scoring + recency boost + engagement boost. Query rewriting: "from:elonmusk" → field-specific filter. Hashtag search: exact term match on the hashtag field (no tokenization).</div></div>
+      <div class="choice-row"><div class="choice-label">TRENDING</div><div class="choice-val">Trending hashtags NOT from ES — from a streaming Count-Min Sketch pipeline (Kafka + Flink + Redis ZSET). ES is too slow for trending (requires aggregation queries). The two systems complement each other.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY NOT SQL</div><div class="choice-val"><code>LIKE '%distributed%'</code> on 500M tweets = full table scan = minutes. Elasticsearch full-text search on same data = milliseconds. Not even close.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups">
+  <div class="sec-tag">05 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you keep Elasticsearch in sync with your primary database?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Two patterns, with very different trade-offs:</strong><br><br><strong>1. Dual write</strong>: Application writes to DB AND ES in the same request. Simple but dangerous — if ES write fails, you have inconsistency with no way to detect it. Acceptable only for non-critical search.<br><br><strong>2. Change Data Capture (CDC)</strong>: Debezium (or similar) reads the PostgreSQL WAL (Write-Ahead Log) and publishes every change to Kafka. An ES indexing consumer reads from Kafka and keeps ES in sync. This is the production approach:<br>— Source of truth is always the DB<br>— ES is an eventually consistent read replica<br>— On ES failure, reindex from DB<br>— Typical lag: 100ms–2s<br><br>Tools: Debezium + Kafka + Elasticsearch Kafka Connector. Used by: LinkedIn, Airbnb, Shopify.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is vector search and when do you need it?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Vector search finds documents semantically similar to a query, not just exact keyword matches.</strong><br><br>Classic inverted index search for "fast database" would not return a document about "high-performance data store" — different words, even if same meaning. Vector search uses ML embeddings (e.g., OpenAI text-embedding-ada-002) to convert both query and documents to dense vectors in the same semantic space. Documents near the query vector in that space are semantically similar.<br><br><strong>Implementation</strong>: index document embeddings in a vector database (Pinecone, Weaviate, Milvus, or Elasticsearch with kNN). Query: embed the query text → find K nearest neighbours using approximate nearest neighbour (HNSW algorithm).<br><br><strong>When to use</strong>: semantic search ("show me articles about making databases fast"), recommendation ("more content like this"), Q&A (RAG — Retrieval Augmented Generation for LLMs).<br><br><strong>Hybrid search</strong>: combine keyword BM25 + vector KNN scores (Reciprocal Rank Fusion). Best of both worlds — used by production AI search systems.</div></div>
+</section></div>
+<div class="footer">SEARCH · ELASTICSEARCH · INVERTED INDEX · BM25 · TYPEAHEAD · VECTOR SEARCH · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>

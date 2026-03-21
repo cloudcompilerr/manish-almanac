@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributed Systems: Fundamentals</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.pill-pg{border-color:#336791;color:#336791;background:rgba(51,103,145,.08);}
+.pill-mg{border-color:#13aa52;color:#13aa52;background:rgba(19,170,82,.08);}
+.pill-dy{border-color:#ff9900;color:#cc7a00;background:rgba(255,153,0,.08);}
+.pill-ca{border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08);}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+h4{font-size:13px;font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}
+.db-card.mg::before{background:var(--mg);}
+.db-card.dy::before{background:var(--dy);}
+.db-card.ca::before{background:var(--ca);}
+.db-logo{font-size:22px;margin-bottom:6px;}
+.db-name{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:4px;}
+.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
+.db-tagline{font-size:13px;color:#5a5848;line-height:1.55;}
+.db-born{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}
+.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;border:1px solid #1e1c18;}
+.codeblock .c{color:#3e3d36;}.codeblock .k{color:#e8b84b;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}.codeblock .t{color:#7aaee0;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
+.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
+.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.use-card ul{padding-left:16px;font-size:13px;color:#4a4838;line-height:1.7;}
+.use-card ul li{margin-bottom:4px;}
+.shard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0;}
+.shard-card{background:var(--ink);border-radius:8px;padding:20px;color:#c8c4b8;}
+.shard-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.shard-name{font-family:var(--serif);font-size:16px;font-weight:700;color:#e8b84b;margin-bottom:8px;}
+.shard-body{font-size:12.5px;line-height:1.65;color:#a8a49c;}
+.shard-verdict{margin-top:10px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:3px;display:inline-block;}
+.sv-easy{background:rgba(26,122,74,.2);color:#5ac882;}.sv-med{background:rgba(184,114,10,.2);color:#e8943a;}.sv-hard{background:rgba(192,57,43,.2);color:#e87868;}
+.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.faq-q:hover{background:var(--surface);}
+.faq-q .tog{font-size:18px;color:#e8b84b;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
+.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3830;line-height:1.75;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.sd-example-title{font-family:var(--serif);font-size:16px;color:#f0ece4;font-weight:700;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6a6458;border:1px solid #2e2c28;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:120px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3830;line-height:1.6;}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
+.b-pg{background:var(--pg-bg);border-color:var(--pg);color:var(--pg);}.b-mg{background:var(--mg-bg);border-color:var(--mg);color:var(--mg);}.b-dy{background:var(--dy-bg);border-color:var(--dy);color:#b06000;}.b-ca{background:var(--ca-bg);border-color:var(--ca);color:var(--ca);}.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+
+.step-block{background:#fff;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.step-block-header{background:var(--ink);color:#e8e4dc;padding:13px 18px;font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.sb-icon{font-size:16px;}
+.step-block-body{padding:0;}
+.step-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);min-width:46px;display:flex;align-items:flex-start;justify-content:center;padding:16px 6px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;border-right:1px solid var(--border);}
+.step-content{padding:14px 18px;flex:1;}
+.step-q{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:6px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:9px 13px;border-radius:5px;font-size:13px;line-height:1.65;}
+.opt-yes{background:#edf8f2;border:1px solid #b8ddc8;}
+.opt-no{background:#fdf6e8;border:1px solid #e8c870;}
+.opt-mid{background:#edf2fb;border:1px solid #b8c8e8;}
+.opt-any{background:#f4f0fb;border:1px solid #c8b8e8;}
+.opt-arrow{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;min-width:120px;}
+.opt-yes .opt-arrow{color:#1a7a4a;}
+.opt-no .opt-arrow{color:#b8720a;}
+.opt-mid .opt-arrow{color:#1a4f8a;}
+.opt-any .opt-arrow{color:#5a3c9a;}
+.opt-text{flex:1;color:#3a3830;}
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+@media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
+
+</style>
+</head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Distributed Systems<br><em>Fundamentals</em></h1>
+  <p class="hero-sub">CAP theorem, PACELC, consensus (Raft), distributed transactions (Saga vs 2PC), distributed locking (Redlock), and vector clocks — from first principles to production patterns.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">CAP</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Raft</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Saga</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">2PC</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:rgba(96,64,160,.08)">Redlock</span></div>
+</div></div>
+<nav class="nav"><a href="#cap">CAP Theorem</a><a href="#consensus">Consensus</a><a href="#transactions">Distributed Tx</a><a href="#locks">Distributed Locks</a><a href="#clocks">Clocks & Ordering</a><a href="#followups">Follow-ups</a></nav>
+<div class="wrap">
+<section id="cap">
+  <div class="sec-tag">00 · CAP Theorem</div>
+  <h2>The constraint every distributed system lives with</h2>
+  <p>CAP theorem: a distributed system can guarantee at most two of Consistency, Availability, and Partition Tolerance. Since network partitions <em>always happen</em> in real distributed systems, the real choice is <strong>CP vs AP</strong> — not "do we handle partitions."</p>
+  <div class="analogy">
+    <div class="analogy-label">CAP in plain English</div>
+    <div class="analogy-text">
+      Your bank has two branches. The network between them goes down.<br><br>
+      <strong>CP (Consistency + Partition Tolerance):</strong> Both branches stop accepting deposits until the network is restored. No one gets a wrong balance. But the service is unavailable during the outage.<br><br>
+      <strong>AP (Availability + Partition Tolerance):</strong> Both branches keep accepting deposits and serving customers independently. Service stays up. But when the network restores, one branch might show ₹5,000 and the other ₹7,000 for the same account — they need to reconcile.<br><br>
+      <strong>The choice is: would you rather return an error, or return potentially stale data?</strong>
+    </div>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">PACELC Extension</div><div class="concept-def"><strong>CAP only describes behaviour during a partition. PACELC also describes the trade-off during normal operation:</strong><br>
+      If Partition → choose Availability or Consistency (the CA in CAP)<br>
+      Else (normal) → choose Latency or Consistency<br>
+      <span style="color:#5a5848;font-size:12.5px;">Even when no partition exists, you must decide: do you want the lowest latency (return from nearest replica, may be slightly stale) or the strongest consistency (always read from primary, higher latency)?<br>DynamoDB: PA/EL — available during partition, low latency during normal. HBase: PC/EC — consistent always, higher latency.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Linearisability</div><div class="concept-def"><strong>The strongest consistency model. Every operation appears to happen at a single point in time, in the order clients observe.</strong><br>
+      If client A writes X=1 and client B subsequently reads X, B must see 1 — not a previous value.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Operations look as if they happened on a single machine. No surprises. Required for: financial transactions, distributed locks, leader election.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Requires coordination (consensus) across nodes. High latency. Not scalable to high throughput across geographies.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Eventual Consistency</div><div class="concept-def"><strong>If no new updates are made, all replicas will eventually converge to the same value.</strong><br>
+      Reads may return stale data during the convergence window (typically milliseconds to seconds).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Highest availability and lowest latency. Scales globally. Acceptable for: social feeds, product descriptions, DNS, shopping carts.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Applications must handle stale reads gracefully. Conflicts (two writes to the same key) need resolution strategy (LWW, CRDT, vector clocks).</span></div></div>
+  </div>
+</section>
+
+<section id="consensus">
+  <div class="sec-tag">01 · Consensus</div>
+  <h2>Raft — how distributed systems agree on one truth</h2>
+  <p>Consensus is the problem of getting multiple nodes to agree on a single value even when some nodes crash or messages are delayed. Every distributed database, distributed lock, and leader election uses consensus internally.</p>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Leader Election</div><div class="concept-def"><strong>Raft elects one leader at a time. All writes go through the leader. Followers only accept writes from the current leader.</strong><br>
+      If no heartbeat from leader for election timeout (150–300ms), followers start a new election. Candidate requests votes. First to get majority (N/2 + 1) becomes new leader.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Simple mental model: one leader, clear authority. Used by: etcd, CockroachDB, TiKV, Kafka (KRaft mode).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Log Replication</div><div class="concept-def"><strong>Every write is appended to the leader's log. Leader replicates to followers. Once a majority acknowledges, the write is committed and applied.</strong><br>
+      Committed = durable even if the leader crashes. Followers will elect a new leader and apply the committed log.<br>
+      <span style="color:#5a5848;font-size:12.5px;">This is exactly how Kafka replication works (ISR — in-sync replicas). Exactly how etcd stores Kubernetes cluster state. Exactly how CockroachDB achieves ACID transactions across nodes.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Why Not Paxos</div><div class="concept-def"><strong>Paxos is theoretically equivalent to Raft but notoriously difficult to understand and implement correctly.</strong><br>
+      Raft was explicitly designed to be understandable — the original paper is titled "Raft: In Search of an Understandable Consensus Algorithm."<br>
+      <span style="color:#5a5848;font-size:12.5px;">In interviews: say "I'd use Raft" — it is the modern consensus algorithm of choice and you can explain it. Paxos is largely of historical interest.</span></div></div>
+  </div>
+</section>
+
+<section id="transactions">
+  <div class="sec-tag">02 · Distributed Transactions</div>
+  <h2>2PC and the Saga pattern — when ACID crosses service boundaries</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Two-Phase Commit (2PC)</div><div class="concept-def"><strong>A coordinator asks all participants to prepare (can you commit?), then commits only if all say yes.</strong><br>
+      Phase 1 (Prepare): Coordinator asks all nodes to lock resources and vote yes/no.<br>
+      Phase 2 (Commit): If all voted yes → commit. If any voted no → rollback all.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Atomicity guaranteed across nodes. All commit or none do.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ <strong>Blocking protocol:</strong> if coordinator crashes after Phase 1, participants are locked waiting forever (holding resources). Tight coupling between services. Performance: 2 round trips minimum. Used in: traditional databases (PostgreSQL distributed transactions, XA protocol). <strong>Avoid in microservices.</strong></span></div></div>
+    <div class="concept-row"><div class="concept-term">Saga Pattern</div><div class="concept-def"><strong>Break a distributed transaction into a sequence of local transactions, each with a compensating transaction to undo it on failure.</strong><br>
+      Example — e-commerce order: (1) Reserve inventory → (2) Charge payment → (3) Create shipment. If step 3 fails: cancel shipment + refund payment (compensation) + release inventory.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ No distributed locks. Services remain independent. Failures handled gracefully via compensation. The correct pattern for microservices.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Eventual consistency only — other services see intermediate states (payment charged before shipment confirmed). Compensation logic must be idempotent. Complex to reason about.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">Two implementations: Choreography (events trigger next step) or Orchestration (a saga coordinator directs each step). Orchestration is easier to monitor and debug.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Idempotency</div><div class="concept-def"><strong>Making the same operation multiple times has the same effect as doing it once.</strong><br>
+      Critical for: retries (network failures mean requests may be delivered twice), payment processing (charge card once even if confirmed twice).<br>
+      Implementation: client sends a unique <code>idempotency-key</code> header. Server stores <code>(idempotency_key → result)</code>. On duplicate: return stored result without re-executing.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Safe retries. Exactly-once semantics. Used by: Stripe (idempotency keys on all payment APIs), Kafka producers (enable.idempotence=true).</span></div></div>
+  </div>
+</section>
+
+<section id="locks">
+  <div class="sec-tag">03 · Distributed Locking</div>
+  <h2>Redlock and why distributed locks are hard</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Redis SETNX Pattern</div><div class="concept-def"><strong>Simple distributed lock using Redis SET NX EX.</strong><br>
+      <code>SET lock:{resource} {unique_id} NX EX 30</code><br>
+      NX = only set if not exists (acquire lock). EX 30 = auto-expire in 30 seconds (prevent deadlock if holder crashes).<br>
+      Release: Lua script to atomically check owner + delete: <code>if GET == unique_id then DEL lock</code><br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Works correctly with a single Redis instance. Simple, widely used.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Single Redis node is a single point of failure. If Redis crashes, lock is lost. Works for most use cases where brief lock loss is acceptable.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Redlock Algorithm</div><div class="concept-def"><strong>Acquire lock on majority of N independent Redis nodes (N=5 recommended). Lock is held only if majority acquired within timeout.</strong><br>
+      Steps: (1) Get current time. (2) Try acquiring lock on all 5 nodes in sequence. (3) Lock succeeds if acquired on ≥3 nodes AND total elapsed time &lt; lock TTL. (4) Release all on failure.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Survives failure of minority of Redis nodes. No single point of failure.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Martin Kleppmann identified a flaw: clock skew and GC pauses can cause two clients to both believe they hold the lock. For truly critical systems (financial), use a CP system like ZooKeeper or etcd for locks.</span></div></div>
+    <div class="concept-row"><div class="concept-term">etcd / ZooKeeper Locks</div><div class="concept-def"><strong>For strong guarantees: use a CP distributed system built on Raft consensus.</strong><br>
+      etcd <code>PUT /locks/resource?prevExist=false</code> — atomic compare-and-set. Uses Raft to ensure only one leader can acquire the lock cluster-wide.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Correct under all failure scenarios. Linearisable — no two clients can simultaneously believe they hold the lock. Used by: Kubernetes for leader election, distributed job schedulers.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Higher latency than Redis (Raft round trip). Operational complexity of running etcd/ZooKeeper cluster.</span></div></div>
+  </div>
+</section>
+
+<section id="clocks">
+  <div class="sec-tag">04 · Clocks & Ordering</div>
+  <h2>Why you cannot trust timestamps in distributed systems</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Clock Skew</div><div class="concept-def"><strong>Different servers have slightly different clocks, even with NTP. Typical skew: 1–100ms. Maximum observed: seconds.</strong><br>
+      Problem: Server A timestamps event at 14:00:01.000, Server B at 14:00:00.998. B's event appears "before" A's despite happening after.<br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Never use wall-clock timestamps for event ordering in distributed systems. "Last Write Wins" based on timestamps will silently discard correct data.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Logical Clocks<br>(Lamport)</div><div class="concept-def"><strong>A counter that increments on every event and is included in every message. Receiving a message with counter C → set local counter to max(local, C) + 1.</strong><br>
+      Guarantees: if event A causally precedes event B, then Lamport(A) &lt; Lamport(B).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Causal ordering without synchronized clocks. Simple to implement.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Cannot tell if two events are concurrent (no causal relationship between them).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Vector Clocks</div><div class="concept-def"><strong>One counter per node. Captures causality and detects concurrent events.</strong><br>
+      Node A: [A:1, B:0, C:0]. Sends to B: B updates to [A:1, B:1, C:0]. If two events have incomparable vector clocks, they are concurrent (conflict).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Detects conflicts precisely. Amazon Dynamo uses vector clocks for conflict detection in shopping carts.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Vector grows with number of nodes. Conflict resolution still needs application logic.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Google TrueTime</div><div class="concept-def"><strong>Google Spanner's approach: GPS + atomic clocks provide a bounded uncertainty interval [earliest, latest] for the current time. Spanner waits out this uncertainty before committing.</strong><br>
+      Uncertainty: ~7ms. Spanner commits with at least 7ms delay to ensure all nodes agree on ordering.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Enables external consistency (linearisability) globally across datacenters. The only system that achieves this at global scale.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">You cannot replicate TrueTime without specialized hardware. For most systems: use logical clocks or a single-region Raft-based system.</span></div></div>
+  </div>
+</section>
+
+<section id="followups">
+  <div class="sec-tag">05 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle split-brain in a distributed system?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Split-brain: a network partition causes two groups of nodes to both believe they are the leader/primary, leading to divergent writes.</strong><br><br><strong>Prevention strategies:</strong><br>1. <strong>Quorum writes</strong>: a write only succeeds if acknowledged by majority (N/2+1). During partition, the minority partition cannot achieve quorum and stops accepting writes. Only the majority side proceeds. Used by: Raft, Cassandra QUORUM writes.<br><br>2. <strong>Fencing tokens</strong>: every time a new leader is elected, it receives a monotonically increasing token. Storage systems reject writes with older tokens. Even if the old leader thinks it is still active, its writes are rejected.<br><br>3. <strong>Lease-based leadership</strong>: leader holds a lease (timed lock). If it cannot renew before expiry, it steps down voluntarily. Used by: Kubernetes leader election via etcd.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between linearisability and serializability?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>These are often confused but refer to different properties at different levels.</strong><br><br><strong>Linearisability</strong> is about <em>single operations</em> on a single object (key). It means every read-write operation appears to happen atomically at a single point in time. It is a property of a single key's history.<br><br><strong>Serializability</strong> is about <em>transactions</em> (groups of operations, possibly on multiple keys). It means the result of concurrent transactions is equivalent to some serial (one-at-a-time) execution. It is a property of the database's transaction isolation.<br><br><strong>Strict Serializability (Linearisable Serializability)</strong> = both: transactions are serialized AND operations appear instantaneous. This is what Spanner and CockroachDB provide. The strongest guarantee, but most expensive.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does the Saga pattern handle a payment failure mid-order?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Compensating transactions undo the effects of already-completed steps.</strong><br><br>Order saga steps: Reserve Inventory → Charge Payment → Create Shipment → Send Confirmation.<br><br>Failure at step 2 (payment declined):<br>1. Shipment not yet created — skip<br>2. <strong>Compensating transaction for step 1</strong>: call Inventory Service with "release reservation for order X." Must be idempotent — if this fails and retries, it should not double-release.<br>3. Return "payment failed" to user.<br><br><strong>Key insight</strong>: compensating transactions must be idempotent and durable. Store the saga state in a database so you can resume compensation after a crash. This is what orchestration-based Sagas (e.g., AWS Step Functions, Temporal.io) manage for you automatically.</div></div>
+</section></div>
+<div class="footer">DISTRIBUTED SYSTEMS · CAP · RAFT · SAGA · IDEMPOTENCY · VECTOR CLOCKS · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>
