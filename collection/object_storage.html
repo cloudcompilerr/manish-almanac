@@ -276,6 +276,50 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   2. <strong>Increase flush interval</strong>: instead of flushing every 10 seconds, flush every 10 minutes. Fewer, larger files. Trade-off: longer lag before data is queryable.<br>
   3. <strong>Delta Lake / Iceberg</strong>: these table formats include compaction operations (<code>OPTIMIZE</code> in Delta, <code>REWRITE_DATA_FILES</code> in Iceberg) that compact small files transactionally — no downtime, readers see consistent data throughout.</div></div>
 </section></div>
+
+<section id="decision-obj">
+  <div class="sec-tag">05 · Decision Framework</div>
+  <h2>Storage type selection</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Object vs Block vs File Storage — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Does the software require a real filesystem (POSIX)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (databases, OS) →</span><span class="opt-text"><strong>Block storage (EBS, GCP PD).</strong> Attached as a disk. Sub-millisecond latency. Random read/write. Required for: PostgreSQL, MySQL, MongoDB — any database that writes WAL files and needs filesystem semantics. Cannot use S3 directly for a DB.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Go to Step 2.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Do multiple servers need to read/write the same files simultaneously?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (shared filesystem) →</span><span class="opt-text"><strong>File storage (EFS, NFS, Azure Files).</strong> POSIX filesystem mounted by multiple instances. Use for: shared config, legacy apps that read/write files and cannot be refactored, CMS media that multiple web servers access.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Go to Step 3.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">What is the access pattern — HTTP or programmatic?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">HTTP / URL-based access →</span><span class="opt-text"><strong>Object storage (S3/GCS) + CDN.</strong> Objects served via HTTP URLs. CDN caches at edge globally. Perfect for: images, videos, static files, any user-facing media. Pre-signed URLs for private access without exposing credentials.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Batch analytics / data lake →</span><span class="opt-text"><strong>Object storage (S3/GCS) with Parquet.</strong> Store raw data in Parquet format. Query with Athena/BigQuery/Redshift Spectrum. Lifecycle policies tier old data to Glacier automatically. Add Delta Lake/Iceberg for ACID transactions on top of S3.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <h3>S3 vs GCS vs Azure Blob — Quick Comparison</h3>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">AWS S3</div><div class="concept-def"><strong>The industry standard. Every major data tool integrates with S3 natively.</strong><br>
+      Unique features: S3 Select (query data inside objects with SQL without downloading), Intelligent-Tiering (auto cost optimisation), Object Lambda (transform objects on read), EventBridge integration.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Largest ecosystem. If you're on AWS, there's no reason to use anything else for object storage.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Google Cloud Storage</div><div class="concept-def"><strong>Best integration with BigQuery and the GCP data ecosystem.</strong><br>
+      GCS → BigQuery: external tables query GCS Parquet files directly without loading. GCS → Dataflow: native integration for streaming pipelines. Multiregional storage for global CDN-like access.<br>
+      <span style="color:#5a5848;font-size:12.5px;">If your analytics runs on BigQuery, GCS is the natural companion.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Cost Optimisation</div><div class="concept-def"><strong>Storage is cheap; data transfer OUT is expensive.</strong><br>
+      S3 storage: $0.023/GB/month (Standard). Data transfer OUT to internet: $0.09/GB. The CDN trick: CloudFront has a free tier for S3 origin transfers — route all user requests through CloudFront to eliminate S3 egress costs entirely.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ S3 → CloudFront transfer is free. CloudFront → users costs $0.085/GB. Net saving: significant at scale.</span></div></div>
+  </div>
+</section>
 <div class="footer">OBJECT STORAGE · S3 · GCS · MULTIPART UPLOAD · PRE-SIGNED URLs · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body></html>

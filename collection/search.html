@@ -298,6 +298,44 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <strong>For sub-second freshness</strong> (stock prices, live sports scores): do not use ES for the hot data. Use Redis Sorted Sets or a dedicated real-time index (Druid) for the last few minutes. ES handles historical data. The search UI blends real-time results (from Redis) with historical results (from ES).<br><br>
   <strong>Index update strategy</strong>: full reindex (expensive, for schema changes), partial update via Update API (efficient for changing specific fields), delete + reindex (for major changes to a document). Avoid full reindexes for high-traffic indexes during peak hours — they consume significant I/O.</div></div>
 </section></div>
+
+<section id="decision-search">
+  <div class="sec-tag">06 · Decision Framework</div>
+  <h2>Search architecture decisions</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Search System Design — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Is this full-text search (keyword matching across documents)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Elasticsearch / OpenSearch.</strong> Inverted index + BM25 scoring. Handles: full-text on articles/tweets/product descriptions, fuzzy matching, multi-field boosts. Scale: billions of documents. Never use SQL LIKE for this.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (exact match / geo / structured) →</span><span class="opt-text">Go to Step 2. SQL or Redis may suffice.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Is the primary dimension geospatial (find things near me)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (geo) →</span><span class="opt-text"><strong>Elasticsearch geo_distance queries or PostGIS.</strong> ES: geo_point field + distance query — returns results within N km. PostGIS: spatial indexes for complex polygon queries. Redis GEO commands for simple "nearby" lookups (Uber driver locations).</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Go to Step 3.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Is it semantic search (meaning-based, not keyword)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Vector search.</strong> Embed documents + queries with an embedding model (OpenAI, Cohere). Store vectors in Pinecone / Weaviate / pgvector. KNN search finds semantically similar content. Use hybrid search (BM25 + vector) for best precision + recall.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Both keyword + semantic →</span><span class="opt-text"><strong>Hybrid search.</strong> Elasticsearch 8+ supports kNN + BM25 in one query with Reciprocal Rank Fusion. Best of both worlds. Production choice for modern AI-powered search (LinkedIn, Spotify).</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">04</div><div class="step-content">
+        <div class="step-q">Typeahead / autocomplete needed?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Small vocabulary (&lt;1M terms) →</span><span class="opt-text"><strong>Redis ZSET prefix trick.</strong> Store all prefixes with popularity score. ZRANGEBYLEX for instant prefix lookup. &lt;1ms. Easy to update in real time with ZINCRBY.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Large vocabulary →</span><span class="opt-text"><strong>ES Completion Suggester.</strong> In-memory FST (finite state transducer). Handles millions of suggestions. Returns top-N by weight instantly. Best for: product search, job title autocomplete.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
 <div class="footer">SEARCH · ELASTICSEARCH · INVERTED INDEX · BM25 · TYPEAHEAD · VECTOR SEARCH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body></html>

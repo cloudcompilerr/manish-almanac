@@ -324,6 +324,44 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   An <strong>API gateway</strong> is a superset: it also load balances, but adds: authentication (JWT validation), authorisation (RBAC checks), rate limiting (per-user quotas), request transformation (add/remove headers, transform body), API versioning (route /v1/ and /v2/ to different backend versions), observability (per-endpoint metrics and logging), and developer portal integration.<br><br>
   <strong>Rule of thumb for interviews</strong>: if the component needs to understand your business logic (who is this user? what plan are they on? is this request authorised?), it is an API gateway. If it just needs to distribute traffic reliably, it is a load balancer. In production, you typically have both: an L4 NLB at the outer edge (raw throughput), an L7 API gateway behind it (business logic), and internal load balancers between services.</div></div>
 </section></div>
+
+<section id="decision-lb">
+  <div class="sec-tag">07 · Decision Framework</div>
+  <h2>Choosing the right load balancing layer</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Load Balancer Selection — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Do you need to inspect HTTP headers, URLs, or cookies to route?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>L7 (Application Layer) LB.</strong> AWS ALB, Nginx, Envoy, HAProxy HTTP mode. Path-based routing (/api/* vs /static/*), host-based routing, header-based A/B testing, SSL termination. Required for any URL-aware routing.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (pure TCP/UDP) →</span><span class="opt-text"><strong>L4 (Transport Layer) LB.</strong> AWS NLB, HAProxy TCP mode. Raw TCP routing — faster, lower overhead, works for any protocol (MySQL, SMTP, game servers). Use when you don't need HTTP awareness.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Are request durations variable (some fast, some very slow)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (variable duration) →</span><span class="opt-text"><strong>Least Connections.</strong> Routes to server with fewest active connections. A slow server accumulates connections and receives fewer new ones automatically. Best for: WebSocket, video streaming, large uploads, ML inference endpoints.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (uniform fast requests) →</span><span class="opt-text"><strong>Round Robin or Weighted Round Robin.</strong> Distributes evenly. Simple, low overhead. Best for: homogeneous stateless API servers with uniform request cost.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Do clients need to always reach the same backend (stateful)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (stateful) →</span><span class="opt-text"><strong>Sticky sessions.</strong> Cookie-based (LB injects AWSALB cookie) or consistent hash by user ID. Required for: WebSocket connections, legacy session-based apps. Prefer moving state to Redis so any server can handle any request.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (stateless) →</span><span class="opt-text"><strong>Any algorithm — no stickiness needed.</strong> Stateless is always preferred. Store session state in Redis, not in-process. Enables free horizontal scaling and zero-downtime rolling deploys.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">04</div><div class="step-content">
+        <div class="step-q">Internal microservice traffic or public edge traffic?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Internal (service mesh) →</span><span class="opt-text"><strong>Envoy sidecar proxies + Istio.</strong> mTLS between services, circuit breaking, distributed tracing, dynamic config via xDS — all without changing application code. Overkill for small systems; essential at 50+ microservices.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Public edge →</span><span class="opt-text"><strong>API Gateway (Kong/AWS API GW) + L7 LB.</strong> Auth, rate limiting, request transformation at the gateway. L7 LB (Nginx/ALB) distributes to backend fleet. Two layers: gateway handles business rules, LB handles distribution.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
 <div class="footer">LOAD BALANCING · L4 · L7 · NGINX · ENVOY · CIRCUIT BREAKER · API GATEWAY · SERVICE MESH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body></html>

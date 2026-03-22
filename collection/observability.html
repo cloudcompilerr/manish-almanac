@@ -311,6 +311,37 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <strong>The CUJ (Critical User Journey) approach</strong> from Google SRE: define SLOs per user journey, not per service. "User can see updated trending content within 60 seconds of an event going viral." This SLO captures the entire pipeline (Kafka lag + Flink latency + Redis update + API response) as a single observable outcome.<br><br>
   Start with 2–3 top-level SLOs per major user journey. Add component-level SLIs only when you need finer-grained alerting to diagnose which component is contributing to SLO burn.</div></div>
 </section></div>
+
+<section id="decision-obs">
+  <div class="sec-tag">06 · Decision Framework</div>
+  <h2>Building your observability stack</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Observability Stack Selection</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Cloud provider or self-managed?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Managed (cloud) →</span><span class="opt-text"><strong>Datadog / New Relic / Dynatrace.</strong> One agent, everything included: metrics, logs, traces, APM, dashboards, alerting. Expensive at scale ($$$) but zero ops. Best for: startups to mid-size engineering teams without a dedicated platform team.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Self-managed (OSS) →</span><span class="opt-text"><strong>Prometheus + Grafana + Jaeger + Loki.</strong> Free, highly customisable, industry standard. Requires a platform team to operate. Best for: large engineering orgs, cost-sensitive at scale, need full data ownership.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">How do you alert — page or ticket?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Page (wake someone up) →</span><span class="opt-text"><strong>SLO burn rate alert.</strong> Only page when error budget is burning at an unsustainable rate. Alert on: p99 latency &gt; SLO threshold for &gt;2 minutes, error rate &gt; 1% sustained, SLO burn rate 10x normal. Every page must be actionable with a runbook.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Ticket (fix in business hours) →</span><span class="opt-text"><strong>Threshold alerts on symptoms.</strong> CPU consistently &gt;80%, disk &gt;70%, error rate trending up but below SLO. These are leading indicators — important to track but not urgent enough to wake someone up.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Microservices or monolith?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Microservices (&gt;5 services) →</span><span class="opt-text"><strong>Distributed tracing is non-negotiable.</strong> Without traces, debugging a latency spike across 10 services is impossible. Instrument with OpenTelemetry SDK or use Envoy sidecar for automatic trace propagation. Jaeger or Tempo as backend. Sample 100% errors, 1% normal traffic.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Monolith / few services →</span><span class="opt-text"><strong>Structured logs + metrics are sufficient.</strong> A single service's logs tell the full story. Elasticsearch + Kibana for log search. Prometheus + Grafana for metrics. Add traces later when you split into microservices.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
 <div class="footer">MONITORING · OBSERVABILITY · PROMETHEUS · JAEGER · SLO · ERROR BUDGET · GOLDEN SIGNALS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body></html>

@@ -311,6 +311,34 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does Cassandra handle concurrent writes to the same key?<span class="tog">+</span></div>
   <div class="faq-a"><strong>Cassandra uses Last Write Wins (LWW) — the write with the highest timestamp wins. This is correct most of the time but has known edge cases.</strong><br><br>Two concurrent writes to the same key from different nodes: write A has timestamp 14:00:01.000, write B has timestamp 14:00:00.998 (clock skewed). Write A wins — it has the higher timestamp. Write B is silently discarded, even though B might have been the "correct" or "intended" final value from the application's perspective.<br><br>Why Cassandra accepts this tradeoff: NTP clock skew is typically &lt;1ms on modern hardware. The probability of two writes in the same millisecond to the same key is very low for most workloads. And Cassandra is optimised for write-heavy, high-scale workloads where this tradeoff (very rare silent overwrites vs guaranteed write availability) is acceptable.<br><br>When it is not acceptable: financial data, counters (use Cassandra counters with conditional updates), any data where silent overwrites are unacceptable. For these: use CAS (Compare-And-Set with Lightweight Transactions) which uses Paxos for coordination — but at 4x the latency cost.</div></div>
 </section></div>
+
+  <h3>Consistency Model Decision Tree</h3>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Which Consistency Model for Your System?</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Can your users tolerate seeing stale data (even briefly)?</div>
+        <div class="step-options">
+          <div class="step-option opt-no"><span class="opt-arrow">NO — must be fresh →</span><span class="opt-text"><strong>Strong consistency (CP).</strong> Every read reflects the latest write. Use: financial balances, inventory counts, seat reservations. Tools: PostgreSQL, CockroachDB, Spanner. Accept higher latency and reduced availability during partitions.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">YES — staleness OK →</span><span class="opt-text">Go to Step 2. Eventual consistency is viable.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">What is the acceptable staleness window?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Seconds OK →</span><span class="opt-text"><strong>Eventual consistency with read-your-own-writes.</strong> Social feeds, product pages, user profiles. DynamoDB (eventually consistent reads), Cassandra (ONE consistency). Add read-your-own-writes: route user's reads to primary for 5s after any write they made.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Minutes OK →</span><span class="opt-text"><strong>Pure eventual consistency.</strong> Analytics dashboards, recommendation engines, search indexes. Cassandra ONE, DynamoDB eventuallyConsistent. Maximum availability and lowest latency.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Do you need cross-shard / cross-service transactions?</div>
+        <div class="step-options">
+          <div class="step-option opt-no"><span class="opt-arrow">YES — multi-entity atomic →</span><span class="opt-text"><strong>Saga pattern</strong> for microservices. Each step is a local transaction with a compensating transaction on failure. <strong>Never use 2PC in microservices</strong> — it creates distributed locks that block on coordinator failure.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">NO — single entity →</span><span class="opt-text"><strong>Single-node transaction or single-shard operation.</strong> Design your data model so related data lives on the same shard. Avoid cross-shard operations in the hot path.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
 <div class="footer">DISTRIBUTED SYSTEMS · CAP · RAFT · SAGA · IDEMPOTENCY · VECTOR CLOCKS · CRDTs · FENCING · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body></html>

@@ -385,3 +385,108 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <footer>DATABASES · POSTGRESQL · MONGODB · DYNAMODB · CASSANDRA · MANISH-ALMANAC</footer>
 <script>function toggle(el){var item=el.parentElement;var isOpen=item.classList.contains('open');document.querySelectorAll('.faq.open').forEach(function(f){f.classList.remove('open');});if(!isOpen)item.classList.add('open');}</script>
 </body></html>
+<section id="concepts-db">
+  <div class="sec-tag">08 · Concepts Deep Dive</div>
+  <h2>The database internals every interviewer probes</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">B-Tree Index</div><div class="concept-def"><strong>The default index structure in PostgreSQL and MySQL. Balanced tree, O(log N) read/write.</strong><br>
+      Nodes store sorted keys + pointers to child nodes or rows. Range queries efficient: scan leaf nodes sequentially. Updates maintain balance via splits and merges.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Excellent for: equality lookups, range scans, ORDER BY, multi-column indexes. The right default for 90% of indexing needs.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Write amplification on updates — every write may trigger re-balancing. LSM trees (Cassandra, RocksDB) are better for write-heavy workloads.</span></div></div>
+    <div class="concept-row"><div class="concept-term">LSM Tree<br>(Log-Structured Merge)</div><div class="concept-def"><strong>Write-optimised tree: writes always go to an in-memory buffer (memtable), then sequential disk writes (SSTables). Used by Cassandra, RocksDB, LevelDB.</strong><br>
+      Write: append to WAL + write to memtable (in-memory sorted tree). Memtable flushes to SSTable on disk when full. Background compaction merges SSTables.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Sequential writes only → 10–100x faster writes than B-Tree on spinning disks. Even on SSDs: fewer random writes = better endurance. Used for: Cassandra, ClickHouse MergeTree, RocksDB (used by MyRocks, TiKV).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Read amplification: must check multiple SSTables for a key (fixed with Bloom filters). Space amplification during compaction.</span></div></div>
+    <div class="concept-row"><div class="concept-term">MVCC<br>(Multi-Version Concurrency)</div><div class="concept-def"><strong>PostgreSQL and MySQL InnoDB use MVCC to allow readers and writers to not block each other.</strong><br>
+      Every write creates a new version of the row with a transaction timestamp. Readers see the consistent snapshot from when their transaction started — never see uncommitted data, never blocked by writers.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ No reader-writer locking. Long-running queries do not block inserts/updates. The foundation of Postgres's excellent read performance under concurrent writes.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Dead tuples accumulate — old row versions must be cleaned up by VACUUM. High write volume without VACUUM → table bloat → performance degradation.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Connection Pooling</div><div class="concept-def"><strong>PostgreSQL spawns one OS process per connection. 1,000 connections = 1,000 processes = severe memory and context-switching overhead.</strong><br>
+      PgBouncer in transaction-mode pooling: application connects to PgBouncer (thousands of connections OK). PgBouncer maintains a pool of 50–100 real PostgreSQL connections. Real connection only held during an active transaction.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ 1,000 app connections → 50 real DB connections. Reduces memory from ~50MB/connection to near-zero overhead for idle connections. Standard for any PostgreSQL production deployment.</span></div></div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Database Selection — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Do you need ACID transactions across multiple entities?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>PostgreSQL</strong> (single region) or <strong>CockroachDB / Spanner</strong> (global). Never sacrifice ACID for write-heavy workloads unless you have proven you cannot scale PostgreSQL — which handles 50K writes/sec with proper indexing and connection pooling.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Go to Step 2. NoSQL may be appropriate.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">What is your primary access pattern?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Key-value / document lookups →</span><span class="opt-text"><strong>DynamoDB</strong> (fully managed, infinite scale) or <strong>MongoDB</strong> (flexible schema, rich queries). DynamoDB: design your access patterns first, denormalise aggressively. MongoDB: better for ad-hoc queries and evolving schemas.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Wide column / time series →</span><span class="opt-text"><strong>Cassandra</strong> (self-managed) or <strong>ScyllaDB</strong> (Cassandra-compatible, 10x faster). Design partition key for even distribution. Never allow unbounded partition growth.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Graph traversal →</span><span class="opt-text"><strong>Neo4j</strong> or <strong>Amazon Neptune.</strong> For: social graph (friends-of-friends), fraud detection (transaction networks), knowledge graphs. SQL with recursive CTEs handles simple graphs; dedicated graph DB needed for deep traversals.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Instagram — Multi-Database Architecture</div><span class="sd-example-tag">POLYGLOT PERSISTENCE</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">USER DATA</div><div class="choice-val"><span class="badge b-g">PostgreSQL ✓</span> User profiles, follow relationships, account settings. Strong ACID — a follow must atomically update both users' counts. Sharded by user_id across 1,000+ PostgreSQL shards. PgBouncer for connection pooling on each shard.</div></div>
+      <div class="choice-row"><div class="choice-label">FEED / POSTS</div><div class="choice-val"><span class="badge b-g">Cassandra ✓</span> Post metadata and pre-computed feeds. Wide-column: partition key = user_id, clustering key = post_timestamp. Feed reads are single-partition: give me last 20 posts for user X. Handles Instagram's scale (100M+ posts/day) with consistent write throughput.</div></div>
+      <div class="choice-row"><div class="choice-label">MEDIA</div><div class="choice-val"><span class="badge b-g">S3 + CDN ✓</span> Photos and videos stored in S3. Never in a database. Pre-signed URLs for upload. CloudFront CDN for delivery. The DB stores only the S3 key (path), never the bytes.</div></div>
+      <div class="choice-row"><div class="choice-label">SEARCH</div><div class="choice-val"><span class="badge b-g">Elasticsearch ✓</span> Username and hashtag search. CDC from PostgreSQL → Kafka → ES indexing. Full-text BM25 for search, geo queries for location-based discovery. PostgreSQL is never touched for search.</div></div>
+      <div class="choice-row"><div class="choice-label">CACHE</div><div class="choice-val"><span class="badge b-g">Redis ✓</span> Hot user profiles, feed fragments, session tokens. Cache-aside with TTL. Offloads ~90% of PostgreSQL read traffic for hot users. Celebrity profiles cached with longer TTL + local cache in each app server.</div></div>
+    </div>
+  </div>
+  <div class="concept-grid" style="margin-top:16px;">
+    <div class="concept-row"><div class="concept-term">Write-Ahead Log<br>(WAL)</div><div class="concept-def"><strong>Every write in PostgreSQL is first written to the WAL before the actual data pages are modified.</strong><br>
+      On crash: replay the WAL from the last checkpoint to recover all committed transactions. This is why PostgreSQL can guarantee durability (D in ACID) without fsyncing every data page on every write.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ WAL is also used for replication: streaming replication sends WAL records to replicas in real time. And for CDC: Debezium reads the WAL to capture every insert/update/delete for streaming to Kafka.</span></div></div>
+  <div class="sd-example" style="margin-top:16px;">
+    <div class="sd-example-head"><div class="sd-example-title">Uber — Database-per-Service Architecture</div><span class="sd-example-tag">MICROSERVICES · POLYGLOT</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">TRIPS</div><div class="choice-val"><span class="badge b-g">MySQL/PostgreSQL ✓</span> Trip records with ACID transactions: fare calculation, driver payment, passenger charge must all succeed atomically. Sharded by city_id for geographic locality. 2PC via Saga for cross-shard trip completion flows.</div></div>
+      <div class="choice-row"><div class="choice-label">DRIVER LOCATION</div><div class="choice-val"><span class="badge b-g">Redis GEO ✓</span> Driver GPS positions updated every 4 seconds. GEOADD for writes, GEORADIUS for "find drivers within 2km." In-memory → &lt;1ms. Persistence: not critical — positions go stale in 4 seconds anyway. Redis Sentinel for HA.</div></div>
+      <div class="choice-row"><div class="choice-label">PRICING</div><div class="choice-val"><span class="badge b-g">Cassandra ✓</span> Surge pricing history per zone per minute (time-series). Partition key = (city, zone), clustering key = minute_timestamp. Wide-column gives fast range reads: "give me all surge records for zone BLR-3 in the last 24 hours" — single partition scan.</div></div>
+    </div>
+  </div>
+    <div class="concept-row"><div class="concept-term">DynamoDB Single-Table<br>Design</div><div class="concept-def"><strong>DynamoDB is designed for one table per application — not one table per entity like SQL.</strong><br>
+      All entities (users, orders, products, sessions) coexist in one table with different partition keys. Overloaded attributes: the same attribute name means different things per entity type.<br>
+      Access patterns must be designed upfront: each GSI (Global Secondary Index) is a pre-planned access pattern. Adding a new access pattern after launch may require a new GSI or table migration.<br>
+      <span style="color:#5a5848;font-size:12.5px;">This is the hardest part of DynamoDB. The "working backwards from access patterns" discipline is what separates DynamoDB experts from novices.</span></div></div>
+    <div class="concept-row"><div class="concept-term">MongoDB Change<br>Streams</div><div class="concept-def"><strong>MongoDB change streams allow applications to subscribe to all data changes in real time — similar to PostgreSQL WAL-based CDC.</strong><br>
+      Use for: real-time notifications (user's order status changed → push notification), cache invalidation (MongoDB write → invalidate Redis cache), event sourcing (stream all changes to Kafka for downstream consumers).<br>
+      <span style="color:#5a5848;font-size:12.5px;">Change streams require a replica set (at least 3-node), not standalone MongoDB. Each change event includes the full document before and after the change.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Cassandra Tombstones</div><div class="concept-def"><strong>Cassandra "deletes" are actually tombstone markers — the data is not removed immediately.</strong><br>
+      Delete a row: Cassandra writes a tombstone (a deletion marker with a timestamp). Compaction eventually removes both the tombstone and the original data when tombstone gc_grace_seconds (default 10 days) expires.<br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Tombstone accumulation: high-delete workloads (e.g., TTL expiry, message queues) can create millions of tombstones that Cassandra must scan on every read. Monitor tombstone warnings in query logs. Anti-pattern: using Cassandra as a queue where messages are constantly deleted.</span></div></div>
+  </div>
+</section>
+
+<section id="faq-db">
+  <div class="sec-tag">09 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">When should you denormalise a relational database?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Denormalise when join cost at read time exceeds storage and write complexity cost.</strong><br><br>
+  Signs it is time to denormalise: (1) the same JOIN appears in every query and drives latency. (2) The joined tables are rarely updated (so maintaining the denormalised copy is cheap). (3) You have measured the query and confirmed the JOIN is the bottleneck — not something else.<br><br>
+  How to denormalise safely: add a pre-computed column (e.g., store user_country directly on the orders table instead of joining to users every time). Update it on write via a trigger or application logic. Accept the storage cost and write overhead in exchange for read speed.<br><br>
+  The rule: normalise first for correctness and simplicity. Denormalise only where profiling shows a specific join is a bottleneck. Never denormalise speculatively.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you choose between DynamoDB and PostgreSQL for a new system?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>The question is not "which is better" — it is "which access pattern dominates."</strong><br><br>
+  <strong>Choose PostgreSQL when:</strong> your queries are ad-hoc and hard to predict upfront, you need complex JOINs across multiple entities, you need ACID transactions, your team knows SQL well, or your scale is below ~50K writes/sec (which is the vast majority of systems).<br><br>
+  <strong>Choose DynamoDB when:</strong> your access patterns are known and fixed (you can design the table schema around them), you need infinite scale with zero ops (DynamoDB auto-scales), your primary access is by a known primary key (user_id, order_id), and you're building on AWS and want fully managed infrastructure.<br><br>
+  <strong>The common mistake:</strong> choosing DynamoDB because it "scales better" without verifying you actually need that scale. DynamoDB's single-table design discipline is a significant upfront investment. Most systems genuinely do not need it.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle a slow query that cannot be easily indexed?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>A systematic approach: profile first, then fix the actual bottleneck.</strong><br><br>
+  Step 1 — <code>EXPLAIN ANALYZE</code>: run it and look for: Seq Scan on large tables (missing index), Hash Join with large estimated rows (wrong statistics), high actual vs estimated rows (stale statistics — run ANALYZE).<br><br>
+  Step 2 — Fix in order of impact:<br>
+  (a) Add a missing index. B-tree for equality/range, partial index for filtered queries (WHERE status='active'), covering index (INCLUDE) to avoid table heap access.<br>
+  (b) Rewrite the query: avoid SELECT *, avoid functions on indexed columns (WHERE date_trunc('day', created_at) = ... defeats the index — use range instead).<br>
+  (c) Materialised view: pre-compute complex aggregations. Refresh on schedule or on trigger. Trades staleness for speed.<br>
+  (d) Denormalise: if the join is always the same, pre-compute it.<br>
+  (e) Move to a different store: if it is fundamentally an analytics query (full table scan, aggregation), PostgreSQL is the wrong tool — use ClickHouse or Redshift.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does Cassandra handle a node failure — what actually happens to reads and writes?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Cassandra is designed to keep working through node failures — but the behaviour depends on your consistency level.</strong><br><br>
+  <strong>Write path on node failure (QUORUM consistency, RF=3):</strong> The coordinator tries to write to all 3 replica nodes. If 2 succeed (quorum) and 1 is down, the write succeeds. The failed node misses the write. When it recovers: Cassandra's hinted handoff replays missed writes (stored as "hints" on other nodes for up to 3 hours). For longer outages: the recovering node runs repair to sync from peers.<br><br>
+  <strong>Read path on node failure (QUORUM consistency):</strong> Coordinator requests from 2 of 3 replicas. If the healthy 2 respond, read succeeds. Read repair: if those 2 have inconsistent data, Cassandra repairs the stale one asynchronously. If only 1 replica is available (2 nodes down): QUORUM fails — you need to drop to ONE consistency level to keep reading (at the cost of possible stale data).<br><br>
+  <strong>The key point:</strong> with RF=3 and QUORUM, you can lose 1 node (out of 3) without any service impact. With RF=3 and ONE consistency, you can lose 2 nodes. Design your RF and consistency level based on your availability and consistency requirements.</div></div>
+</section>

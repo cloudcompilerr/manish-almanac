@@ -522,6 +522,49 @@
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Gold-standard components for CMS page */
+    .concept-grid{border:1px solid var(--border, #d4cfc7);border-radius:10px;overflow:hidden;margin:20px 0;}
+    .concept-row{display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border,#d4cfc7);}
+    .concept-row:last-child{border-bottom:none;}
+    .concept-term{background:var(--ink,#0f0e0c);color:#e8dcc8;padding:14px 16px;font-family:var(--mono,monospace);font-size:11px;font-weight:600;letter-spacing:.5px;display:flex;align-items:center;line-height:1.4;}
+    .concept-def{background:white;padding:14px 16px;font-size:13px;line-height:1.65;color:var(--ink,#0f0e0c);}
+    .sd-example{border:1px solid var(--border,#d4cfc7);border-radius:10px;overflow:hidden;margin:16px 0;}
+    .sd-example-head{background:var(--ink,#0f0e0c);padding:12px 16px;display:flex;align-items:center;gap:10px;}
+    .sd-example-title{color:#f0e8d8;font-weight:700;font-size:13px;}
+    .sd-example-tag{background:rgba(255,255,255,.12);color:#c8b896;font-size:10px;padding:3px 8px;border-radius:4px;margin-left:auto;font-family:monospace;}
+    .sd-example-body{padding:0;}
+    .choice-row{display:grid;grid-template-columns:110px 1fr;border-bottom:1px solid var(--border,#d4cfc7);padding:0;}
+    .choice-row:last-child{border-bottom:none;}
+    .choice-label{background:#f7f5f0;padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7a7568;display:flex;align-items:center;border-right:1px solid var(--border,#d4cfc7);}
+    .choice-val{padding:12px 14px;font-size:13px;line-height:1.6;color:var(--ink,#0f0e0c);}
+    .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;margin-right:4px;}
+    .b-g{background:#e8f5ee;color:#1a7a4a;}
+    .step-block{border:1px solid var(--border,#d4cfc7);border-radius:10px;overflow:hidden;margin:20px 0;}
+    .step-block-header{background:var(--ink,#0f0e0c);color:#e8dcc8;padding:14px 18px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;}
+    .sb-icon{font-size:16px;}
+    .step-block-body{background:white;}
+    .step-row{display:grid;grid-template-columns:44px 1fr;border-bottom:1px solid var(--border,#d4cfc7);}
+    .step-row:last-child{border-bottom:none;}
+    .step-num{background:#f0ede8;display:flex;align-items:flex-start;justify-content:center;padding:14px 0;font-family:monospace;font-weight:700;font-size:11px;color:#7a7568;border-right:1px solid var(--border,#d4cfc7);}
+    .step-content{padding:14px 16px;}
+    .step-q{font-weight:700;font-size:13px;margin-bottom:8px;color:var(--ink,#0f0e0c);}
+    .step-options{display:flex;flex-direction:column;gap:6px;}
+    .step-option{background:#f7f5f0;border-radius:6px;padding:10px 12px;display:flex;gap:8px;font-size:12.5px;line-height:1.55;}
+    .opt-arrow{font-family:monospace;font-size:10px;font-weight:700;min-width:130px;flex-shrink:0;padding-top:1px;}
+    .opt-yes .opt-arrow{color:#1a7a4a;}
+    .opt-no  .opt-arrow{color:#b8720a;}
+    .opt-mid .opt-arrow{color:#1a4f8a;}
+    .callout{border-radius:8px;padding:14px 16px;margin:16px 0;border-left:4px solid;}
+    .callout.cl-blue{background:#eef4ff;border-color:#1a4f8a;}
+    .callout.cl-amber{background:#fff8ee;border-color:#b8720a;}
+    .cl-lbl{font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+    .sec-tag{font-family:monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7a7568;margin-bottom:8px;}
+    @media(max-width:560px){
+      .concept-row{grid-template-columns:1fr;}
+      .opt-arrow{min-width:80px;}
+      .choice-row{grid-template-columns:1fr;}
+    }
 </style>
 </head>
 <body>
@@ -899,6 +942,86 @@
   // Init
   renderGrid();
 </script>
+
+
+
+<div style="padding:20px 16px;max-width:760px;margin:0 auto;">
+
+<div class="sec-tag">05 · Concepts Quick Reference</div>
+<h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:16px;">Core mechanics in one place</h2>
+<div class="concept-grid">
+  <div class="concept-row"><div class="concept-term">Hash Width<br>(w)</div><div class="concept-def"><strong>Number of columns in the CMS table — controls error magnitude.</strong><br>
+    Guarantee: estimation error ≤ <code>e/w</code> where e is the base of natural log (~2.718). Set <code>w = ⌈e/ε⌉</code> where ε is your acceptable error rate.<br>
+    Example: ε=0.01 (1% error) → w = ⌈2.718/0.01⌉ = 272 columns. With total count N=1,000,000: max overcount = 10,000 (1% of N).<br>
+    <span style="color:#5a5848;font-size:12.5px;">Wider table = smaller error. Each row is independent — width scales linearly with required accuracy.</span></div></div>
+  <div class="concept-row"><div class="concept-term">Hash Depth<br>(d)</div><div class="concept-def"><strong>Number of rows (independent hash functions) — controls error probability.</strong><br>
+    Guarantee: probability of exceeding the error bound ≤ <code>δ^d</code>. Set <code>d = ⌈ln(1/δ)⌉</code> where δ is acceptable failure probability.<br>
+    Example: δ=0.01 (99% confidence) → d = ⌈ln(100)⌉ = 5 rows. With 5 independent hash functions, probability that ALL 5 collide for the same key is (0.01)^5 = 0.0000000001.<br>
+    <span style="color:#5a5848;font-size:12.5px;">More rows = higher confidence. Depth grows logarithmically — 5 rows gives 99% confidence, 10 rows gives 99.9999%. Depth has diminishing returns.</span></div></div>
+  <div class="concept-row"><div class="concept-term">Why Minimum?</div><div class="concept-def"><strong>The CMS query returns the minimum across all d rows — not sum, not average, minimum.</strong><br>
+    Each row's counter is always ≥ the true count (due to hash collisions adding counts from other keys). The minimum across all rows is the closest to the true count — but still an upper bound.<br>
+    <span style="color:#1a7a4a;font-size:12.5px;">✓ Mathematically proven: min(rows) ≥ true_count always. And min(rows) − true_count ≤ error_bound with high probability. This is why CMS only over-estimates, never under-estimates.</span></div></div>
+  <div class="concept-row"><div class="concept-term">Space Complexity</div><div class="concept-def"><strong>O(w × d) — constant space regardless of the number of distinct keys.</strong><br>
+    A CMS with ε=0.01, δ=0.01: w=272, d=5. Total cells: 272 × 5 = 1,360 integers. At 4 bytes each: 5,440 bytes = 5.3KB.<br>
+    Compare: tracking 1 billion unique keys in a HashMap = ~24GB. CMS achieves similar functionality in 5.3KB — a 4.5 million times reduction.<br>
+    <span style="color:#1a7a4a;font-size:12.5px;">✓ This is why CMS is used in production for counting at scale: it fits in L1 CPU cache, enabling billions of updates per second.</span></div></div>
+  <div class="concept-row"><div class="concept-term">CMS vs HyperLogLog</div><div class="concept-def"><strong>CMS counts frequency of each item. HyperLogLog counts the number of distinct items. Different problems.</strong><br>
+    CMS answers: "how many times did user X appear?" → frequency/count estimation.<br>
+    HyperLogLog answers: "how many distinct users appeared?" → cardinality estimation.<br>
+    <span style="color:#5a5848;font-size:12.5px;">Both are probabilistic, both use constant space. Use CMS for Top-K (need per-item counts). Use HyperLogLog for DAU / unique visitor counts (need distinct count). Redis supports both natively.</span></div></div>
+</div>
+
+<div class="sec-tag" style="margin-top:24px;">06 · System Design Examples</div>
+<h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:16px;">CMS in production systems</h2>
+<div class="sd-example">
+  <div class="sd-example-head"><div class="sd-example-title">Twitter — Trending Hashtags</div><span class="sd-example-tag">BILLIONS OF EVENTS</span></div>
+  <div class="sd-example-body">
+    <div class="choice-row"><div class="choice-label">PROBLEM</div><div class="choice-val">500M tweets/day. Count how many times each hashtag appears in the last 1 hour. Millions of distinct hashtags. A HashMap would need gigabytes. Must update in real time as tweets arrive.</div></div>
+    <div class="choice-row"><div class="choice-label">CMS SOLUTION</div><div class="choice-val"><span class="badge b-g">ε=0.01, δ=0.01 ✓</span> One CMS per 5-minute bucket. Each tweet: extract hashtag → hash into CMS → increment counters. At end of bucket: query CMS for all candidate hashtags to get approximate counts. Top-K selection from CMS estimates using a min-heap.</div></div>
+    <div class="choice-row"><div class="choice-label">SIZE</div><div class="choice-val">w=272, d=5 → 1,360 cells × 4 bytes = 5.3KB per CMS. 12 buckets/hour = 64KB total for a full hour of sliding window. Compare: tracking all distinct hashtags by count → gigabytes. CMS fits in CPU cache.</div></div>
+    <div class="choice-row"><div class="choice-label">ERROR</div><div class="choice-val">At 500M events/hour: max error = 500M × 0.01 = 5M per hashtag. A hashtag with 100M appearances is estimated as 95M–105M. For trending (relative ranking), this error is irrelevant — #WorldCup at 100M vs #Olympics at 80M are still correctly ranked.</div></div>
+  </div>
+</div>
+
+<div class="sd-example">
+  <div class="sd-example-head"><div class="sd-example-title">Redis — Native CMS Implementation</div><span class="sd-example-tag">PRODUCTION USE</span></div>
+  <div class="sd-example-body">
+    <div class="choice-row"><div class="choice-label">COMMAND</div><div class="choice-val"><code>CMS.INITBYPROB key 0.001 0.01</code> — create CMS with 0.1% error, 99% confidence.<br><code>CMS.INCRBY key hashtag 1</code> — increment count for hashtag.<br><code>CMS.QUERY key hashtag1 hashtag2</code> — query multiple keys at once.</div></div>
+    <div class="choice-row"><div class="choice-label">TOPK INTEGRATION</div><div class="choice-val">Redis also has <code>TOPK.ADD</code> which combines a CMS with a min-heap to maintain the Top-K list automatically. Add events one at a time — Redis maintains the top-K internally. No Flink or separate aggregation layer needed for moderate scales (&lt;100K events/sec).</div></div>
+    <div class="choice-row"><div class="choice-label">MERGE</div><div class="choice-val"><code>CMS.MERGE dest numkeys src1 src2 ...</code> — merge multiple CMS sketches into one. Use for: shard multiple CMS across Redis cluster (one per shard), merge at query time to get global counts. Merge is O(w × d) — constant time regardless of event volume.</div></div>
+  </div>
+</div>
+
+<div class="sec-tag" style="margin-top:24px;">07 · Decision Framework</div>
+<h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:16px;">When to use CMS — and when not to</h2>
+<div class="step-block">
+  <div class="step-block-header"><span class="sb-icon">🎯</span>CMS vs Exact Counting — Ask in Order</div>
+  <div class="step-block-body">
+    <div class="step-row"><div class="step-num">01</div><div class="step-content">
+      <div class="step-q">How many distinct keys do you need to count?</div>
+      <div class="step-options">
+        <div class="step-option opt-yes"><span class="opt-arrow">Few (&lt;1M distinct) →</span><span class="opt-text"><strong>Exact counting with HashMap is fine.</strong> 1M keys × 8 bytes = 8MB — trivially fits in memory. Use Redis HSET or a HashMap. No need for probabilistic structures at this scale.</span></div>
+        <div class="step-option opt-no"><span class="opt-arrow">Many (&gt;10M distinct) →</span><span class="opt-text"><strong>CMS is justified.</strong> 100M distinct keys × 8 bytes = 800MB. CMS achieves same Top-K result in 5KB. The accuracy trade-off is worth it.</span></div>
+      </div>
+    </div></div>
+    <div class="step-row"><div class="step-num">02</div><div class="step-content">
+      <div class="step-q">Can you tolerate small over-counting (CMS never under-counts)?</div>
+      <div class="step-options">
+        <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Use CMS.</strong> CMS guarantees frequency(item) ≤ estimate ≤ frequency(item) + ε×N. The overcount is bounded and predictable. Perfect for: trending topics, popular product ranking, heavy hitter detection in network traffic.</span></div>
+        <div class="step-option opt-no"><span class="opt-arrow">NO (exact counts required) →</span><span class="opt-text"><strong>Exact counting required.</strong> Use a distributed exact counter: Redis INCR per key (limited by memory), or a database COUNT per key (slow at scale), or a streaming aggregation into a database (Flink → Cassandra with exact counts).</span></div>
+      </div>
+    </div></div>
+    <div class="step-row"><div class="step-num">03</div><div class="step-content">
+      <div class="step-q">Do you need to track individual item counts or just find the Top-K?</div>
+      <div class="step-options">
+        <div class="step-option opt-yes"><span class="opt-arrow">Just Top-K →</span><span class="opt-text"><strong>CMS + min-heap (or Redis TOPK).</strong> Maintain a min-heap of size K. For each new item: query CMS for its estimated count. If estimate > heap minimum, replace minimum with this item. O(log K) per update. K is typically small (top 10, top 100).</span></div>
+        <div class="step-option opt-no"><span class="opt-arrow">All item counts →</span><span class="opt-text"><strong>CMS alone.</strong> Query any key in O(d) time — constant regardless of vocabulary size. Cannot enumerate all keys (CMS stores counts, not keys). Combine with a key registry if you need to iterate over all counted items.</span></div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+</div>
 
 </body>
 </html>

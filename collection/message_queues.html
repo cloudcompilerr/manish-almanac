@@ -319,6 +319,45 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   Kafka does not have a native DLQ. Options: (1) catch the exception, log the problematic message + offset to an error Kafka topic (manual DLQ pattern), then commit the offset and continue. (2) Use Spring Kafka's SeekToCurrentErrorHandler which retries N times then calls a recovery callback. (3) Use a dead-letter topic: on failure, produce to <code>topic.DLT</code> and commit the original offset.<br><br>
   <strong>Prevention</strong>: validate message schema at ingest time. Reject malformed messages at the producer with an explicit schema (Avro + Schema Registry is the Kafka standard). Malformed messages never enter the queue in the first place.</div></div>
 </section></div>
+
+<section id="decision-mq">
+  <div class="sec-tag">06 · Decision Framework</div>
+  <h2>Choosing your messaging system</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Message Queue vs Event Stream — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Do multiple independent consumers need to read the same messages?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (broadcast) →</span><span class="opt-text"><strong>Event stream (Kafka / Kinesis).</strong> Multiple consumer groups each get all messages independently. Flink, ClickHouse, S3 sink all read the same Kafka topic. Retention means replay is possible.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (one consumer per message) →</span><span class="opt-text">Go to Step 2. Queue semantics.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Do you need strict FIFO ordering per entity?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>SQS FIFO</strong> (up to 3K msg/sec) or <strong>Kafka</strong> (partition by entity key). SQS FIFO: set MessageGroupId = entity ID. All messages for that entity are processed in order. Kafka: key by entity ID → same partition → same consumer thread → ordered.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (order doesn't matter) →</span><span class="opt-text"><strong>SQS Standard.</strong> Unlimited throughput. Best-effort ordering. Simplest, cheapest, fully managed. Perfect for: image resizing jobs, email sending, background tasks where order is irrelevant.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Do you need message replay / audit trail?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Kafka.</strong> Configurable retention (hours to forever). Replay from any offset. Consumer crashed? Resume from last committed offset. New consumer added? Read from the beginning. SQS deletes on consumption — no replay possible.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text"><strong>SQS</strong> (zero ops) or <strong>RabbitMQ</strong> (complex routing). Choose based on ops budget and routing needs, not replay.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">04</div><div class="step-content">
+        <div class="step-q">What is your ops budget?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Zero ops (managed) →</span><span class="opt-text"><strong>SQS / SNS / EventBridge.</strong> No infrastructure to manage. Auto-scales. Integrates with Lambda. Pay per request. Best default for AWS-native systems.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Medium ops OK →</span><span class="opt-text"><strong>MSK (managed Kafka) or Confluent Cloud.</strong> Kafka without the operational burden. Handles broker management, replication, upgrades.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Full control needed →</span><span class="opt-text"><strong>Self-managed Kafka or RabbitMQ.</strong> Maximum flexibility, tuning, and cost efficiency at extreme scale. Requires dedicated platform team.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
 <div class="footer">MESSAGE QUEUES · SQS · RABBITMQ · DLQ · FAN-OUT · AT-LEAST-ONCE · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body></html>
