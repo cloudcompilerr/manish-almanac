@@ -1,247 +1,709 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Design Uber</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
-*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
-body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
-.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
-.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
-.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
-.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
-h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
-h1 .acc{color:#e8b84b;}
-.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
-.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
-.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
-.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
-.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
-.nav::-webkit-scrollbar{display:none;}
-.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
-.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
-.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
-section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
-.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
-.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
-h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
-h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
-p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
-code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
-.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
-.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
-.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
-.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
-.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
-.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
-.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
-.steps{list-style:none;margin:16px 0;counter-reset:s;}
-.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
-.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
-.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
-.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
-.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
-.blist{list-style:none;margin:12px 0;}
-.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
-.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
-.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
-.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
-@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
-.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
-.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
-.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
-.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
-.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
-.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
-.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
-.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
-.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
-.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
-.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
-.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
-.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
-.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
-.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
-.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
-.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
-.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
-.faq-q:hover{background:var(--surface);}
-.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
-.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
-.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
-.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
-.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
-.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
-.dtree-node:last-child{border:none;}
-.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
-.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
-.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
-.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
-.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
-.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
-footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+:root {
+  --ink: #0c0d14;
+  --page: #f4f3ee;
+  --surface: #eeede6;
+  --surface2: #e6e4db;
+  --border: #d4d2c8;
+  --border2: #c0bdb0;
 
-/* ── Concept Grid: term/definition cards ─────────────── */
-.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
-.concept-row:last-child{border-bottom:none;}
-.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
-.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
-.concept-def strong{color:var(--ink);font-weight:700;}
-.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-/* ── Knowledge Card: FAANG internals deep-dive ────────── */
-.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
-.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
-.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
-.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
-.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
-.k-point{display:flex;flex-direction:column;gap:4px;}
-.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
-.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
-.k-point-text strong{color:var(--ink);}
-.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-.k-divider{height:1px;background:var(--border);margin:4px 0;}
-.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
-.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
-.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
-/* ── FAQs: consistent across all files ────────────────── */
-.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
-.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
-.faq-q:hover{background:var(--surface);}
-.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
-.faq-item.open .tog{transform:rotate(45deg);}
-.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
-.faq-item.open .faq-a{display:block;}
-.faq-a strong{color:var(--ink);}
-.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
-/* ── SD Examples ──────────────────────────────────────── */
-.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
-.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
-.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
-.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
-.sd-example-body{padding:0;}
-.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
-.choice-row:last-child{border-bottom:none;}
-.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
-.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
-.choice-val strong{color:var(--ink);}
-.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-/* ── Step block ───────────────────────────────────────── */
-.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
-.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
-.sb-icon{font-size:18px;}
-.step-block-body{padding:0;}
-.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
-.step-row:last-child{border-bottom:none;}
-.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
-.step-content{padding:16px 18px;}
-.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
-.step-options{display:flex;flex-direction:column;gap:8px;}
-.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
-.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
-.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
-.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
-.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
-.opt-text{color:#2a2820;}
-.opt-text strong{color:var(--ink);}
-/* ── Analogy block ───────────────────────────────────── */
-.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
-.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
-.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
-.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
-/* ── Callout ──────────────────────────────────────────── */
-.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
-.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
-.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
-.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
-.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
-.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
-/* ── DB pills ─────────────────────────────────────────── */
-.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
-.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
-/* ── hero-sub ─────────────────────────────────────────── */
-.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
-/* ── footer ───────────────────────────────────────────── */
-.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+  --red:    #c0392b;
+  --amber:  #c47d11;
+  --green:  #1a7a4a;
+  --blue:   #1a4f8a;
+  --purple: #5a3e8a;
+  --teal:   #1a6b6b;
 
-/* ── Concept-def sub-points ────────────────────────── */
-.concept-def p{margin:0 0 8px;}
-.concept-def p:last-child{margin-bottom:0;}
+  --red-bg:    #fdf0ee;
+  --amber-bg:  #fdf6e8;
+  --green-bg:  #edf8f2;
+  --blue-bg:   #edf2fb;
+  --purple-bg: #f4f0fb;
+  --teal-bg:   #edf6f6;
+
+  --text: #1a1b26;
+  --muted: #7a7870;
+  --mono: 'JetBrains Mono', monospace;
+  --body: 'Outfit', sans-serif;
+  --head: 'Fraunces', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--ink);
+  color: #e8e6df;
+  padding: 64px 24px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px);
+}
+.hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #8a8070;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: #5a5850; }
+h1 {
+  font-family: var(--head);
+  font-size: clamp(34px, 5.5vw, 62px);
+  font-weight: 900;
+  line-height: 1.03;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+  color: #f0ede4;
+}
+h1 .accent { color: #e8b84b; }
+.hero-desc {
+  font-size: 15px;
+  color: #8a8070;
+  max-width: 620px;
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.meta-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  border: 1px solid #2e2d26;
+  border-radius: 3px;
+  color: #7a7868;
+  letter-spacing: .5px;
+}
+.meta-chip.lit { border-color: #5a4e20; color: #e8b84b; background: rgba(232,184,75,.06); }
+
+/* ── NAV ── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--ink);
+  border-bottom: 1px solid #1e1d18;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 20px;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav a {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #5a5850;
+  text-decoration: none;
+  padding: 14px 14px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: .18s;
+}
+.nav a:hover { color: #e8b84b; border-color: #e8b84b; }
+
+/* ── LAYOUT ── */
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+section { padding: 56px 0 36px; border-bottom: 2px solid var(--border); }
+section:last-child { border: none; }
+
+/* ── TYPOGRAPHY ── */
+.sec-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sec-tag::before { content: ''; width: 20px; height: 1px; background: var(--border2); }
+h2 {
+  font-family: var(--head);
+  font-size: clamp(22px, 3.5vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.5px;
+  line-height: 1.15;
+  margin-bottom: 18px;
+  color: var(--ink);
+}
+h3 {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 32px 0 10px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+h4 {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 16px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+p { color: #3a3830; font-size: 14.5px; margin-bottom: 12px; }
+strong { color: var(--ink); }
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--blue);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 13.5px;
+  border-left: 3px solid;
+  line-height: 1.65;
+}
+.callout p { font-size: 13.5px; margin-bottom: 6px; }
+.callout p:last-child { margin: 0; }
+.cl-blue   { background: var(--blue-bg);   border-color: var(--blue);   color: #1a2a4a; }
+.cl-amber  { background: var(--amber-bg);  border-color: var(--amber);  color: #3a2a08; }
+.cl-green  { background: var(--green-bg);  border-color: var(--green);  color: #0a2a1a; }
+.cl-red    { background: var(--red-bg);    border-color: var(--red);    color: #3a0a08; }
+.cl-purple { background: var(--purple-bg); border-color: var(--purple); color: #2a1a4a; }
+.cl-teal   { background: var(--teal-bg);   border-color: var(--teal);   color: #0a2a2a; }
+.cl-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  opacity: .7;
+}
+
+/* ── CODE BLOCK ── */
+.codeblock {
+  background: var(--ink);
+  border-radius: 6px;
+  padding: 20px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 2;
+  overflow-x: auto;
+  margin: 14px 0;
+  color: #c8c4b8;
+  border: 1px solid #1e1d18;
+}
+.codeblock .c  { color: #3e3d36; }
+.codeblock .k  { color: #e8b84b; }
+.codeblock .s  { color: #8bc4a0; }
+.codeblock .n  { color: #e8946a; }
+.codeblock .t  { color: #7aaee0; }
+.codeblock .m  { color: #d07090; }
+.codeblock .o  { color: #b0a890; }
+
+/* ════════════════════════════════════
+   THE BIG ARCHITECTURE DIAGRAM
+════════════════════════════════════ */
+.arch-canvas {
+  background: var(--ink);
+  border-radius: 8px;
+  padding: 32px 24px;
+  margin: 24px 0;
+  overflow-x: auto;
+  border: 1px solid #1e1d18;
+}
+.arch-canvas-inner { min-width: 840px; }
+
+/* Lane labels */
+.lanes { display: grid; grid-template-columns: 80px 1fr; gap: 0; }
+.lane-labels { display: flex; flex-direction: column; gap: 0; padding-top: 8px; }
+.lane-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #3a3830;
+  writing-mode: horizontal-tb;
+  padding: 18px 0;
+  border-bottom: 1px solid #1e1d18;
+  text-align: right;
+  padding-right: 12px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* The main flow grid */
+.flow-grid { display: flex; flex-direction: column; gap: 0; }
+.flow-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  gap: 0;
+  border-bottom: 1px solid #1a1a16;
+  min-height: 88px;
+}
+.flow-row:last-child { border: none; }
+
+/* Individual component box */
+.fbox {
+  flex-shrink: 0;
+  background: #161614;
+  border: 1px solid #2a2924;
+  border-radius: 6px;
+  padding: 10px 14px;
+  text-align: center;
+  transition: border-color .2s;
+  cursor: default;
+  min-width: 100px;
+}
+.fbox:hover { border-color: #e8b84b; }
+.fbox .fi { font-size: 18px; margin-bottom: 3px; }
+.fbox .fn {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: #c8c4b0;
+  line-height: 1.3;
+}
+.fbox .ft { font-family: var(--mono); font-size: 9px; color: #4a4840; margin-top: 2px; }
+
+.fbox.col-r  { border-color: rgba(192,57,43,.4);  background: rgba(192,57,43,.06); }
+.fbox.col-a  { border-color: rgba(196,125,17,.4); background: rgba(196,125,17,.06); }
+.fbox.col-g  { border-color: rgba(26,122,74,.4);  background: rgba(26,122,74,.06); }
+.fbox.col-b  { border-color: rgba(26,79,138,.4);  background: rgba(26,79,138,.06); }
+.fbox.col-p  { border-color: rgba(90,62,138,.4);  background: rgba(90,62,138,.06); }
+.fbox.col-t  { border-color: rgba(26,107,107,.4); background: rgba(26,107,107,.06); }
+
+/* Arrows */
+.arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 4px;
+  gap: 2px;
+  min-width: 44px;
+}
+.arrow-line { height: 2px; width: 36px; background: #2a2924; position: relative; }
+.arrow-line::after { content:'▶'; position:absolute; right:-5px; top:-6px; font-size:8px; color:#3a3830; }
+.arrow-label { font-family: var(--mono); font-size: 8px; color: #3a3830; white-space: nowrap; text-align: center; }
+
+/* Down arrow */
+.down-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: #3a3830;
+  gap: 1px;
+}
+.down-line { width: 1px; height: 12px; background: #2a2924; }
+
+/* branching from Kafka */
+.branch-wrap { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+/* ════════════════════════════════════
+   COMPONENT DEEP-DIVE CARDS
+════════════════════════════════════ */
+.component-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media(max-width:640px){ .component-grid { grid-template-columns: 1fr; } }
+
+.comp-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.comp-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.cc-red::before    { background: var(--red); }
+.cc-amber::before  { background: var(--amber); }
+.cc-green::before  { background: var(--green); }
+.cc-blue::before   { background: var(--blue); }
+.cc-purple::before { background: var(--purple); }
+.cc-teal::before   { background: var(--teal); }
+
+.cc-name { font-family: var(--head); font-size: 16px; font-weight: 700; margin: 8px 0 4px; }
+.cc-role { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.cc-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 12px; padding: 6px 0; border-top: 1px solid var(--surface); }
+.cc-key { color: var(--muted); width: 100px; flex-shrink: 0; }
+.cc-val { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; }
+.cc-val.g { color: var(--green); }
+.cc-val.r { color: var(--red); }
+.cc-val.a { color: var(--amber); }
+
+/* ════════════════════════════════════
+   OLAP SECTION
+════════════════════════════════════ */
+.olap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
+@media(max-width:600px){ .olap-grid { grid-template-columns: 1fr; } }
+
+.olap-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px;
+}
+.olap-name { font-family: var(--head); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.olap-type { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--muted); margin-bottom: 10px; }
+.olap-rows { display: flex; flex-direction: column; gap: 5px; }
+.olap-row { display: flex; justify-content: space-between; font-size: 12px; }
+.olap-k { color: var(--muted); }
+.olap-v { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+
+/* ════════════════════════════════════
+   DATA FLOW TABLE
+════════════════════════════════════ */
+.flow-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+.flow-table thead th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  background: var(--surface);
+}
+.flow-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: #3a3830;
+}
+.flow-table tbody tr:hover td { background: var(--surface); }
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.b-g  { background: var(--green-bg);  border-color: var(--green);  color: var(--green); }
+.b-a  { background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber); }
+.b-r  { background: var(--red-bg);    border-color: var(--red);    color: var(--red); }
+.b-b  { background: var(--blue-bg);   border-color: var(--blue);   color: var(--blue); }
+.b-p  { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+.b-t  { background: var(--teal-bg);   border-color: var(--teal);   color: var(--teal); }
+
+/* ════════════════════════════════════
+   SCHEMA BLOCKS
+════════════════════════════════════ */
+.schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media(max-width:580px){ .schema-grid { grid-template-columns: 1fr; } }
+
+.schema-block {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.schema-header {
+  background: var(--ink);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.schema-title { font-family: var(--mono); font-size: 11px; color: #c8c4b0; }
+.schema-type  { font-family: var(--mono); font-size: 9px; color: #4a4840; }
+.schema-body { padding: 12px 16px; }
+.schema-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--surface); font-family: var(--mono); font-size: 11px; }
+.schema-row:last-child { border: none; }
+.sc-col { color: var(--ink); flex: 1; }
+.sc-type { color: var(--blue); font-size: 10px; }
+.sc-pk { font-size: 8px; color: var(--amber); border: 1px solid var(--amber); padding: 1px 4px; border-radius: 2px; }
+.sc-idx { font-size: 8px; color: var(--green); border: 1px solid var(--green); padding: 1px 4px; border-radius: 2px; }
+.sc-sort { font-size: 8px; color: var(--purple); border: 1px solid var(--purple); padding: 1px 4px; border-radius: 2px; }
+.sc-dist { font-size: 8px; color: var(--red); border: 1px solid var(--red); padding: 1px 4px; border-radius: 2px; }
+
+/* ════════════════════════════════════
+   TRADE-OFF MATRIX
+════════════════════════════════════ */
+.matrix { width: 100%; border-collapse: collapse; margin: 20px 0; }
+.matrix th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+}
+.matrix td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  vertical-align: top;
+  color: #3a3830;
+}
+.matrix .row-head { font-family: var(--mono); font-size: 11px; font-weight: 500; background: var(--surface); color: var(--ink); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot.g { background: var(--green); }
+.dot.a { background: var(--amber); }
+.dot.r { background: var(--red); }
+
+/* ════════════════════════════════════
+   TIMELINE / SEQUENCE
+════════════════════════════════════ */
+.timeline { position: relative; padding-left: 32px; margin: 20px 0; }
+.timeline::before { content:''; position:absolute; left:10px; top:0; bottom:0; width:1px; background:var(--border); }
+.tl-item { position: relative; margin-bottom: 24px; }
+.tl-item::before {
+  content:'';
+  position:absolute;
+  left:-26px;
+  top:4px;
+  width:10px; height:10px;
+  border-radius:50%;
+  border:2px solid var(--border2);
+  background:var(--page);
+}
+.tl-item.active::before { background: var(--amber); border-color: var(--amber); }
+.tl-time { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.tl-title { font-weight: 600; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
+.tl-desc { font-size: 13px; color: #5a5848; }
+
+/* ════════════════════════════════════
+   FAQ
+════════════════════════════════════ */
+.faq-item { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+.faq-q {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  user-select: none;
+  transition: background .15s;
+}
+.faq-q:hover { background: var(--surface); }
+.faq-q .tog { font-size: 18px; color: var(--amber); flex-shrink: 0; margin-left: 12px; transition: transform .2s; font-family: var(--mono); }
+.faq-a {
+  display: none;
+  padding: 18px;
+  background: var(--surface);
+  font-size: 13.5px;
+  color: #3a3830;
+  line-height: 1.75;
+  border-top: 1px solid var(--border);
+}
+.faq-item.open .faq-a { display: block; }
+.faq-item.open .tog { transform: rotate(45deg); }
+
+/* ════════════════════════════════════
+   DIVIDERS
+════════════════════════════════════ */
+.rule { height: 1px; background: var(--border); margin: 24px 0; }
+
+.footer {
+  background: var(--ink);
+  text-align: center;
+  padding: 36px 20px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #3a3830;
+  letter-spacing: 2px;
+}
+
+/* ── concept-note: coloured signal blocks ─────────── */
 .concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
-.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
-.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
-.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
-.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
-.concept-def br+br{display:none;}
-</style></head><body>
-<div class="hero"><div class="hero-inner">
-  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
-  <h1>Design Uber<br><em>Complete system design: driver location tracking, geospatial matching engine, surge pricing, trip management, WebSocket real-time communication.</em></h1>
-  <p class="hero-sub">Complete system design: driver location tracking, geospatial matching engine, surge pricing, trip management, WebSocket real-time communication.</p>
-  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Geospatial</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Matching</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Redis GEO</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">WebSocket</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Surge Pricing</span></div>
-</div></div>
-<nav class="nav"><a href="#requirements">Requirements</a><a href="#architecture">Architecture</a><a href="#deep-dive">Matching Deep Dive</a><a href="#followups-uber">Follow-ups</a></nav>
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
+/* ── concept-def paragraph spacing ────────────────── */
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.9;color:#2a2820;}
+.concept-def>strong:first-child{display:block;margin-bottom:8px;font-size:14px;}
+.concept-def p{margin:0 0 8px 0;}
+.concept-def p:last-child{margin-bottom:0;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
+
+/* Knowledge Cards */
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow"><span>System Design · FAANG Interview Prep · Manish-Almanac</span></div>
+    <h1>Design Uber</h1>
+    <p class="hero-desc">Complete FAANG-level walkthrough: geospatial driver matching, WebSocket tracking, surge pricing with Flink, atomic Redis locking, schemas, and 6 hard follow-up questions.</p>
+    <div class="db-badges"><span class="db-badge" style="background:#06C167">Redis GEO</span><span class="db-badge" style="background:#e8b84b">WebSocket</span><span class="db-badge" style="background:#3d7a52">Flink Surge</span><span class="db-badge" style="background:#2d5fa0">Cassandra</span><span class="db-badge" style="background:#8a3a3a">Atomic Match</span></div>
+  </div>
+</div>
+<nav class="nav"><a href="#overview">Requirements</a><a href="#architecture">Architecture</a><a href="#matching-deep">Match Deep Dive</a><a href="#schemas">Schemas</a><a href="#tradeoffs">Trade-offs</a><a href="#followups">Follow-ups</a></nav>
 <div class="wrap">
-<section id="requirements">
+
+<section id="overview">
   <div class="sec-tag">00 · Requirements</div>
-  <h2>Clarify before designing</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Functional</div><div class="concept-def">Rider requests a ride (location → destination). Nearby drivers notified. Driver accepts → trip starts. Real-time location tracking. Fare calculation. Payment. Trip history.</div></div>
-    <div class="concept-row"><div class="concept-term">Non-Functional</div><div class="concept-def">100M rides/day. Driver location update every 4 seconds. Match rider to nearest driver in &lt;5 seconds. Location accuracy: &lt;100m. High availability (no rider stranded). 1M concurrent drivers globally.</div></div>
-    <div class="concept-row"><div class="concept-term">Estimation</div><div class="concept-def">1M active drivers × 1 location update/4s = 250K location updates/sec. 100M rides/day = 1,157 ride requests/sec. Location data: 250K × 50 bytes = 12.5 MB/sec = 1TB/day (stored in time-series). Geospatial index: 1M drivers × 50 bytes = 50MB in Redis (trivial).</div></div>
+  <h2>Requirements & Scale Assumptions</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+    <div><h4>Functional</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Rider requests ride (pickup + dropoff location)</td></tr><tr><td><strong>FR2</strong></td><td>Match rider to nearest available driver (< 5s)</td></tr><tr><td><strong>FR3</strong></td><td>Real-time driver location tracking (every 4s)</td></tr><tr><td><strong>FR4</strong></td><td>Live trip tracking for rider + driver</td></tr><tr><td><strong>FR5</strong></td><td>Surge pricing based on supply/demand</td></tr><tr><td><strong>FR6</strong></td><td>Fare calculation + payment on completion</td></tr></tbody></table></div>
+    <div><h4>Non-Functional</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>1M concurrent drivers globally</td></tr><tr><td><strong>NFR2</strong></td><td>100M trips/day = 1,157 ride requests/sec</td></tr><tr><td><strong>NFR3</strong></td><td>Driver location update: 250K writes/sec</td></tr><tr><td><strong>NFR4</strong></td><td>Match latency: < 5 seconds end-to-end</td></tr><tr><td><strong>NFR5</strong></td><td>Location accuracy: ± 50 metres</td></tr><tr><td><strong>NFR6</strong></td><td>High availability — no rider stranded</td></tr></tbody></table></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:20px 0">
+    <div class="db-card pg"><div class="db-card-name">Location Updates</div><div class="db-row"><div class="db-k">Rate</div><div class="db-v">250K/sec</div></div><div class="db-row"><div class="db-k">Payload</div><div class="db-v">50 bytes</div></div><div class="db-row"><div class="db-k">Redis GEO size</div><div class="db-v g">50MB/city</div></div></div>
+    <div class="db-card mg"><div class="db-card-name">Ride Requests</div><div class="db-row"><div class="db-k">Rate</div><div class="db-v">1,157/sec</div></div><div class="db-row"><div class="db-k">Match window</div><div class="db-v">5 km radius</div></div><div class="db-row"><div class="db-k">Match time</div><div class="db-v g">&lt; 2 sec</div></div></div>
+    <div class="db-card dy"><div class="db-card-name">Trip Data</div><div class="db-row"><div class="db-k">Location history</div><div class="db-v">1 TB/day</div></div><div class="db-row"><div class="db-k">Store</div><div class="db-v">Cassandra</div></div><div class="db-row"><div class="db-k">Retention</div><div class="db-v a">7 years (legal)</div></div></div>
   </div>
 </section>
 
 <section id="architecture">
   <div class="sec-tag">01 · Architecture</div>
-  <h2>The complete system — four core flows</h2>
-  <div class="k-cards">
-<div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">Driver Location Tracking</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>WebSocket from driver app → Location Service → Redis GEO.</strong> Persistent WebSocket connection from each driver app. Driver sends GPS every 4 seconds. Location Service receives update → <code>GEOADD drivers:city {lng} {lat} driver:{id}</code> in Redis. Also writes to Cassandra (time-series for trip replay + analytics): <code>(driver_id, timestamp, lat, lng)</code>. Why WebSocket vs HTTP polling? HTTP polling at 4s interval = 250K × 1 HTTP request/4s = 62,500 HTTP requests/sec. WebSocket: one persistent connection per driver, push updates. 10× less server overhead. Uber uses WebSocket for all real-time communication.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Matching Engine</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Rider requests ride → find nearest available driver → notify driver → driver accepts → match confirmed.</strong> Rider sends pickup location. Matching Service: <code>GEORADIUS drivers:city {rider_lng} {rider_lat} 5 km ASC COUNT 10</code> → 10 nearest drivers. Check availability (each driver has a status in Redis: available/on_trip). Notify available drivers via WebSocket (push notification to driver app). First driver to accept: lock the match atomically using Redis SET NX (prevent two riders matching the same driver). Confirm match, start trip.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">03</span><span class="k-title">Surge Pricing</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Supply/demand ratio per geospatial cell determines the surge multiplier.</strong> Kafka stream: ride requests + driver availability per S2 cell. Flink aggregation: rolling 5-minute window, count (requests, available_drivers) per cell. Surge multiplier = f(demand/supply). Store in Redis: <code>surge:city:s2cell → multiplier</code>. Pricing Service reads multiplier from Redis on every fare calculation. Druid for historical surge analytics (which zones, which times).</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">04</span><span class="k-title">Trip Management</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>In-progress trips tracked in Redis for real-time access, written to PostgreSQL for persistence.</strong> Active trip: <code>trip:active:{trip_id} → {driver_id, rider_id, status, route}</code> in Redis (TTL=4h). Written to PostgreSQL on completion with full metadata. Payment triggers on completion: ride fare + tip + surge = total → Stripe charge → write payment record to PostgreSQL. Kafka event: TripCompleted → downstream (rating request, analytics, driver earnings).</div></div></div></div>
+  <h2>Full System — Every Component Justified</h2>
+  <div class="k-cards"><div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Driver Location Tracking</span><span class="k-tag">WebSocket + Redis GEO</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Data Flow</div>
+    <div class="k-point-text"><strong>Persistent WebSocket connection from each driver app → Location Service → Redis GEO.</strong><br>Driver app sends GPS every 4 seconds. Location Service receives: <code>GEOADD drivers:bangalore 77.5946 12.9716 driver:123</code>. Also writes to Cassandra for trip replay: <code>(driver_id, timestamp, lat, lng)</code>.<br>Why WebSocket not HTTP polling? 250K drivers × 1 HTTP request/4s = 62,500 HTTP requests/sec with overhead. WebSocket: persistent connection, push updates. 10× less server CPU. Erlang/Go handles 500K WebSocket connections per node.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>Redis GEO stores 1M drivers in ~80MB. GEORADIUS query for 5km radius runs in < 1ms</span></div><div class="k-warn"><span class="k-icon">⚠</span><span>WebSocket reconnect: exponential backoff. Buffer updates locally on device, batch-send on reconnect with original timestamps</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Driver Matching</span><span class="k-tag">Redis GEO + Atomic Lock</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Matching Algorithm</div>
+    <div class="k-point-text"><strong>Rider requests ride → find nearest available drivers → notify → first to accept wins.</strong><br>Step 1: <code>GEORADIUS drivers:bangalore {rider_lat} {rider_lng} 5 km ASC COUNT 10</code> → 10 nearest. Step 2: check status: <code>HGET driver:status:{id}</code> = "available". Step 3: push notification to all available drivers via WebSocket. Step 4: first driver to accept → <code>SET driver:trip:{id} {trip_id} NX EX 3600</code> (atomic NX = only if not exists → prevents double-matching). Step 5: reject all other drivers, start trip.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>NX (set if not exists) is atomic in Redis — impossible for two riders to claim the same driver simultaneously</span></div><div class="k-info"><span class="k-icon">ℹ</span><span>If no driver accepts within 30s: expand radius to 8km, retry. After 60s: show "no drivers available"</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Surge Pricing</span><span class="k-tag">Kafka + Flink + Redis</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Real-time Computation</div>
+    <div class="k-point-text"><strong>Demand/supply ratio per geospatial cell determines the surge multiplier.</strong><br>Kafka streams: ride requests + driver availability events, partitioned by S2 cell ID. Flink job: 5-minute tumbling window, count (requests, available_drivers) per cell. Surge = f(demand/supply): ratio < 1.2 → 1.0×, 1.2–2.0 → 1.5×, > 2.0 → 2.0×. Store result: <code>SET surge:bangalore:s2cell:{id} 1.5 EX 300</code>. Pricing Service reads this on every fare estimate.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>Flink maintains exactly one count per cell window — no double counting even with Kafka redelivery (idempotent state updates)</span></div><div class="k-muted"><span class="k-icon">→</span><span>S2 cells at level 12 cover ~3km² — fine-grained enough for city-level surge without excessive computation</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">04</span><span class="k-title">Trip Management</span><span class="k-tag">Redis + PostgreSQL</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">State Machine</div>
+    <div class="k-point-text"><strong>Active trip state in Redis (fast reads), final state in PostgreSQL (durability).</strong><br>Trip states: REQUESTED → MATCHED → DRIVER_EN_ROUTE → IN_PROGRESS → COMPLETED → PAID. Each state: <code>HSET trip:{id} status IN_PROGRESS driver_id 123 rider_id 456</code>. TTL = 4 hours (max trip duration). On COMPLETED: write full trip record to PostgreSQL + trigger payment (Stripe API) + Kafka TripCompleted event for driver earnings, analytics, rating requests.</div>
+    <div class="k-info"><span class="k-icon">ℹ</span><span>Redis TTL as safety net: if trip state is stuck (crash mid-trip), the key expires and the system can reconcile via Cassandra location history</span></div><div class="k-warn"><span class="k-icon">⚠</span><span>Payment is synchronous (rider must know charge amount before leaving the car). All other post-trip actions (ratings, analytics, driver earnings) are async via Kafka</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">05</span><span class="k-title">Location History</span><span class="k-tag">Cassandra Time-Series</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Persistence</div>
+    <div class="k-point-text"><strong>Every driver GPS update stored in Cassandra for trip replay, disputes, and ML training.</strong><br>Schema: <code>PRIMARY KEY ((driver_id, trip_date), timestamp)</code>. Clustering by timestamp gives time-ordered reads within a partition. Query "replay trip 789": <code>SELECT * FROM locations WHERE driver_id = 123 AND trip_date = '2026-03-22' AND timestamp BETWEEN start AND end</code>. At 250K updates/sec × 50 bytes = 12.5 MB/sec = 1 TB/day.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>Cassandra partition key by (driver_id, date) means each driver's daily data is co-located. 7-year retention with tiered storage: 30 days hot SSD, 7 years cold S3 via TTL + archival job</span></div>
+  </div></div>
+</div></div>
+</section>
+
+<section id="matching-deep">
+  <div class="sec-tag">02 · Deep Dive</div>
+  <h2>Ride Request to Driver Acceptance — Complete Flow</h2><div class="sd-example"><div class="sd-example-head"><div class="sd-example-title">Matching Lifecycle (T=0 to T=1500ms)</div></div><div class="sd-example-body"><div class="choice-row"><div class="choice-label">T+0ms</div><div class="choice-val">Rider taps "Request Ride." App sends: <code>POST /rides {pickup, dropoff}</code>. API Gateway validates JWT. Routes to Ride Service.</div></div><div class="choice-row"><div class="choice-label">T+10ms</div><div class="choice-val">Ride Service → Matching Service. <code>GEORADIUS drivers:bangalore {lat} {lng} 3 km ASC COUNT 5</code>. Check status of each: <code>HGET driver:status:{id}</code>. Found 3 available drivers in 2km.</div></div><div class="choice-row"><div class="choice-label">T+15ms</div><div class="choice-val">Notify all 3 drivers via WebSocket push: "{pickup_lat, pickup_lng, estimated_distance: 1.2km, estimated_fare: ₹89}". Driver apps show the request.</div></div><div class="choice-row"><div class="choice-label">T+1200ms</div><div class="choice-val">Driver:7 taps Accept. Matching Service: <code>SET driver:trip:7 {trip_id} NX EX 3600</code>. Returns OK (not already claimed).</div></div><div class="choice-row"><div class="choice-label">T+1210ms</div><div class="choice-val">Claim succeeded. Atomically update driver status: <code>HSET driver:status:7 status on_trip</code>. Notify other drivers: request no longer available.</div></div><div class="choice-row"><div class="choice-label">T+1220ms</div><div class="choice-val">Notify rider: driver accepted, ETA 4 minutes, driver location {lat,lng}. Open live tracking WebSocket. Trip state → MATCHED.</div></div></div></div>
+</section>
+
+<section id="schemas">
+  <div class="sec-tag">03 · Schemas</div>
+  <h2>All Schemas at a Glance</h2><h4>trips (PostgreSQL)</h4><table class="flow-table"><thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead><tbody><tr><td>id</td><td>UUID</td><td>Primary key</td></tr><tr><td>rider_id</td><td>BIGINT</td><td>FK to users</td></tr><tr><td>driver_id</td><td>BIGINT</td><td>FK to drivers</td></tr><tr><td>status</td><td>ENUM</td><td>COMPLETED, CANCELLED, etc.</td></tr><tr><td>pickup_lat/lng</td><td>DECIMAL(9,6)</td><td>Start location</td></tr><tr><td>dropoff_lat/lng</td><td>DECIMAL(9,6)</td><td>End location</td></tr><tr><td>fare_amount</td><td>DECIMAL(10,2)</td><td>Final charged amount</td></tr><tr><td>surge_multiplier</td><td>DECIMAL(3,2)</td><td>1.0–5.0</td></tr><tr><td>started_at</td><td>TIMESTAMPTZ</td><td>Trip start</td></tr><tr><td>completed_at</td><td>TIMESTAMPTZ</td><td>Trip end</td></tr></tbody></table><h4>Redis Keys</h4><table class="flow-table"><thead><tr><th>Key</th><th>Type</th><th>Value</th></tr></thead><tbody><tr><td>drivers:{city}</td><td>GEO</td><td>lng, lat, driver_id — all drivers in city</td></tr><tr><td>driver:status:{id}</td><td>Hash</td><td>status, last_seen, vehicle_type</td></tr><tr><td>driver:trip:{id}</td><td>String</td><td>trip_id (NX lock for matching)</td></tr><tr><td>trip:{id}</td><td>Hash</td><td>Full trip state during active trip</td></tr><tr><td>surge:{city}:{cell}</td><td>String</td><td>multiplier float, TTL 5min</td></tr></tbody></table>
+</section>
+
+<section id="tradeoffs">
+  <div class="sec-tag">04 · Trade-offs</div>
+  <h2>Trade-off Matrix</h2><table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Location store</td><td>Redis GEO</td><td><span class="dot g"></span>Sub-ms GEORADIUS queries. 50MB per city — trivial RAM</td><td><span class="dot a"></span>Data lost on Redis crash. Mitigated: replica + AOF persistence</td><td>Dedicated geo-DB (PostGIS) if complex polygon queries needed</td></tr><tr><td class="row-head">WebSocket for location</td><td>vs HTTP polling</td><td><span class="dot g"></span>70% less overhead. Server-push model — no polling storm</td><td><span class="dot a"></span>Persistent connections exhaust file descriptors. Need tuned ulimits and connection-aware LB</td><td>Long polling if WebSocket blocked by corporate firewalls (rare for mobile)</td></tr><tr><td class="row-head">Matching atomicity</td><td>Redis NX SET</td><td><span class="dot g"></span>Single atomic op — no distributed locking needed. O(1)</td><td><span class="dot a"></span>Redis single-threaded — NX is sequential. Not an issue at 1,157 requests/sec</td><td>Lua script for multi-key atomicity if matching requires updating multiple keys simultaneously</td></tr><tr><td class="row-head">Surge pricing</td><td>Flink 5-min window</td><td><span class="dot g"></span>Near real-time. Scales with Kafka partitions. Exactly-once</td><td><span class="dot a"></span>5-minute lag — surge reacts to demand 5 minutes ago</td><td>1-min windows if surge responsiveness is critical (doubles Flink state size)</td></tr><tr><td class="row-head">Trip persistence</td><td>PG on completion</td><td><span class="dot g"></span>ACID for payment and legal records. Simple query model</td><td><span class="dot a"></span>Only written once — could use append-only Kafka topic as source of truth instead</td><td>Event sourcing if trip dispute resolution requires full state replay</td></tr></tbody></table></section>
+
+<section id="followups">
+  <div class="sec-tag">05 · Hard Follow-ups</div>
+  <h2>Every Question Your Interviewer Will Ask</h2><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you prevent a driver being matched to two riders simultaneously?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Redis SET with NX (set if not exists) is the atomic lock.</strong><br><br>When rider A's match request claims driver 7: <code>SET driver:trip:7 tripA NX EX 3600</code>. NX means "only set if key doesn't exist." If driver 7 is simultaneously claimed by rider B: Redis processes the two SET NX commands serially (Redis is single-threaded for commands). One succeeds, one fails. The failing request must find a different driver.<br><br>Why not application-level locking? Distributed locks (Redlock) across Redis nodes are complex and have failure modes. A single Redis primary processes NX commands atomically — simpler and sufficient for this use case.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you handle GPS inaccuracy — a driver appears to be in a building or on the wrong road?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Kalman filter + road snapping + dead reckoning.</strong><br><br>Kalman filter on the driver app: combines GPS reading (noisy, ±50m in cities) with accelerometer + gyroscope data to estimate the most likely position. Reduces GPS noise by 60–70%.<br><br>Road snapping: the estimated position is projected onto the nearest road from Uber's internal road graph. A driver "inside a building" snaps to the adjacent road. This requires a map matching service that queries the road graph with the current position estimate.<br><br>Dead reckoning during GPS gaps (tunnels, underground): use last known speed + heading to extrapolate position for up to 30 seconds. The driver app buffers location updates during connectivity loss and batch-sends them with original timestamps on reconnect.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How does surge pricing prevent riders from being exploited — what stops surge from going to 10×?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Surge caps + transparency + pre-trip confirmation.</strong><br><br>Technical cap: surge multiplier is capped at 5.0× in the Flink aggregation function. Business logic, not just UX.<br><br>Pre-trip price lock: when a rider sees the surge price and taps "Request Ride," the fare is locked at that surge multiplier for 120 seconds. If surge changes during the 2 minutes before a driver accepts, the rider still pays the locked price. This removes the bait-and-switch failure mode.<br><br>Surge decay: as drivers enter a high-demand area (attracted by surge), supply increases → demand/supply ratio drops → Flink computes lower multiplier → next 5-minute window has lower surge. This is the negative feedback loop that makes surge self-correcting.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you design the system for 10× scale — 10M trips/day vs 100M/day?<span class="faq-tog">+</span></div><div class="faq-a"><strong>The bottleneck shifts at each order of magnitude:</strong><br><br>At 10M trips/day (current 100M ÷ 10): single Redis instance per city might suffice. PostgreSQL read replicas handle the load.<br><br>At 100M trips/day: city-level Redis sharding (shard by geohash prefix within a city). Cassandra for location history. Kafka for async fan-out of trip events.<br><br>At 1B trips/day (10×): Redis Cluster per region. Location history in a time-series database (InfluxDB or a custom columnar store). Dedicated matching service per city with no cross-city coordination. Surge pricing becomes a distributed ML model running per-region inference, not a Flink job.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you handle driver going offline mid-trip?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Client-side buffering + server-side timeout + rider notification.</strong><br><br>Driver app: buffer all location updates locally (SQLite) when offline. On reconnect: batch-send buffered updates with original timestamps. Location Service accepts out-of-order updates (Cassandra handles this naturally).<br><br>Server-side: if no driver location update received for > 30 seconds → mark driver as "connectivity issues." Notify rider ("Your driver has lost connectivity — we're monitoring the situation"). After 120 seconds with no reconnection: trigger escalation (rider support contact, potential trip cancellation).<br><br>Trip fare: for connectivity gaps, interpolate between last known and reconnect position using straight-line distance. Apply the same per-km rate. Rider sees the gap acknowledged in the trip receipt.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How does Uber handle payments across 70 countries with different currencies and regulations?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Stripe as the payment processor + local payment method adapters + regulatory compliance layer.</strong><br><br>Stripe handles: credit card processing in 135+ currencies, fraud detection, PCI-DSS compliance (Uber never stores card numbers). Uber stores only Stripe's payment_method_id.<br><br>Local payment methods (UPI in India, GoPay in Indonesia, cash in some markets): each implemented as an adapter implementing a PaymentProvider interface. The Trip Completion Service calls <code>paymentProvider.charge(trip_id, amount, currency)</code> — agnostic to which provider handles it.<br><br>Regulatory: driver earnings subject to local tax law. Separate Earnings Service calculates driver payout = fare − commission − applicable taxes, stores in an append-only Kafka topic (audit trail). Payout batch runs weekly per country via local banking APIs.</div></div></section>
 </div>
-</section>
-
-<section id="deep-dive">
-  <div class="sec-tag">02 · Deep Dive — Driver Matching</div>
-  <h2>The complete matching flow in detail</h2>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Ride Request to Driver Acceptance</div><span class="sd-example-tag">&lt;5 SECONDS END-TO-END</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">T+0ms</div><div class="choice-val">Rider taps "Request Ride." App sends: <code>POST /rides {"pickup": {lat,lng}, "dropoff": {lat,lng}}</code>. API Gateway authenticates JWT. Routes to Ride Service.</div></div>
-      <div class="choice-row"><div class="choice-label">T+10ms</div><div class="choice-val">Ride Service → Matching Service. <code>GEORADIUS drivers:bangalore {pickup_lat} {pickup_lng} 3 km ASC COUNT 5</code> → [driver:123, driver:456, driver:789]. Check status: <code>HGET driver:status:123</code> = "available." Found 2 available drivers in 3km.</div></div>
-      <div class="choice-row"><div class="choice-label">T+20ms</div><div class="choice-val">Push notification via WebSocket to both available drivers: "New ride request nearby — accept?" Driver apps show the request with pickup location, estimated distance.</div></div>
-      <div class="choice-row"><div class="choice-label">T+1500ms</div><div class="choice-val">Driver:123 taps "Accept." Matching Service: <code>SET driver:trip:123 {trip_id} NX EX 3600</code> — atomic "claim" of this driver. NX = only set if not exists — prevents two riders matching the same driver. Returns success.</div></div>
-      <div class="choice-row"><div class="choice-label">T+1520ms</div><div class="choice-val">Notify rider: driver accepted. ETA: 3 minutes. Start trip record in Redis. Update driver status to "on_trip." Notify driver:456 that the request is no longer available.</div></div>
-    </div>
-  </div>
-</section>
-
-<section id="followups-uber">
-  <div class="sec-tag">03 · Follow-ups</div>
-  <h2>The questions your interviewer will ask</h2>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What happens if the driver's GPS is inaccurate or they go offline mid-trip?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>GPS inaccuracy: dead reckoning + Kalman filter. Connectivity loss: client-side buffering + reconnect.</strong><br><br>
-  GPS inaccuracy: mobile GPS is ±10–50m in cities (building reflection). Uber's driver app applies a Kalman filter — a statistical technique that combines GPS readings with accelerometer/gyroscope data to estimate the most likely position. Road snapping: the estimated position is "snapped" to the nearest road (Uber uses their own road graph). A driver teleporting across a building is corrected to the road they're on.<br><br>
-  Driver goes offline during trip: driver app buffers location updates locally (SQLite on device). When connectivity restores, the app batch-sends all buffered updates with original timestamps. Location Service accepts out-of-order updates with timestamps — writes to Cassandra in order. Gap in location data is handled gracefully: straight-line interpolation between last known and first reconnect point.<br><br>
-  WebSocket reconnect: exponential backoff. Connection state stored in Redis — on reconnect, driver receives the current trip state and can resume seamlessly.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle the city-scale sharding of driver location data?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Shard by city initially, then by geohash within dense cities.</strong><br><br>
-  One Redis GEO key per city: <code>drivers:bangalore</code>, <code>drivers:mumbai</code>, <code>drivers:delhi</code>. Bangalore has ~50,000 active drivers during peak — this is a 50K member ZSET in Redis, trivially fast (&lt;1ms queries).<br><br>
-  For mega-cities (London, NYC, São Paulo) with 200,000 concurrent drivers: split by 4-character geohash prefix (each cell is ~40km × 40km). NYC becomes ~20 cells covering the metropolitan area. GEORADIUS query: determine which cells overlap with the 5km search radius → query those cells only → merge results.<br><br>
-  The lookup function: given a rider's location, determine which geohash cells are within 5km → issue parallel GEORADIUS queries against those Redis keys → merge and sort results. At most 4–5 Redis keys need to be queried for any given pickup location.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does Uber prevent "ghost rides" — a driver falsely claiming they completed a trip?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Multiple independent verification systems cross-reference trip legitimacy.</strong><br><br>
-  GPS trace verification: the full GPS trace is stored in Cassandra. After trip completion, the route is compared to the claimed start/end points. A trip from MG Road to Indiranagar that has GPS points in Whitefield is flagged as anomalous.<br><br>
-  Time-distance consistency: calculate the minimum possible time to travel the claimed distance. If the trip took 2 minutes but the claimed distance requires 30 minutes of driving — fraud signal.<br><br>
-  Rider confirmation: rider app must confirm trip end (tap "Arrived"). Rider and driver GPS positions are compared at "trip end" — they should be within 500m of each other.<br><br>
-  Machine learning fraud detection: features include: driver's historical trip patterns, rider's complaint history, GPS trace anomalies, payment patterns, device fingerprints. Model flags suspicious trips for manual review before payment is released to driver.</div></div>
-</section></div>
-<div class="footer">DESIGN UBER · FAANG SYSTEM DESIGN WALKTHROUGH · MANISH-ALMANAC</div>
+<div class="footer">DESIGN UBER · GEOSPATIAL · WEBSOCKET · MATCHING · SURGE · CASSANDRA · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

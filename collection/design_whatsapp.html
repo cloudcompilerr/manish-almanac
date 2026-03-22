@@ -1,232 +1,707 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Design WhatsApp</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
-*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
-body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
-.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
-.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
-.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
-.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
-h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
-h1 .acc{color:#e8b84b;}
-.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
-.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
-.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
-.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
-.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
-.nav::-webkit-scrollbar{display:none;}
-.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
-.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
-.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
-section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
-.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
-.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
-h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
-h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
-p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
-code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
-.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
-.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
-.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
-.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
-.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
-.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
-.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
-.steps{list-style:none;margin:16px 0;counter-reset:s;}
-.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
-.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
-.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
-.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
-.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
-.blist{list-style:none;margin:12px 0;}
-.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
-.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
-.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
-.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
-@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
-.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
-.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
-.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
-.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
-.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
-.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
-.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
-.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
-.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
-.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
-.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
-.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
-.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
-.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
-.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
-.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
-.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
-.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
-.faq-q:hover{background:var(--surface);}
-.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
-.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
-.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
-.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
-.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
-.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
-.dtree-node:last-child{border:none;}
-.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
-.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
-.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
-.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
-.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
-.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
-footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+:root {
+  --ink: #0c0d14;
+  --page: #f4f3ee;
+  --surface: #eeede6;
+  --surface2: #e6e4db;
+  --border: #d4d2c8;
+  --border2: #c0bdb0;
 
-/* ── Concept Grid: term/definition cards ─────────────── */
-.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
-.concept-row:last-child{border-bottom:none;}
-.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
-.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
-.concept-def strong{color:var(--ink);font-weight:700;}
-.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-/* ── Knowledge Card: FAANG internals deep-dive ────────── */
-.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
-.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
-.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
-.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
-.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
-.k-point{display:flex;flex-direction:column;gap:4px;}
-.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
-.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
-.k-point-text strong{color:var(--ink);}
-.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-.k-divider{height:1px;background:var(--border);margin:4px 0;}
-.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
-.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
-.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
-/* ── FAQs: consistent across all files ────────────────── */
-.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
-.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
-.faq-q:hover{background:var(--surface);}
-.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
-.faq-item.open .tog{transform:rotate(45deg);}
-.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
-.faq-item.open .faq-a{display:block;}
-.faq-a strong{color:var(--ink);}
-.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
-/* ── SD Examples ──────────────────────────────────────── */
-.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
-.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
-.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
-.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
-.sd-example-body{padding:0;}
-.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
-.choice-row:last-child{border-bottom:none;}
-.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
-.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
-.choice-val strong{color:var(--ink);}
-.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-/* ── Step block ───────────────────────────────────────── */
-.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
-.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
-.sb-icon{font-size:18px;}
-.step-block-body{padding:0;}
-.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
-.step-row:last-child{border-bottom:none;}
-.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
-.step-content{padding:16px 18px;}
-.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
-.step-options{display:flex;flex-direction:column;gap:8px;}
-.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
-.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
-.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
-.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
-.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
-.opt-text{color:#2a2820;}
-.opt-text strong{color:var(--ink);}
-/* ── Analogy block ───────────────────────────────────── */
-.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
-.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
-.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
-.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
-/* ── Callout ──────────────────────────────────────────── */
-.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
-.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
-.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
-.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
-.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
-.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
-/* ── DB pills ─────────────────────────────────────────── */
-.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
-.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
-/* ── hero-sub ─────────────────────────────────────────── */
-.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
-/* ── footer ───────────────────────────────────────────── */
-.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+  --red:    #c0392b;
+  --amber:  #c47d11;
+  --green:  #1a7a4a;
+  --blue:   #1a4f8a;
+  --purple: #5a3e8a;
+  --teal:   #1a6b6b;
 
-/* ── Concept-def sub-points ────────────────────────── */
-.concept-def p{margin:0 0 8px;}
-.concept-def p:last-child{margin-bottom:0;}
+  --red-bg:    #fdf0ee;
+  --amber-bg:  #fdf6e8;
+  --green-bg:  #edf8f2;
+  --blue-bg:   #edf2fb;
+  --purple-bg: #f4f0fb;
+  --teal-bg:   #edf6f6;
+
+  --text: #1a1b26;
+  --muted: #7a7870;
+  --mono: 'JetBrains Mono', monospace;
+  --body: 'Outfit', sans-serif;
+  --head: 'Fraunces', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--ink);
+  color: #e8e6df;
+  padding: 64px 24px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px);
+}
+.hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #8a8070;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: #5a5850; }
+h1 {
+  font-family: var(--head);
+  font-size: clamp(34px, 5.5vw, 62px);
+  font-weight: 900;
+  line-height: 1.03;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+  color: #f0ede4;
+}
+h1 .accent { color: #e8b84b; }
+.hero-desc {
+  font-size: 15px;
+  color: #8a8070;
+  max-width: 620px;
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.meta-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  border: 1px solid #2e2d26;
+  border-radius: 3px;
+  color: #7a7868;
+  letter-spacing: .5px;
+}
+.meta-chip.lit { border-color: #5a4e20; color: #e8b84b; background: rgba(232,184,75,.06); }
+
+/* ── NAV ── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--ink);
+  border-bottom: 1px solid #1e1d18;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 20px;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav a {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #5a5850;
+  text-decoration: none;
+  padding: 14px 14px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: .18s;
+}
+.nav a:hover { color: #e8b84b; border-color: #e8b84b; }
+
+/* ── LAYOUT ── */
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+section { padding: 56px 0 36px; border-bottom: 2px solid var(--border); }
+section:last-child { border: none; }
+
+/* ── TYPOGRAPHY ── */
+.sec-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sec-tag::before { content: ''; width: 20px; height: 1px; background: var(--border2); }
+h2 {
+  font-family: var(--head);
+  font-size: clamp(22px, 3.5vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.5px;
+  line-height: 1.15;
+  margin-bottom: 18px;
+  color: var(--ink);
+}
+h3 {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 32px 0 10px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+h4 {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 16px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+p { color: #3a3830; font-size: 14.5px; margin-bottom: 12px; }
+strong { color: var(--ink); }
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--blue);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 13.5px;
+  border-left: 3px solid;
+  line-height: 1.65;
+}
+.callout p { font-size: 13.5px; margin-bottom: 6px; }
+.callout p:last-child { margin: 0; }
+.cl-blue   { background: var(--blue-bg);   border-color: var(--blue);   color: #1a2a4a; }
+.cl-amber  { background: var(--amber-bg);  border-color: var(--amber);  color: #3a2a08; }
+.cl-green  { background: var(--green-bg);  border-color: var(--green);  color: #0a2a1a; }
+.cl-red    { background: var(--red-bg);    border-color: var(--red);    color: #3a0a08; }
+.cl-purple { background: var(--purple-bg); border-color: var(--purple); color: #2a1a4a; }
+.cl-teal   { background: var(--teal-bg);   border-color: var(--teal);   color: #0a2a2a; }
+.cl-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  opacity: .7;
+}
+
+/* ── CODE BLOCK ── */
+.codeblock {
+  background: var(--ink);
+  border-radius: 6px;
+  padding: 20px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 2;
+  overflow-x: auto;
+  margin: 14px 0;
+  color: #c8c4b8;
+  border: 1px solid #1e1d18;
+}
+.codeblock .c  { color: #3e3d36; }
+.codeblock .k  { color: #e8b84b; }
+.codeblock .s  { color: #8bc4a0; }
+.codeblock .n  { color: #e8946a; }
+.codeblock .t  { color: #7aaee0; }
+.codeblock .m  { color: #d07090; }
+.codeblock .o  { color: #b0a890; }
+
+/* ════════════════════════════════════
+   THE BIG ARCHITECTURE DIAGRAM
+════════════════════════════════════ */
+.arch-canvas {
+  background: var(--ink);
+  border-radius: 8px;
+  padding: 32px 24px;
+  margin: 24px 0;
+  overflow-x: auto;
+  border: 1px solid #1e1d18;
+}
+.arch-canvas-inner { min-width: 840px; }
+
+/* Lane labels */
+.lanes { display: grid; grid-template-columns: 80px 1fr; gap: 0; }
+.lane-labels { display: flex; flex-direction: column; gap: 0; padding-top: 8px; }
+.lane-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #3a3830;
+  writing-mode: horizontal-tb;
+  padding: 18px 0;
+  border-bottom: 1px solid #1e1d18;
+  text-align: right;
+  padding-right: 12px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* The main flow grid */
+.flow-grid { display: flex; flex-direction: column; gap: 0; }
+.flow-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  gap: 0;
+  border-bottom: 1px solid #1a1a16;
+  min-height: 88px;
+}
+.flow-row:last-child { border: none; }
+
+/* Individual component box */
+.fbox {
+  flex-shrink: 0;
+  background: #161614;
+  border: 1px solid #2a2924;
+  border-radius: 6px;
+  padding: 10px 14px;
+  text-align: center;
+  transition: border-color .2s;
+  cursor: default;
+  min-width: 100px;
+}
+.fbox:hover { border-color: #e8b84b; }
+.fbox .fi { font-size: 18px; margin-bottom: 3px; }
+.fbox .fn {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: #c8c4b0;
+  line-height: 1.3;
+}
+.fbox .ft { font-family: var(--mono); font-size: 9px; color: #4a4840; margin-top: 2px; }
+
+.fbox.col-r  { border-color: rgba(192,57,43,.4);  background: rgba(192,57,43,.06); }
+.fbox.col-a  { border-color: rgba(196,125,17,.4); background: rgba(196,125,17,.06); }
+.fbox.col-g  { border-color: rgba(26,122,74,.4);  background: rgba(26,122,74,.06); }
+.fbox.col-b  { border-color: rgba(26,79,138,.4);  background: rgba(26,79,138,.06); }
+.fbox.col-p  { border-color: rgba(90,62,138,.4);  background: rgba(90,62,138,.06); }
+.fbox.col-t  { border-color: rgba(26,107,107,.4); background: rgba(26,107,107,.06); }
+
+/* Arrows */
+.arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 4px;
+  gap: 2px;
+  min-width: 44px;
+}
+.arrow-line { height: 2px; width: 36px; background: #2a2924; position: relative; }
+.arrow-line::after { content:'▶'; position:absolute; right:-5px; top:-6px; font-size:8px; color:#3a3830; }
+.arrow-label { font-family: var(--mono); font-size: 8px; color: #3a3830; white-space: nowrap; text-align: center; }
+
+/* Down arrow */
+.down-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: #3a3830;
+  gap: 1px;
+}
+.down-line { width: 1px; height: 12px; background: #2a2924; }
+
+/* branching from Kafka */
+.branch-wrap { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+/* ════════════════════════════════════
+   COMPONENT DEEP-DIVE CARDS
+════════════════════════════════════ */
+.component-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media(max-width:640px){ .component-grid { grid-template-columns: 1fr; } }
+
+.comp-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.comp-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.cc-red::before    { background: var(--red); }
+.cc-amber::before  { background: var(--amber); }
+.cc-green::before  { background: var(--green); }
+.cc-blue::before   { background: var(--blue); }
+.cc-purple::before { background: var(--purple); }
+.cc-teal::before   { background: var(--teal); }
+
+.cc-name { font-family: var(--head); font-size: 16px; font-weight: 700; margin: 8px 0 4px; }
+.cc-role { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.cc-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 12px; padding: 6px 0; border-top: 1px solid var(--surface); }
+.cc-key { color: var(--muted); width: 100px; flex-shrink: 0; }
+.cc-val { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; }
+.cc-val.g { color: var(--green); }
+.cc-val.r { color: var(--red); }
+.cc-val.a { color: var(--amber); }
+
+/* ════════════════════════════════════
+   OLAP SECTION
+════════════════════════════════════ */
+.olap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
+@media(max-width:600px){ .olap-grid { grid-template-columns: 1fr; } }
+
+.olap-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px;
+}
+.olap-name { font-family: var(--head); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.olap-type { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--muted); margin-bottom: 10px; }
+.olap-rows { display: flex; flex-direction: column; gap: 5px; }
+.olap-row { display: flex; justify-content: space-between; font-size: 12px; }
+.olap-k { color: var(--muted); }
+.olap-v { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+
+/* ════════════════════════════════════
+   DATA FLOW TABLE
+════════════════════════════════════ */
+.flow-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+.flow-table thead th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  background: var(--surface);
+}
+.flow-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: #3a3830;
+}
+.flow-table tbody tr:hover td { background: var(--surface); }
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.b-g  { background: var(--green-bg);  border-color: var(--green);  color: var(--green); }
+.b-a  { background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber); }
+.b-r  { background: var(--red-bg);    border-color: var(--red);    color: var(--red); }
+.b-b  { background: var(--blue-bg);   border-color: var(--blue);   color: var(--blue); }
+.b-p  { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+.b-t  { background: var(--teal-bg);   border-color: var(--teal);   color: var(--teal); }
+
+/* ════════════════════════════════════
+   SCHEMA BLOCKS
+════════════════════════════════════ */
+.schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media(max-width:580px){ .schema-grid { grid-template-columns: 1fr; } }
+
+.schema-block {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.schema-header {
+  background: var(--ink);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.schema-title { font-family: var(--mono); font-size: 11px; color: #c8c4b0; }
+.schema-type  { font-family: var(--mono); font-size: 9px; color: #4a4840; }
+.schema-body { padding: 12px 16px; }
+.schema-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--surface); font-family: var(--mono); font-size: 11px; }
+.schema-row:last-child { border: none; }
+.sc-col { color: var(--ink); flex: 1; }
+.sc-type { color: var(--blue); font-size: 10px; }
+.sc-pk { font-size: 8px; color: var(--amber); border: 1px solid var(--amber); padding: 1px 4px; border-radius: 2px; }
+.sc-idx { font-size: 8px; color: var(--green); border: 1px solid var(--green); padding: 1px 4px; border-radius: 2px; }
+.sc-sort { font-size: 8px; color: var(--purple); border: 1px solid var(--purple); padding: 1px 4px; border-radius: 2px; }
+.sc-dist { font-size: 8px; color: var(--red); border: 1px solid var(--red); padding: 1px 4px; border-radius: 2px; }
+
+/* ════════════════════════════════════
+   TRADE-OFF MATRIX
+════════════════════════════════════ */
+.matrix { width: 100%; border-collapse: collapse; margin: 20px 0; }
+.matrix th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+}
+.matrix td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  vertical-align: top;
+  color: #3a3830;
+}
+.matrix .row-head { font-family: var(--mono); font-size: 11px; font-weight: 500; background: var(--surface); color: var(--ink); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot.g { background: var(--green); }
+.dot.a { background: var(--amber); }
+.dot.r { background: var(--red); }
+
+/* ════════════════════════════════════
+   TIMELINE / SEQUENCE
+════════════════════════════════════ */
+.timeline { position: relative; padding-left: 32px; margin: 20px 0; }
+.timeline::before { content:''; position:absolute; left:10px; top:0; bottom:0; width:1px; background:var(--border); }
+.tl-item { position: relative; margin-bottom: 24px; }
+.tl-item::before {
+  content:'';
+  position:absolute;
+  left:-26px;
+  top:4px;
+  width:10px; height:10px;
+  border-radius:50%;
+  border:2px solid var(--border2);
+  background:var(--page);
+}
+.tl-item.active::before { background: var(--amber); border-color: var(--amber); }
+.tl-time { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.tl-title { font-weight: 600; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
+.tl-desc { font-size: 13px; color: #5a5848; }
+
+/* ════════════════════════════════════
+   FAQ
+════════════════════════════════════ */
+.faq-item { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+.faq-q {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  user-select: none;
+  transition: background .15s;
+}
+.faq-q:hover { background: var(--surface); }
+.faq-q .tog { font-size: 18px; color: var(--amber); flex-shrink: 0; margin-left: 12px; transition: transform .2s; font-family: var(--mono); }
+.faq-a {
+  display: none;
+  padding: 18px;
+  background: var(--surface);
+  font-size: 13.5px;
+  color: #3a3830;
+  line-height: 1.75;
+  border-top: 1px solid var(--border);
+}
+.faq-item.open .faq-a { display: block; }
+.faq-item.open .tog { transform: rotate(45deg); }
+
+/* ════════════════════════════════════
+   DIVIDERS
+════════════════════════════════════ */
+.rule { height: 1px; background: var(--border); margin: 24px 0; }
+
+.footer {
+  background: var(--ink);
+  text-align: center;
+  padding: 36px 20px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #3a3830;
+  letter-spacing: 2px;
+}
+
+/* ── concept-note: coloured signal blocks ─────────── */
 .concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
-.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
-.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
-.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
-.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
-.concept-def br+br{display:none;}
-</style></head><body>
-<div class="hero"><div class="hero-inner">
-  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
-  <h1>Design WhatsApp<br><em>Complete system design: WebSocket at 600M connections, message routing, E2EE Signal Protocol, offline delivery, group messaging fan-out.</em></h1>
-  <p class="hero-sub">Complete system design: WebSocket at 600M connections, message routing, E2EE Signal Protocol, offline delivery, group messaging fan-out.</p>
-  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">WebSocket</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Signal Protocol E2EE</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Cassandra</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Erlang Actor</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Fan-out</span></div>
-</div></div>
-<nav class="nav"><a href="#requirements">Requirements</a><a href="#architecture">Architecture</a><a href="#followups-wa">Follow-ups</a></nav>
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
+/* ── concept-def paragraph spacing ────────────────── */
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.9;color:#2a2820;}
+.concept-def>strong:first-child{display:block;margin-bottom:8px;font-size:14px;}
+.concept-def p{margin:0 0 8px 0;}
+.concept-def p:last-child{margin-bottom:0;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
+
+/* Knowledge Cards */
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow"><span>System Design · FAANG Interview Prep · Manish-Almanac</span></div>
+    <h1>Design WhatsApp</h1>
+    <p class="hero-desc">Complete FAANG-level walkthrough: Erlang 600M connections, Signal Protocol E2EE, Cassandra offline delivery, group messaging fan-out, and 4 hard follow-up questions.</p>
+    <div class="db-badges"><span class="db-badge" style="background:#25D366">Erlang WS</span><span class="db-badge" style="background:#128C7E">Signal Protocol</span><span class="db-badge" style="background:#e8b84b">Cassandra</span><span class="db-badge" style="background:#2d5fa0">Redis Pub/Sub</span><span class="db-badge" style="background:#8a3a3a">E2EE</span></div>
+  </div>
+</div>
+<nav class="nav"><a href="#overview">Requirements</a><a href="#architecture">Architecture</a><a href="#delivery-deep">Delivery Deep Dive</a><a href="#schemas">Schemas</a><a href="#tradeoffs">Trade-offs</a><a href="#followups">Follow-ups</a></nav>
 <div class="wrap">
-<section id="requirements">
+
+<section id="overview">
   <div class="sec-tag">00 · Requirements</div>
-  <h2>Scope first</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Functional</div><div class="concept-def">1-to-1 messaging. Group chat (up to 256 members). Message delivery receipts (sent, delivered, read). Online/last-seen presence. End-to-end encryption. Media (images, video, voice messages). Push notifications for offline users.</div></div>
-    <div class="concept-row"><div class="concept-term">Non-Functional</div><div class="concept-def">2B users, 100B messages/day. Message delivery: &lt;500ms when both online. Offline message delivery on reconnect. Order guaranteed per conversation. At-least-once delivery. High availability (messages never lost). E2EE: server never reads message content.</div></div>
-    <div class="concept-row"><div class="concept-term">Estimation</div><div class="concept-def">100B messages/day ÷ 86,400 = 1.16M messages/sec. Average message: 100 bytes (text). Storage: 1.16M × 100 bytes = 116 MB/sec = ~4PB/year. WhatsApp stores messages only until delivered — not indefinitely. Active connections: 2B users × 30% online = 600M concurrent WebSocket connections.</div></div>
+  <h2>Requirements & Scale Assumptions</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+    <div><h4>Functional</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>1-to-1 messaging with delivery + read receipts</td></tr><tr><td><strong>FR2</strong></td><td>Group chat (≤ 256 members)</td></tr><tr><td><strong>FR3</strong></td><td>Online/last-seen presence</td></tr><tr><td><strong>FR4</strong></td><td>End-to-end encryption (server never reads content)</td></tr><tr><td><strong>FR5</strong></td><td>Media: images, video, voice messages</td></tr><tr><td><strong>FR6</strong></td><td>Offline message delivery on reconnect</td></tr></tbody></table></div>
+    <div><h4>Non-Functional</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>2B users, 100B messages/day</td></tr><tr><td><strong>NFR2</strong></td><td>Delivery latency (both online): < 500ms</td></tr><tr><td><strong>NFR3</strong></td><td>600M concurrent WebSocket connections</td></tr><tr><td><strong>NFR4</strong></td><td>At-least-once delivery. Messages never lost.</td></tr><tr><td><strong>NFR5</strong></td><td>E2EE: server stores only ciphertext</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: 99.99%</td></tr></tbody></table></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:20px 0">
+    <div class="db-card pg"><div class="db-card-name">Messages/sec</div><div class="db-row"><div class="db-k">Avg</div><div class="db-v">1.16M/sec</div></div><div class="db-row"><div class="db-k">Storage/msg</div><div class="db-v">100 bytes</div></div><div class="db-row"><div class="db-k">Total/year</div><div class="db-v a">~3.6 PB</div></div></div>
+    <div class="db-card mg"><div class="db-card-name">Connections</div><div class="db-row"><div class="db-k">Concurrent</div><div class="db-v">600M WS</div></div><div class="db-row"><div class="db-k">Per node</div><div class="db-v">2M (Erlang)</div></div><div class="db-row"><div class="db-k">Nodes needed</div><div class="db-v g">300</div></div></div>
+    <div class="db-card dy"><div class="db-card-name">Storage</div><div class="db-row"><div class="db-k">Strategy</div><div class="db-v">Delete on delivery</div></div><div class="db-row"><div class="db-k">Offline hold</div><div class="db-v">30 days</div></div><div class="db-row"><div class="db-k">Media</div><div class="db-v a">S3, 90-day TTL</div></div></div>
   </div>
 </section>
 
 <section id="architecture">
   <div class="sec-tag">01 · Architecture</div>
-  <h2>The complete messaging system</h2>
-  <div class="k-cards">
-<div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">Connection Layer</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Persistent WebSocket per user → Chat Server. Chat servers stateful for connection management.</strong> Each user maintains one WebSocket connection to a Chat Server. Chat Server knows which users are connected to it. Connection metadata in Redis: <code>user:connection:{user_id} → chat_server_id</code>. This lets any service look up which server a user is on and route messages to them. 600M concurrent connections: Erlang-based chat servers (WhatsApp uses Erlang) handle 2M+ connections per node. 300 Erlang nodes for 600M connections. Erlang's actor model: each connection is a lightweight process (~300 bytes). C10M problem solved.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Message Flow (Both Online)</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Alice → Server A → Route to Server B → Bob. Under 100ms.</strong> Alice sends message: WebSocket → Chat Server A. Server A: look up Bob's server from Redis: <code>HGET user:connection:bob → server_b</code>. Publish message to Server B via internal pub/sub (Redis Pub/Sub or Kafka). Server B: deliver to Bob's WebSocket. Return delivery receipt to Alice: Server A sends "delivered" status back via Alice's WebSocket. Message ID: monotonically increasing per conversation (Snowflake ID). Used by Bob's client to detect gaps and request missing messages.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">03</span><span class="k-title">Message Flow (Bob Offline)</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Messages stored in Cassandra until Bob reconnects.</strong> Bob is offline → <code>HGET user:connection:bob → null</code>. Store message in Cassandra: <code>messages(conversation_id, message_id, sender_id, content_encrypted, created_at)</code>. Send push notification (APNs for iOS, FCM for Android). Bob reconnects → Chat Server checks Cassandra for undelivered messages → batch deliver → delete from Cassandra → return "delivered" receipts to Alice. Storage TTL: WhatsApp deletes messages from server after delivery. If Bob doesn't reconnect in 30 days, message is deleted. Client devices store message history locally (encrypted).</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">04</span><span class="k-title">End-to-End Encryption</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Signal Protocol: server never sees plaintext. Only the recipient can decrypt.</strong> Each user has a public/private key pair generated on device. Public keys stored on WhatsApp servers. When Alice messages Bob: Alice fetches Bob's public key → encrypts message with Bob's public key → sends ciphertext to server → server routes to Bob → Bob decrypts with his private key. Server role: routing and storage of encrypted ciphertext only. Even WhatsApp cannot read the content. Key verification: users can compare "safety numbers" (a hash of both key fingerprints) in person to detect MITM attacks.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">05</span><span class="k-title">Group Messaging</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Fan-out on write: server sends one copy per group member.</strong> Group message from Alice (256-member group): Alice's client encrypts message separately for each recipient (Signal Protocol's sender keys optimise this). Server receives one message → creates 255 delivery tasks → routes to each member's server. Kafka topic per group for ordered, reliable delivery to all members. Scale concern: 100M group messages/day × 256 members avg = 25.6B fan-out writes/day. Handled with: parallel delivery, Kafka for buffering, per-member TTL in Cassandra.</div></div></div></div>
-</div>
+  <h2>Full System — Every Component Justified</h2>
+  <div class="k-cards"><div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Connection Layer</span><span class="k-tag">Erlang Chat Servers</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">The 600M Connection Problem</div>
+    <div class="k-point-text"><strong>600M concurrent WebSocket connections — solved by Erlang's actor model.</strong><br>Java thread-per-connection: 600M × 1MB stack = 600TB RAM. Not viable. Erlang lightweight process: ~300 bytes RAM each. 2M connections per Erlang node = 300 nodes for 600M connections. Each WebSocket connection is an independent Erlang process. Messages between processes use Erlang's built-in message passing — no shared state, no locks.<br>Connection metadata in Redis: <code>HSET user:conn:{user_id} server_id 47 last_seen 1742383200</code>. Any service can look up which server a user is connected to.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>WhatsApp handled 1M concurrent users with 2 engineers using Erlang/OTP. The actor model was specifically designed for this: millions of lightweight, isolated, fault-tolerant processes</span></div><div class="k-info"><span class="k-icon">ℹ</span><span>Alternative: Node.js event loop handles 10K–50K connections per process. Would need 60,000 Node processes for 600M connections. Erlang's model is orders of magnitude more efficient</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Message Routing</span><span class="k-tag">Redis Pub/Sub + Direct Push</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Both-Online Fast Path</div>
+    <div class="k-point-text"><strong>Alice → Server A → find Bob's server → Server B → Bob. Under 100ms.</strong><br>Alice sends message: WebSocket → Chat Server A. Server A: <code>HGET user:conn:bob → server_47</code>. Publish to Server 47's channel: <code>PUBLISH server:47 {message_payload}</code>. Server 47: receives via subscription → finds Bob's Erlang process → delivers to Bob's WebSocket. Return delivery receipt to Alice.<br>Message ID: Snowflake-style time-sortable ID. Bob's client uses sequence numbers to detect gaps and request retransmission.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>Redis Pub/Sub message routing: < 1ms. Total round-trip Alice→Bob: < 50ms on same continent</span></div><div class="k-warn"><span class="k-icon">⚠</span><span>Redis Pub/Sub is fire-and-forget — if Server 47 crashes after publish but before delivery, message is lost. Mitigation: Cassandra persistence before publish (see Offline Flow)</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Offline Message Delivery</span><span class="k-tag">Cassandra + Push Notifications</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Offline Flow</div>
+    <div class="k-point-text"><strong>Bob is offline → store in Cassandra → push notification → deliver on reconnect.</strong><br>Bob offline: <code>HGET user:conn:bob → null</code>. Write to Cassandra: <code>messages(conversation_id, message_id, sender_id, ciphertext, created_at)</code>. Send push notification (APNs/FCM) — "You have new messages."<br>Bob reconnects: Chat Server queries <code>SELECT * FROM messages WHERE conversation_id IN (?) AND message_id > last_seen_id</code>. Deliver all undelivered. Mark as delivered. Delete from Cassandra (messages stored only until delivered). Send delivery receipts to Alice.</div>
+    <div class="k-info"><span class="k-icon">ℹ</span><span>WhatsApp deletes messages from server after delivery. Client devices store history locally (encrypted SQLite). If Bob loses his phone: messages in the 30-day offline window are unrecoverable — this is a privacy feature, not a bug</span></div><div class="k-muted"><span class="k-icon">→</span><span>30-day offline retention: if Bob doesn't reconnect in 30 days, messages deleted. Sender notified with "message expired" status</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">04</span><span class="k-title">End-to-End Encryption</span><span class="k-tag">Signal Protocol</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">E2EE Architecture</div>
+    <div class="k-point-text"><strong>Server never sees plaintext. Only the recipient's device can decrypt.</strong><br>Each user has a public/private key pair generated on device. Public keys stored on WhatsApp servers. When Alice messages Bob: Alice fetches Bob's public key → encrypts message using Signal Protocol (XSalsa20 + Poly1305) → sends ciphertext. Server routes ciphertext. Bob's device decrypts with private key (never left Bob's device).<br>Key exchange: X3DH (Extended Triple Diffie-Hellman) for initial key agreement. Double Ratchet for forward secrecy — each message uses a fresh ephemeral key derived from the previous one.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>Even WhatsApp cannot read message content. Government requests: WhatsApp can provide metadata (who messaged whom, when) but not content</span></div><div class="k-warn"><span class="k-icon">⚠</span><span>Backup weakness: WhatsApp cloud backups (Google Drive, iCloud) were historically NOT E2EE. End-to-end encrypted backup added 2021 — but only if user opts in. Most users don't, exposing backup content</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">05</span><span class="k-title">Group Messaging</span><span class="k-tag">Fan-out on Write</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Group Architecture</div>
+    <div class="k-point-text"><strong>256-member group: server sends individual encrypted messages to each member.</strong><br>Alice sends to group: Alice's device uses "Sender Keys" (Signal Protocol optimization) — encrypt once per group session, not once per member. Server receives one ciphertext → creates 255 delivery tasks → routes to each member's server → delivers. Kafka topic per group for ordered, at-least-once delivery to all members.<br>At scale: 100M group messages/day × 256 members = 25.6B individual deliveries/day = 296K/sec.</div>
+    <div class="k-info"><span class="k-icon">ℹ</span><span>Sender Keys optimisation: without it, Alice would need to encrypt 255 separate messages (one per member). With Sender Keys: encrypt once, each member has a pre-shared group key to decrypt. 255× less encryption CPU on sender device</span></div>
+  </div></div>
+</div></div>
 </section>
 
-<section id="followups-wa">
-  <div class="sec-tag">02 · Follow-ups</div>
-  <h2>The questions your interviewer will ask</h2>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you guarantee message ordering in a distributed chat system?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Ordering within a conversation is guaranteed by the Cassandra clustering key. Cross-conversation ordering is not needed.</strong><br><br>
-  Schema: <code>PRIMARY KEY ((conversation_id), message_id)</code> where message_id is a time-sortable Snowflake ID. Messages within a conversation are stored in order and returned in order. Cassandra clustering key guarantees physical ordering on disk within a partition.<br><br>
-  The subtle problem: Alice sends message M1, then M2. Both arrive at the server. Network latency differences cause M2 to be written first. Solution: client-side sequence numbers. Alice's client assigns seq=1 to M1, seq=2 to M2. Server detects out-of-order delivery (seq=2 before seq=1). Options: (1) buffer M2 briefly while waiting for M1, (2) deliver both and let client sort on sequence number.<br><br>
-  WhatsApp's actual approach: client-side logical clocks. Each message has a client-assigned sequence number per conversation. Client reorders on receipt. The server provides at-least-once delivery; the client provides exactly-once display via deduplication on message_id.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you scale to 600M concurrent WebSocket connections?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>The solution is Erlang's actor model and horizontal scaling of chat servers.</strong><br><br>
-  In most languages, a WebSocket connection requires a thread or an event loop callback. Java with thread-per-connection: 1M connections × 1MB stack = 1TB RAM. Not viable. Node.js with async I/O: better, but GC pauses cause latency spikes at scale.<br><br>
-  Erlang/Elixir actor model: each connection is an independent lightweight process using ~300 bytes of RAM. Erlang processes are not OS threads — they're scheduled by the Erlang VM. One physical machine can run millions of processes. WhatsApp's chat servers run on Erlang with 2M connections per node. 600M connections ÷ 2M per node = 300 nodes.<br><br>
-  The connection routing: when Alice sends a message to Bob, the server must find which node Bob is connected to. Solution: Redis hash: <code>HGET user:connection bob → node_47</code>. Server Alice is on routes the message to node 47 via internal messaging. Node 47 delivers to Bob's process. This lookup happens on every message — must be sub-millisecond. Redis pipelining handles this at 2M+ lookups/sec.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle the "read receipt" feature at 1M messages/sec?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Read receipts are high-volume, low-priority writes — batch them asynchronously.</strong><br><br>
-  When Bob reads a message: his client sends a read receipt for every unread message (potentially 100 messages if he was offline). That's 100 DB writes per reconnect event. At 1M reconnects/day: 100M read receipt writes/day = 1,157 writes/sec — manageable, but batching makes it better.<br><br>
-  Pattern: client buffers read receipts locally (within 1 second or up to 50 receipts). Sends in a batch: <code>POST /receipts {"message_ids": [123, 124, 125, ...], "status": "read"}</code>. Server: one Cassandra batch write per batch. Updates: <code>message_status(message_id) → "read"</code>.<br><br>
-  Delivering receipts to sender: Alice is connected to Server A. Bob's read receipt arrives → look up Alice's connection: <code>HGET user:connection alice → server_a</code> → route receipt to Server A → Server A delivers to Alice's WebSocket in real time. Alice sees the double blue tick appear. Round trip: &lt;200ms when both online.</div></div>
-</section></div>
-<div class="footer">DESIGN WHATSAPP · FAANG SYSTEM DESIGN WALKTHROUGH · MANISH-ALMANAC</div>
+<section id="delivery-deep">
+  <div class="sec-tag">02 · Deep Dive</div>
+  <h2>Message Delivery — Both Online Path</h2><div class="sd-example"><div class="sd-example-head"><div class="sd-example-title">Alice sends "Hey Bob!" — T=0 to T=80ms</div></div><div class="sd-example-body"><div class="choice-row"><div class="choice-label">T+0ms</div><div class="choice-val">Alice types message, taps Send. Signal Protocol encrypts: plaintext → ciphertext (Bob's public key used). WebSocket frame sent to Chat Server A.</div></div><div class="choice-row"><div class="choice-label">T+5ms</div><div class="choice-val">Server A validates message (spam filter, size check). Generates message_id (Snowflake). Writes to Cassandra asynchronously (durability). Does NOT wait for Cassandra before routing.</div></div><div class="choice-row"><div class="choice-label">T+8ms</div><div class="choice-val">Server A: <code>HGET user:conn:bob</code> → "server_47." Publishes to <code>server:47</code> Redis channel: {message_id, sender, ciphertext, timestamp}.</div></div><div class="choice-row"><div class="choice-label">T+12ms</div><div class="choice-val">Server 47 receives via Redis subscription. Finds Bob's Erlang process. Enqueues message delivery.</div></div><div class="choice-row"><div class="choice-label">T+15ms</div><div class="choice-val">Bob's Erlang process sends ciphertext via Bob's WebSocket. Bob's device decrypts, displays "Hey Bob!".</div></div><div class="choice-row"><div class="choice-label">T+18ms</div><div class="choice-val">Bob's device sends delivery receipt: "message_id=X delivered." Server 47 → Redis → Server A → Alice's WebSocket: single grey tick becomes double grey tick.</div></div><div class="choice-row"><div class="choice-label">T+20ms</div><div class="choice-val">Bob opens the chat. App sends read receipt. Double grey → double blue tick for Alice.</div></div></div></div></section>
+
+<section id="schemas">
+  <div class="sec-tag">03 · Schemas</div>
+  <h2>All Schemas at a Glance</h2><h4>messages (Cassandra — offline store)</h4><table class="flow-table"><thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead><tbody><tr><td>conversation_id</td><td>UUID</td><td>Partition key: chat between Alice+Bob or group_id</td></tr><tr><td>message_id</td><td>BIGINT</td><td>Snowflake ID — clustering key (time-sortable)</td></tr><tr><td>sender_id</td><td>UUID</td><td>Sender user ID</td></tr><tr><td>recipient_id</td><td>UUID</td><td>Recipient (null for groups — use conversation_id)</td></tr><tr><td>ciphertext</td><td>BLOB</td><td>Encrypted content — server never decrypts</td></tr><tr><td>media_key</td><td>TEXT</td><td>S3 key for media (if applicable)</td></tr><tr><td>created_at</td><td>TIMESTAMPTZ</td><td>Message creation time</td></tr><tr><td>status</td><td>ENUM</td><td>PENDING, DELIVERED, READ, EXPIRED</td></tr></tbody></table><h4>Redis connection registry</h4><table class="flow-table"><thead><tr><th>Key</th><th>Type</th><th>Value</th></tr></thead><tbody><tr><td>user:conn:{user_id}</td><td>Hash</td><td>server_id, last_seen timestamp</td></tr><tr><td>server:{id}</td><td>Pub/Sub channel</td><td>Messages for this chat server</td></tr><tr><td>presence:{user_id}</td><td>String</td><td>online/away, TTL 60s (refreshed by heartbeat)</td></tr><tr><td>unread:{user_id}</td><td>Hash</td><td>conversation_id → unread_count</td></tr></tbody></table></section>
+
+<section id="tradeoffs">
+  <div class="sec-tag">04 · Trade-offs</div>
+  <h2>Trade-off Matrix</h2><table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Connection runtime</td><td>Erlang/OTP</td><td><span class="dot g"></span>2M connections/node. Fault isolation — one crash doesn't cascade. Built-in distributed messaging</td><td><span class="dot a"></span>Erlang expertise rare. Harder to hire than Go/Java engineers</td><td>Go with goroutines if Erlang expertise unavailable — similar concurrency model, easier hiring</td></tr><tr><td class="row-head">Message storage</td><td>Delete on delivery</td><td><span class="dot g"></span>Minimises server storage (99.9% of messages deleted within seconds). Privacy by design</td><td><span class="dot a"></span>No server-side message history. Backup is user's responsibility</td><td>Store messages on server (Telegram model) if users need multi-device sync and history restoration</td></tr><tr><td class="row-head">E2EE</td><td>Signal Protocol</td><td><span class="dot g"></span>Military-grade forward secrecy. Open-source audited. Widely trusted</td><td><span class="dot a"></span>No server-side content moderation possible. Illegal content can be shared</td><td>No E2EE if compliance requires content scanning (some regulated industries)</td></tr><tr><td class="row-head">Group size</td><td>256 member cap</td><td><span class="dot g"></span>Limits fan-out cost (256 deliveries/message). Manageable key distribution</td><td><span class="dot a"></span>Not suitable for broadcast channels (Telegram supports 200K). Users use WhatsApp Channels for broadcasts</td><td>Remove cap if broadcast is a requirement — changes from "group chat" to "pub-sub channel" architecture</td></tr><tr><td class="row-head">Offline retention</td><td>30 days, then delete</td><td><span class="dot g"></span>Bounded storage cost. Privacy protection</td><td><span class="dot a"></span>Users who lose devices and don't reconnect within 30 days lose messages</td><td>Longer retention (Telegram keeps messages indefinitely on their servers) if history persistence is a product requirement</td></tr></tbody></table></section>
+
+<section id="followups">
+  <div class="sec-tag">05 · Hard Follow-ups</div>
+  <h2>Every Question Your Interviewer Will Ask</h2><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you guarantee message ordering in a distributed chat system?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Per-conversation ordering guaranteed by Cassandra clustering key. Cross-conversation ordering not needed.</strong><br><br>Cassandra schema: <code>PRIMARY KEY ((conversation_id), message_id)</code> where message_id is Snowflake (time-sortable). Messages within a conversation are physically sorted on disk by message_id. Queries return in order automatically.<br><br>The subtle problem: Alice sends M1, then M2. Network jitter causes M2 to arrive at Server A before M1. Solution: client-side sequence numbers. Alice's device assigns seq=1 to M1, seq=2 to M2. Server stores both. Client detects gap (received seq=2 before seq=1): buffer M2, wait 100ms for M1, then render in order. If M1 doesn't arrive: request retransmission via <code>GET /messages/{conversation_id}?since={last_seen}</code>.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you scale to 600M concurrent WebSocket connections — what does the infrastructure look like?<span class="faq-tog">+</span></div><div class="faq-a"><strong>300 Erlang nodes × 2M connections each = 600M. Each node is a single beam.smp process.</strong><br><br>Node spec: 64-core server, 512GB RAM. At 300 bytes per Erlang process: 2M connections = 600MB RAM just for processes. Add message buffers and routing tables: ~50GB per node. Well within 512GB.<br><br>Connection routing: Redis Hash <code>user:conn:{user_id} → node_id</code>. Updated on connect/disconnect. Any node can route to any other node via Redis Pub/Sub subscription. Each node subscribes to its own channel: <code>SUBSCRIBE server:{node_id}</code>.<br><br>Load balancing: GeoDNS routes users to nearest datacenter. Within a datacenter, L4 load balancer (Nginx/HAProxy) distributes WebSocket connections across Erlang nodes using consistent hashing on user_id — same user always connects to same node (reduces connection lookup overhead).</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you handle the thundering herd when a user with 10,000 contacts comes online?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Presence updates are the most expensive part of WhatsApp — send judiciously.</strong><br><br>Naive approach: user comes online → notify all 10,000 contacts → 10,000 presence updates → 10,000 × (another user's 10,000 contacts who are online) = O(N²) notifications. At scale: catastrophic.<br><br>WhatsApp's approach: presence is opt-in and lazy. User coming online: server marks them online (Redis TTL key, refreshed every 30s by heartbeat). Presence notifications sent only to users whose chat screen is currently open on that conversation. "Last seen" timestamps fetched on-demand (when you open a conversation) not pushed proactively.<br><br>Contact sync: done in the background, not at connection time. When you open the app, your contact list presence states load lazily as you scroll.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How does WhatsApp deliver messages when the recipient's device is a different phone (number ported)?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Messages are addressed to user_id (account), not phone number (device). Phone number is just a login identifier.</strong><br><br>When Alice registers: WhatsApp creates a user_id. Phone number is the login credential and verified via SMS OTP. The user_id is stored permanently.<br><br>When Bob ports his number to a new phone: new device generates new key pair. Registers the new public key with WhatsApp servers (associated with Bob's user_id, not just his phone number). Alice's device fetches Bob's updated public key before encrypting. Safety number changes (visible in WhatsApp settings) — Alice is notified if Bob's key changed, alerting her to verify with Bob in person.</div></div></section>
+</div>
+<div class="footer">DESIGN WHATSAPP · ERLANG · SIGNAL PROTOCOL · E2EE · CASSANDRA · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

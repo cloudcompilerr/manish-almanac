@@ -1,251 +1,714 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Design Twitter / X</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
-*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
-body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
-.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
-.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
-.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
-.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
-h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
-h1 .acc{color:#e8b84b;}
-.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
-.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
-.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
-.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
-.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
-.nav::-webkit-scrollbar{display:none;}
-.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
-.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
-.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
-section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
-.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
-.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
-h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
-h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
-p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
-code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
-.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
-.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
-.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
-.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
-.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
-.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
-.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
-.steps{list-style:none;margin:16px 0;counter-reset:s;}
-.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
-.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
-.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
-.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
-.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
-.blist{list-style:none;margin:12px 0;}
-.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
-.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
-.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
-.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
-@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
-.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
-.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
-.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
-.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
-.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
-.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
-.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
-.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
-.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
-.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
-.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
-.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
-.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
-.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
-.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
-.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
-.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
-.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
-.faq-q:hover{background:var(--surface);}
-.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
-.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
-.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
-.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
-.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
-.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
-.dtree-node:last-child{border:none;}
-.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
-.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
-.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
-.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
-.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
-.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
-footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+:root {
+  --ink: #0c0d14;
+  --page: #f4f3ee;
+  --surface: #eeede6;
+  --surface2: #e6e4db;
+  --border: #d4d2c8;
+  --border2: #c0bdb0;
 
-/* ── Concept Grid: term/definition cards ─────────────── */
-.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
-.concept-row:last-child{border-bottom:none;}
-.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
-.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
-.concept-def strong{color:var(--ink);font-weight:700;}
-.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-/* ── Knowledge Card: FAANG internals deep-dive ────────── */
-.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
-.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
-.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
-.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
-.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
-.k-point{display:flex;flex-direction:column;gap:4px;}
-.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
-.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
-.k-point-text strong{color:var(--ink);}
-.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-.k-divider{height:1px;background:var(--border);margin:4px 0;}
-.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
-.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
-.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
-/* ── FAQs: consistent across all files ────────────────── */
-.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
-.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
-.faq-q:hover{background:var(--surface);}
-.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
-.faq-item.open .tog{transform:rotate(45deg);}
-.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
-.faq-item.open .faq-a{display:block;}
-.faq-a strong{color:var(--ink);}
-.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
-/* ── SD Examples ──────────────────────────────────────── */
-.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
-.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
-.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
-.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
-.sd-example-body{padding:0;}
-.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
-.choice-row:last-child{border-bottom:none;}
-.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
-.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
-.choice-val strong{color:var(--ink);}
-.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-/* ── Step block ───────────────────────────────────────── */
-.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
-.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
-.sb-icon{font-size:18px;}
-.step-block-body{padding:0;}
-.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
-.step-row:last-child{border-bottom:none;}
-.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
-.step-content{padding:16px 18px;}
-.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
-.step-options{display:flex;flex-direction:column;gap:8px;}
-.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
-.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
-.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
-.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
-.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
-.opt-text{color:#2a2820;}
-.opt-text strong{color:var(--ink);}
-/* ── Analogy block ───────────────────────────────────── */
-.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
-.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
-.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
-.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
-/* ── Callout ──────────────────────────────────────────── */
-.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
-.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
-.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
-.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
-.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
-.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
-/* ── DB pills ─────────────────────────────────────────── */
-.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
-.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
-/* ── hero-sub ─────────────────────────────────────────── */
-.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
-/* ── footer ───────────────────────────────────────────── */
-.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+  --red:    #c0392b;
+  --amber:  #c47d11;
+  --green:  #1a7a4a;
+  --blue:   #1a4f8a;
+  --purple: #5a3e8a;
+  --teal:   #1a6b6b;
 
-/* ── Concept-def sub-points ────────────────────────── */
-.concept-def p{margin:0 0 8px;}
-.concept-def p:last-child{margin-bottom:0;}
+  --red-bg:    #fdf0ee;
+  --amber-bg:  #fdf6e8;
+  --green-bg:  #edf8f2;
+  --blue-bg:   #edf2fb;
+  --purple-bg: #f4f0fb;
+  --teal-bg:   #edf6f6;
+
+  --text: #1a1b26;
+  --muted: #7a7870;
+  --mono: 'JetBrains Mono', monospace;
+  --body: 'Outfit', sans-serif;
+  --head: 'Fraunces', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--ink);
+  color: #e8e6df;
+  padding: 64px 24px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px);
+}
+.hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #8a8070;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: #5a5850; }
+h1 {
+  font-family: var(--head);
+  font-size: clamp(34px, 5.5vw, 62px);
+  font-weight: 900;
+  line-height: 1.03;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+  color: #f0ede4;
+}
+h1 .accent { color: #e8b84b; }
+.hero-desc {
+  font-size: 15px;
+  color: #8a8070;
+  max-width: 620px;
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.meta-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  border: 1px solid #2e2d26;
+  border-radius: 3px;
+  color: #7a7868;
+  letter-spacing: .5px;
+}
+.meta-chip.lit { border-color: #5a4e20; color: #e8b84b; background: rgba(232,184,75,.06); }
+
+/* ── NAV ── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--ink);
+  border-bottom: 1px solid #1e1d18;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 20px;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav a {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #5a5850;
+  text-decoration: none;
+  padding: 14px 14px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: .18s;
+}
+.nav a:hover { color: #e8b84b; border-color: #e8b84b; }
+
+/* ── LAYOUT ── */
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+section { padding: 56px 0 36px; border-bottom: 2px solid var(--border); }
+section:last-child { border: none; }
+
+/* ── TYPOGRAPHY ── */
+.sec-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sec-tag::before { content: ''; width: 20px; height: 1px; background: var(--border2); }
+h2 {
+  font-family: var(--head);
+  font-size: clamp(22px, 3.5vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.5px;
+  line-height: 1.15;
+  margin-bottom: 18px;
+  color: var(--ink);
+}
+h3 {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 32px 0 10px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+h4 {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 16px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+p { color: #3a3830; font-size: 14.5px; margin-bottom: 12px; }
+strong { color: var(--ink); }
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--blue);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 13.5px;
+  border-left: 3px solid;
+  line-height: 1.65;
+}
+.callout p { font-size: 13.5px; margin-bottom: 6px; }
+.callout p:last-child { margin: 0; }
+.cl-blue   { background: var(--blue-bg);   border-color: var(--blue);   color: #1a2a4a; }
+.cl-amber  { background: var(--amber-bg);  border-color: var(--amber);  color: #3a2a08; }
+.cl-green  { background: var(--green-bg);  border-color: var(--green);  color: #0a2a1a; }
+.cl-red    { background: var(--red-bg);    border-color: var(--red);    color: #3a0a08; }
+.cl-purple { background: var(--purple-bg); border-color: var(--purple); color: #2a1a4a; }
+.cl-teal   { background: var(--teal-bg);   border-color: var(--teal);   color: #0a2a2a; }
+.cl-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  opacity: .7;
+}
+
+/* ── CODE BLOCK ── */
+.codeblock {
+  background: var(--ink);
+  border-radius: 6px;
+  padding: 20px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 2;
+  overflow-x: auto;
+  margin: 14px 0;
+  color: #c8c4b8;
+  border: 1px solid #1e1d18;
+}
+.codeblock .c  { color: #3e3d36; }
+.codeblock .k  { color: #e8b84b; }
+.codeblock .s  { color: #8bc4a0; }
+.codeblock .n  { color: #e8946a; }
+.codeblock .t  { color: #7aaee0; }
+.codeblock .m  { color: #d07090; }
+.codeblock .o  { color: #b0a890; }
+
+/* ════════════════════════════════════
+   THE BIG ARCHITECTURE DIAGRAM
+════════════════════════════════════ */
+.arch-canvas {
+  background: var(--ink);
+  border-radius: 8px;
+  padding: 32px 24px;
+  margin: 24px 0;
+  overflow-x: auto;
+  border: 1px solid #1e1d18;
+}
+.arch-canvas-inner { min-width: 840px; }
+
+/* Lane labels */
+.lanes { display: grid; grid-template-columns: 80px 1fr; gap: 0; }
+.lane-labels { display: flex; flex-direction: column; gap: 0; padding-top: 8px; }
+.lane-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #3a3830;
+  writing-mode: horizontal-tb;
+  padding: 18px 0;
+  border-bottom: 1px solid #1e1d18;
+  text-align: right;
+  padding-right: 12px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* The main flow grid */
+.flow-grid { display: flex; flex-direction: column; gap: 0; }
+.flow-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  gap: 0;
+  border-bottom: 1px solid #1a1a16;
+  min-height: 88px;
+}
+.flow-row:last-child { border: none; }
+
+/* Individual component box */
+.fbox {
+  flex-shrink: 0;
+  background: #161614;
+  border: 1px solid #2a2924;
+  border-radius: 6px;
+  padding: 10px 14px;
+  text-align: center;
+  transition: border-color .2s;
+  cursor: default;
+  min-width: 100px;
+}
+.fbox:hover { border-color: #e8b84b; }
+.fbox .fi { font-size: 18px; margin-bottom: 3px; }
+.fbox .fn {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: #c8c4b0;
+  line-height: 1.3;
+}
+.fbox .ft { font-family: var(--mono); font-size: 9px; color: #4a4840; margin-top: 2px; }
+
+.fbox.col-r  { border-color: rgba(192,57,43,.4);  background: rgba(192,57,43,.06); }
+.fbox.col-a  { border-color: rgba(196,125,17,.4); background: rgba(196,125,17,.06); }
+.fbox.col-g  { border-color: rgba(26,122,74,.4);  background: rgba(26,122,74,.06); }
+.fbox.col-b  { border-color: rgba(26,79,138,.4);  background: rgba(26,79,138,.06); }
+.fbox.col-p  { border-color: rgba(90,62,138,.4);  background: rgba(90,62,138,.06); }
+.fbox.col-t  { border-color: rgba(26,107,107,.4); background: rgba(26,107,107,.06); }
+
+/* Arrows */
+.arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 4px;
+  gap: 2px;
+  min-width: 44px;
+}
+.arrow-line { height: 2px; width: 36px; background: #2a2924; position: relative; }
+.arrow-line::after { content:'▶'; position:absolute; right:-5px; top:-6px; font-size:8px; color:#3a3830; }
+.arrow-label { font-family: var(--mono); font-size: 8px; color: #3a3830; white-space: nowrap; text-align: center; }
+
+/* Down arrow */
+.down-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: #3a3830;
+  gap: 1px;
+}
+.down-line { width: 1px; height: 12px; background: #2a2924; }
+
+/* branching from Kafka */
+.branch-wrap { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+/* ════════════════════════════════════
+   COMPONENT DEEP-DIVE CARDS
+════════════════════════════════════ */
+.component-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media(max-width:640px){ .component-grid { grid-template-columns: 1fr; } }
+
+.comp-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.comp-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.cc-red::before    { background: var(--red); }
+.cc-amber::before  { background: var(--amber); }
+.cc-green::before  { background: var(--green); }
+.cc-blue::before   { background: var(--blue); }
+.cc-purple::before { background: var(--purple); }
+.cc-teal::before   { background: var(--teal); }
+
+.cc-name { font-family: var(--head); font-size: 16px; font-weight: 700; margin: 8px 0 4px; }
+.cc-role { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.cc-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 12px; padding: 6px 0; border-top: 1px solid var(--surface); }
+.cc-key { color: var(--muted); width: 100px; flex-shrink: 0; }
+.cc-val { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; }
+.cc-val.g { color: var(--green); }
+.cc-val.r { color: var(--red); }
+.cc-val.a { color: var(--amber); }
+
+/* ════════════════════════════════════
+   OLAP SECTION
+════════════════════════════════════ */
+.olap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
+@media(max-width:600px){ .olap-grid { grid-template-columns: 1fr; } }
+
+.olap-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px;
+}
+.olap-name { font-family: var(--head); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.olap-type { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--muted); margin-bottom: 10px; }
+.olap-rows { display: flex; flex-direction: column; gap: 5px; }
+.olap-row { display: flex; justify-content: space-between; font-size: 12px; }
+.olap-k { color: var(--muted); }
+.olap-v { font-family: var(--mono); font-size: 11px; color: var(--ink); }
+
+/* ════════════════════════════════════
+   DATA FLOW TABLE
+════════════════════════════════════ */
+.flow-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+.flow-table thead th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  background: var(--surface);
+}
+.flow-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: #3a3830;
+}
+.flow-table tbody tr:hover td { background: var(--surface); }
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.b-g  { background: var(--green-bg);  border-color: var(--green);  color: var(--green); }
+.b-a  { background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber); }
+.b-r  { background: var(--red-bg);    border-color: var(--red);    color: var(--red); }
+.b-b  { background: var(--blue-bg);   border-color: var(--blue);   color: var(--blue); }
+.b-p  { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); }
+.b-t  { background: var(--teal-bg);   border-color: var(--teal);   color: var(--teal); }
+
+/* ════════════════════════════════════
+   SCHEMA BLOCKS
+════════════════════════════════════ */
+.schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+@media(max-width:580px){ .schema-grid { grid-template-columns: 1fr; } }
+
+.schema-block {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.schema-header {
+  background: var(--ink);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.schema-title { font-family: var(--mono); font-size: 11px; color: #c8c4b0; }
+.schema-type  { font-family: var(--mono); font-size: 9px; color: #4a4840; }
+.schema-body { padding: 12px 16px; }
+.schema-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--surface); font-family: var(--mono); font-size: 11px; }
+.schema-row:last-child { border: none; }
+.sc-col { color: var(--ink); flex: 1; }
+.sc-type { color: var(--blue); font-size: 10px; }
+.sc-pk { font-size: 8px; color: var(--amber); border: 1px solid var(--amber); padding: 1px 4px; border-radius: 2px; }
+.sc-idx { font-size: 8px; color: var(--green); border: 1px solid var(--green); padding: 1px 4px; border-radius: 2px; }
+.sc-sort { font-size: 8px; color: var(--purple); border: 1px solid var(--purple); padding: 1px 4px; border-radius: 2px; }
+.sc-dist { font-size: 8px; color: var(--red); border: 1px solid var(--red); padding: 1px 4px; border-radius: 2px; }
+
+/* ════════════════════════════════════
+   TRADE-OFF MATRIX
+════════════════════════════════════ */
+.matrix { width: 100%; border-collapse: collapse; margin: 20px 0; }
+.matrix th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+}
+.matrix td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  vertical-align: top;
+  color: #3a3830;
+}
+.matrix .row-head { font-family: var(--mono); font-size: 11px; font-weight: 500; background: var(--surface); color: var(--ink); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot.g { background: var(--green); }
+.dot.a { background: var(--amber); }
+.dot.r { background: var(--red); }
+
+/* ════════════════════════════════════
+   TIMELINE / SEQUENCE
+════════════════════════════════════ */
+.timeline { position: relative; padding-left: 32px; margin: 20px 0; }
+.timeline::before { content:''; position:absolute; left:10px; top:0; bottom:0; width:1px; background:var(--border); }
+.tl-item { position: relative; margin-bottom: 24px; }
+.tl-item::before {
+  content:'';
+  position:absolute;
+  left:-26px;
+  top:4px;
+  width:10px; height:10px;
+  border-radius:50%;
+  border:2px solid var(--border2);
+  background:var(--page);
+}
+.tl-item.active::before { background: var(--amber); border-color: var(--amber); }
+.tl-time { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.tl-title { font-weight: 600; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
+.tl-desc { font-size: 13px; color: #5a5848; }
+
+/* ════════════════════════════════════
+   FAQ
+════════════════════════════════════ */
+.faq-item { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+.faq-q {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  user-select: none;
+  transition: background .15s;
+}
+.faq-q:hover { background: var(--surface); }
+.faq-q .tog { font-size: 18px; color: var(--amber); flex-shrink: 0; margin-left: 12px; transition: transform .2s; font-family: var(--mono); }
+.faq-a {
+  display: none;
+  padding: 18px;
+  background: var(--surface);
+  font-size: 13.5px;
+  color: #3a3830;
+  line-height: 1.75;
+  border-top: 1px solid var(--border);
+}
+.faq-item.open .faq-a { display: block; }
+.faq-item.open .tog { transform: rotate(45deg); }
+
+/* ════════════════════════════════════
+   DIVIDERS
+════════════════════════════════════ */
+.rule { height: 1px; background: var(--border); margin: 24px 0; }
+
+.footer {
+  background: var(--ink);
+  text-align: center;
+  padding: 36px 20px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #3a3830;
+  letter-spacing: 2px;
+}
+
+/* ── concept-note: coloured signal blocks ─────────── */
 .concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
-.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
-.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
-.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
-.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
-.concept-def br+br{display:none;}
-</style></head><body>
-<div class="hero"><div class="hero-inner">
-  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
-  <h1>Design Twitter / X<br><em>Complete system design: tweet storage, follow graph, feed generation (fan-out on write vs read), media storage, Redis caching, and high availability.</em></h1>
-  <p class="hero-sub">Complete system design: tweet storage, follow graph, feed generation (fan-out on write vs read), media storage, Redis caching, and high availability.</p>
-  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Feed Generation</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Fan-out</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Redis ZSET</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Celebrity Problem</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">S3/CDN</span></div>
-</div></div>
-<nav class="nav"><a href="#requirements">Requirements</a><a href="#architecture">Architecture</a><a href="#deep-dive">Feed Deep Dive</a><a href="#followups-twitter">Follow-ups</a></nav>
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
+/* ── concept-def paragraph spacing ────────────────── */
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.9;color:#2a2820;}
+.concept-def>strong:first-child{display:block;margin-bottom:8px;font-size:14px;}
+.concept-def p{margin:0 0 8px 0;}
+.concept-def p:last-child{margin-bottom:0;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
+
+/* Knowledge Cards */
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow"><span>System Design · FAANG Interview Prep · Manish-Almanac</span></div>
+    <h1>Design Twitter / X</h1>
+    <p class="hero-desc">Complete FAANG-level walkthrough: tweet storage, hybrid feed fan-out, celebrity problem, Redis cache tiers, schemas, trade-off matrix, and 6 hard follow-up questions.</p>
+    <div class="db-badges"><span class="db-badge" style="background:#1da1f2">Feed Fan-out</span><span class="db-badge" style="background:#e8b84b">Redis ZSET</span><span class="db-badge" style="background:#3d7a52">PostgreSQL</span><span class="db-badge" style="background:#8a3a3a">Hybrid Push/Pull</span><span class="db-badge" style="background:#6040a0">S3 + CDN</span></div>
+  </div>
+</div>
+<nav class="nav"><a href="#overview">Requirements</a><a href="#architecture">Architecture</a><a href="#feed-deep">Feed Deep Dive</a><a href="#schemas">Schemas</a><a href="#tradeoffs">Trade-offs</a><a href="#followups">Follow-ups</a></nav>
 <div class="wrap">
-<section id="requirements">
-  <div class="sec-tag">00 · Requirements</div>
-  <h2>Start here — always. What are we actually building?</h2>
-  <div class="callout cl-blue"><div class="cl-lbl">Interview opening</div><p>"Before I start, let me clarify the scope. Are we designing the core tweet + feed experience, or do I need to include DMs, trends, ads? I'll focus on: posting tweets, following users, and reading a personalised feed. Out of scope: search, trends, direct messages, ads."</p></div>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Functional</div><div class="concept-def">Post a tweet (text + optional media). Follow/unfollow users. Read a personalised home feed (tweets from followed users, reverse chronological). Like and retweet. User profiles.</div></div>
-    <div class="concept-row"><div class="concept-term">Non-Functional</div><div class="concept-def">300M DAU. Read-heavy: 300K reads/sec, 6K writes/sec (50:1 ratio). Feed load &lt;200ms p99. Post tweet &lt;500ms p99. High availability (99.99%). Eventual consistency acceptable for feed (a tweet appearing 1–2s late is OK).</div></div>
-    <div class="concept-row"><div class="concept-term">Estimation</div><div class="concept-def">Tweets: 300M × 0.02 tweets/day = 6M tweets/day = 70 writes/sec. Feed reads: 300M × 1 feed load/day = 3,500 reads/sec (conservative). Storage: 6M tweets/day × 300 bytes = 1.8GB text/day = 660GB/year. Media: 50% of tweets have images, 200KB avg → 600GB media/day → need S3 + CDN.</div></div>
+
+<section id="overview">
+  <div class="sec-tag">00 · Before You Draw Anything</div>
+  <h2>Requirements & Scale Assumptions</h2>
+  <p>Drive the requirements phase. Establish these before drawing a single box. A Director-level candidate narrows scope in the first 3 minutes.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+    <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Post a tweet (text ≤ 280 chars, optional media)</td></tr><tr><td><strong>FR2</strong></td><td>Follow / unfollow users</td></tr><tr><td><strong>FR3</strong></td><td>Home feed: reverse-chron tweets from followed users</td></tr><tr><td><strong>FR4</strong></td><td>Like, retweet, reply</td></tr><tr><td><strong>FR5</strong></td><td>User profile + tweet history</td></tr><tr><td><strong>FR6</strong></td><td>Search tweets and users</td></tr></tbody></table></div>
+    <div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>300M DAU, 500M tweets/day</td></tr><tr><td><strong>NFR2</strong></td><td>Read:write ≈ 100:1 — heavily read-heavy</td></tr><tr><td><strong>NFR3</strong></td><td>Feed load p99 < 200ms</td></tr><tr><td><strong>NFR4</strong></td><td>Post tweet p99 < 500ms</td></tr><tr><td><strong>NFR5</strong></td><td>Eventual consistency acceptable (feed lag ≤ 2s)</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: 99.99% (< 52 min downtime/year)</td></tr></tbody></table></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:20px 0">
+    <div class="db-card pg"><div class="db-card-name">Write QPS</div><div class="db-row"><div class="db-k">Avg</div><div class="db-v">~6,000/s</div></div><div class="db-row"><div class="db-k">Peak (3×)</div><div class="db-v g">~18,000/s</div></div><div class="db-row"><div class="db-k">Implication</div><div class="db-v">Single PG primary handles this</div></div></div>
+    <div class="db-card mg"><div class="db-card-name">Read QPS</div><div class="db-row"><div class="db-k">Feed loads</div><div class="db-v">~35,000/s</div></div><div class="db-row"><div class="db-k">Peak</div><div class="db-v g">~350,000/s</div></div><div class="db-row"><div class="db-k">Implication</div><div class="db-v">Must cache aggressively</div></div></div>
+    <div class="db-card dy"><div class="db-card-name">Storage</div><div class="db-row"><div class="db-k">Text/year</div><div class="db-v">~55 GB</div></div><div class="db-row"><div class="db-k">Media/year</div><div class="db-v a">~43 TB</div></div><div class="db-row"><div class="db-k">Implication</div><div class="db-v">S3 for media, DB for text</div></div></div>
   </div>
 </section>
 
 <section id="architecture">
-  <div class="sec-tag">01 · Architecture</div>
-  <h2>The complete system — every component justified</h2>
-  <div class="k-cards">
-<div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">Tweet Storage</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>PostgreSQL sharded by tweet_id (UUIDv7 — time-sortable).</strong> Schema: <code>tweets(id UUID, user_id BIGINT, content TEXT, media_urls TEXT[], created_at TIMESTAMPTZ, like_count INT, retweet_count INT)</code>. Index on user_id for "all tweets by user X." Sharded: 100 shards, each shard ≈ 7GB tweet text/year. Why PostgreSQL? Tweets are relational, we need ACID for like_count updates, and the volume is manageable with sharding.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Follow Graph</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>PostgreSQL table: <code>follows(follower_id, followee_id, created_at)</code>.</strong> Index on follower_id (who do I follow?) and followee_id (who follows me?). 300M users × avg 200 follows = 60B rows → needs sharding or a graph DB. Alternative: Redis SET per user (<code>follows:user:123</code>) for O(1) "do I follow X?" checks. DB is source of truth; Redis is read cache.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">03</span><span class="k-title">Feed Generation</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>The hardest part. Two approaches with different trade-offs:</strong> </p><p><strong>Fan-out on Write (push)</strong>: when user A posts, push to the feed of every follower. Store pre-computed feeds in Redis (<code>feed:user:123</code> as a sorted set scored by timestamp). ✓ Feed read = single Redis lookup. Fast reads. ⚠ Celebrity problem: @elonmusk has 200M followers → 200M Redis writes per tweet. Impractical. </p><p><strong>Fan-out on Read (pull)</strong>: on feed request, fetch the last N tweets from each followed user. Merge and sort. ✓ No fan-out on write. No celebrity problem. ⚠ Feed read requires N DB queries (N = number of following). For users following 1K people: 1K DB queries per feed load. Slow. </p><p><strong>Twitter's actual solution: Hybrid.</strong> Regular users: fan-out on write. Celebrities (>1M followers): fan-out on read at query time. Feed assembly merges: pre-computed Redis list + fresh celebrity tweets pulled from DB → sorted → returned.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">04</span><span class="k-title">Media Storage</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Images/videos → S3. Never store in the DB.</strong> Upload flow: client → pre-signed S3 URL (your server generates it) → client uploads directly to S3 → client notifies tweet service of S3 key → tweet stored with media_urls. Serving: S3 → CloudFront CDN. Images served from PoP nearest to the user. p99 latency: &lt;20ms for cached images globally.</div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">05</span><span class="k-title">Cache Layer</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Three caches, each serving different purposes:</strong> (1) <strong>Feed cache (Redis ZSET)</strong>: pre-computed feeds for active users. Key: <code>feed:user:123</code>. 1,000 tweet IDs per user. ZREVRANGE returns top-20 tweet IDs in 1ms. (2) <strong>Tweet content cache (Redis Hash)</strong>: hot tweets (100K+ engagements) cached as JSON. 99% cache hit rate for viral tweets. (3) <strong>User profile cache (Redis String)</strong>: username, avatar, follower count. TTL=1h. Profile displayed on every tweet — must be fast.</div></div></div></div>
+  <div class="sec-tag">01 · Core Architecture</div>
+  <h2>Full System Architecture — Every Component Justified</h2>
+  <div class="k-cards"><div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Tweet Storage</span><span class="k-tag">PostgreSQL + S3</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Data Model</div>
+    <div class="k-point-text"><strong>PostgreSQL sharded by tweet_id (UUIDv7 — time-sortable).</strong><br>Schema: <code>tweets(id, user_id, content TEXT, media_urls[], created_at, like_count, retweet_count)</code>. Index on user_id for profile timeline. 100 shards → each shard ~0.5GB text/year. Why not Cassandra? Tweets are relational (replies, retweets), need ACID for counters, and write QPS (6K/s) fits comfortably on sharded PG.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>UUIDv7 tweet IDs are time-sortable — range queries for "last N tweets by user" use index scan, not full table scan</span></div><div class="k-warn"><span class="k-icon">⚠</span><span>Shard by tweet_id not user_id — otherwise celebrity users create hot shards with millions of writes</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Follow Graph</span><span class="k-tag">Redis + PostgreSQL</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Data Model</div>
+    <div class="k-point-text"><strong>PostgreSQL <code>follows(follower_id, followee_id, created_at)</code> as source of truth.</strong> Index on both columns. 300M users × 200 avg follows = 60B rows — needs partitioning. Redis SET per user: <code>following:user:123</code> for O(1) "do I follow X?" checks (feed generation uses this heavily). Redis is populated lazily from PG on first access.</div>
+    <div class="k-info"><span class="k-icon">ℹ</span><span>A graph DB (Neo4j) seems natural but is overkill — the queries are simple lookups, not multi-hop traversals. PostgreSQL + Redis covers 99% of the follow-graph access patterns</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Feed Generation</span><span class="k-tag">Hybrid Fan-out</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">The Hardest Part</div>
+    <div class="k-point-text"><strong>Two approaches, each fails alone. Twitter uses a hybrid.</strong><br><strong>Fan-out on Write (push):</strong> when user posts, push tweet_id to every follower's Redis feed list. Feed read = single <code>LRANGE feed:user:X 0 19</code>. Problem: @elonmusk → 200M writes per tweet.<br><strong>Fan-out on Read (pull):</strong> at feed load, fetch last N tweets from each followed user. No write amplification. Problem: user follows 2,000 people → 2,000 DB queries per load, 35K feeds/sec = 70M DB queries/sec.<br><strong>Hybrid (Twitter's actual solution):</strong> Regular users (< 1M followers) → push. Celebrities → pull at read time. Feed assembly merges pre-computed list + fresh celebrity tweets.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>Push path: feed load = 1 Redis read (< 1ms). Celebrity path: parallel DB reads for each celebrity followed (typically 3–5 queries, 30ms total)</span></div><div class="k-warn"><span class="k-icon">⚠</span><span>Celebrity threshold matters — set too low and push amplification is huge; set too high and read path is slow</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">04</span><span class="k-title">Cache Layer</span><span class="k-tag">Redis — Three Tiers</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Cache Strategy</div>
+    <div class="k-point-text"><strong>Three separate caches, each with different TTLs and purposes:</strong><br>(1) <code>feed:user:{id}</code> — Redis List of 800 tweet_ids, TTL=24h. Pre-computed by fan-out. Feed read = LRANGE + batch HGET for content.<br>(2) <code>tweet:{id}</code> — Redis Hash with full tweet JSON, TTL=1h. 99% hit rate for viral tweets.<br>(3) <code>user:{id}</code> — username, avatar, follower count, TTL=30min. Displayed on every tweet render.</div>
+    <div class="k-good"><span class="k-icon">✓</span><span>At 100:1 read:write ratio, 99% cache hit rate means DB sees only 3,500 read QPS instead of 350,000</span></div><div class="k-muted"><span class="k-icon">→</span><span>Cache stampede mitigation: jitter on TTL (±10%), stale-while-revalidate for tweet content</span></div>
+  </div></div>
+</div><div class="k-card">
+  <div class="k-card-head"><span class="k-num">05</span><span class="k-title">Media Storage</span><span class="k-tag">S3 + CloudFront</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">Upload Flow</div>
+    <div class="k-point-text"><strong>Never store media in the database. Never proxy through your servers.</strong><br>Upload: client → <code>POST /media/upload-url</code> → server returns pre-signed S3 URL → client uploads directly to S3 (your server never handles the bytes). On completion: client notifies tweet service with S3 key. Serving: S3 → CloudFront CDN → user. p99 image load: < 20ms globally from CDN edge.</div>
+    <div class="k-info"><span class="k-icon">ℹ</span><span>Pre-signed URL upload means your API servers never saturate on media bandwidth. 7 image uploads/sec × 200KB = 1.4MB/s — trivial for S3, catastrophic if proxied through your servers</span></div>
+  </div></div>
+</div></div>
+</section>
+
+<section id="feed-deep">
+  <div class="sec-tag">02 · Deep Dive</div>
+  <h2>Feed Assembly — Complete Request Lifecycle</h2><div class="sd-example"><div class="sd-example-head"><div class="sd-example-title">Home Feed Request — T=0 to T=40ms</div></div><div class="sd-example-body"><div class="choice-row"><div class="choice-label">T+0ms</div><div class="choice-val">GET /feed → API Gateway authenticates JWT (verifies RS256 signature against cached public key — no auth service call). Routes to Feed Service.</div></div><div class="choice-row"><div class="choice-label">T+1ms</div><div class="choice-val">Feed Service: <code>LRANGE feed:user:123 0 19</code> → 20 tweet_ids from Redis. If list is empty (cold start or TTL expired) → fall through to fan-out-on-read for this user.</div></div><div class="choice-row"><div class="choice-label">T+3ms</div><div class="choice-val">Batch enrich: <code>HGETALL tweet:{id}</code> for each tweet_id. Pipeline all 20 requests in one Redis round trip. ~90% cache hit rate for recent tweets.</div></div><div class="choice-row"><div class="choice-label">T+5ms</div><div class="choice-val">For cache misses: <code>SELECT * FROM tweets WHERE id IN (?)</code> on the appropriate PG shard. Populate cache before returning.</div></div><div class="choice-row"><div class="choice-label">T+10ms</div><div class="choice-val">Celebrity check: for each followed celebrity user, fetch their last 5 tweets from tweet cache. Typically 3–5 parallel Redis reads.</div></div><div class="choice-row"><div class="choice-label">T+15ms</div><div class="choice-val">Merge: combine pre-computed feed + celebrity tweets. Sort by created_at DESC. Deduplicate (user might follow both a celebrity and someone who retweeted them).</div></div><div class="choice-row"><div class="choice-label">T+20ms</div><div class="choice-val">Enrich with user profiles: batch <code>HGETALL user:{id}</code> for all unique authors. All in Redis — < 1ms.</div></div><div class="choice-row"><div class="choice-label">T+25ms</div><div class="choice-val">Return: 20 tweets with full content, author info, media URLs. Total: ~25ms p50, ~40ms p99.</div></div></div></div>
+</section>
+
+<section id="schemas">
+  <div class="sec-tag">03 · Schemas</div>
+  <h2>All Schemas at a Glance</h2><h4>tweets (PostgreSQL, sharded by tweet_id)</h4><table class="flow-table"><thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead><tbody><tr><td>id</td><td>UUID (UUIDv7)</td><td>Time-sortable, used as shard key</td></tr><tr><td>user_id</td><td>BIGINT</td><td>Index for profile timeline</td></tr><tr><td>content</td><td>TEXT</td><td>Max 280 chars (enforced in app layer)</td></tr><tr><td>media_urls</td><td>TEXT[]</td><td>S3 keys, resolved to CDN URLs at read</td></tr><tr><td>reply_to_id</td><td>UUID</td><td>NULL for top-level tweets</td></tr><tr><td>retweet_of_id</td><td>UUID</td><td>NULL for original tweets</td></tr><tr><td>like_count</td><td>INT</td><td>Approximate — updated async from Redis</td></tr><tr><td>retweet_count</td><td>INT</td><td>Approximate — updated async</td></tr><tr><td>created_at</td><td>TIMESTAMPTZ</td><td>Index for user timeline queries</td></tr></tbody></table><h4>User feed in Redis</h4><table class="flow-table"><thead><tr><th>Key pattern</th><th>Type</th><th>Contents</th></tr></thead><tbody><tr><td>feed:user:{user_id}</td><td>List</td><td>tweet_ids, newest first. Max 800 entries. TTL 24h</td></tr><tr><td>tweet:{tweet_id}</td><td>Hash</td><td>Full tweet JSON. TTL 1h</td></tr><tr><td>user:{user_id}</td><td>Hash</td><td>name, handle, avatar_url, follower_count. TTL 30m</td></tr><tr><td>like:count:{tweet_id}</td><td>String</td><td>INCR counter. Flushed to PG every 60s</td></tr><tr><td>trending:1h</td><td>ZSET</td><td>hashtag→count. ZINCRBY on every tweet parse</td></tr></tbody></table>
+</section>
+
+<section id="tradeoffs">
+  <div class="sec-tag">04 · Design Choices</div>
+  <h2>Trade-off Matrix</h2>
+  <p>Every senior interview ends here. Know what you gave up.</p><table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Feed generation</td><td>Hybrid push/pull</td><td><span class="dot g"></span>Sub-ms feed reads for regular users; no write storm for celebrities</td><td><span class="dot a"></span>Complexity: two code paths. Must maintain celebrity threshold list</td><td>Switch to full pull if > 50% of users are "celebrities" (unlikely)</td></tr><tr><td class="row-head">Consistency</td><td>Eventual (feed lag ≤ 2s)</td><td><span class="dot g"></span>Massive read scale. No distributed transactions. Simple fan-out</td><td><span class="dot a"></span>User posts and doesn't see it immediately in their own feed (fix with read-your-own-writes)</td><td>Strong consistency if regulations require (banking, healthcare — not Twitter)</td></tr><tr><td class="row-head">Tweet storage</td><td>PostgreSQL sharded</td><td><span class="dot g"></span>ACID for counter updates. Relational for replies/retweets. Familiar ops</td><td><span class="dot a"></span>Operational complexity of sharding. Cross-shard queries impossible</td><td>Cassandra if write QPS grows 10×. Accept eventual consistency on counters</td></tr><tr><td class="row-head">Like counts</td><td>Redis async flush</td><td><span class="dot g"></span>Zero DB writes for every like. INCR is atomic and instant</td><td><span class="dot a"></span>Lose up to 60s of likes on Redis crash (acceptable for UX, not for billing)</td><td>Sync PG writes if like counts have financial implications (ad revenue attribution)</td></tr><tr><td class="row-head">Media</td><td>S3 + CloudFront</td><td><span class="dot g"></span>Infinite scale. Pre-signed URLs mean servers never see bytes. Global CDN edge caching</td><td><span class="dot a"></span>S3 eventual consistency (now strong, but historically an issue). CDN invalidation complexity</td><td>No alternative at this scale — object storage is the only answer for 43TB/year</td></tr></tbody></table>
+</section>
+
+<section id="followups">
+  <div class="sec-tag">05 · Hard Follow-ups</div>
+  <h2>Every Question Your Interviewer Will Ask</h2><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you handle the "celebrity problem" — Elon Musk tweets and 200M followers need their feed updated?<span class="faq-tog">+</span></div><div class="faq-a"><strong>The celebrity problem is solved by NOT updating celebrity follower feeds on write.</strong><br><br>When @elonmusk tweets: (1) Write tweet to PostgreSQL. (2) Write tweet_id to <code>celeb_timeline:elon</code> Redis List (not to each follower's feed). Done. Cost: 2 writes, not 200M.<br><br>At feed read time: Feed Service checks "which of the users I follow are celebrities?" (maintain a Redis SET of celebrity user_ids). For each celebrity in my following list: fetch their last 5 tweets from <code>celeb_timeline:{id}</code>. Merge with pre-computed feed. Sort by timestamp.<br><br>Result: one tweet from Elon → 2 Redis writes (not 200M). 200M users each make 1–5 extra Redis reads when loading their feed. Total cost: 200M × 5 reads = 1B reads spread across feed load time, not a thundering write at tweet time.<br><br>Celebrity threshold: users with > 1M followers are treated as celebrities. ~1,000 accounts globally.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you implement "read your own writes" — user posts a tweet and immediately sees it in their feed?<span class="faq-tog">+</span></div><div class="faq-a"><strong>After posting, prepend the new tweet_id to the user's own Redis feed list directly.</strong><br><br>POST /tweet → store in PG → fan-out to followers (async) → LPUSH feed:user:{poster_id} {new_tweet_id} (sync, before returning to the poster). The poster's feed is updated immediately. Other users get the tweet through async fan-out within 2 seconds.<br><br>This is a classic "read-your-own-writes" consistency pattern. The write propagates eventually to all followers (eventual consistency) but the writer gets immediate consistency. Implementation cost: one extra Redis write in the tweet creation hot path.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you scale the like count — at 300K likes/sec on a viral tweet, you can't hit PostgreSQL on every like?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Redis atomic increment + async batch flush to PostgreSQL.</strong><br><br>User likes tweet 789: <code>INCR like:count:tweet:789</code> in Redis. Return new count to user instantly. Background job runs every 60 seconds: <code>GETSET like:count:tweet:789 0</code> (atomically read and reset counter) → <code>UPDATE tweets SET like_count = like_count + {delta} WHERE id = 789</code>.<br><br>At 300K likes/sec on one viral tweet: Redis handles this trivially (INCR is O(1), Redis does 1M ops/sec). PostgreSQL sees only 1 UPDATE per tweet per 60 seconds regardless of like rate.<br><br>Risk: Redis crash between increments = lose up to 60s of likes. Mitigation: Redis AOF persistence + replicas. Acceptable tradeoff for a "like count" feature (vs. unacceptable for financial transactions).</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">What happens when a user has 200,000 followers and tweets frequently — how do you prevent fan-out storms?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Rate-limit fan-out per user + process fan-out asynchronously via Kafka.</strong><br><br>Synchronous fan-out: POST /tweet → instantly push to 200K Redis Lists → response blocked until 200K writes complete. At 200K × 1ms per write (with pipelining) = 200 seconds. Clearly wrong.<br><br>Async fan-out: POST /tweet → write to PG → publish TweetCreated event to Kafka → return 201 to user immediately (< 100ms). Fan-out consumer reads TweetCreated → looks up follower list in batches of 1,000 → LPUSH to each follower's Redis list. Fan-out completes in 2–10 seconds for 200K followers (not in the request path).<br><br>The user gets a 201 response immediately. Their tweet appears in followers' feeds within seconds. This is acceptable — Twitter's SLA is "eventually" not "immediately."</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you implement trending hashtags in real time?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Redis ZINCRBY on every tweet + sliding window with multiple ZSET buckets.</strong><br><br>On every tweet post: parse hashtags from content → for each hashtag: <code>ZINCRBY trending:window:{current_5min_bucket} #{hashtag} 1</code>.<br><br>To get "trending in last 1 hour": ZUNIONSTORE across last 12 buckets (12 × 5min = 60min) → ZREVRANGE with top 10. Run this aggregation every 30 seconds and cache the result.<br><br>Decay: buckets expire naturally (TTL on each bucket key = 70 minutes). No delete logic needed — old buckets disappear automatically.<br><br>At scale (500M tweets/day = 6K/sec): Redis ZINCRBY takes < 1ms. Even at 10 hashtags per tweet average = 60K ZINCRBY operations/sec. Redis handles this comfortably. For extreme scale: shard trending by region (trending:US:..., trending:IN:...).</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How does search work — how do you make 500M tweets searchable in < 1 second?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Elasticsearch as the search index, updated via Kafka CDC pipeline.</strong><br><br>Pipeline: Tweet posted → Kafka TweetCreated event → Search Consumer → Elasticsearch index. Delay: tweet searchable within 1–2 seconds of posting (Elasticsearch default refresh interval = 1 second).<br><br>Index mapping: tweet_id, user_id, content (analyzed — tokenized, stemmed), created_at (for recency scoring), like_count (for popularity scoring), hashtags[], lang.<br><br>Query: BM25 relevance score × recency boost × popularity boost. For "trending" queries: boost documents created in the last 24 hours. For personalized search: boost tweets from accounts the user follows.<br><br>Scale: 500M tweets × 300 bytes indexed content = 150GB index. Elasticsearch handles this easily across 10 nodes. Shard by tweet creation time — search queries mostly target recent tweets, enabling time-based pruning.</div></div>
+</section>
+
 </div>
-</section>
-
-<section id="deep-dive">
-  <div class="sec-tag">02 · Deep Dive — Feed Generation</div>
-  <h2>The complete feed assembly flow</h2>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Home Feed Request — Complete Flow</div><span class="sd-example-tag">END-TO-END</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">STEP 1</div><div class="choice-val">GET /feed → API Gateway → Feed Service. Feed Service checks: is user's feed in Redis? <code>ZREVRANGE feed:user:123 0 19</code>. If populated (cache hit): get 20 tweet IDs. Elapsed: 1ms.</div></div>
-      <div class="choice-row"><div class="choice-label">STEP 2</div><div class="choice-val">Enrich tweet IDs → batch fetch tweet content from Tweet cache (Redis Hash, HGETALL). Cache hit rate: 90% for recent tweets. Misses: fetch from PostgreSQL tweet shard by tweet_id. Elapsed: 5ms.</div></div>
-      <div class="choice-row"><div class="choice-label">STEP 3</div><div class="choice-val">Fetch celebrity tweets (fan-out on read): check if any followed users are "celebrities" (follower count > 1M). For each celebrity: <code>SELECT * FROM tweets WHERE user_id = X ORDER BY created_at DESC LIMIT 5</code>. Merge with pre-computed feed, sort by timestamp. Elapsed: 30ms (3 celebrity DB queries in parallel).</div></div>
-      <div class="choice-row"><div class="choice-label">STEP 4</div><div class="choice-val">Enrich with user profiles (avatars, names) from user profile cache. Return final feed JSON. Total elapsed: ~40ms. Well within 200ms SLA.</div></div>
-    </div>
-  </div>
-</section>
-
-<section id="followups-twitter">
-  <div class="sec-tag">03 · Follow-ups</div>
-  <h2>The questions your interviewer will ask</h2>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle the "hotkey" problem for Elon Musk's tweets?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>The problem: @elonmusk tweets → 200M followers → 200M simultaneous feed update requests → your Redis and DB cannot handle this write storm.</strong><br><br>
-  Solution (hybrid fan-out):<br>
-  1. Celebrity tweets are NOT pushed to follower feeds on write.<br>
-  2. Celebrity tweets are written to a "celebrity timeline" in Redis (keyed by user_id).<br>
-  3. On feed read: fetch pre-computed feed (regular users) + merge with celebrity tweet list (pull from celebrity key). Merging happens at read time, not write time.<br>
-  4. Celebrity tweet cache has high TTL (30 min) — it's read millions of times, worth caching aggressively.<br>
-  This way: one write (celebrity tweet) → one Redis write (celebrity timeline). 200M followers read the celebrity tweet lazily at their next feed load — no write storm.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you implement the "like count" without race conditions?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>At scale, updating like_count in PostgreSQL on every like would saturate the DB. Use Redis atomic increment with async DB sync.</strong><br><br>
-  Pattern: Like event → <code>INCR tweet:likes:tweet_id</code> in Redis → return new count to user immediately. Background job (runs every 30s): flush Redis like counts to PostgreSQL in batch. <code>UPDATE tweets SET like_count = $1 WHERE id = $2</code> in batches of 1,000.<br><br>
-  Race condition protection: Redis INCR is atomic — two simultaneous likes cannot both read 99 and both write 100. Redis guarantees the counter goes to 101.<br><br>
-  Durability: if Redis crashes before flush, we lose up to 30 seconds of like counts. Acceptable trade-off — losing some like counts is not a catastrophic failure for this use case. For financial operations (not likes), you'd need stronger guarantees.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you make the system highly available — what fails and how do you handle it?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Design for each component's failure independently:</strong><br><br>
-  <strong>API servers</strong>: stateless, behind a load balancer. Any server can fail. New servers spin up in 2 minutes (auto-scaling). Zero impact on users (ALB stops routing to unhealthy instances).<br><br>
-  <strong>Redis</strong>: Redis Sentinel with 3 sentinels monitors the primary. Failover to replica in &lt;30 seconds on primary failure. During failover: feed reads fall back to PostgreSQL (higher latency but correct). Redis Cluster for horizontal scaling.<br><br>
-  <strong>PostgreSQL</strong>: streaming replication to 2 read replicas. On primary failure: promote a replica in &lt;60 seconds (automatic with Patroni). Writes are unavailable during promotion. Mitigation: route read-heavy endpoints to replicas (already happening), reducing impact on users.<br><br>
-  <strong>S3</strong>: managed by AWS with 99.999999999% durability. Not your problem. Media delivery via CloudFront — CDN absorbs all traffic, S3 is only the origin.</div></div>
-</section></div>
-<div class="footer">DESIGN TWITTER / X · FAANG SYSTEM DESIGN WALKTHROUGH · MANISH-ALMANAC</div>
+<div class="footer">DESIGN TWITTER · FEED · FAN-OUT · CELEBRITY PROBLEM · REDIS · POSTGRESQL · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>
