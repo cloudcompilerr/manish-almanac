@@ -464,16 +464,38 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="olap-advanced">
   <div class="sec-tag">10 · Advanced OLAP Topics</div>
   <h2>ClickHouse MergeTree internals and the data lakehouse</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">ClickHouse<br>MergeTree Internals</div><div class="concept-def"><strong>ClickHouse's secret: sorted, compressed columnar storage with sparse indexing.</strong><br>
-      Insert: data written to parts (immutable, sorted by ORDER BY key). Background merge: small parts merged into larger parts. Reads: scan only parts that overlap with the query's WHERE clause (partition pruning + primary key range scan).<br>
-      Sparse index: ClickHouse doesn't index every row. It keeps one index entry per "granule" (8192 rows by default). To find rows where user_id = 12345: scan the sparse index to find which granule ranges might contain it → decompress those granules → scan within. Index is small enough to fit in RAM; scanned granules are sequential reads.
-        <span class="concept-note good">✓ Result: ClickHouse can scan 1 billion rows/second/server. For a query like "count events by country for the last 7 days": partition pruning eliminates all but the last 7 days' partitions → sparse index finds the relevant granules → columnar scan of just the country and timestamp columns. Often 100-1000× faster than row-oriented OLAP.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Apache Iceberg<br>& the Data Lakehouse</div><div class="concept-def"><strong>Iceberg brings ACID transactions and schema evolution to data lakes stored in S3.</strong><br>
-      Problem with plain S3 as a data lake: no transactions (concurrent writes → corrupted partitions), no schema evolution (adding a column requires full rewrite), no time travel (can't query "how did the data look last Tuesday?").<br>
-      Iceberg solves this: maintains a metadata layer (JSON manifests) that tracks all files, their statistics, and versions. ACID writes: create new files, update the manifest atomically. Time travel: each manifest version is immutable — query the manifest from any point in time. Schema evolution: add/remove/rename columns by updating metadata only (no data rewrite).
-        <span class="concept-note good">✓ Iceberg is the new standard for lakehouse architecture. Supported by: Snowflake, BigQuery (in preview), Athena, Spark, Flink, Trino. Paired with object storage (S3/GCS), it provides data warehouse semantics without the cost of a managed data warehouse.</span></div></div>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">ClickHouse MergeTree Internals</span>
+    
   </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>ClickHouse's secret: sorted, compressed columnar storage with sparse indexing.</strong>
+      <p>/p><p>Insert: data written to parts (immutable, sorted by ORDER BY key). Background merge: small parts merged into larger parts. Reads: scan only parts that overlap with the query's WHERE clause (partition pruning + primary key range scan).</p><p>Sparse index: ClickHouse doesn't index every row. It keeps one index entry per "granule" (8192 rows by default). To find rows where user_id = 12345: scan the sparse index to find which granule ranges might contain it → decompress those granules → scan within. Index is small enough to fit in RAM; scanned granules are sequential reads.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ Result: ClickHouse can scan 1 billion rows/second/server. For a query like "count events by country for the last 7 days": partition pruning eliminates all but the last 7 days' partitions → sparse index finds the relevant granules → columnar scan of just the country and timestamp columns. Often 100-1000× faster than row-oriented OLAP.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">Apache Iceberg & the Data Lakehouse</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Iceberg brings ACID transactions and schema evolution to data lakes stored in S3.</strong>
+      <p>/p><p>Problem with plain S3 as a data lake: no transactions (concurrent writes → corrupted partitions), no schema evolution (adding a column requires full rewrite), no time travel (can't query "how did the data look last Tuesday?").</p><p>Iceberg solves this: maintains a metadata layer (JSON manifests) that tracks all files, their statistics, and versions. ACID writes: create new files, update the manifest atomically. Time travel: each manifest version is immutable — query the manifest from any point in time. Schema evolution: add/remove/rename columns by updating metadata only (no data rewrite).</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ Iceberg is the new standard for lakehouse architecture. Supported by: Snowflake, BigQuery (in preview), Athena, Spark, Flink, Trino. Paired with object storage (S3/GCS), it provides data warehouse semantics without the cost of a managed data warehouse.</span></div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 <section id="concepts-olap">
   <div class="sec-tag">08 · Core Concepts</div>

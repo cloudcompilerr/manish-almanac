@@ -138,6 +138,33 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -344,15 +371,51 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 <section id="vector-search">
   <div class="sec-tag">09 · Vector Search & ML Ranking</div>
   <h2>Beyond keyword matching — the AI layer modern search requires</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Vector Embeddings<br>for Semantic Search</div><div class="concept-def"><strong>Convert text to dense vectors. Find semantically similar documents even without keyword overlap.</strong><br>
-      Query "cheap flights to goa" → embed with text-embedding-3-small → 1536-dimensional vector [0.23, -0.91, ...]. Documents in the index also embedded at index time. Find documents whose embedding is cosine-closest to the query embedding. Returns results about "affordable airfare Goa" even with zero keyword overlap.<br>
-      Index: FAISS (Facebook AI Similarity Search), pgvector (PostgreSQL extension), Pinecone, Weaviate, or Elasticsearch's dense_vector field. All support approximate nearest neighbour (ANN) with HNSW index. O(log N) search over billions of vectors.
-        <span class="concept-note good">✓ Hybrid search: combine BM25 (keyword) score + vector similarity score with a weighted sum. BM25 wins for exact product codes and names. Vectors win for semantic and intent-based queries. LinkedIn People Search, Notion AI Search, and Google Shopping all use hybrid.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Multi-Stage Ranking<br>Pipeline</div><div class="concept-def"><strong>Narrow from billions to thousands (retrieval) → score thousands (ranking) → rerank top-100 (re-ranking).</strong></p><p><strong>Stage 1 — Retrieval</strong>: BM25 or ANN vector search. Fast, approximate. Returns 1,000 candidates from billions of documents in &lt;50ms.</p><p><strong>Stage 2 — Ranking</strong>: ML model (gradient boosted trees or a small neural net) scores each candidate on: relevance signals (BM25 score, vector score, freshness), behavioural signals (CTR for this query, dwell time, position bias-corrected), personalisation (user's historical preferences). Scores 1,000 candidates in &lt;100ms.</p><p><strong>Stage 3 — Re-ranking</strong>: large cross-encoder model (BERT-based) scores top-100 pairs (query, document) together — captures deep semantic interaction. Expensive but only for 100 items. Runs in &lt;200ms on GPU.<br>
-      Total pipeline: 350ms. Parallelise stages 1+2, run stage 3 on stage 2 top-100.</div></div>
-    <div class="concept-row"><div class="concept-term">Index Freshness<br>Strategies</div><div class="concept-def"><strong>How fast do new documents appear in search results? The answer changes the architecture.</strong></p><p><strong>Batch indexing</strong>: rebuild the full index nightly. Freshness: 24h lag. Simple. Right for: product catalogs with daily updates, static content.</p><p><strong>Near-real-time (NRT)</strong>: Elasticsearch refreshes the in-memory index segment every 1 second (<code>index.refresh_interval=1s</code>). New documents visible in 1 second. Default Elasticsearch behaviour. Right for: most applications.</p><p><strong>Real-time</strong>: Elasticsearch with <code>refresh=true</code> on write (forces immediate segment refresh). Visible immediately. Cost: 10–100× more write overhead. Right for: financial transactions, legal documents where freshness is critical.</p><p><strong>Dual-index</strong>: a large, rarely-updated "base index" + a small, frequently-updated "delta index." Merge results at query time. Right for: trillion-document indexes where full daily rebuilds take days.</div></div>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">Vector Embeddings for Semantic Search</span>
+    
   </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Convert text to dense vectors. Find semantically similar documents even without keyword overlap.</strong>
+      <p>/p><p>Query "cheap flights to goa" → embed with text-embedding-3-small → 1536-dimensional vector [0.23, -0.91, ...]. Documents in the index also embedded at index time. Find documents whose embedding is cosine-closest to the query embedding. Returns results about "affordable airfare Goa" even with zero keyword overlap.</p><p>Index: FAISS (Facebook AI Similarity Search), pgvector (PostgreSQL extension), Pinecone, Weaviate, or Elasticsearch's dense_vector field. All support approximate nearest neighbour (ANN) with HNSW index. O(log N) search over billions of vectors.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ Hybrid search: combine BM25 (keyword) score + vector similarity score with a weighted sum. BM25 wins for exact product codes and names. Vectors win for semantic and intent-based queries. LinkedIn People Search, Notion AI Search, and Google Shopping all use hybrid.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">Multi-Stage Ranking Pipeline</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Narrow from billions to thousands (retrieval) → score thousands (ranking) → rerank top-100 (re-ranking).</strong>
+      <p>/p><p><strong>Stage 1 — Retrieval</strong>: BM25 or ANN vector search. Fast, approximate. Returns 1,000 candidates from billions of documents in &lt;50ms.</p><p><strong>Stage 2 — Ranking</strong>: ML model (gradient boosted trees or a small neural net) scores each candidate on: relevance signals (BM25 score, vector score, freshness), behavioural signals (CTR for this query, dwell time, position bias-corrected), personalisation (user's historical preferences). Scores 1,000 candidates in &lt;100ms.</p><p><strong>Stage 3 — Re-ranking</strong>: large cross-encoder model (BERT-based) scores top-100 pairs (query, document) together — captures deep semantic interaction. Expensive but only for 100 items. Runs in &lt;200ms on GPU.</p><p>Total pipeline: 350ms. Parallelise stages 1+2, run stage 3 on stage 2 top-100.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">03</span>
+    <span class="k-title">Index Freshness Strategies</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>How fast do new documents appear in search results? The answer changes the architecture.</strong>
+      <p>/p><p><strong>Batch indexing</strong>: rebuild the full index nightly. Freshness: 24h lag. Simple. Right for: product catalogs with daily updates, static content.</p><p><strong>Near-real-time (NRT)</strong>: Elasticsearch refreshes the in-memory index segment every 1 second (<code>index.refresh_interval=1s</code>). New documents visible in 1 second. Default Elasticsearch behaviour. Right for: most applications.</p><p><strong>Real-time</strong>: Elasticsearch with <code>refresh=true</code> on write (forces immediate segment refresh). Visible immediately. Cost: 10–100× more write overhead. Right for: financial transactions, legal documents where freshness is critical.</p><p><strong>Dual-index</strong>: a large, rarely-updated "base index" + a small, frequently-updated "delta index." Merge results at query time. Right for: trillion-document indexes where full daily rebuilds take days.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 
 </div>

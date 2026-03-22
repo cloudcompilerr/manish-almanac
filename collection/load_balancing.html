@@ -139,6 +139,33 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </style>
 </head><body>
 <div class="hero"><div class="hero-inner">
@@ -373,18 +400,53 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 <section id="lb-global">
   <div class="sec-tag">10 · Global Load Balancing</div>
   <h2>Beyond the datacenter — routing traffic across regions and continents</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">GeoDNS<br>Latency-Based Routing</div><div class="concept-def"><strong>DNS responds with different IP addresses based on the requester's geographic location.</strong><br>
-      User in Mumbai queries api.myapp.com → GeoDNS determines their location → returns the IP of the Mumbai regional load balancer. User in London → returns the London LB IP. Same DNS name, different IP, routed to the nearest datacenter.<br>
-      AWS Route 53 latency-based routing: measures actual latency between the user's DNS resolver and each region (not just geographic distance). Routes to the region with lowest latency, not just the nearest one. Tokyo might actually be faster than Singapore for some Australian users.
-        <span class="concept-note muted">DNS TTL = 60 seconds: if a region goes down, GeoDNS removes it from the response within 60s. But some resolvers cache longer. For fast failover: use Anycast routing instead (or both together).</span></div></div>
-    <div class="concept-row"><div class="concept-term">Anycast Routing</div><div class="concept-def"><strong>Multiple servers share the same IP address. BGP routing sends traffic to the topologically nearest server.</strong><br>
-      Cloudflare uses Anycast for its 200+ PoPs. Every PoP advertises the same IP address (e.g., 1.1.1.1). BGP automatically routes each user to the nearest PoP based on network topology. No DNS magic — happens at the routing layer.<br>
-      Failover: if a PoP goes down, its BGP advertisement withdraws. Traffic automatically routes to the next-nearest PoP within seconds — faster than DNS TTL-based failover.
-        <span class="concept-note good">✓ Used by: Cloudflare, Akamai, AWS Global Accelerator (uses Anycast to route to the nearest AWS edge node). Faster failover than GeoDNS. Used for: DDoS mitigation (absorb attack traffic across many PoPs), low-latency global routing.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Active-Active vs<br>Active-Passive Global</div><div class="concept-def"><strong>Active-active: multiple regions serve traffic simultaneously. Active-passive: one region serves, the other is standby.</strong></p><p><strong>Active-passive</strong>: all traffic goes to US-East. US-West is a warm standby. On US-East failure: DNS/Anycast switches to US-West. Recovery: 30–120 seconds. Simple. RPO/RTO: minutes. Right for: applications where global latency doesn't matter but simplicity does.</p><p><strong>Active-active</strong>: US-East serves US traffic, EU-West serves European traffic, AP-Southeast serves Asia. Each region is a full stack. DB replication: bidirectional (Cassandra's multi-datacenter replication, or CockroachDB global tables). Right for: globally distributed user bases where latency matters. Hard part: write-write conflicts across regions need careful resolution.
-        <span class="concept-note good">✓ Notion runs globally active-active on AWS with CockroachDB. Stripe's payments infrastructure is active-active across 3 AWS regions. Cloudflare serves from 200+ PoPs active-active. Start with active-passive — upgrade to active-active when latency SLA demands it.</span></div></div>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">GeoDNS Latency-Based Routing</span>
+    
   </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>DNS responds with different IP addresses based on the requester's geographic location.</strong>
+      <p>/p><p>User in Mumbai queries api.myapp.com → GeoDNS determines their location → returns the IP of the Mumbai regional load balancer. User in London → returns the London LB IP. Same DNS name, different IP, routed to the nearest datacenter.</p><p>AWS Route 53 latency-based routing: measures actual latency between the user's DNS resolver and each region (not just geographic distance). Routes to the region with lowest latency, not just the nearest one. Tokyo might actually be faster than Singapore for some Australian users.</p>
+      </div>
+      <div class="k-muted"><span class="k-icon">→</span><span>DNS TTL = 60 seconds: if a region goes down, GeoDNS removes it from the response within 60s. But some resolvers cache longer. For fast failover: use Anycast routing instead (or both together).</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">Anycast Routing</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Multiple servers share the same IP address. BGP routing sends traffic to the topologically nearest server.</strong>
+      <p>/p><p>Cloudflare uses Anycast for its 200+ PoPs. Every PoP advertises the same IP address (e.g., 1.1.1.1). BGP automatically routes each user to the nearest PoP based on network topology. No DNS magic — happens at the routing layer.</p><p>Failover: if a PoP goes down, its BGP advertisement withdraws. Traffic automatically routes to the next-nearest PoP within seconds — faster than DNS TTL-based failover.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ Used by: Cloudflare, Akamai, AWS Global Accelerator (uses Anycast to route to the nearest AWS edge node). Faster failover than GeoDNS. Used for: DDoS mitigation (absorb attack traffic across many PoPs), low-latency global routing.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">03</span>
+    <span class="k-title">Active-Active vs Active-Passive Global</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Active-active: multiple regions serve traffic simultaneously. Active-passive: one region serves, the other is standby.</strong>
+      <p>/p><p><strong>Active-passive</strong>: all traffic goes to US-East. US-West is a warm standby. On US-East failure: DNS/Anycast switches to US-West. Recovery: 30–120 seconds. Simple. RPO/RTO: minutes. Right for: applications where global latency doesn't matter but simplicity does.</p><p><strong>Active-active</strong>: US-East serves US traffic, EU-West serves European traffic, AP-Southeast serves Asia. Each region is a full stack. DB replication: bidirectional (Cassandra's multi-datacenter replication, or CockroachDB global tables). Right for: globally distributed user bases where latency matters. Hard part: write-write conflicts across regions need careful resolution.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ Notion runs globally active-active on AWS with CockroachDB. Stripe's payments infrastructure is active-active across 3 AWS regions. Cloudflare serves from 200+ PoPs active-active. Start with active-passive — upgrade to active-active when latency SLA demands it.</span></div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 
 </div>

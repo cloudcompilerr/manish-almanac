@@ -225,69 +225,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <div id="db-results" class="db-body" style="display:none">
     <div id="db-results-inner"></div>
     <button class="db-run" style="background:var(--ts);margin-top:8px" onclick="resetDebate()">← New debate</button>
-  </div>    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#8B008B">PLATINUM — NEW</span><span class="coll-cat-line"></span></div>
-    <button class="note-row" id="btn_coll_security">
-      <div class="note-icon">🔐</div>
-      <div class="note-preview"><div class="note-title">Security & Authentication</div><div class="note-snippet">JWT · OAuth 2.0 · TLS/mTLS · RBAC · SSRF · XSS · CSRF</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Security</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_scalability">
-      <div class="note-icon">📈</div>
-      <div class="note-preview"><div class="note-title">Scalability Patterns</div><div class="note-snippet">Back-of-Envelope · CQRS · Event Sourcing · Circuit Breaker</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Patterns</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_api_design">
-      <div class="note-icon">🔌</div>
-      <div class="note-preview"><div class="note-title">API Design</div><div class="note-snippet">REST · Pagination · Versioning · Idempotency · GraphQL</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">API</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_data_structures">
-      <div class="note-icon">🌳</div>
-      <div class="note-preview"><div class="note-title">Data Structures for SysDesign</div><div class="note-snippet">Bloom Filter · Trie · Merkle Tree · Quadtree · Skip List</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">CS Fundamentals</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_microservices">
-      <div class="note-icon">🧩</div>
-      <div class="note-preview"><div class="note-title">Microservices Patterns</div><div class="note-snippet">Saga · Strangler Fig · Sidecar · Outbox Pattern · BFF</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Architecture</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_interview_framework">
-      <div class="note-icon">🎯</div>
-      <div class="note-preview"><div class="note-title">Interview Framework</div><div class="note-snippet">Requirements · Estimation · Mistakes · Estimation Sheet</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Process</span></div>
-    </button>
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#2c3e50">FULL SYSTEM WALKTHROUGHS</span><span class="coll-cat-line"></span></div>
-    <button class="note-row" id="btn_coll_design_twitter">
-      <div class="note-icon">🐦</div>
-      <div class="note-preview"><div class="note-title">Design Twitter / X</div><div class="note-snippet">Feed · Fan-out · Celebrity Problem · Redis ZSET · S3</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_design_uber">
-      <div class="note-icon">🚗</div>
-      <div class="note-preview"><div class="note-title">Design Uber</div><div class="note-snippet">Geospatial Matching · Surge Pricing · WebSocket · Redis GEO</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_design_whatsapp">
-      <div class="note-icon">💬</div>
-      <div class="note-preview"><div class="note-title">Design WhatsApp</div><div class="note-snippet">WebSocket · E2EE Signal Protocol · 600M Connections</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_design_youtube">
-      <div class="note-icon">▶</div>
-      <div class="note-preview"><div class="note-title">Design YouTube</div><div class="note-snippet">HLS · Transcoding · CDN · Adaptive Bitrate · Recommendations</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_design_dropbox">
-      <div class="note-icon">📦</div>
-      <div class="note-preview"><div class="note-title">Design Dropbox</div><div class="note-snippet">Delta Sync · Deduplication · Chunked Upload · Conflict Res.</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-
-</div>
-
-
-
-
+  </div>    
 <!-- MY COLLECTION — list panel -->
 <div id="coll-panel">
   <div class="coll-header">
@@ -471,8 +409,65 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">AI / Leadership</span>
       </div>
     </button>
+  
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#8B008B">PLATINUM — FOUNDATIONS</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_security">
+      <div class="note-icon">🔐</div>
+      <div class="note-preview"><div class="note-title">Security & Authentication</div><div class="note-snippet">JWT · OAuth 2.0 · TLS/mTLS · RBAC · SSRF · XSS · Zero Trust</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Security</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_scalability">
+      <div class="note-icon">📈</div>
+      <div class="note-preview"><div class="note-title">Scalability Patterns</div><div class="note-snippet">Back-of-Envelope · CQRS · Event Sourcing · Circuit Breaker</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Patterns</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_api_design">
+      <div class="note-icon">🔌</div>
+      <div class="note-preview"><div class="note-title">API Design</div><div class="note-snippet">REST · Pagination · Versioning · Idempotency · GraphQL</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">API</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_data_structures">
+      <div class="note-icon">🌳</div>
+      <div class="note-preview"><div class="note-title">Data Structures for SysDesign</div><div class="note-snippet">Bloom Filter · Trie · Merkle Tree · Quadtree · Skip List</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">CS Fundamentals</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_microservices">
+      <div class="note-icon">🧩</div>
+      <div class="note-preview"><div class="note-title">Microservices Patterns</div><div class="note-snippet">Saga · Strangler Fig · Sidecar · Outbox · Service Discovery</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Architecture</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_interview_framework">
+      <div class="note-icon">🎯</div>
+      <div class="note-preview"><div class="note-title">Interview Framework</div><div class="note-snippet">Requirements · Estimation · 45-min Plan · Common Mistakes</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Process</span></div>
+    </button>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#2c3e50">FULL SYSTEM WALKTHROUGHS</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_design_twitter">
+      <div class="note-icon">🐦</div>
+      <div class="note-preview"><div class="note-title">Design Twitter / X</div><div class="note-snippet">Feed · Fan-out · Celebrity Problem · Redis ZSET</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_design_uber">
+      <div class="note-icon">🚗</div>
+      <div class="note-preview"><div class="note-title">Design Uber</div><div class="note-snippet">Geospatial Matching · Surge Pricing · WebSocket · Redis GEO</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_design_whatsapp">
+      <div class="note-icon">💬</div>
+      <div class="note-preview"><div class="note-title">Design WhatsApp</div><div class="note-snippet">WebSocket · E2EE Signal Protocol · 600M Connections</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_design_youtube">
+      <div class="note-icon">▶️</div>
+      <div class="note-preview"><div class="note-title">Design YouTube</div><div class="note-snippet">HLS · Transcoding · CDN · Adaptive Bitrate · Recommendations</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_design_dropbox">
+      <div class="note-icon">📦</div>
+      <div class="note-preview"><div class="note-title">Design Dropbox</div><div class="note-snippet">Delta Sync · Deduplication · Chunked Upload · Conflict Resolution</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
   </div>
-
 <!-- MY COLLECTION — item viewer panel -->
 <div id="coll-item">
   <div class="ci-header">

@@ -138,6 +138,33 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -339,28 +366,51 @@ end</pre>
 <section id="rl-redis-impl">
   <div class="sec-tag">07 · Redis Implementation — Atomicity & Lua Scripts</div>
   <h2>How to implement rate limiting correctly in Redis without race conditions</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Sliding Window<br>with Lua Script</div><div class="concept-def"><strong>Lua scripts in Redis execute atomically — multiple Redis commands as one atomic operation.</strong><br>
-      The race condition without Lua: (1) GET count (2) if count &lt; limit → INCR (3) SET expiry. Between steps 1 and 2, another request can GET the same count and both increment — exceeding the limit.<br>
-      The Lua solution (runs as a single atomic transaction):<br>
-      <code>local key = KEYS[1]</code><br>
-      <code>local limit = tonumber(ARGV[1])</code><br>
-      <code>local window = tonumber(ARGV[2])</code><br>
-      <code>local current = redis.call('INCR', key)</code><br>
-      <code>if current == 1 then redis.call('EXPIRE', key, window) end</code><br>
-      <code>if current > limit then return 0 else return 1 end</code><br>
-      Redis executes this Lua script as one atomic unit — no other commands can interleave. No race condition possible.</div></div>
-    <div class="concept-row"><div class="concept-term">Token Bucket<br>with Redis</div><div class="concept-def"><strong>Precise token bucket using Redis MULTI/EXEC or Lua for atomicity:</strong><br>
-      Key: <code>ratelimit:{user_id}</code> → Hash with fields: tokens (current bucket level), last_refill (timestamp).<br>
-      On each request: calculate tokens to add since last_refill (rate × elapsed seconds). Cap at bucket capacity. Check if tokens ≥ 1. If yes: decrement tokens, allow request. If no: reject with 429.<br>
-      All of the above in a single Lua script to ensure atomicity. Returns: allowed (1) or rejected (0) + current token count + time until next token.<br>
-      <code>Retry-After</code> header: include <code>X-RateLimit-Reset: {unix_timestamp}</code> in 429 responses. Client knows exactly when to retry. Prevents exponential backoff pileup — all clients retry at the same informed time instead of random exponential times.</div></div>
-    <div class="concept-row"><div class="concept-term">Distributed Rate Limiting<br>Without Redis</div><div class="concept-def"><strong>When Redis is unavailable: fail open vs fail closed — a critical production decision.</strong><br>
-      Fail open: if Redis is unavailable, allow requests through. Rate limiting is a best-effort feature. Service stays available. Risk: unprotected during Redis outage — a DDoS during a Redis outage can overwhelm the service.<br>
-      Fail closed: if Redis is unavailable, reject all requests (or allow only a local-cache-based limit). Service is protected but unavailable. For authentication endpoints (brute force protection): fail closed is correct. For API quota limiting: fail open is usually correct.<br>
-      Local fallback: each app server maintains a local rate limiter (Guava RateLimiter) as a fallback. Less accurate (doesn't coordinate across servers) but better than either extreme.
-        <span class="concept-note muted">Circuit breaker on the rate limiter itself: if Redis is returning errors, switch to local limiter automatically. When Redis recovers, switch back. The rate limiter protecting your service must itself be resilient.</span></div></div>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">Sliding Window with Lua Script</span>
+    
   </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Lua scripts in Redis execute atomically — multiple Redis commands as one atomic operation.</strong>
+      <p>/p><p>The race condition without Lua: (1) GET count (2) if count &lt; limit → INCR (3) SET expiry. Between steps 1 and 2, another request can GET the same count and both increment — exceeding the limit.</p><p>The Lua solution (runs as a single atomic transaction):</p><p><code>local key = KEYS[1]</code></p><p><code>local limit = tonumber(ARGV[1])</code></p><p><code>local window = tonumber(ARGV[2])</code></p><p><code>local current = redis.call('INCR', key)</code></p><p><code>if current == 1 then redis.call('EXPIRE', key, window) end</code></p><p><code>if current > limit then return 0 else return 1 end</code></p><p>Redis executes this Lua script as one atomic unit — no other commands can interleave. No race condition possible.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">Token Bucket with Redis</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Precise token bucket using Redis MULTI/EXEC or Lua for atomicity:</strong>
+      <p>/p><p>Key: <code>ratelimit:{user_id}</code> → Hash with fields: tokens (current bucket level), last_refill (timestamp).</p><p>On each request: calculate tokens to add since last_refill (rate × elapsed seconds). Cap at bucket capacity. Check if tokens ≥ 1. If yes: decrement tokens, allow request. If no: reject with 429.</p><p>All of the above in a single Lua script to ensure atomicity. Returns: allowed (1) or rejected (0) + current token count + time until next token.</p><p><code>Retry-After</code> header: include <code>X-RateLimit-Reset: {unix_timestamp}</code> in 429 responses. Client knows exactly when to retry. Prevents exponential backoff pileup — all clients retry at the same informed time instead of random exponential times.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">03</span>
+    <span class="k-title">Distributed Rate Limiting Without Redis</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>When Redis is unavailable: fail open vs fail closed — a critical production decision.</strong>
+      <p>/p><p>Fail open: if Redis is unavailable, allow requests through. Rate limiting is a best-effort feature. Service stays available. Risk: unprotected during Redis outage — a DDoS during a Redis outage can overwhelm the service.</p><p>Fail closed: if Redis is unavailable, reject all requests (or allow only a local-cache-based limit). Service is protected but unavailable. For authentication endpoints (brute force protection): fail closed is correct. For API quota limiting: fail open is usually correct.</p><p>Local fallback: each app server maintains a local rate limiter (Guava RateLimiter) as a fallback. Less accurate (doesn't coordinate across servers) but better than either extreme.</p>
+      </div>
+      <div class="k-muted"><span class="k-icon">→</span><span>Circuit breaker on the rate limiter itself: if Redis is returning errors, switch to local limiter automatically. When Redis recovers, switch back. The rate limiter protecting your service must itself be resilient.</span></div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 
 </div>

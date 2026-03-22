@@ -483,22 +483,67 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="db-advanced">
   <div class="sec-tag">10 · Advanced DB Topics</div>
   <h2>The database internals that separate senior engineers in interviews</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">B-Tree vs LSM Tree<br>— The Fundamental Split</div><div class="concept-def"><strong>B-Tree: optimised for reads. LSM Tree: optimised for writes. Every major DB chooses one.</strong></p><p><strong>B-Tree (PostgreSQL, MySQL)</strong>: data stored in a balanced tree on disk. Reads: O(log N) — traverse tree to find data. Writes: random I/O — find the correct leaf node, write in place. At scale: random writes cause "write amplification" (each write updates the B-Tree index). Great for: frequent reads, mixed read-write, OLTP with read-heavy patterns.</p><p><strong>LSM Tree (Cassandra, RocksDB, LevelDB)</strong>: writes go to an in-memory buffer (MemTable) first — always sequential. MemTable flushed to SSTable on disk when full. Background compaction merges SSTables. Reads: must check MemTable + every SSTable level (mitigated by Bloom filters). Great for: write-heavy workloads (IoT, logging, time-series).
-        <span class="concept-note muted">Write amplification: B-Tree writes amplify by 2–10× (update the page + write-ahead log). LSM writes amplify by 10–30× during compaction. But LSM writes are sequential (fast SSD I/O) vs B-Tree random writes. Net effect: LSM is faster for write throughput on modern SSDs.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Zero-Downtime Schema<br>Migration</div><div class="concept-def"><strong>Expand-Contract pattern: never ALTER TABLE on a live table with millions of rows.</strong><br>
-      Example: rename column <code>user_name</code> → <code>display_name</code> on 100M row table.</p><p><strong>Step 1 — Expand</strong>: <code>ALTER TABLE users ADD COLUMN display_name VARCHAR(255)</code>. PostgreSQL 11+: instant (no table rewrite for nullable columns). Start writing BOTH columns in application code.</p><p><strong>Step 2 — Backfill</strong>: background job: <code>UPDATE users SET display_name = user_name WHERE display_name IS NULL LIMIT 1000</code>. Repeat with 100ms sleep between batches. Runs in background for hours — zero user impact.</p><p><strong>Step 3 — Switch</strong>: once backfill complete, switch reads to display_name. Deploy. Verify for 1 week.</p><p><strong>Step 4 — Contract</strong>: <code>ALTER TABLE users DROP COLUMN user_name</code>. Done.
-        <span class="concept-note good">Tools: gh-ost (GitHub's online schema migration for MySQL), pgroll (Postgres), Liquibase/Flyway for migration management.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Read Replica Lag —<br>Detection & Handling</div><div class="concept-def"><strong>Replica lag is the delay between a write on the primary and it being visible on a replica.</strong><br>
-      Measuring lag: <code>SHOW SLAVE STATUS</code> → Seconds_Behind_Master. Or: write a heartbeat row to primary every second, read it from replica, compare timestamps. Alert if lag > 5 seconds.<br>
-      Causes: replica on underpowered hardware, long-running transactions on primary holding replication slot, high write throughput saturating replica's single-threaded replay (PostgreSQL parallel apply helps).</p><p><strong>Read-your-own-writes with replicas</strong>: after a write, subsequent reads must go to the primary (or a replica that has caught up). Pattern: track the LSN (log sequence number) of the last write per session. Before reading from a replica, verify it has replayed up to that LSN. If not: route to primary.
-        <span class="concept-note warn">⚠ Common bug: user updates their profile → reads from replica → sees old data → "the update didn't work!" → contacts support. Always route reads to primary for a few seconds after a user-visible write.</span></div></div>
-    <div class="concept-row"><div class="concept-term">DynamoDB Hot Partition<br>Problem & Solutions</div><div class="concept-def"><strong>DynamoDB shards data by partition key. A "hot" partition key sends all traffic to one shard.</strong><br>
-      Example: <code>partition_key = user_id</code>, but user:123 is a celebrity with 50M followers. All writes for user:123 go to one DynamoDB partition. That partition has a throughput limit of 3,000 RCUs / 1,000 WCUs. Exceeded = throttling errors.</p><p><strong>Solutions:</strong><br>
-      (1) <strong>Key sharding</strong>: append a random suffix to the partition key: <code>user:123#1</code>, <code>user:123#2</code>, ..., <code>user:123#10</code>. Writes distributed across 10 partitions. Reads: query all 10 suffixes + merge. Cost: 10× read units for hot keys.<br>
-      (2) <strong>DynamoDB Adaptive Capacity</strong>: automatically redistributes capacity across partitions. Enables a single partition to use up to 2× its provisioned throughput for a short burst. Handles temporary spikes but not sustained hot keys.<br>
-      (3) <strong>Application-level caching</strong>: cache hot partition reads in Redis. Dramatically reduces RCU consumption for the hot partition.</div></div>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">B-Tree vs LSM Tree — The Fundamental Split</span>
+    
   </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>B-Tree: optimised for reads. LSM Tree: optimised for writes. Every major DB chooses one.</strong>
+      <p>/p><p><strong>B-Tree (PostgreSQL, MySQL)</strong>: data stored in a balanced tree on disk. Reads: O(log N) — traverse tree to find data. Writes: random I/O — find the correct leaf node, write in place. At scale: random writes cause "write amplification" (each write updates the B-Tree index). Great for: frequent reads, mixed read-write, OLTP with read-heavy patterns.</p><p><strong>LSM Tree (Cassandra, RocksDB, LevelDB)</strong>: writes go to an in-memory buffer (MemTable) first — always sequential. MemTable flushed to SSTable on disk when full. Background compaction merges SSTables. Reads: must check MemTable + every SSTable level (mitigated by Bloom filters). Great for: write-heavy workloads (IoT, logging, time-series).</p>
+      </div>
+      <div class="k-muted"><span class="k-icon">→</span><span>Write amplification: B-Tree writes amplify by 2–10× (update the page + write-ahead log). LSM writes amplify by 10–30× during compaction. But LSM writes are sequential (fast SSD I/O) vs B-Tree random writes. Net effect: LSM is faster for write throughput on modern SSDs.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">Zero-Downtime Schema Migration</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Expand-Contract pattern: never ALTER TABLE on a live table with millions of rows.</strong>
+      <p>/p><p>Example: rename column <code>user_name</code> → <code>display_name</code> on 100M row table.</p><p><strong>Step 1 — Expand</strong>: <code>ALTER TABLE users ADD COLUMN display_name VARCHAR(255)</code>. PostgreSQL 11+: instant (no table rewrite for nullable columns). Start writing BOTH columns in application code.</p><p><strong>Step 2 — Backfill</strong>: background job: <code>UPDATE users SET display_name = user_name WHERE display_name IS NULL LIMIT 1000</code>. Repeat with 100ms sleep between batches. Runs in background for hours — zero user impact.</p><p><strong>Step 3 — Switch</strong>: once backfill complete, switch reads to display_name. Deploy. Verify for 1 week.</p><p><strong>Step 4 — Contract</strong>: <code>ALTER TABLE users DROP COLUMN user_name</code>. Done.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>Tools: gh-ost (GitHub's online schema migration for MySQL), pgroll (Postgres), Liquibase/Flyway for migration management.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">03</span>
+    <span class="k-title">Read Replica Lag — Detection & Handling</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Replica lag is the delay between a write on the primary and it being visible on a replica.</strong>
+      <p>/p><p>Measuring lag: <code>SHOW SLAVE STATUS</code> → Seconds_Behind_Master. Or: write a heartbeat row to primary every second, read it from replica, compare timestamps. Alert if lag > 5 seconds.</p><p>Causes: replica on underpowered hardware, long-running transactions on primary holding replication slot, high write throughput saturating replica's single-threaded replay (PostgreSQL parallel apply helps).</p><p><strong>Read-your-own-writes with replicas</strong>: after a write, subsequent reads must go to the primary (or a replica that has caught up). Pattern: track the LSN (log sequence number) of the last write per session. Before reading from a replica, verify it has replayed up to that LSN. If not: route to primary.</p>
+      </div>
+      <div class="k-warn"><span class="k-icon">⚠</span><span>⚠ Common bug: user updates their profile → reads from replica → sees old data → "the update didn't work!" → contacts support. Always route reads to primary for a few seconds after a user-visible write.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">04</span>
+    <span class="k-title">DynamoDB Hot Partition Problem & Solutions</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>DynamoDB shards data by partition key. A "hot" partition key sends all traffic to one shard.</strong>
+      <p>/p><p>Example: <code>partition_key = user_id</code>, but user:123 is a celebrity with 50M followers. All writes for user:123 go to one DynamoDB partition. That partition has a throughput limit of 3,000 RCUs / 1,000 WCUs. Exceeded = throttling errors.</p><p><strong>Solutions:</strong></p><p>(1) <strong>Key sharding</strong>: append a random suffix to the partition key: <code>user:123#1</code>, <code>user:123#2</code>, ..., <code>user:123#10</code>. Writes distributed across 10 partitions. Reads: query all 10 suffixes + merge. Cost: 10× read units for hot keys.</p><p>(2) <strong>DynamoDB Adaptive Capacity</strong>: automatically redistributes capacity across partitions. Enables a single partition to use up to 2× its provisioned throughput for a short burst. Handles temporary spikes but not sustained hot keys.</p><p>(3) <strong>Application-level caching</strong>: cache hot partition reads in Redis. Dramatically reduces RCU consumption for the hot partition.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 <section id="concepts-db">
   <div class="sec-tag">08 · Concepts Deep Dive</div>

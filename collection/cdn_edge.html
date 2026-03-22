@@ -138,6 +138,33 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -308,19 +335,52 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 <section id="cdn-advanced">
   <div class="sec-tag">07 · Advanced CDN Topics</div>
   <h2>Range requests, edge functions, and cache invalidation at scale</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Range Requests<br>for Video Seeking</div><div class="concept-def"><strong>HTTP Range header allows a client to request any byte range of a file — enabling video seeking without HLS segmentation.</strong><br>
-      HTTP: <code>GET /video.mp4 Range: bytes=45670000-45800000</code><br>
-      Server (or CDN): <code>206 Partial Content Content-Range: bytes 45670000-45800000/1073741824</code><br>
-      For a 1GB MP4: seek to 42 minutes → calculate byte offset (bitrate × time) → request only those bytes. CDN serves from cache if that range was previously requested (range is part of the cache key).<br>
-      Why CDN caches ranges: CDN can cache full files and serve any range from cache. The first range request for a file causes CDN to fetch the full file from origin (or the requested range — implementation-dependent). Subsequent range requests served from CDN cache. This is why YouTube scrubbing is fast — popular video ranges are cached at the CDN edge.</div></div>
-    <div class="concept-row"><div class="concept-term">Cache Invalidation<br>at Scale</div><div class="concept-def"><strong>Purging a URL from 200+ CDN PoPs simultaneously — and why URL versioning is better.</strong><br>
-      API-based purge: <code>DELETE https://api.cloudflare.com/zones/{id}/purge_cache</code>. Propagates to all PoPs in ~1 second (Cloudflare claims 150ms). CloudFront purge: ~60 seconds. Fastly: &lt;150ms with instant purge.<br>
-      The better solution — immutable URLs with versioning: instead of <code>/app.js</code> (must invalidate on deploy), use <code>/app.v3f4a9.js</code> (content hash in URL). Old URL forever cached (TTL=1 year). New deploy: new hash → new URL → automatically served. Zero invalidation needed.
-        <span class="concept-note good">✓ This is how Next.js, Vite, and Webpack handle static assets: hash in filename → set Cache-Control: max-age=31536000, immutable → CDN caches forever. Only HTML files with TTL=60s for the version pointers. Zero cache invalidation needed on deploy.</span></div></div>
-    <div class="concept-row"><div class="concept-term">CDN vs Reverse Proxy<br>vs API Gateway</div><div class="concept-def"><strong>Similar but different layers. Understanding the distinction is a Director-level signal.</strong></p><p><strong>CDN</strong>: globally distributed cache for static and cacheable content. Brings content closer to users. Origin sits behind it. Cache hit = CDN never calls origin. Examples: CloudFront, Cloudflare, Akamai.</p><p><strong>Reverse Proxy</strong>: single-location intermediary for routing, SSL termination, and caching. Sits in front of app servers in your data center. Nginx, HAProxy. Cache hit = doesn't hit app servers but still in your DC.</p><p><strong>API Gateway</strong>: application-level routing with business logic. Auth, rate limiting, request transformation, API versioning. Kong, AWS API Gateway. Not primarily a cache.
-        <span class="concept-note muted">Cloudflare Workers blurs these lines: it's a CDN with programmable logic at each PoP. Can do auth, routing, transformation at the edge — formerly only possible with origin API gateways.</span></div></div>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">Range Requests for Video Seeking</span>
+    
   </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>HTTP Range header allows a client to request any byte range of a file — enabling video seeking without HLS segmentation.</strong>
+      <p>/p><p>HTTP: <code>GET /video.mp4 Range: bytes=45670000-45800000</code></p><p>Server (or CDN): <code>206 Partial Content Content-Range: bytes 45670000-45800000/1073741824</code></p><p>For a 1GB MP4: seek to 42 minutes → calculate byte offset (bitrate × time) → request only those bytes. CDN serves from cache if that range was previously requested (range is part of the cache key).</p><p>Why CDN caches ranges: CDN can cache full files and serve any range from cache. The first range request for a file causes CDN to fetch the full file from origin (or the requested range — implementation-dependent). Subsequent range requests served from CDN cache. This is why YouTube scrubbing is fast — popular video ranges are cached at the CDN edge.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">Cache Invalidation at Scale</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Purging a URL from 200+ CDN PoPs simultaneously — and why URL versioning is better.</strong>
+      <p>/p><p>API-based purge: <code>DELETE https://api.cloudflare.com/zones/{id}/purge_cache</code>. Propagates to all PoPs in ~1 second (Cloudflare claims 150ms). CloudFront purge: ~60 seconds. Fastly: &lt;150ms with instant purge.</p><p>The better solution — immutable URLs with versioning: instead of <code>/app.js</code> (must invalidate on deploy), use <code>/app.v3f4a9.js</code> (content hash in URL). Old URL forever cached (TTL=1 year). New deploy: new hash → new URL → automatically served. Zero invalidation needed.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ This is how Next.js, Vite, and Webpack handle static assets: hash in filename → set Cache-Control: max-age=31536000, immutable → CDN caches forever. Only HTML files with TTL=60s for the version pointers. Zero cache invalidation needed on deploy.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">03</span>
+    <span class="k-title">CDN vs Reverse Proxy vs API Gateway</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Similar but different layers. Understanding the distinction is a Director-level signal.</strong>
+      <p>/p><p><strong>CDN</strong>: globally distributed cache for static and cacheable content. Brings content closer to users. Origin sits behind it. Cache hit = CDN never calls origin. Examples: CloudFront, Cloudflare, Akamai.</p><p><strong>Reverse Proxy</strong>: single-location intermediary for routing, SSL termination, and caching. Sits in front of app servers in your data center. Nginx, HAProxy. Cache hit = doesn't hit app servers but still in your DC.</p><p><strong>API Gateway</strong>: application-level routing with business logic. Auth, rate limiting, request transformation, API versioning. Kong, AWS API Gateway. Not primarily a cache.</p>
+      </div>
+      <div class="k-muted"><span class="k-icon">→</span><span>Cloudflare Workers blurs these lines: it's a CDN with programmable logic at each PoP. Can do auth, routing, transformation at the edge — formerly only possible with origin API gateways.</span></div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 
 </div>

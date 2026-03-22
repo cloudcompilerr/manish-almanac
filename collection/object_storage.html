@@ -138,6 +138,33 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -334,21 +361,52 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 <section id="obj-advanced">
   <div class="sec-tag">07 · Advanced Object Storage</div>
   <h2>Erasure coding, multipart upload, and S3 internals</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Erasure Coding vs<br>Replication</div><div class="concept-def"><strong>Two ways to achieve durability. Erasure coding uses less storage for the same durability level.</strong><br>
-      3× replication: store 3 copies of every object. Tolerate 2 node failures. Storage overhead: 200% (3× the original size).<br>
-      Erasure coding (Reed-Solomon): split data into k chunks, generate m parity chunks. Store k+m chunks. Can reconstruct from any k of k+m chunks. Tolerate m node failures.<br>
-      Example: RS(10,4) — 10 data chunks + 4 parity chunks = 14 total. Tolerate 4 node failures. Storage overhead: 40% (14/10 = 1.4×). Same durability as 3× replication at 1/5 the storage cost.
-        <span class="concept-note good">✓ S3 uses erasure coding internally. GFS/Colossus (Google) uses erasure coding. The trade-off: erasure coding requires reading k chunks to reconstruct data (higher read latency for small files). For large files (videos, datasets): erasure coding is superior. For small files (&lt;1MB): replication's simplicity wins.</span></div></div>
-    <div class="concept-row"><div class="concept-term">S3 Multipart Upload<br>Internals</div><div class="concept-def"><strong>Required for files &gt;5GB. Recommended for files &gt;100MB. Enables parallel upload and resumability.</strong><br>
-      Flow: <code>CreateMultipartUpload</code> → get UploadId. Split file into parts (5MB–5GB each). Upload parts in parallel (up to 10,000 parts, each with a PartNumber). S3 stores each part independently. <code>CompleteMultipartUpload</code> → S3 assembles parts into final object. AbortMultipartUpload → cleanup if upload fails.<br>
-      Parallelism: 10 concurrent part uploads × 100MB/s bandwidth = 1GB/s effective upload speed. Without multipart: single stream × 100MB/s = 100MB/s.<br>
-      Resumability: if connection drops during part 7, only resume part 7. Parts 1-6 already committed to S3. ListParts to find which parts succeeded → resume from the first missing part.</div></div>
-    <div class="concept-row"><div class="concept-term">S3 Consistency<br>Model (Updated)</div><div class="concept-def"><strong>Since December 2020: S3 provides strong read-after-write consistency for all operations.</strong><br>
-      Previously: S3 was eventually consistent. A PUT followed immediately by a GET might return the old data. Applications had to add delays or use conditional operations.<br>
-      Now: after a successful PUT, subsequent GETs return the new data — immediately and consistently. After a DELETE, subsequent GETs correctly return 404. LIST operations are also consistent — a newly created object appears in LIST results immediately.
-        <span class="concept-note good">✓ This change removed the most common operational footgun in S3-based systems. If you're asked about S3 consistency in an interview: "S3 is strongly consistent since Dec 2020. I don't need to account for eventual consistency in my S3 access patterns." This shows you're current.</span></div></div>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">Erasure Coding vs Replication</span>
+    
   </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Two ways to achieve durability. Erasure coding uses less storage for the same durability level.</strong>
+      <p>/p><p>3× replication: store 3 copies of every object. Tolerate 2 node failures. Storage overhead: 200% (3× the original size).</p><p>Erasure coding (Reed-Solomon): split data into k chunks, generate m parity chunks. Store k+m chunks. Can reconstruct from any k of k+m chunks. Tolerate m node failures.</p><p>Example: RS(10,4) — 10 data chunks + 4 parity chunks = 14 total. Tolerate 4 node failures. Storage overhead: 40% (14/10 = 1.4×). Same durability as 3× replication at 1/5 the storage cost.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ S3 uses erasure coding internally. GFS/Colossus (Google) uses erasure coding. The trade-off: erasure coding requires reading k chunks to reconstruct data (higher read latency for small files). For large files (videos, datasets): erasure coding is superior. For small files (&lt;1MB): replication's simplicity wins.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">S3 Multipart Upload Internals</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Required for files &gt;5GB. Recommended for files &gt;100MB. Enables parallel upload and resumability.</strong>
+      <p>/p><p>Flow: <code>CreateMultipartUpload</code> → get UploadId. Split file into parts (5MB–5GB each). Upload parts in parallel (up to 10,000 parts, each with a PartNumber). S3 stores each part independently. <code>CompleteMultipartUpload</code> → S3 assembles parts into final object. AbortMultipartUpload → cleanup if upload fails.</p><p>Parallelism: 10 concurrent part uploads × 100MB/s bandwidth = 1GB/s effective upload speed. Without multipart: single stream × 100MB/s = 100MB/s.</p><p>Resumability: if connection drops during part 7, only resume part 7. Parts 1-6 already committed to S3. ListParts to find which parts succeeded → resume from the first missing part.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">03</span>
+    <span class="k-title">S3 Consistency Model (Updated)</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Since December 2020: S3 provides strong read-after-write consistency for all operations.</strong>
+      <p>/p><p>Previously: S3 was eventually consistent. A PUT followed immediately by a GET might return the old data. Applications had to add delays or use conditional operations.</p><p>Now: after a successful PUT, subsequent GETs return the new data — immediately and consistently. After a DELETE, subsequent GETs correctly return 404. LIST operations are also consistent — a newly created object appears in LIST results immediately.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ This change removed the most common operational footgun in S3-based systems. If you're asked about S3 consistency in an interview: "S3 is strongly consistent since Dec 2020. I don't need to account for eventual consistency in my S3 access patterns." This shows you're current.</span></div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 
 </div>

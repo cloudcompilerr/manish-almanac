@@ -138,6 +138,33 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+
+/* ══ Knowledge Cards — FAANG Internals ══════════════════════════ */
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* Upgrade existing concept-note spans too */
+span.concept-note{display:block !important;margin-top:10px;padding:8px 12px;border-radius:0 5px 5px 0;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -341,19 +368,51 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 <section id="ch-production">
   <div class="sec-tag">08 · Production Failure Modes</div>
   <h2>What actually breaks in consistent hashing — real incidents</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Virtual Node Count<br>Trade-offs</div><div class="concept-def"><strong>More virtual nodes = more uniform distribution. But: more metadata to store and more keys to move on node addition/removal.</strong><br>
-      With 3 nodes and 1 virtual node each: each node owns 1/3 of the ring. Token assignment might be 33%, 35%, 32% (slightly uneven due to hash function distribution).<br>
-      With 3 nodes and 150 virtual nodes each: each node owns ~1/3 of 450 ring positions. Statistical uniformity: ±2% variance. Adding a 4th node: it claims 150 ring positions from ALL other nodes (not just its neighbours). Keys migrate from all existing nodes, not one. 25% of keys move — exactly what you want.
-        <span class="concept-note muted">Cassandra default: 256 virtual nodes (vnodes) per node. This means a new node steals a small amount of data from every existing node simultaneously — parallelising the data migration and rebalancing faster than stealing all data from one neighbour.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Hot Spot Failure<br>in the Ring</div><div class="concept-def"><strong>Real incident pattern: a node's virtual nodes cluster together, creating an uneven load distribution.</strong><br>
-      With bad luck in random virtual node placement: Node A gets token positions [0, 1, 3, 5, 8]. Node B gets [10, 15, 25, 50, 100]. Node C gets [2, 4, 6, 7, 9]. The "space" between positions is uneven — B owns huge ranges (10→15, 50→100), A owns tiny ranges. B gets 60% of traffic, A and C share 40%.<br>
-      Detection: monitor "data skew" — compare data size across nodes. If any node holds 2× the average data, the vnode placement is causing skew.<br>
-      Fix: Cassandra's "token allocation algorithm" (vnodes=256 + Cassandra 3.0+) generates virtual node positions that are mathematically guaranteed to produce balanced token ranges. Earlier versions used random placement — skew was possible.</div></div>
-    <div class="concept-row"><div class="concept-term">Cascading Failure<br>Pattern</div><div class="concept-def"><strong>Node failure → neighbour takes extra load → neighbour fails → cascade until cluster collapse.</strong><br>
-      Consistent hashing ring: Node A fails. Its token range transfers to Node B. Node B now handles 2× its normal load. If Node B was already at 70% capacity → now at 140% → Node B fails. Node C gets 3× normal load. Cascade.<br>
-      Prevention: capacity planning — never run nodes above 50% utilisation. The extra 50% headroom absorbs a neighbour's load without pushing into failure. Admission control: when a node's CPU > 80%, start rejecting new requests (503) rather than accepting them and degrading further. Circuit breaker at the client: stop sending traffic to an overloaded node.</div></div>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">Virtual Node Count Trade-offs</span>
+    
   </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>More virtual nodes = more uniform distribution. But: more metadata to store and more keys to move on node addition/removal.</strong>
+      <p>/p><p>With 3 nodes and 1 virtual node each: each node owns 1/3 of the ring. Token assignment might be 33%, 35%, 32% (slightly uneven due to hash function distribution).</p><p>With 3 nodes and 150 virtual nodes each: each node owns ~1/3 of 450 ring positions. Statistical uniformity: ±2% variance. Adding a 4th node: it claims 150 ring positions from ALL other nodes (not just its neighbours). Keys migrate from all existing nodes, not one. 25% of keys move — exactly what you want.</p>
+      </div>
+      <div class="k-muted"><span class="k-icon">→</span><span>Cassandra default: 256 virtual nodes (vnodes) per node. This means a new node steals a small amount of data from every existing node simultaneously — parallelising the data migration and rebalancing faster than stealing all data from one neighbour.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">Hot Spot Failure in the Ring</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Real incident pattern: a node's virtual nodes cluster together, creating an uneven load distribution.</strong>
+      <p>/p><p>With bad luck in random virtual node placement: Node A gets token positions [0, 1, 3, 5, 8]. Node B gets [10, 15, 25, 50, 100]. Node C gets [2, 4, 6, 7, 9]. The "space" between positions is uneven — B owns huge ranges (10→15, 50→100), A owns tiny ranges. B gets 60% of traffic, A and C share 40%.</p><p>Detection: monitor "data skew" — compare data size across nodes. If any node holds 2× the average data, the vnode placement is causing skew.</p><p>Fix: Cassandra's "token allocation algorithm" (vnodes=256 + Cassandra 3.0+) generates virtual node positions that are mathematically guaranteed to produce balanced token ranges. Earlier versions used random placement — skew was possible.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">03</span>
+    <span class="k-title">Cascading Failure Pattern</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Node failure → neighbour takes extra load → neighbour fails → cascade until cluster collapse.</strong>
+      <p>/p><p>Consistent hashing ring: Node A fails. Its token range transfers to Node B. Node B now handles 2× its normal load. If Node B was already at 70% capacity → now at 140% → Node B fails. Node C gets 3× normal load. Cascade.</p><p>Prevention: capacity planning — never run nodes above 50% utilisation. The extra 50% headroom absorbs a neighbour's load without pushing into failure. Admission control: when a node's CPU > 80%, start rejecting new requests (503) rather than accepting them and degrading further. Circuit breaker at the client: stop sending traffic to an overloaded node.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 </section>
 
 </div>
