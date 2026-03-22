@@ -123,11 +123,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -135,7 +145,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <p class="hero-sub">Queue vs stream, dead letter queues, fan-out, backpressure, exactly-once patterns — when to use each and how to make the right choice in system design interviews.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">SQS</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">RabbitMQ</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Fan-Out</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">DLQ</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">At-Least-Once</span></div>
 </div></div>
-<nav class="nav"><a href="#queues-vs-streams">Queue vs Stream</a><a href="#patterns">Patterns</a><a href="#sqs">SQS vs RabbitMQ</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#queues-vs-streams">Queue vs Stream</a><a href="#patterns">Patterns</a><a href="#sqs">SQS vs RabbitMQ</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#mq-advanced">Advanced Patterns</a></nav>
 <div class="wrap">
 <section id="queues-vs-streams">
   <div class="sec-tag">00 · The Critical Distinction</div>
@@ -149,12 +159,12 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Message Queue</div><div class="concept-def"><strong>One consumer reads a message. Once consumed and acknowledged, it is deleted.</strong><br>
-      Point-to-point: one message → one consumer. Or fan-out: publish to topic → one copy per subscriber queue.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Ideal for task distribution: "process this image resize job" — you want exactly one worker to do it, not all of them. Built-in dead letter queues, retry logic, visibility timeout.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Examples: SQS, RabbitMQ, ActiveMQ. Use for: email sending, image processing, order fulfillment tasks.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Event Stream</div><div class="concept-def"><strong>Messages are retained. Multiple independent consumers can read all messages, each at their own pace.</strong><br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Replay: Flink crashed? Replay from last offset. Multiple consumers: Flink, ClickHouse, and S3 all read the same stream independently.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Examples: Kafka, Kinesis, Pulsar. Use for: event sourcing, streaming analytics, audit logs, feeding multiple downstream systems.</span></div></div>
+      Point-to-point: one message → one consumer. Or fan-out: publish to topic → one copy per subscriber queue.
+        <span class="concept-note good">✓ Ideal for task distribution: "process this image resize job" — you want exactly one worker to do it, not all of them. Built-in dead letter queues, retry logic, visibility timeout.</span>
+      <span class="concept-note muted">Examples: SQS, RabbitMQ, ActiveMQ. Use for: email sending, image processing, order fulfillment tasks.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Event Stream</div><div class="concept-def"><strong>Messages are retained. Multiple independent consumers can read all messages, each at their own pace.</strong>
+        <span class="concept-note good">✓ Replay: Flink crashed? Replay from last offset. Multiple consumers: Flink, ClickHouse, and S3 all read the same stream independently.</span>
+      <span class="concept-note muted">Examples: Kafka, Kinesis, Pulsar. Use for: event sourcing, streaming analytics, audit logs, feeding multiple downstream systems.</span></div></div>
   </div>
 </section>
 
@@ -164,23 +174,23 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Dead Letter Queue (DLQ)</div><div class="concept-def"><strong>When a message fails processing N times, it moves to a DLQ instead of being silently dropped.</strong><br>
       Flow: message enters queue → worker fails to process → message becomes visible again after visibility timeout → after 3 retries → moved to DLQ.<br>
-      DLQ stores failed messages for investigation and reprocessing.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ No silent data loss. Failed messages are preserved and inspectable. Essential for production systems — without DLQ, a bad message can block a queue forever (poison pill).</span></div></div>
+      DLQ stores failed messages for investigation and reprocessing.
+        <span class="concept-note good">✓ No silent data loss. Failed messages are preserved and inspectable. Essential for production systems — without DLQ, a bad message can block a queue forever (poison pill).</span></div></div>
     <div class="concept-row"><div class="concept-term">Visibility Timeout</div><div class="concept-def"><strong>When a worker picks up a message, it becomes invisible to other workers for N seconds (the visibility timeout).</strong><br>
       If the worker completes processing: explicitly deletes the message.<br>
-      If the worker crashes: timeout expires, message becomes visible again for another worker to pick up.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Automatic retry on worker failure. At-least-once delivery guarantee. Set timeout to 2x your expected processing time.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ At-least-once means duplicates are possible (worker completes but crashes before deleting). Make your consumers idempotent.</span></div></div>
+      If the worker crashes: timeout expires, message becomes visible again for another worker to pick up.
+        <span class="concept-note good">✓ Automatic retry on worker failure. At-least-once delivery guarantee. Set timeout to 2x your expected processing time.</span>
+      <span class="concept-note warn">⚠ At-least-once means duplicates are possible (worker completes but crashes before deleting). Make your consumers idempotent.</span></div></div>
     <div class="concept-row"><div class="concept-term">Fan-Out Pattern</div><div class="concept-def"><strong>One message triggers multiple independent processing pipelines.</strong><br>
       SNS (pub/sub topic) + multiple SQS queues: publish to SNS → SNS delivers a copy to each subscribed SQS queue → each queue has its own consumer processing independently.<br>
-      Example: new order event → (1) fulfillment queue, (2) analytics queue, (3) notification queue — all independent.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Decoupled services. New consumers added without touching the publisher. Each consumer has its own DLQ.</span></div></div>
+      Example: new order event → (1) fulfillment queue, (2) analytics queue, (3) notification queue — all independent.
+        <span class="concept-note good">✓ Decoupled services. New consumers added without touching the publisher. Each consumer has its own DLQ.</span></div></div>
     <div class="concept-row"><div class="concept-term">Backpressure</div><div class="concept-def"><strong>When consumers cannot keep up with producers, the queue grows. Backpressure signals the producer to slow down.</strong><br>
       Strategies:<br>
       • <strong>Queue depth alarm</strong>: CloudWatch alarm when SQS depth &gt; 10K → auto-scale consumers.<br>
       • <strong>Producer rate limiting</strong>: producer checks queue depth before sending; slows if deep.<br>
-      • <strong>Blocking send</strong>: Kafka producer blocks when buffer is full (internal backpressure).<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Without backpressure: queue grows unbounded → OOM or unbounded delay → cascading failure. Always monitor queue depth.</span></div></div>
+      • <strong>Blocking send</strong>: Kafka producer blocks when buffer is full (internal backpressure).
+        <span class="concept-note warn">⚠ Without backpressure: queue grows unbounded → OOM or unbounded delay → cascading failure. Always monitor queue depth.</span></div></div>
   </div>
 </section>
 
@@ -225,20 +235,20 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">SQS Standard</div><div class="concept-def"><strong>Best-effort ordering only.</strong> Messages may arrive out of order. May be delivered more than once.<br>
-      Why: SQS Standard routes messages across many redundant queues for maximum throughput. Order is not preserved across these internal queues.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Highest throughput (unlimited). Best for: tasks where order does not matter (image resizing, email sending, background jobs).</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ If you need order, use SQS FIFO — not Standard.</span></div></div>
+      Why: SQS Standard routes messages across many redundant queues for maximum throughput. Order is not preserved across these internal queues.
+        <span class="concept-note good">✓ Highest throughput (unlimited). Best for: tasks where order does not matter (image resizing, email sending, background jobs).</span>
+      <span class="concept-note warn">⚠ If you need order, use SQS FIFO — not Standard.</span></div></div>
     <div class="concept-row"><div class="concept-term">SQS FIFO</div><div class="concept-def"><strong>Strict first-in-first-out ordering AND exactly-once delivery within a message group.</strong><br>
       Message Group ID: messages with the same group ID are processed in order. Different group IDs process in parallel.<br>
-      Example: all order events for order_123 share group_id="order_123" → processed in sequence. Orders 123 and 456 processed in parallel.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Exactly-once processing (deduplication by message ID). Order guaranteed within group. Used for: order state machines, financial transactions, any workflow where step sequence matters.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Max 3,000 transactions/sec per queue (vs unlimited for Standard). If one message in a group fails and blocks, all subsequent messages in that group wait.</span></div></div>
+      Example: all order events for order_123 share group_id="order_123" → processed in sequence. Orders 123 and 456 processed in parallel.
+        <span class="concept-note good">✓ Exactly-once processing (deduplication by message ID). Order guaranteed within group. Used for: order state machines, financial transactions, any workflow where step sequence matters.</span>
+      <span class="concept-note warn">⚠ Max 3,000 transactions/sec per queue (vs unlimited for Standard). If one message in a group fails and blocks, all subsequent messages in that group wait.</span></div></div>
     <div class="concept-row"><div class="concept-term">Kafka Ordering</div><div class="concept-def"><strong>Strict ordering within a partition. No ordering guarantee across partitions.</strong><br>
-      All events for user_123 → same partition (keyed by user_id) → consumed in order by the same consumer thread. Events for user_456 → different partition → parallel, independent.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Per-entity ordering (all of one user's events are ordered) + high parallelism (different entities processed in parallel). The right model for most real-world ordering needs.</span></div></div>
+      All events for user_123 → same partition (keyed by user_id) → consumed in order by the same consumer thread. Events for user_456 → different partition → parallel, independent.
+        <span class="concept-note good">✓ Per-entity ordering (all of one user's events are ordered) + high parallelism (different entities processed in parallel). The right model for most real-world ordering needs.</span></div></div>
     <div class="concept-row"><div class="concept-term">RabbitMQ Ordering</div><div class="concept-def"><strong>FIFO within a single queue with a single consumer. Multiple consumers break ordering.</strong><br>
-      With 3 consumers on one queue: message A → consumer 1 (slow, takes 5s), message B → consumer 2 (fast, takes 100ms). B is processed before A — out of order.<br>
-      <span style="color:#5a5848;font-size:12.5px;">To preserve order with RabbitMQ: use a single consumer. Or use one queue per "entity" (one queue per user) — but this doesn't scale to millions of users. RabbitMQ is a poor choice when strict per-entity ordering at scale matters — use Kafka instead.</span></div></div>
+      With 3 consumers on one queue: message A → consumer 1 (slow, takes 5s), message B → consumer 2 (fast, takes 100ms). B is processed before A — out of order.
+        <span class="concept-note muted">To preserve order with RabbitMQ: use a single consumer. Or use one queue per "entity" (one queue per user) — but this doesn't scale to millions of users. RabbitMQ is a poor choice when strict per-entity ordering at scale matters — use Kafka instead.</span></div></div>
   </div>
 </section>
 
@@ -247,16 +257,14 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>Two fundamentally different delivery models</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Point-to-Point<br>(Queue)</div><div class="concept-def"><strong>One producer sends, one consumer receives. Message is deleted after consumption.</strong><br>
-      Multiple consumers on the same queue compete for messages — each message goes to exactly one consumer. This is task distribution: "process this job" should be done by one worker, not all workers.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Use for: task queues (image processing, email sending), work distribution, exactly-once processing. SQS, RabbitMQ queues.</span></div></div>
+      Multiple consumers on the same queue compete for messages — each message goes to exactly one consumer. This is task distribution: "process this job" should be done by one worker, not all workers.
+        <span class="concept-note muted">Use for: task queues (image processing, email sending), work distribution, exactly-once processing. SQS, RabbitMQ queues.</span></div></div>
     <div class="concept-row"><div class="concept-term">Publish-Subscribe<br>(Topic)</div><div class="concept-def"><strong>One producer publishes, ALL subscribers receive a copy. Message is not deleted after first consumption.</strong><br>
-      An OrderPlaced event published to SNS topic → Fulfillment Service gets a copy AND Notification Service gets a copy AND Analytics Service gets a copy. All three process independently.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Decoupled fan-out. Adding a new subscriber (e.g., new Fraud Detection service) requires zero changes to the publisher. Used for: event broadcasting, audit logging, feeding multiple downstream systems.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">SNS (pub/sub) + SQS (queue): the AWS pattern. SNS distributes to multiple SQS queues. Each queue has its own consumer group with independent retry logic and DLQ.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Kafka as Both</div><div class="concept-def"><strong>Kafka supports both models via consumer groups.</strong><br>
-      <strong>Point-to-point</strong>: one consumer group, multiple consumers. Each partition assigned to one consumer. Messages load-balanced across consumers.<br>
-      <strong>Pub/sub</strong>: multiple independent consumer groups on the same topic. Each group gets all messages. Group A (Flink) and Group B (ClickHouse) both read the same events independently, at their own pace.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ This flexibility is why Kafka replaced both SQS-style queues and SNS-style topics in many architectures. One transport layer serves all consumption patterns.</span></div></div>
+      An OrderPlaced event published to SNS topic → Fulfillment Service gets a copy AND Notification Service gets a copy AND Analytics Service gets a copy. All three process independently.
+        <span class="concept-note good">✓ Decoupled fan-out. Adding a new subscriber (e.g., new Fraud Detection service) requires zero changes to the publisher. Used for: event broadcasting, audit logging, feeding multiple downstream systems.</span>
+      <span class="concept-note muted">SNS (pub/sub) + SQS (queue): the AWS pattern. SNS distributes to multiple SQS queues. Each queue has its own consumer group with independent retry logic and DLQ.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Kafka as Both</div><div class="concept-def"><strong>Kafka supports both models via consumer groups.</strong></p><p><strong>Point-to-point</strong>: one consumer group, multiple consumers. Each partition assigned to one consumer. Messages load-balanced across consumers.</p><p><strong>Pub/sub</strong>: multiple independent consumer groups on the same topic. Each group gets all messages. Group A (Flink) and Group B (ClickHouse) both read the same events independently, at their own pace.
+        <span class="concept-note good">✓ This flexibility is why Kafka replaced both SQS-style queues and SNS-style topics in many architectures. One transport layer serves all consumption patterns.</span></div></div>
   </div>
 </section>
 
@@ -358,6 +366,26 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
     </div>
   </div>
 </section>
+
+<section id="mq-advanced">
+  <div class="sec-tag">09 · Advanced Patterns</div>
+  <h2>Poison pills, exactly-once, and outbox pattern</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Poison Pill<br>Handling</div><div class="concept-def"><strong>A message that crashes your consumer every time it's processed. Without handling, the consumer loops forever.</strong><br>
+      Pattern: message → consumer fails → message returned to queue → redelivered → consumer fails again → infinite loop. The queue grows stale as the poison pill blocks processing.<br>
+      Solution — Dead Letter Queue (DLQ): after N failed delivery attempts (SQS default: 3), move the message to a DLQ automatically. Consumer processes the queue normally. Poison pill lands in DLQ. Separate DLQ consumer (or a human) inspects the message → fix the bug → redeliver manually or discard.<br>
+      SQS configuration: <code>maxReceiveCount=3</code> on the source queue → <code>redrivePolicy → deadLetterTargetArn → DLQ ARN</code>. Message appears in DLQ after 3 failed deliveries. DLQ retention: 14 days (gives you time to investigate).
+        <span class="concept-note warn">⚠ Alert on DLQ depth. A growing DLQ means messages are failing repeatedly — likely a schema change, a downstream service being down, or a code bug. Treat DLQ messages as incidents, not background noise.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Exactly-Once<br>in Kafka</div><div class="concept-def"><strong>Kafka's EOS (Exactly-Once Semantics) uses idempotent producers + transactional consumers.</strong><br>
+      Idempotent producer: each producer has a PID + sequence number. Broker deduplicates messages with the same PID+seq. Safe to retry on network failure — duplicates are dropped. Enable: <code>enable.idempotence=true</code>.<br>
+      Transactional producer: producer opens a transaction, writes to multiple partitions/topics atomically, commits. Consumers with <code>isolation.level=read_committed</code> see only committed messages. Uncommitted messages from aborted transactions are hidden.<br>
+      The cost: transactional commits require a coordinator round trip — adds 10–100ms per batch. Throughput reduced by ~10%. Worth it for: financial transactions, inventory updates, any "write to DB + publish event" pattern where both must succeed or both must fail.
+        <span class="concept-note muted">Idempotent consumers are still needed: Kafka EOS guarantees exactly-once delivery but your consumer's processing logic must also be idempotent (e.g., INSERT OR IGNORE, upsert with idempotency key) for true end-to-end exactly-once semantics.</span></div></div>
+  </div>
+</section>
+
+</div>
 <div class="footer">MESSAGE QUEUES · SQS · RABBITMQ · DLQ · FAN-OUT · AT-LEAST-ONCE · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

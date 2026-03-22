@@ -124,11 +124,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style>
 </head><body>
 <div class="hero"><div class="hero-inner">
@@ -137,7 +147,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <p class="hero-sub">L4 vs L7, load balancing algorithms, circuit breakers, API Gateway vs service mesh, and zero-downtime deployments — every concept needed for system design interviews.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">L4 / L7</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Nginx</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Envoy</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">Circuit Breaker</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:rgba(96,64,160,.08)">Service Mesh</span></div>
 </div></div>
-<nav class="nav"><a href="#why">Why LB</a><a href="#l4vsl7">L4 vs L7</a><a href="#algorithms">Algorithms</a><a href="#patterns">Advanced Patterns</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#why">Why LB</a><a href="#l4vsl7">L4 vs L7</a><a href="#algorithms">Algorithms</a><a href="#patterns">Advanced Patterns</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#lb-global">Global LB</a></nav>
 <div class="wrap">
 <section id="why">
   <div class="sec-tag">00 · Why Load Balancing</div>
@@ -159,15 +169,15 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">L4 (Transport Layer)</div><div class="concept-def"><strong>Routes based on IP address and TCP/UDP port only. Does not inspect packet contents.</strong><br>
       Decision: "This TCP connection from 1.2.3.4 goes to server B."<br>
-      One TCP connection between client and server — the LB just forwards packets.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Extremely fast — no parsing overhead. Works for any protocol (TCP, UDP, SMTP, MySQL). Lower latency. Used for high-throughput, low-overhead routing.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Cannot make routing decisions based on URL, headers, cookies, or content. Cannot terminate SSL. Cannot implement application-level health checks.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Examples: AWS NLB (Network Load Balancer), HAProxy in TCP mode, Linux IPVS.</span></div></div>
+      One TCP connection between client and server — the LB just forwards packets.
+        <span class="concept-note good">✓ Extremely fast — no parsing overhead. Works for any protocol (TCP, UDP, SMTP, MySQL). Lower latency. Used for high-throughput, low-overhead routing.</span>
+      <span class="concept-note warn">⚠ Cannot make routing decisions based on URL, headers, cookies, or content. Cannot terminate SSL. Cannot implement application-level health checks.</span>
+      <span class="concept-note muted">Examples: AWS NLB (Network Load Balancer), HAProxy in TCP mode, Linux IPVS.</span></div></div>
     <div class="concept-row"><div class="concept-term">L7 (Application Layer)</div><div class="concept-def"><strong>Inspects HTTP headers, URL paths, cookies, and body to make routing decisions. Terminates the client connection and opens a new one to the backend.</strong><br>
-      Decision: "This POST /api/payments request goes to the payments service. This GET /images/ request goes to the static content service."<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ URL-based routing (path-based or host-based). SSL termination (decrypts once at LB, unencrypted to backends). A/B testing and canary deploys. Rate limiting. Request/response transformation. Advanced health checks (HTTP 200 check, not just TCP connect).</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Higher CPU overhead (parses every HTTP request). Slightly higher latency. Cannot handle raw TCP/UDP workloads.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Examples: AWS ALB, Nginx, Envoy, Traefik, HAProxy in HTTP mode.</span></div></div>
+      Decision: "This POST /api/payments request goes to the payments service. This GET /images/ request goes to the static content service."
+        <span class="concept-note good">✓ URL-based routing (path-based or host-based). SSL termination (decrypts once at LB, unencrypted to backends). A/B testing and canary deploys. Rate limiting. Request/response transformation. Advanced health checks (HTTP 200 check, not just TCP connect).</span>
+      <span class="concept-note warn">⚠ Higher CPU overhead (parses every HTTP request). Slightly higher latency. Cannot handle raw TCP/UDP workloads.</span>
+      <span class="concept-note muted">Examples: AWS ALB, Nginx, Envoy, Traefik, HAProxy in HTTP mode.</span></div></div>
   </div>
 </section>
 
@@ -176,18 +186,18 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>How the LB decides which server gets the request</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Round Robin</div><div class="concept-def"><strong>Distribute requests evenly in rotation: server 1, 2, 3, 1, 2, 3...</strong><br>
-      Simple and fair for homogeneous servers with similar request costs.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Fails when servers have different capacities or when request cost varies (a 10ms request and a 5-second request are treated identically).</span></div></div>
+      Simple and fair for homogeneous servers with similar request costs.
+        <span class="concept-note warn">⚠ Fails when servers have different capacities or when request cost varies (a 10ms request and a 5-second request are treated identically).</span></div></div>
     <div class="concept-row"><div class="concept-term">Weighted Round Robin</div><div class="concept-def"><strong>Servers get traffic proportional to their weight.</strong> Server A (32 cores) gets 2x traffic of Server B (16 cores).<br>
-      Useful during rolling deploys: new servers start with weight=0, gradually increased.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Handles heterogeneous fleets. Natural fit for canary deployments (weight new version at 5%).</span></div></div>
+      Useful during rolling deploys: new servers start with weight=0, gradually increased.
+        <span class="concept-note good">✓ Handles heterogeneous fleets. Natural fit for canary deployments (weight new version at 5%).</span></div></div>
     <div class="concept-row"><div class="concept-term">Least Connections</div><div class="concept-def"><strong>Route to the server with fewest active connections currently.</strong><br>
-      Ideal for long-lived connections or variable request duration (WebSocket, video streaming, large file uploads).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Naturally load-balances when request durations vary. A slow server accumulates connections and receives fewer new ones.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Requires the LB to track active connections per server — state overhead.</span></div></div>
+      Ideal for long-lived connections or variable request duration (WebSocket, video streaming, large file uploads).
+        <span class="concept-note good">✓ Naturally load-balances when request durations vary. A slow server accumulates connections and receives fewer new ones.</span>
+      <span class="concept-note warn">⚠ Requires the LB to track active connections per server — state overhead.</span></div></div>
     <div class="concept-row"><div class="concept-term">Consistent Hash</div><div class="concept-def"><strong>Route requests from the same source (IP or user ID) to the same server consistently.</strong><br>
-      Required for: WebSocket connections (must reach the same server), stateful sessions without a shared cache, server-side caching (cache warm on one server).<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Can create hot spots if one user generates disproportionate traffic. Server removal disrupts affected users.</span></div></div>
+      Required for: WebSocket connections (must reach the same server), stateful sessions without a shared cache, server-side caching (cache warm on one server).
+        <span class="concept-note warn">⚠ Can create hot spots if one user generates disproportionate traffic. Server removal disrupts affected users.</span></div></div>
   </div>
 </section>
 
@@ -197,18 +207,15 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Health Checks</div><div class="concept-def"><strong>LB continuously probes backends. Unhealthy servers are removed from rotation.</strong><br>
       Passive: track error rate and latency from real traffic. Remove servers exceeding threshold.<br>
-      Active: LB sends <code>GET /health</code> every 10s. If 3 consecutive failures → mark unhealthy → remove from pool.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Automatic removal of crashed instances without human intervention. Required for zero-downtime deployments.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Return 200 only when truly healthy: DB connected, dependencies up, startup complete. Not just "process is running."</span></div></div>
+      Active: LB sends <code>GET /health</code> every 10s. If 3 consecutive failures → mark unhealthy → remove from pool.
+        <span class="concept-note good">✓ Automatic removal of crashed instances without human intervention. Required for zero-downtime deployments.</span>
+      <span class="concept-note muted">Return 200 only when truly healthy: DB connected, dependencies up, startup complete. Not just "process is running."</span></div></div>
     <div class="concept-row"><div class="concept-term">Circuit Breaker</div><div class="concept-def"><strong>Stop sending requests to a failing service instead of letting failures cascade.</strong><br>
       Three states: Closed (normal) → Open (failures exceed threshold, stop sending) → Half-Open (send probe requests to check recovery).<br>
-      Example: Payment service is down. Without circuit breaker: all requests queue up, threads exhaust, your entire API times out. With circuit breaker: immediately return "payment service unavailable" and redirect to fallback.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Prevents cascade failures. Fast failure response. Used by: Netflix Hystrix, Envoy, Istio, Spring Cloud Circuit Breaker.</span></div></div>
-    <div class="concept-row"><div class="concept-term">API Gateway vs<br>Reverse Proxy vs<br>Service Mesh</div><div class="concept-def"><strong>Three different things that are often confused:</strong><br>
-      <strong>Reverse Proxy</strong>: Sits in front of servers, forwards requests. Handles SSL, caching, compression. Example: Nginx.<br>
-      <strong>API Gateway</strong>: Smart reverse proxy with auth, rate limiting, request routing by path, API versioning, request/response transformation. Example: Kong, AWS API Gateway.<br>
-      <strong>Service Mesh</strong>: Sidecar proxies (Envoy) injected next to every service. Handles service-to-service communication: mTLS, circuit breaking, load balancing, distributed tracing — all without changing application code. Example: Istio, Linkerd.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Use API Gateway for external traffic (public API). Use service mesh for internal service-to-service traffic at large scale.</span></div></div>
+      Example: Payment service is down. Without circuit breaker: all requests queue up, threads exhaust, your entire API times out. With circuit breaker: immediately return "payment service unavailable" and redirect to fallback.
+        <span class="concept-note good">✓ Prevents cascade failures. Fast failure response. Used by: Netflix Hystrix, Envoy, Istio, Spring Cloud Circuit Breaker.</span></div></div>
+    <div class="concept-row"><div class="concept-term">API Gateway vs<br>Reverse Proxy vs<br>Service Mesh</div><div class="concept-def"><strong>Three different things that are often confused:</strong></p><p><strong>Reverse Proxy</strong>: Sits in front of servers, forwards requests. Handles SSL, caching, compression. Example: Nginx.</p><p><strong>API Gateway</strong>: Smart reverse proxy with auth, rate limiting, request routing by path, API versioning, request/response transformation. Example: Kong, AWS API Gateway.</p><p><strong>Service Mesh</strong>: Sidecar proxies (Envoy) injected next to every service. Handles service-to-service communication: mTLS, circuit breaking, load balancing, distributed tracing — all without changing application code. Example: Istio, Linkerd.
+        <span class="concept-note muted">Use API Gateway for external traffic (public API). Use service mesh for internal service-to-service traffic at large scale.</span></div></div>
   </div>
 </section>
 
@@ -232,22 +239,22 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>Blue-green, canary, and rolling — how the LB enables zero-downtime deploys</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Blue-Green Deploy</div><div class="concept-def"><strong>Run two identical production environments (blue = current, green = new). Switch traffic instantly by updating the LB.</strong><br>
-      Blue = v1.0 serving 100% traffic. Deploy v1.1 to green (idle). Run smoke tests on green. Switch LB: 0% → blue, 100% → green. Instant cutover. Rollback: flip LB back to blue in seconds.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Zero downtime. Instant rollback. Full production test on idle environment before cutover. Used for: high-stakes deploys where any version mixing is unacceptable.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Requires double infrastructure temporarily. DB schema changes must be backwards-compatible (both blue and green must work with same schema during transition).</span></div></div>
+      Blue = v1.0 serving 100% traffic. Deploy v1.1 to green (idle). Run smoke tests on green. Switch LB: 0% → blue, 100% → green. Instant cutover. Rollback: flip LB back to blue in seconds.
+        <span class="concept-note good">✓ Zero downtime. Instant rollback. Full production test on idle environment before cutover. Used for: high-stakes deploys where any version mixing is unacceptable.</span>
+      <span class="concept-note warn">⚠ Requires double infrastructure temporarily. DB schema changes must be backwards-compatible (both blue and green must work with same schema during transition).</span></div></div>
     <div class="concept-row"><div class="concept-term">Canary Deploy</div><div class="concept-def"><strong>Route a small percentage of real traffic to the new version. Gradually increase if metrics look good.</strong><br>
-      Week 1: 1% → new version. Week 2: 10%. Week 3: 50%. Week 4: 100%. At each stage, monitor error rates, latency, and business metrics. Automated rollback if anomaly detected.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Real user validation before full rollout. Limits blast radius of bugs to 1% of users initially. Used by: Google, Netflix, Amazon for all feature releases.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Implementation: Nginx <code>split_clients</code>, Envoy weighted clusters, AWS ALB weighted target groups. Route by: random (statistical), user ID hash (consistent experience), header flag (beta testers).</span></div></div>
+      Week 1: 1% → new version. Week 2: 10%. Week 3: 50%. Week 4: 100%. At each stage, monitor error rates, latency, and business metrics. Automated rollback if anomaly detected.
+        <span class="concept-note good">✓ Real user validation before full rollout. Limits blast radius of bugs to 1% of users initially. Used by: Google, Netflix, Amazon for all feature releases.</span>
+      <span class="concept-note muted">Implementation: Nginx <code>split_clients</code>, Envoy weighted clusters, AWS ALB weighted target groups. Route by: random (statistical), user ID hash (consistent experience), header flag (beta testers).</span></div></div>
     <div class="concept-row"><div class="concept-term">Rolling Deploy</div><div class="concept-def"><strong>Replace instances one at a time. At any point, some instances run old version, some run new.</strong><br>
-      10 instances: replace 1 → 2 → 3... until all 10 run new version. LB automatically routes to healthy instances (health checks remove in-progress instances from rotation).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ No extra infrastructure. Gradual. Works with any LB.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Both versions run simultaneously — APIs must be backwards-compatible. Rollback requires rolling back all instances (slow). Default strategy for Kubernetes Deployments.</span></div></div>
+      10 instances: replace 1 → 2 → 3... until all 10 run new version. LB automatically routes to healthy instances (health checks remove in-progress instances from rotation).
+        <span class="concept-note good">✓ No extra infrastructure. Gradual. Works with any LB.</span>
+      <span class="concept-note warn">⚠ Both versions run simultaneously — APIs must be backwards-compatible. Rollback requires rolling back all instances (slow). Default strategy for Kubernetes Deployments.</span></div></div>
     <div class="concept-row"><div class="concept-term">Connection Draining</div><div class="concept-def"><strong>Before removing a server from rotation, wait for in-flight requests to complete.</strong><br>
       1. Mark server as "draining" in LB — no new connections routed to it.<br>
       2. Wait for existing connections to finish (or timeout after 30 seconds).<br>
-      3. Server reports zero active connections → safely terminate/redeploy.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Zero dropped requests. Users in the middle of a long operation (file upload, ML inference) are not interrupted. AWS ALB calls this "deregistration delay" (default 300s).</span></div></div>
+      3. Server reports zero active connections → safely terminate/redeploy.
+        <span class="concept-note good">✓ Zero dropped requests. Users in the middle of a long operation (file upload, ML inference) are not interrupted. AWS ALB calls this "deregistration delay" (default 300s).</span></div></div>
   </div>
 </section>
 
@@ -362,6 +369,26 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
     </div>
   </div>
 </section>
+
+<section id="lb-global">
+  <div class="sec-tag">10 · Global Load Balancing</div>
+  <h2>Beyond the datacenter — routing traffic across regions and continents</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">GeoDNS<br>Latency-Based Routing</div><div class="concept-def"><strong>DNS responds with different IP addresses based on the requester's geographic location.</strong><br>
+      User in Mumbai queries api.myapp.com → GeoDNS determines their location → returns the IP of the Mumbai regional load balancer. User in London → returns the London LB IP. Same DNS name, different IP, routed to the nearest datacenter.<br>
+      AWS Route 53 latency-based routing: measures actual latency between the user's DNS resolver and each region (not just geographic distance). Routes to the region with lowest latency, not just the nearest one. Tokyo might actually be faster than Singapore for some Australian users.
+        <span class="concept-note muted">DNS TTL = 60 seconds: if a region goes down, GeoDNS removes it from the response within 60s. But some resolvers cache longer. For fast failover: use Anycast routing instead (or both together).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Anycast Routing</div><div class="concept-def"><strong>Multiple servers share the same IP address. BGP routing sends traffic to the topologically nearest server.</strong><br>
+      Cloudflare uses Anycast for its 200+ PoPs. Every PoP advertises the same IP address (e.g., 1.1.1.1). BGP automatically routes each user to the nearest PoP based on network topology. No DNS magic — happens at the routing layer.<br>
+      Failover: if a PoP goes down, its BGP advertisement withdraws. Traffic automatically routes to the next-nearest PoP within seconds — faster than DNS TTL-based failover.
+        <span class="concept-note good">✓ Used by: Cloudflare, Akamai, AWS Global Accelerator (uses Anycast to route to the nearest AWS edge node). Faster failover than GeoDNS. Used for: DDoS mitigation (absorb attack traffic across many PoPs), low-latency global routing.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Active-Active vs<br>Active-Passive Global</div><div class="concept-def"><strong>Active-active: multiple regions serve traffic simultaneously. Active-passive: one region serves, the other is standby.</strong></p><p><strong>Active-passive</strong>: all traffic goes to US-East. US-West is a warm standby. On US-East failure: DNS/Anycast switches to US-West. Recovery: 30–120 seconds. Simple. RPO/RTO: minutes. Right for: applications where global latency doesn't matter but simplicity does.</p><p><strong>Active-active</strong>: US-East serves US traffic, EU-West serves European traffic, AP-Southeast serves Asia. Each region is a full stack. DB replication: bidirectional (Cassandra's multi-datacenter replication, or CockroachDB global tables). Right for: globally distributed user bases where latency matters. Hard part: write-write conflicts across regions need careful resolution.
+        <span class="concept-note good">✓ Notion runs globally active-active on AWS with CockroachDB. Stripe's payments infrastructure is active-active across 3 AWS regions. Cloudflare serves from 200+ PoPs active-active. Start with active-passive — upgrade to active-active when latency SLA demands it.</span></div></div>
+  </div>
+</section>
+
+</div>
 <div class="footer">LOAD BALANCING · L4 · L7 · NGINX · ENVOY · CIRCUIT BREAKER · API GATEWAY · SERVICE MESH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

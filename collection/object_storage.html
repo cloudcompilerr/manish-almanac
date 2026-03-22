@@ -123,11 +123,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -135,24 +145,24 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <p class="hero-sub">S3 vs block vs file storage, multipart uploads, pre-signed URLs, storage classes, and CDN integration — everything for media and data lake system designs.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">S3 / GCS</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Multipart Upload</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Pre-Signed URLs</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Storage Classes</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">CDN Origin</span></div>
 </div></div>
-<nav class="nav"><a href="#what">Storage Types</a><a href="#internals">S3 Internals</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#what">Storage Types</a><a href="#internals">S3 Internals</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#obj-advanced">Advanced</a></nav>
 <div class="wrap">
 <section id="what">
   <div class="sec-tag">00 · What Is Object Storage</div>
   <h2>S3 vs Block Storage vs File Storage</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Object Storage (S3)</div><div class="concept-def"><strong>Stores data as flat objects — each object is a file with a key (path), value (bytes), and metadata.</strong> No directory hierarchy (though keys can have slashes to simulate it).<br>
-      Access: HTTP GET/PUT. Each object immutable after write. Unlimited scale. Cheap ($0.023/GB/month).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Unlimited scale. Cheap. HTTP accessible from anywhere. Perfect for: images, videos, logs, backups, data lakes. Used by: Netflix (video), Instagram (photos), Dropbox (files).</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ High latency for small random reads (~50–200ms). No in-place updates. No filesystem semantics (no rename, no locking).</span></div></div>
+      Access: HTTP GET/PUT. Each object immutable after write. Unlimited scale. Cheap ($0.023/GB/month).
+        <span class="concept-note good">✓ Unlimited scale. Cheap. HTTP accessible from anywhere. Perfect for: images, videos, logs, backups, data lakes. Used by: Netflix (video), Instagram (photos), Dropbox (files).</span>
+      <span class="concept-note warn">⚠ High latency for small random reads (~50–200ms). No in-place updates. No filesystem semantics (no rename, no locking).</span></div></div>
     <div class="concept-row"><div class="concept-term">Block Storage (EBS)</div><div class="concept-def"><strong>Raw storage volumes attached to a VM. The OS sees it as a disk — format with any filesystem.</strong><br>
-      Sub-millisecond latency. Random reads/writes. Required for databases (PostgreSQL, MySQL need a filesystem).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Low latency. Random access. Required for any software that needs a real filesystem (databases, OS volumes).</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Attached to one instance at a time. Fixed capacity (must resize manually). Expensive ($0.10/GB/month vs S3's $0.023).</span></div></div>
+      Sub-millisecond latency. Random reads/writes. Required for databases (PostgreSQL, MySQL need a filesystem).
+        <span class="concept-note good">✓ Low latency. Random access. Required for any software that needs a real filesystem (databases, OS volumes).</span>
+      <span class="concept-note warn">⚠ Attached to one instance at a time. Fixed capacity (must resize manually). Expensive ($0.10/GB/month vs S3's $0.023).</span></div></div>
     <div class="concept-row"><div class="concept-term">File Storage (EFS/NFS)</div><div class="concept-def"><strong>Shared filesystem mounted by multiple instances simultaneously. Files, directories, locking semantics.</strong><br>
-      Multiple EC2 instances can read/write the same files concurrently.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Shared access across instances. POSIX filesystem. No refactoring of existing code that uses files.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Higher latency than block storage. More expensive. Rarely needed in modern cloud-native designs (S3 has replaced most file storage use cases).</span></div></div>
+      Multiple EC2 instances can read/write the same files concurrently.
+        <span class="concept-note good">✓ Shared access across instances. POSIX filesystem. No refactoring of existing code that uses files.</span>
+      <span class="concept-note warn">⚠ Higher latency than block storage. More expensive. Rarely needed in modern cloud-native designs (S3 has replaced most file storage use cases).</span></div></div>
   </div>
 </section>
 
@@ -161,24 +171,24 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>How S3 actually works under the hood</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Consistency Model</div><div class="concept-def"><strong>S3 provides strong read-after-write consistency for all operations (since December 2020).</strong><br>
-      After a successful PUT, subsequent GET will return the new object. After DELETE, subsequent GET returns 404. No more "eventually consistent" surprises.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ You can safely read immediately after writing. No need for artificial delays or consistency workarounds.</span></div></div>
+      After a successful PUT, subsequent GET will return the new object. After DELETE, subsequent GET returns 404. No more "eventually consistent" surprises.
+        <span class="concept-note good">✓ You can safely read immediately after writing. No need for artificial delays or consistency workarounds.</span></div></div>
     <div class="concept-row"><div class="concept-term">Multipart Upload</div><div class="concept-def"><strong>For files &gt;100MB: upload in parallel chunks, then assemble.</strong><br>
       1. Initiate: <code>POST /object?uploads</code> → returns uploadId<br>
       2. Upload parts: <code>PUT /object?partNumber=1&uploadId=X</code> (each part ≥5MB)<br>
-      3. Complete: <code>POST /object?uploadId=X</code> with list of part ETags<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Parallel uploads (5–10x faster for large files). Resume interrupted uploads. Each part is independently verified with MD5. Required for files &gt;5GB (single PUT limit).</span></div></div>
+      3. Complete: <code>POST /object?uploadId=X</code> with list of part ETags
+        <span class="concept-note good">✓ Parallel uploads (5–10x faster for large files). Resume interrupted uploads. Each part is independently verified with MD5. Required for files &gt;5GB (single PUT limit).</span></div></div>
     <div class="concept-row"><div class="concept-term">Pre-Signed URLs</div><div class="concept-def"><strong>Temporarily grant a user direct access to an S3 object without exposing your credentials.</strong><br>
       Server generates a signed URL valid for N seconds: <code>aws s3 presign s3://bucket/video.mp4 --expires-in 3600</code><br>
-      User uses URL directly to upload or download — bypasses your server entirely.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Client uploads directly to S3 — your server never sees the bytes. Offloads bandwidth and CPU. Standard pattern for all file upload systems (Instagram, Dropbox, Google Drive).</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Flow: Client → GET /upload-url → Server → Pre-signed URL → Client PUT directly to S3 → Client notifies Server of completion.</span></div></div>
+      User uses URL directly to upload or download — bypasses your server entirely.
+        <span class="concept-note good">✓ Client uploads directly to S3 — your server never sees the bytes. Offloads bandwidth and CPU. Standard pattern for all file upload systems (Instagram, Dropbox, Google Drive).</span>
+      <span class="concept-note muted">Flow: Client → GET /upload-url → Server → Pre-signed URL → Client PUT directly to S3 → Client notifies Server of completion.</span></div></div>
     <div class="concept-row"><div class="concept-term">Storage Classes</div><div class="concept-def"><strong>Different cost/access speed tiers for different data lifecycle stages:</strong><br>
       <code>Standard</code>: frequently accessed, ~$0.023/GB/month, &lt;100ms access<br>
       <code>Standard-IA</code>: infrequent access, ~$0.0125/GB/month, retrieval fee per GB<br>
       <code>Glacier Instant</code>: archive, ~$0.004/GB/month, millisecond retrieval<br>
-      <code>Glacier Deep Archive</code>: long-term archive, ~$0.00099/GB/month, 12-hour retrieval<br>
-      <span style="color:#5a5848;font-size:12.5px;">Use Lifecycle Policies to automatically transition objects: new uploads → Standard → after 30 days → IA → after 1 year → Glacier. Common for log files and video archives.</span></div></div>
+      <code>Glacier Deep Archive</code>: long-term archive, ~$0.00099/GB/month, 12-hour retrieval
+        <span class="concept-note muted">Use Lifecycle Policies to automatically transition objects: new uploads → Standard → after 30 days → IA → after 1 year → Glacier. Common for log files and video archives.</span></div></div>
   </div>
 </section>
 
@@ -202,21 +212,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>S3 as the foundation of every modern data platform</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">What Is a Data Lake</div><div class="concept-def"><strong>Store ALL your data in S3 in raw format first. Process later, for different purposes.</strong><br>
-      Raw events → S3 in Parquet/JSON. Same S3 data is read by: Spark (ML training), Athena (ad-hoc SQL), Redshift Spectrum (BI reports), Flink (stream processing via S3 checkpoints).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Schema-on-read: no predefined schema. Add new data sources without refactoring. Multiple compute engines on same data. Extremely cheap storage ($0.023/GB vs $0.10/GB for block storage).</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ No ACID transactions on raw S3. Small file problem: millions of 1KB files are much slower to query than thousands of 100MB files. Use Parquet + Snappy compression + file compaction jobs.</span></div></div>
+      Raw events → S3 in Parquet/JSON. Same S3 data is read by: Spark (ML training), Athena (ad-hoc SQL), Redshift Spectrum (BI reports), Flink (stream processing via S3 checkpoints).
+        <span class="concept-note good">✓ Schema-on-read: no predefined schema. Add new data sources without refactoring. Multiple compute engines on same data. Extremely cheap storage ($0.023/GB vs $0.10/GB for block storage).</span>
+      <span class="concept-note warn">⚠ No ACID transactions on raw S3. Small file problem: millions of 1KB files are much slower to query than thousands of 100MB files. Use Parquet + Snappy compression + file compaction jobs.</span></div></div>
     <div class="concept-row"><div class="concept-term">Delta Lake / Iceberg</div><div class="concept-def"><strong>Table formats that add ACID transactions, schema evolution, and time-travel to S3.</strong><br>
       Delta Lake (Databricks) / Apache Iceberg (Netflix, Apple): store metadata files alongside Parquet data in S3 that track which files constitute the current table version.<br>
       ACID on S3: each transaction writes new Parquet files + updates metadata atomically. Readers see consistent snapshots.<br>
-      Time travel: <code>SELECT * FROM events TIMESTAMP AS OF '2026-03-01'</code> — queries the state of the table on March 1st.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Fixes the S3 "no transactions" problem. Schema evolution without rewriting all data. Streaming + batch unified (Flink writes, Spark reads). Used by: Airbnb, Netflix, Apple for petabyte-scale data lakes.</span></div></div>
+      Time travel: <code>SELECT * FROM events TIMESTAMP AS OF '2026-03-01'</code> — queries the state of the table on March 1st.
+        <span class="concept-note good">✓ Fixes the S3 "no transactions" problem. Schema evolution without rewriting all data. Streaming + batch unified (Flink writes, Spark reads). Used by: Airbnb, Netflix, Apple for petabyte-scale data lakes.</span></div></div>
     <div class="concept-row"><div class="concept-term">S3 Event Notifications</div><div class="concept-def"><strong>S3 can trigger Lambda/SQS/SNS automatically when objects are created, deleted, or modified.</strong><br>
       New photo uploaded to S3 → S3 event → Lambda triggered → resize image → write variants back to S3.<br>
-      Log file uploaded → S3 event → SQS message → EC2 worker processes log → writes structured data to Redshift.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Event-driven pipelines with zero polling. S3 becomes the trigger for the entire data processing pipeline. Latency: ~1 second from S3 write to Lambda invocation.</span></div></div>
+      Log file uploaded → S3 event → SQS message → EC2 worker processes log → writes structured data to Redshift.
+        <span class="concept-note good">✓ Event-driven pipelines with zero polling. S3 becomes the trigger for the entire data processing pipeline. Latency: ~1 second from S3 write to Lambda invocation.</span></div></div>
     <div class="concept-row"><div class="concept-term">Intelligent Tiering</div><div class="concept-def"><strong>S3 Intelligent-Tiering automatically moves objects between storage classes based on access patterns.</strong><br>
-      Objects not accessed for 30 days → moved to Infrequent Access automatically. Objects not accessed for 90 days → moved to Archive Instant. No retrieval fees for objects moved by Intelligent-Tiering.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Optimal cost without manual lifecycle management. Best for: data lakes where access patterns are unpredictable. Small management fee ($0.0025 per 1,000 objects) — worth it for large data lakes.</span></div></div>
+      Objects not accessed for 30 days → moved to Infrequent Access automatically. Objects not accessed for 90 days → moved to Archive Instant. No retrieval fees for objects moved by Intelligent-Tiering.
+        <span class="concept-note good">✓ Optimal cost without manual lifecycle management. Best for: data lakes where access patterns are unpredictable. Small management fee ($0.0025 per 1,000 objects) — worth it for large data lakes.</span></div></div>
   </div>
 </section>
 
@@ -310,16 +320,39 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h3>S3 vs GCS vs Azure Blob — Quick Comparison</h3>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">AWS S3</div><div class="concept-def"><strong>The industry standard. Every major data tool integrates with S3 natively.</strong><br>
-      Unique features: S3 Select (query data inside objects with SQL without downloading), Intelligent-Tiering (auto cost optimisation), Object Lambda (transform objects on read), EventBridge integration.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Largest ecosystem. If you're on AWS, there's no reason to use anything else for object storage.</span></div></div>
+      Unique features: S3 Select (query data inside objects with SQL without downloading), Intelligent-Tiering (auto cost optimisation), Object Lambda (transform objects on read), EventBridge integration.
+        <span class="concept-note muted">Largest ecosystem. If you're on AWS, there's no reason to use anything else for object storage.</span></div></div>
     <div class="concept-row"><div class="concept-term">Google Cloud Storage</div><div class="concept-def"><strong>Best integration with BigQuery and the GCP data ecosystem.</strong><br>
-      GCS → BigQuery: external tables query GCS Parquet files directly without loading. GCS → Dataflow: native integration for streaming pipelines. Multiregional storage for global CDN-like access.<br>
-      <span style="color:#5a5848;font-size:12.5px;">If your analytics runs on BigQuery, GCS is the natural companion.</span></div></div>
+      GCS → BigQuery: external tables query GCS Parquet files directly without loading. GCS → Dataflow: native integration for streaming pipelines. Multiregional storage for global CDN-like access.
+        <span class="concept-note muted">If your analytics runs on BigQuery, GCS is the natural companion.</span></div></div>
     <div class="concept-row"><div class="concept-term">Cost Optimisation</div><div class="concept-def"><strong>Storage is cheap; data transfer OUT is expensive.</strong><br>
-      S3 storage: $0.023/GB/month (Standard). Data transfer OUT to internet: $0.09/GB. The CDN trick: CloudFront has a free tier for S3 origin transfers — route all user requests through CloudFront to eliminate S3 egress costs entirely.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ S3 → CloudFront transfer is free. CloudFront → users costs $0.085/GB. Net saving: significant at scale.</span></div></div>
+      S3 storage: $0.023/GB/month (Standard). Data transfer OUT to internet: $0.09/GB. The CDN trick: CloudFront has a free tier for S3 origin transfers — route all user requests through CloudFront to eliminate S3 egress costs entirely.
+        <span class="concept-note good">✓ S3 → CloudFront transfer is free. CloudFront → users costs $0.085/GB. Net saving: significant at scale.</span></div></div>
   </div>
 </section>
+
+<section id="obj-advanced">
+  <div class="sec-tag">07 · Advanced Object Storage</div>
+  <h2>Erasure coding, multipart upload, and S3 internals</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Erasure Coding vs<br>Replication</div><div class="concept-def"><strong>Two ways to achieve durability. Erasure coding uses less storage for the same durability level.</strong><br>
+      3× replication: store 3 copies of every object. Tolerate 2 node failures. Storage overhead: 200% (3× the original size).<br>
+      Erasure coding (Reed-Solomon): split data into k chunks, generate m parity chunks. Store k+m chunks. Can reconstruct from any k of k+m chunks. Tolerate m node failures.<br>
+      Example: RS(10,4) — 10 data chunks + 4 parity chunks = 14 total. Tolerate 4 node failures. Storage overhead: 40% (14/10 = 1.4×). Same durability as 3× replication at 1/5 the storage cost.
+        <span class="concept-note good">✓ S3 uses erasure coding internally. GFS/Colossus (Google) uses erasure coding. The trade-off: erasure coding requires reading k chunks to reconstruct data (higher read latency for small files). For large files (videos, datasets): erasure coding is superior. For small files (&lt;1MB): replication's simplicity wins.</span></div></div>
+    <div class="concept-row"><div class="concept-term">S3 Multipart Upload<br>Internals</div><div class="concept-def"><strong>Required for files &gt;5GB. Recommended for files &gt;100MB. Enables parallel upload and resumability.</strong><br>
+      Flow: <code>CreateMultipartUpload</code> → get UploadId. Split file into parts (5MB–5GB each). Upload parts in parallel (up to 10,000 parts, each with a PartNumber). S3 stores each part independently. <code>CompleteMultipartUpload</code> → S3 assembles parts into final object. AbortMultipartUpload → cleanup if upload fails.<br>
+      Parallelism: 10 concurrent part uploads × 100MB/s bandwidth = 1GB/s effective upload speed. Without multipart: single stream × 100MB/s = 100MB/s.<br>
+      Resumability: if connection drops during part 7, only resume part 7. Parts 1-6 already committed to S3. ListParts to find which parts succeeded → resume from the first missing part.</div></div>
+    <div class="concept-row"><div class="concept-term">S3 Consistency<br>Model (Updated)</div><div class="concept-def"><strong>Since December 2020: S3 provides strong read-after-write consistency for all operations.</strong><br>
+      Previously: S3 was eventually consistent. A PUT followed immediately by a GET might return the old data. Applications had to add delays or use conditional operations.<br>
+      Now: after a successful PUT, subsequent GETs return the new data — immediately and consistently. After a DELETE, subsequent GETs correctly return 404. LIST operations are also consistent — a newly created object appears in LIST results immediately.
+        <span class="concept-note good">✓ This change removed the most common operational footgun in S3-based systems. If you're asked about S3 consistency in an interview: "S3 is strongly consistent since Dec 2020. I don't need to account for eventual consistency in my S3 access patterns." This shows you're current.</span></div></div>
+  </div>
+</section>
+
+</div>
 <div class="footer">OBJECT STORAGE · S3 · GCS · MULTIPART UPLOAD · PRE-SIGNED URLs · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

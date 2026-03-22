@@ -120,7 +120,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 /* Step block */
@@ -172,6 +172,16 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   .concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}
   .opt-arrow{min-width:80px;}.choice-label{width:80px;}
 }
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style>
 </head>
 <body>
@@ -201,7 +211,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <a href="#examples">System Design</a>
   <a href="#decision">Decision Tree</a>
   <a href="#followups">Follow-ups</a>
-</nav>
+<a href="#grpc-streaming">gRPC Streaming</a></nav>
 
 <div class="wrap">
 
@@ -236,11 +246,11 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row">
       <div class="concept-term">Request-Response</div>
-      <div class="concept-def"><strong>Client sends a request, server replies, connection closes.</strong> Each interaction is independent. The server has no memory of previous requests unless you send a session token.<br><span style="color:#5a5848;font-size:12.5px;">Members: REST, gRPC (unary), GraphQL Query/Mutation. HTTP/1.1, HTTP/2, HTTP/3 are the transports.</span></div>
+      <div class="concept-def"><strong>Client sends a request, server replies, connection closes.</strong> Each interaction is independent. The server has no memory of previous requests unless you send a session token.<br><span class="concept-note muted">Members: REST, gRPC (unary), GraphQL Query/Mutation. HTTP/1.1, HTTP/2, HTTP/3 are the transports.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Persistent / Push</div>
-      <div class="concept-def"><strong>Connection stays open. Server can push data without the client asking.</strong> Crucial for real-time features: live feeds, notifications, chat, collaborative editing.<br><span style="color:#5a5848;font-size:12.5px;">Members: WebSocket (bidirectional), SSE (server→client only), Long Polling (simulated push), gRPC streaming.</span></div>
+      <div class="concept-def"><strong>Connection stays open. Server can push data without the client asking.</strong> Crucial for real-time features: live feeds, notifications, chat, collaborative editing.<br><span class="concept-note muted">Members: WebSocket (bidirectional), SSE (server→client only), Long Polling (simulated push), gRPC streaming.</span></div>
     </div>
   </div>
 </section>
@@ -283,34 +293,34 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
         <code>POST /users</code> → create user<br>
         <code>PUT /users/123</code> → replace user<br>
         <code>PATCH /users/123</code> → partial update<br>
-        <code>DELETE /users/123</code> → delete user<br>
-        <span style="color:#5a5848;font-size:12.5px;">The URL is the resource (noun). The HTTP method is the action (verb). This separation is REST's core design principle.</span>
+        <code>DELETE /users/123</code> → delete user
+        <span class="concept-note muted">The URL is the resource (noun). The HTTP method is the action (verb). This separation is REST's core design principle.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Stateless</div>
-      <div class="concept-def"><strong>Every request must contain everything the server needs to process it.</strong> The server stores no session between requests. Identity always comes from a token in the header — never assumed from context.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Statelessness makes REST trivially horizontally scalable — any server can handle any request. No sticky sessions needed.</span></div>
+      <div class="concept-def"><strong>Every request must contain everything the server needs to process it.</strong> The server stores no session between requests. Identity always comes from a token in the header — never assumed from context.<br><span class="concept-note good">✓ Statelessness makes REST trivially horizontally scalable — any server can handle any request. No sticky sessions needed.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">HTTP Caching</div>
-      <div class="concept-def"><strong>GET requests are cacheable by default</strong> — CDNs, browsers, and proxies can cache them. This is one of REST's biggest advantages over gRPC and GraphQL.<br><code>Cache-Control: max-age=3600</code> tells every layer to cache for 1 hour.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ A public REST API with GET responses cached at Cloudflare reduces origin traffic by 95%+. gRPC and GraphQL cannot use HTTP caching natively.</span></div>
+      <div class="concept-def"><strong>GET requests are cacheable by default</strong> — CDNs, browsers, and proxies can cache them. This is one of REST's biggest advantages over gRPC and GraphQL.<br><code>Cache-Control: max-age=3600</code> tells every layer to cache for 1 hour.<br><span class="concept-note good">✓ A public REST API with GET responses cached at Cloudflare reduces origin traffic by 95%+. gRPC and GraphQL cannot use HTTP caching natively.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Status Codes</div>
       <div class="concept-def"><strong>HTTP status codes carry semantic meaning every client understands natively:</strong><br>
         <code>200</code> OK · <code>201</code> Created · <code>204</code> No Content<br>
         <code>400</code> Bad Request · <code>401</code> Unauthorised · <code>403</code> Forbidden · <code>404</code> Not Found<br>
-        <code>429</code> Rate Limited · <code>500</code> Server Error · <code>503</code> Unavailable<br>
-        <span style="color:#5a5848;font-size:12.5px;">Every HTTP client, load balancer, and monitoring tool understands these codes. GraphQL always returns 200 — errors are in the response body, invisible to infrastructure.</span>
+        <code>429</code> Rate Limited · <code>500</code> Server Error · <code>503</code> Unavailable
+        <span class="concept-note muted">Every HTTP client, load balancer, and monitoring tool understands these codes. GraphQL always returns 200 — errors are in the response body, invisible to infrastructure.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Over-Fetching</div>
-      <div class="concept-def"><strong>REST's biggest weakness: you get what the endpoint returns, not what you need.</strong><br><code>GET /users/123</code> returns all 40 fields. Your mobile app only needed name and avatar.<br><span style="color:#b83030;font-size:12.5px;">⚠️ On mobile with limited bandwidth, over-fetching wastes data and slows rendering. This is exactly why Facebook invented GraphQL.</span></div>
+      <div class="concept-def"><strong>REST's biggest weakness: you get what the endpoint returns, not what you need.</strong><br><code>GET /users/123</code> returns all 40 fields. Your mobile app only needed name and avatar.<br><span class="concept-note warn">⚠️ On mobile with limited bandwidth, over-fetching wastes data and slows rendering. This is exactly why Facebook invented GraphQL.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Under-Fetching</div>
-      <div class="concept-def"><strong>REST's second weakness: one endpoint rarely returns all the data you need.</strong><br>To show a user's profile with their posts and followers: <code>GET /users/123</code> + <code>GET /users/123/posts</code> + <code>GET /users/123/followers</code> — 3 round trips.<br><span style="color:#b83030;font-size:12.5px;">⚠️ On mobile, each extra round trip adds 50–200ms. Waterfall requests add up fast. GraphQL solves this with a single query.</span></div>
+      <div class="concept-def"><strong>REST's second weakness: one endpoint rarely returns all the data you need.</strong><br>To show a user's profile with their posts and followers: <code>GET /users/123</code> + <code>GET /users/123/posts</code> + <code>GET /users/123/followers</code> — 3 round trips.<br><span class="concept-note warn">⚠️ On mobile, each extra round trip adds 50–200ms. Waterfall requests add up fast. GraphQL solves this with a single query.</span></div>
     </div>
   </div>
 
@@ -318,29 +328,25 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row">
       <div class="concept-term">Protocol Buffers</div>
-      <div class="concept-def"><strong>gRPC uses Protobuf — a binary serialisation format — instead of JSON.</strong> You define your data schema in a <code>.proto</code> file. Both client and server generate code from it automatically.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Binary is 5–10x smaller than equivalent JSON. Parsing binary is 5–10x faster than parsing JSON text. At 1M requests/sec, this matters enormously.</span></div>
+      <div class="concept-def"><strong>gRPC uses Protobuf — a binary serialisation format — instead of JSON.</strong> You define your data schema in a <code>.proto</code> file. Both client and server generate code from it automatically.<br><span class="concept-note good">✓ Binary is 5–10x smaller than equivalent JSON. Parsing binary is 5–10x faster than parsing JSON text. At 1M requests/sec, this matters enormously.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">HTTP/2 Multiplexing</div>
-      <div class="concept-def"><strong>gRPC runs on HTTP/2, which multiplexes multiple requests over a single TCP connection.</strong> With HTTP/1.1 REST, each request needs its own connection (or connection pooling). HTTP/2 sends hundreds of requests simultaneously over one connection.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Huge advantage for service-to-service calls where you're making thousands of RPCs per second between the same two services.</span></div>
+      <div class="concept-def"><strong>gRPC runs on HTTP/2, which multiplexes multiple requests over a single TCP connection.</strong> With HTTP/1.1 REST, each request needs its own connection (or connection pooling). HTTP/2 sends hundreds of requests simultaneously over one connection.<br><span class="concept-note good">✓ Huge advantage for service-to-service calls where you're making thousands of RPCs per second between the same two services.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Streaming Modes</div>
-      <div class="concept-def"><strong>gRPC supports 4 modes — REST only supports request-response:</strong><br>
-        <strong>Unary</strong> — one request, one response (like REST)<br>
-        <strong>Server streaming</strong> — one request, stream of responses (like SSE)<br>
-        <strong>Client streaming</strong> — stream of requests, one response (uploading chunks)<br>
-        <strong>Bidirectional streaming</strong> — both sides stream simultaneously (like WebSocket)<br>
-        <span style="color:#5a5848;font-size:12.5px;">Real example: Google Maps sends your location as a client stream, receives route updates as a server stream — all over one gRPC bidirectional connection.</span>
+      <div class="concept-def"><strong>gRPC supports 4 modes — REST only supports request-response:</strong></p><p><strong>Unary</strong> — one request, one response (like REST)</p><p><strong>Server streaming</strong> — one request, stream of responses (like SSE)</p><p><strong>Client streaming</strong> — stream of requests, one response (uploading chunks)</p><p><strong>Bidirectional streaming</strong> — both sides stream simultaneously (like WebSocket)
+        <span class="concept-note muted">Real example: Google Maps sends your location as a client stream, receives route updates as a server stream — all over one gRPC bidirectional connection.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Schema Contract</div>
-      <div class="concept-def"><strong>The .proto file is a strict API contract between client and server.</strong> Both sides must use the same schema. Adding a field is backwards-compatible; removing one breaks older clients.<br><span style="color:#b83030;font-size:12.5px;">⚠️ gRPC requires code generation on every schema change. REST and GraphQL don't. This is operational overhead — significant for teams with many services.</span></div>
+      <div class="concept-def"><strong>The .proto file is a strict API contract between client and server.</strong> Both sides must use the same schema. Adding a field is backwards-compatible; removing one breaks older clients.<br><span class="concept-note warn">⚠️ gRPC requires code generation on every schema change. REST and GraphQL don't. This is operational overhead — significant for teams with many services.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Browser Support</div>
-      <div class="concept-def"><strong>Browsers cannot call gRPC directly.</strong> HTTP/2 trailers (which gRPC uses) are not exposed by browser APIs. You need gRPC-Web (a proxy layer) or gRPC-Gateway (which translates to REST).<br><span style="color:#b83030;font-size:12.5px;">⚠️ This is why gRPC is almost exclusively used for internal service-to-service communication, not for public-facing APIs.</span></div>
+      <div class="concept-def"><strong>Browsers cannot call gRPC directly.</strong> HTTP/2 trailers (which gRPC uses) are not exposed by browser APIs. You need gRPC-Web (a proxy layer) or gRPC-Gateway (which translates to REST).<br><span class="concept-note warn">⚠️ This is why gRPC is almost exclusively used for internal service-to-service communication, not for public-facing APIs.</span></div>
     </div>
   </div>
 
@@ -348,27 +354,27 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row">
       <div class="concept-term">Single Endpoint</div>
-      <div class="concept-def"><strong>GraphQL has one endpoint: <code>POST /graphql</code>.</strong> The query in the request body describes exactly what data to return. No URL routing, no versioning headaches — the schema evolves by adding fields (never removing).<br><span style="color:#5a5848;font-size:12.5px;">This is how Facebook, GitHub, Shopify, and Twitter serve data to their apps — one endpoint, infinite flexibility.</span></div>
+      <div class="concept-def"><strong>GraphQL has one endpoint: <code>POST /graphql</code>.</strong> The query in the request body describes exactly what data to return. No URL routing, no versioning headaches — the schema evolves by adding fields (never removing).<br><span class="concept-note muted">This is how Facebook, GitHub, Shopify, and Twitter serve data to their apps — one endpoint, infinite flexibility.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Query vs Mutation</div>
       <div class="concept-def"><strong>Query</strong> = read (like GET). <strong>Mutation</strong> = write (like POST/PUT/DELETE). <strong>Subscription</strong> = real-time push (like WebSocket).<br>
         <code>query { user(id:"123") { name, avatar, followerCount } }</code><br>
-        <code>mutation { createPost(input:{...}) { id, createdAt } }</code><br>
-        <span style="color:#5a5848;font-size:12.5px;">Subscriptions use WebSocket under the hood — GraphQL is a query language on top of a transport, not a transport itself.</span>
+        <code>mutation { createPost(input:{...}) { id, createdAt } }</code>
+        <span class="concept-note muted">Subscriptions use WebSocket under the hood — GraphQL is a query language on top of a transport, not a transport itself.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">N+1 Problem</div>
-      <div class="concept-def"><strong>GraphQL's biggest pitfall: a single query can trigger hundreds of database calls.</strong><br>Query for 100 posts, each needing its author → 1 query for posts + 100 queries for authors = 101 DB calls.<br><span style="color:#b83030;font-size:12.5px;">⚠️ Fix: DataLoader (batches and deduplicates database calls). Every GraphQL implementation needs it or performance degrades to unusable.</span></div>
+      <div class="concept-def"><strong>GraphQL's biggest pitfall: a single query can trigger hundreds of database calls.</strong><br>Query for 100 posts, each needing its author → 1 query for posts + 100 queries for authors = 101 DB calls.<br><span class="concept-note warn">⚠️ Fix: DataLoader (batches and deduplicates database calls). Every GraphQL implementation needs it or performance degrades to unusable.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Introspection</div>
-      <div class="concept-def"><strong>GraphQL APIs are self-documenting.</strong> Clients can query the schema itself to discover all available types, fields, and operations — no separate Swagger/OpenAPI needed.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Tools like GraphiQL and Apollo Studio give developers interactive playgrounds. New team members explore the API without reading docs.</span><br><span style="color:#b83030;font-size:12.5px;">⚠️ Disable introspection in production — it exposes your entire data model to attackers.</span></div>
+      <div class="concept-def"><strong>GraphQL APIs are self-documenting.</strong> Clients can query the schema itself to discover all available types, fields, and operations — no separate Swagger/OpenAPI needed.<br><span class="concept-note good">✓ Tools like GraphiQL and Apollo Studio give developers interactive playgrounds. New team members explore the API without reading docs.</span><span class="concept-note warn">⚠️ Disable introspection in production — it exposes your entire data model to attackers.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Caching Problem</div>
-      <div class="concept-def"><strong>GraphQL uses POST for queries — HTTP caching doesn't work natively.</strong> CDNs only cache GET requests. Every GraphQL query hits your origin.<br><span style="color:#5a5848;font-size:12.5px;">Workarounds: Persisted Queries (assign each query a hash, send hash as GET), Apollo CDN caching, or Cloudflare Workers. More complexity than REST's built-in GET caching.</span></div>
+      <div class="concept-def"><strong>GraphQL uses POST for queries — HTTP caching doesn't work natively.</strong> CDNs only cache GET requests. Every GraphQL query hits your origin.<br><span class="concept-note muted">Workarounds: Persisted Queries (assign each query a hash, send hash as GET), Apollo CDN caching, or Cloudflare Workers. More complexity than REST's built-in GET caching.</span></div>
     </div>
   </div>
 </section>
@@ -415,25 +421,25 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       <div class="concept-def"><strong>WebSocket starts as an HTTP request, then upgrades to a persistent TCP connection.</strong><br>
         Client sends: <code>GET /ws HTTP/1.1, Upgrade: websocket</code><br>
         Server responds: <code>101 Switching Protocols</code><br>
-        Now: raw TCP frames flow in both directions — no HTTP overhead per message.<br>
-        <span style="color:#5a5848;font-size:12.5px;">Why HTTP start? Firewalls and proxies block arbitrary TCP but allow HTTP port 80/443. The upgrade trick bypasses firewall restrictions.</span>
+        Now: raw TCP frames flow in both directions — no HTTP overhead per message.
+        <span class="concept-note muted">Why HTTP start? Firewalls and proxies block arbitrary TCP but allow HTTP port 80/443. The upgrade trick bypasses firewall restrictions.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Full-Duplex</div>
-      <div class="concept-def"><strong>Both client and server can send messages at any moment, simultaneously, over the same connection.</strong> No waiting for the other side. No request-response cycle.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ This is why WebSocket is used for chat (user sends and receives simultaneously), multiplayer games (constant position updates both directions), and collaborative editing (every keystroke sent immediately).</span></div>
+      <div class="concept-def"><strong>Both client and server can send messages at any moment, simultaneously, over the same connection.</strong> No waiting for the other side. No request-response cycle.<br><span class="concept-note good">✓ This is why WebSocket is used for chat (user sends and receives simultaneously), multiplayer games (constant position updates both directions), and collaborative editing (every keystroke sent immediately).</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Framing</div>
-      <div class="concept-def"><strong>WebSocket sends data as frames, not HTTP requests.</strong> Each frame has a tiny 2–10 byte header (opcode, mask, length) vs HTTP's 200–800 byte headers per request.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ A chat message sent via WebSocket costs ~10 bytes overhead. Via HTTP polling: 300–800 bytes of headers per poll even when empty. At 1M active users, this difference is measured in gigabits per second.</span></div>
+      <div class="concept-def"><strong>WebSocket sends data as frames, not HTTP requests.</strong> Each frame has a tiny 2–10 byte header (opcode, mask, length) vs HTTP's 200–800 byte headers per request.<br><span class="concept-note good">✓ A chat message sent via WebSocket costs ~10 bytes overhead. Via HTTP polling: 300–800 bytes of headers per poll even when empty. At 1M active users, this difference is measured in gigabits per second.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">State & Scaling</div>
-      <div class="concept-def"><strong>WebSocket connections are stateful and sticky — the connection lives on a specific server.</strong> If that server dies, all its connections drop. Clients must reconnect.<br><span style="color:#b83030;font-size:12.5px;">⚠️ You cannot load-balance WebSocket with standard round-robin. You need sticky sessions (by user_id) or a pub/sub broker (Redis, Kafka) so any server can push to any user regardless of which server they're connected to.</span></div>
+      <div class="concept-def"><strong>WebSocket connections are stateful and sticky — the connection lives on a specific server.</strong> If that server dies, all its connections drop. Clients must reconnect.<br><span class="concept-note warn">⚠️ You cannot load-balance WebSocket with standard round-robin. You need sticky sessions (by user_id) or a pub/sub broker (Redis, Kafka) so any server can push to any user regardless of which server they're connected to.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Heartbeats</div>
-      <div class="concept-def"><strong>Idle WebSocket connections get killed by proxies and NAT gateways after 30–90 seconds.</strong> Solution: ping/pong heartbeat every 20–30 seconds. Server sends a ping frame, client echoes a pong. No pong = connection dead, clean up and notify.<br><span style="color:#5a5848;font-size:12.5px;">Every production WebSocket implementation needs heartbeat logic. Without it, you get ghost connections — the server thinks the client is connected but the client is gone.</span></div>
+      <div class="concept-def"><strong>Idle WebSocket connections get killed by proxies and NAT gateways after 30–90 seconds.</strong> Solution: ping/pong heartbeat every 20–30 seconds. Server sends a ping frame, client echoes a pong. No pong = connection dead, clean up and notify.<br><span class="concept-note muted">Every production WebSocket implementation needs heartbeat logic. Without it, you get ghost connections — the server thinks the client is connected but the client is gone.</span></div>
     </div>
   </div>
 
@@ -443,21 +449,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       <div class="concept-term">The Wire Format</div>
       <div class="concept-def"><strong>SSE is a plain HTTP response that never ends.</strong> Content-Type is <code>text/event-stream</code>. The server sends newline-delimited text events:<br>
         <code>data: {"type":"view","count":1247}\n\n</code><br>
-        <code>data: {"type":"view","count":1248}\n\n</code><br>
-        <span style="color:#5a5848;font-size:12.5px;">Two consecutive newlines signal the end of one event. The browser's EventSource API parses this automatically and fires events at your JavaScript handler.</span>
+        <code>data: {"type":"view","count":1248}\n\n</code>
+        <span class="concept-note muted">Two consecutive newlines signal the end of one event. The browser's EventSource API parses this automatically and fires events at your JavaScript handler.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Auto-Reconnect</div>
-      <div class="concept-def"><strong>The browser's EventSource automatically reconnects after a disconnect.</strong> The server sends an event ID with each event. On reconnect, the browser sends <code>Last-Event-ID</code> header — the server can replay missed events.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ This makes SSE dramatically simpler to operate than WebSocket. No custom reconnect logic needed on the client. Works out of the box.</span></div>
+      <div class="concept-def"><strong>The browser's EventSource automatically reconnects after a disconnect.</strong> The server sends an event ID with each event. On reconnect, the browser sends <code>Last-Event-ID</code> header — the server can replay missed events.<br><span class="concept-note good">✓ This makes SSE dramatically simpler to operate than WebSocket. No custom reconnect logic needed on the client. Works out of the box.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">HTTP/2 Multiplexing</div>
-      <div class="concept-def"><strong>Over HTTP/2, multiple SSE streams share one TCP connection.</strong> With HTTP/1.1, browsers limit connections per domain (typically 6). If you have 6 SSE streams, you've used all connections. HTTP/2 multiplexes hundreds over one connection.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Use HTTP/2 for SSE at scale. HTTP/1.1 SSE has a hard limit of ~6 concurrent streams per browser per domain.</span></div>
+      <div class="concept-def"><strong>Over HTTP/2, multiple SSE streams share one TCP connection.</strong> With HTTP/1.1, browsers limit connections per domain (typically 6). If you have 6 SSE streams, you've used all connections. HTTP/2 multiplexes hundreds over one connection.<br><span class="concept-note good">✓ Use HTTP/2 for SSE at scale. HTTP/1.1 SSE has a hard limit of ~6 concurrent streams per browser per domain.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">One Direction Only</div>
-      <div class="concept-def"><strong>SSE is server-to-client only.</strong> The client cannot send data back on the same connection. For any client action (user sends a message, acknowledges a notification), you make a separate REST/HTTP POST call.<br><span style="color:#5a5848;font-size:12.5px;">This is the key difference from WebSocket. In most notification/feed systems this is fine — client-to-server actions are already REST calls.</span></div>
+      <div class="concept-def"><strong>SSE is server-to-client only.</strong> The client cannot send data back on the same connection. For any client action (user sends a message, acknowledges a notification), you make a separate REST/HTTP POST call.<br><span class="concept-note muted">This is the key difference from WebSocket. In most notification/feed systems this is fine — client-to-server actions are already REST calls.</span></div>
     </div>
   </div>
 
@@ -470,21 +476,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
         2. Server checks if new messages exist. If yes → respond immediately. If no → <strong>hold the connection open</strong><br>
         3. When a message arrives, server responds with it<br>
         4. Client receives response, <strong>immediately sends a new request</strong><br>
-        5. Repeat forever<br>
-        <span style="color:#5a5848;font-size:12.5px;">Timeout: if no data after 30 seconds, server responds with 204 No Content. Client retries. This prevents proxy timeouts.</span>
+        5. Repeat forever
+        <span class="concept-note muted">Timeout: if no data after 30 seconds, server responds with 204 No Content. Client retries. This prevents proxy timeouts.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">vs Regular Polling</div>
-      <div class="concept-def"><strong>Regular polling</strong>: client asks every N seconds regardless. Empty responses waste bandwidth and add N seconds of latency.<br><strong>Long polling</strong>: client asks once, server responds only when there's data. Near-zero latency, zero empty responses.<br><span style="color:#1a7a4a;font-size:12.5px;">✓ Long polling is near-real-time with standard HTTP. No WebSocket, no special protocol. Works everywhere HTTP works.</span></div>
+      <div class="concept-def"><strong>Regular polling</strong>: client asks every N seconds regardless. Empty responses waste bandwidth and add N seconds of latency.<br><strong>Long polling</strong>: client asks once, server responds only when there's data. Near-zero latency, zero empty responses.<br><span class="concept-note good">✓ Long polling is near-real-time with standard HTTP. No WebSocket, no special protocol. Works everywhere HTTP works.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Scalability Challenge</div>
-      <div class="concept-def"><strong>Long polling holds server threads/connections open while waiting.</strong> With 100K concurrent users each holding a long poll connection, you need 100K open connections on your servers — consuming file descriptors and memory even when idle.<br><span style="color:#b83030;font-size:12.5px;">⚠️ Mitigate with async event loops (Node.js, Go goroutines, Nginx) that handle thousands of open connections on a single thread. Traditional thread-per-request servers (Java/Rails) cannot scale long polling.</span></div>
+      <div class="concept-def"><strong>Long polling holds server threads/connections open while waiting.</strong> With 100K concurrent users each holding a long poll connection, you need 100K open connections on your servers — consuming file descriptors and memory even when idle.<br><span class="concept-note warn">⚠️ Mitigate with async event loops (Node.js, Go goroutines, Nginx) that handle thousands of open connections on a single thread. Traditional thread-per-request servers (Java/Rails) cannot scale long polling.</span></div>
     </div>
     <div class="concept-row">
       <div class="concept-term">When Still Used</div>
-      <div class="concept-def"><strong>Long polling is the fallback when WebSocket is unavailable</strong> (corporate firewalls blocking WS) or for systems where you need guaranteed delivery with replay.<br><span style="color:#5a5848;font-size:12.5px;">Real usage: Slack originally used long polling before WebSocket. Some mobile apps in restricted networks still use it. XMPP Bosh protocol is long polling. Most modern systems use WebSocket or SSE instead.</span></div>
+      <div class="concept-def"><strong>Long polling is the fallback when WebSocket is unavailable</strong> (corporate firewalls blocking WS) or for systems where you need guaranteed delivery with replay.<br><span class="concept-note muted">Real usage: Slack originally used long polling before WebSocket. Some mobile apps in restricted networks still use it. XMPP Bosh protocol is long polling. Most modern systems use WebSocket or SSE instead.</span></div>
     </div>
   </div>
 </section>
@@ -1048,6 +1054,28 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       <strong>5. Operational tooling:</strong> HTTP logs, traces, and metrics are supported by every monitoring tool out of the box. WebSocket message-level observability requires custom instrumentation.<br><br>
       <strong>The correct split:</strong> WebSocket for what genuinely needs real-time bidirectional communication (location, status updates). REST for everything transactional (booking, payment, profile). The complexity-to-benefit ratio is much better.
     </div>
+  </div>
+</section>
+
+</div>
+
+<section id="grpc-streaming">
+  <div class="sec-tag">08 · gRPC Streaming Modes</div>
+  <h2>All four streaming types — with real use cases</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Unary RPC</div><div class="concept-def"><strong>One request → one response. The standard call.</strong><br>
+      <code>rpc GetUser(GetUserRequest) returns (User);</code><br>
+      Use for: any operation where you have one question and need one answer. 90% of RPC calls. Same semantics as REST but with Protocol Buffers and HTTP/2.</div></div>
+    <div class="concept-row"><div class="concept-term">Server Streaming</div><div class="concept-def"><strong>One request → stream of responses. Server sends multiple messages for a single client request.</strong><br>
+      <code>rpc WatchFeed(WatchRequest) returns (stream FeedEvent);</code><br>
+      Use cases: real-time feed subscription (client subscribes once, server pushes new items as they arrive), large data download (server streams chunks), log tailing (client requests logs, server streams them continuously). gRPC keeps the HTTP/2 stream open until the server signals completion. Client reads from the stream in a loop.</div></div>
+    <div class="concept-row"><div class="concept-term">Client Streaming</div><div class="concept-def"><strong>Stream of requests → one response. Client sends multiple messages, server responds once at the end.</strong><br>
+      <code>rpc UploadFile(stream FileChunk) returns (UploadResult);</code><br>
+      Use cases: chunked file upload (client streams 4MB chunks, server assembles), sensor data batch ingestion (IoT device streams 1,000 readings, server processes and returns aggregate), speech-to-text (client streams audio chunks, server returns transcript when done).</div></div>
+    <div class="concept-row"><div class="concept-term">Bidirectional Streaming</div><div class="concept-def"><strong>Stream of requests ↔ stream of responses. Full duplex. Both sides can send at any time.</strong><br>
+      <code>rpc Chat(stream ChatMessage) returns (stream ChatMessage);</code><br>
+      Use cases: real-time chat between services (internal Slack-like communication between microservices), collaborative editing (both sides stream cursor positions and edits), online gaming (client streams player input, server streams game state updates), live translation (client streams audio, server streams translated text in real time).
+        <span class="concept-note muted">Bidirectional streaming is gRPC's most powerful feature — enabling true full-duplex communication over a single HTTP/2 stream. WebSocket achieves similar for browser clients. For server-to-server: bidirectional gRPC is preferred over WebSocket due to Protocol Buffer efficiency and built-in load balancing.</span></div></div>
   </div>
 </section>
 

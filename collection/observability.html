@@ -123,11 +123,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -135,7 +145,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <p class="hero-sub">Metrics, logs, traces — SLI/SLO/SLA, error budgets, four golden signals, Prometheus/Grafana, distributed tracing and alerting best practices.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Prometheus</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Jaeger / OTEL</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">SLO / SLA</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Golden Signals</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Error Budget</span></div>
 </div></div>
-<nav class="nav"><a href="#three-pillars">Three Pillars</a><a href="#slo">SLI/SLO/SLA</a><a href="#tools">Tools & Signals</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#three-pillars">Three Pillars</a><a href="#slo">SLI/SLO/SLA</a><a href="#tools">Tools & Signals</a><a href="#followups">Follow-ups</a><a href="#otel">OpenTelemetry</a></nav>
 <div class="wrap">
 <section id="three-pillars">
   <div class="sec-tag">00 · The Three Pillars</div>
@@ -152,18 +162,18 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Metrics</div><div class="concept-def"><strong>Numeric measurements over time. Aggregated, efficient, alertable.</strong><br>
       Examples: requests/sec, p99 latency, error rate, CPU usage, DB connections.<br>
-      Storage: time-series databases (Prometheus, InfluxDB) designed for fast aggregation over time ranges.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Cheap to store (numbers, not text). Fast to query. Essential for dashboards and alerting. Answer: "is something wrong?"</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Cannot tell you why something is wrong. High cardinality metrics (one time series per user ID) explode storage costs.</span></div></div>
+      Storage: time-series databases (Prometheus, InfluxDB) designed for fast aggregation over time ranges.
+        <span class="concept-note good">✓ Cheap to store (numbers, not text). Fast to query. Essential for dashboards and alerting. Answer: "is something wrong?"</span>
+      <span class="concept-note warn">⚠ Cannot tell you why something is wrong. High cardinality metrics (one time series per user ID) explode storage costs.</span></div></div>
     <div class="concept-row"><div class="concept-term">Logs</div><div class="concept-def"><strong>Text records of discrete events. Timestamped. Searchable.</strong><br>
       Examples: "ERROR: DB connection failed — timeout after 5000ms", "INFO: user:123 logged in from IP 1.2.3.4"<br>
-      Storage: Elasticsearch (ELK stack) or Loki (cheaper, label-based).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Rich context. Exact error messages. Correlate events by user/session/request ID. Answer: "what exactly happened?"</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Expensive to store at high volume. Unstructured logs are hard to query — use structured JSON logging. Do not log sensitive data.</span></div></div>
+      Storage: Elasticsearch (ELK stack) or Loki (cheaper, label-based).
+        <span class="concept-note good">✓ Rich context. Exact error messages. Correlate events by user/session/request ID. Answer: "what exactly happened?"</span>
+      <span class="concept-note warn">⚠ Expensive to store at high volume. Unstructured logs are hard to query — use structured JSON logging. Do not log sensitive data.</span></div></div>
     <div class="concept-row"><div class="concept-term">Traces</div><div class="concept-def"><strong>Records the path of a single request through all microservices, with timing at each hop.</strong><br>
-      A user request spawns a trace with a unique trace_id. Each service call is a span. The trace shows: API Gateway (10ms) → Auth Service (5ms) → Product Service (200ms) → DB query (180ms of that 200ms).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Immediately identifies which service is slow. Essential for microservices. Answer: "which service is causing the problem?"</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Requires instrumentation in every service. Storage costs proportional to request volume × service count. Use sampling (store 1% of traces, all error traces).</span></div></div>
+      A user request spawns a trace with a unique trace_id. Each service call is a span. The trace shows: API Gateway (10ms) → Auth Service (5ms) → Product Service (200ms) → DB query (180ms of that 200ms).
+        <span class="concept-note good">✓ Immediately identifies which service is slow. Essential for microservices. Answer: "which service is causing the problem?"</span>
+      <span class="concept-note warn">⚠ Requires instrumentation in every service. Storage costs proportional to request volume × service count. Use sampling (store 1% of traces, all error traces).</span></div></div>
   </div>
 </section>
 
@@ -172,20 +182,20 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>How to define and measure reliability — Director-level expected</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">SLI<br>(Service Level Indicator)</div><div class="concept-def"><strong>A quantitative measure of service behaviour. The thing you actually measure.</strong><br>
-      Examples: request success rate (% of requests returning non-5xx), p99 latency (99th percentile response time), availability (% of time service is up).<br>
-      <span style="color:#5a5848;font-size:12.5px;">SLIs are the raw measurements. Choose SLIs that directly reflect the user experience.</span></div></div>
+      Examples: request success rate (% of requests returning non-5xx), p99 latency (99th percentile response time), availability (% of time service is up).
+        <span class="concept-note muted">SLIs are the raw measurements. Choose SLIs that directly reflect the user experience.</span></div></div>
     <div class="concept-row"><div class="concept-term">SLO<br>(Service Level Objective)</div><div class="concept-def"><strong>The target for your SLI. The internal goal your team commits to.</strong><br>
-      Examples: "99.9% of requests complete successfully" (three nines), "p99 latency ≤ 200ms", "availability ≥ 99.95% per month".<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ SLOs drive engineering decisions. If you are burning your error budget, prioritise reliability work. If you are comfortably meeting SLOs, invest in features.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">99.9% availability = 8.7 hours downtime/year. 99.99% = 52 minutes. 99.999% = 5 minutes. Know these numbers.</span></div></div>
+      Examples: "99.9% of requests complete successfully" (three nines), "p99 latency ≤ 200ms", "availability ≥ 99.95% per month".
+        <span class="concept-note good">✓ SLOs drive engineering decisions. If you are burning your error budget, prioritise reliability work. If you are comfortably meeting SLOs, invest in features.</span>
+      <span class="concept-note muted">99.9% availability = 8.7 hours downtime/year. 99.99% = 52 minutes. 99.999% = 5 minutes. Know these numbers.</span></div></div>
     <div class="concept-row"><div class="concept-term">SLA<br>(Service Level Agreement)</div><div class="concept-def"><strong>The contractual commitment to customers, with financial penalties for breach.</strong><br>
-      AWS EC2 SLA: 99.99% availability. If violated: customer gets service credits.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ SLA should be more conservative than your SLO. Your internal SLO is 99.95% so you have headroom before violating the 99.9% SLA you've contractually committed to customers.</span></div></div>
+      AWS EC2 SLA: 99.99% availability. If violated: customer gets service credits.
+        <span class="concept-note warn">⚠ SLA should be more conservative than your SLO. Your internal SLO is 99.95% so you have headroom before violating the 99.9% SLA you've contractually committed to customers.</span></div></div>
     <div class="concept-row"><div class="concept-term">Error Budget</div><div class="concept-def"><strong>The amount of unreliability you are allowed per period before violating your SLO.</strong><br>
       SLO: 99.9% success rate over 30 days. That is 0.1% allowed failures = 43.2 minutes of downtime allowed per month.<br>
-      If you deploy a bad release and burn 30 minutes of error budget, you have 13 minutes left that month.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Error budgets make reliability discussions data-driven. "We cannot deploy this risky feature — we have only 5 minutes of error budget left this month."</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Google SRE invented this concept. It is the key metric for Director-level reliability conversations.</span></div></div>
+      If you deploy a bad release and burn 30 minutes of error budget, you have 13 minutes left that month.
+        <span class="concept-note good">✓ Error budgets make reliability discussions data-driven. "We cannot deploy this risky feature — we have only 5 minutes of error budget left this month."</span>
+      <span class="concept-note muted">Google SRE invented this concept. It is the key metric for Director-level reliability conversations.</span></div></div>
   </div>
 </section>
 
@@ -197,22 +207,22 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       1. <strong>Latency</strong>: how long it takes to serve a request. Track p50, p95, p99 separately — averages hide outliers.<br>
       2. <strong>Traffic</strong>: demand on your system (requests/sec, messages/sec, transactions/sec).<br>
       3. <strong>Errors</strong>: rate of failed requests (5xx errors, exceptions, timeouts).<br>
-      4. <strong>Saturation</strong>: how "full" your service is (CPU %, memory %, DB connection pool utilisation, queue depth).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ If you only monitor these four for every service, you will catch 90% of production incidents before users notice.</span></div></div>
+      4. <strong>Saturation</strong>: how "full" your service is (CPU %, memory %, DB connection pool utilisation, queue depth).
+        <span class="concept-note good">✓ If you only monitor these four for every service, you will catch 90% of production incidents before users notice.</span></div></div>
     <div class="concept-row"><div class="concept-term">Prometheus + Grafana</div><div class="concept-def"><strong>The standard open-source metrics stack.</strong><br>
       Prometheus: pulls metrics from /metrics endpoints every 15s. Stores as time-series. PromQL query language for aggregations.<br>
       Grafana: dashboards on top of Prometheus (and many other sources). Pre-built dashboards for Kubernetes, PostgreSQL, Redis, etc.<br>
-      <code>rate(http_requests_total{status=~"5.."}[5m])</code> — error rate over last 5 minutes.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Used by: Grafana Labs (obviously), Uber, DigitalOcean, dozens of FAANG-adjacent companies. Kubernetes ships Prometheus-compatible metrics by default.</span></div></div>
+      <code>rate(http_requests_total{status=~"5.."}[5m])</code> — error rate over last 5 minutes.
+        <span class="concept-note muted">Used by: Grafana Labs (obviously), Uber, DigitalOcean, dozens of FAANG-adjacent companies. Kubernetes ships Prometheus-compatible metrics by default.</span></div></div>
     <div class="concept-row"><div class="concept-term">Distributed Tracing<br>(Jaeger / Zipkin)</div><div class="concept-def"><strong>OpenTelemetry is the emerging standard for instrumentation. One SDK, plugs into any backend (Jaeger, Zipkin, Tempo, Datadog).</strong><br>
       Instrument your code once with OpenTelemetry SDK → export traces to Jaeger → visualise spans in the Jaeger UI.<br>
       trace_id propagated in headers: <code>traceparent: 00-{trace_id}-{span_id}-01</code><br>
-      All services that receive this header add their span to the same trace.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ OpenTelemetry is vendor-neutral — switch backends without re-instrumenting. Used by: Google Cloud Trace, AWS X-Ray, Datadog, New Relic all accept OTLP format.</span></div></div>
+      All services that receive this header add their span to the same trace.
+        <span class="concept-note good">✓ OpenTelemetry is vendor-neutral — switch backends without re-instrumenting. Used by: Google Cloud Trace, AWS X-Ray, Datadog, New Relic all accept OTLP format.</span></div></div>
     <div class="concept-row"><div class="concept-term">Structured Logging</div><div class="concept-def"><strong>Log as JSON instead of plain text. Every field is queryable.</strong><br>
       Bad: <code>"ERROR: user 123 failed login from 1.2.3.4 at 14:23:01"</code> — requires regex to parse.<br>
-      Good: <code>{"level":"error","event":"login_failed","user_id":123,"ip":"1.2.3.4","ts":"14:23:01"}</code> — directly filterable in Elasticsearch or Loki.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Filter all errors for user:123 in seconds. Correlate across services by request_id. Aggregate error types. Essential for production debugging at scale.</span></div></div>
+      Good: <code>{"level":"error","event":"login_failed","user_id":123,"ip":"1.2.3.4","ts":"14:23:01"}</code> — directly filterable in Elasticsearch or Loki.
+        <span class="concept-note good">✓ Filter all errors for user:123 in seconds. Correlate across services by request_id. Aggregate error types. Essential for production debugging at scale.</span></div></div>
   </div>
 </section>
 
@@ -229,12 +239,10 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       5. <strong>Fix or rollback?</strong> → If recent deploy is culprit: rollback first, diagnose later. Never debug a production incident with a new deployment in flight.</div></div>
     <div class="concept-row"><div class="concept-term">Cardinality Problem</div><div class="concept-def"><strong>High-cardinality labels in metrics explode your time-series database cost and performance.</strong><br>
       Bad: <code>http_requests_total{user_id="12345", ...}</code> — if 1M users, this creates 1M time series. Prometheus stores each separately. Query performance degrades, storage costs explode.<br>
-      Good: <code>http_requests_total{status="200", endpoint="/api/feed"}</code> — low cardinality labels only. Use traces for per-user debugging, not metrics.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ The rule: metrics are for aggregates (rates, percentiles, counts by cohort). Traces are for individual requests. Never put high-cardinality identifiers (user_id, request_id) in metric labels.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Sampling Strategy</div><div class="concept-def"><strong>Storing 100% of traces at high traffic is cost-prohibitive. Smart sampling is essential.</strong><br>
-      <strong>Head-based sampling</strong>: decide at trace start whether to sample. Simple (coin flip at 1%). Misses rare errors — a 0.01% error rate with 1% sampling = you only see 1 in 10,000 errors.<br>
-      <strong>Tail-based sampling</strong>: collect all spans, decide at trace completion. Always sample: all traces with errors, all traces over p99 latency, 1% of normal traces. Captures all interesting events.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Tail-based sampling is the production standard (Honeycomb, Datadog APM, OpenTelemetry Collector). Ensures no errors are missed while controlling storage costs.</span></div></div>
+      Good: <code>http_requests_total{status="200", endpoint="/api/feed"}</code> — low cardinality labels only. Use traces for per-user debugging, not metrics.
+        <span class="concept-note warn">⚠ The rule: metrics are for aggregates (rates, percentiles, counts by cohort). Traces are for individual requests. Never put high-cardinality identifiers (user_id, request_id) in metric labels.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Sampling Strategy</div><div class="concept-def"><strong>Storing 100% of traces at high traffic is cost-prohibitive. Smart sampling is essential.</strong></p><p><strong>Head-based sampling</strong>: decide at trace start whether to sample. Simple (coin flip at 1%). Misses rare errors — a 0.01% error rate with 1% sampling = you only see 1 in 10,000 errors.</p><p><strong>Tail-based sampling</strong>: collect all spans, decide at trace completion. Always sample: all traces with errors, all traces over p99 latency, 1% of normal traces. Captures all interesting events.
+        <span class="concept-note good">✓ Tail-based sampling is the production standard (Honeycomb, Datadog APM, OpenTelemetry Collector). Ensures no errors are missed while controlling storage costs.</span></div></div>
   </div>
 </section>
 
@@ -272,8 +280,8 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       Alert if: error rate &gt; 5% for last 2 minutes (fast detection) AND error rate &gt; 1% for last 1 hour (confirms ongoing issue, not a spike).<br>
       Single-window alerts are noisy — a 30-second spike fires the alert. Multi-window only fires when the issue is sustained.</div></div>
     <div class="concept-row"><div class="concept-term">On-Call Runbook</div><div class="concept-def"><strong>Every alert must link to a runbook — documented steps the on-call engineer follows.</strong><br>
-      Runbook for "p99 latency elevated": (1) Check Grafana: which endpoint is slow? (2) Open Jaeger: find slow traces for that endpoint. (3) Is it a DB query? Check slow query log. (4) Is it an external API? Check circuit breaker status. (5) If new deploy is correlated: rollback procedure link.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Reduces mean time to resolution (MTTR). New engineers can handle alerts without senior help. Runbooks should be updated after every incident — add what was missed.</span></div></div>
+      Runbook for "p99 latency elevated": (1) Check Grafana: which endpoint is slow? (2) Open Jaeger: find slow traces for that endpoint. (3) Is it a DB query? Check slow query log. (4) Is it an external API? Check circuit breaker status. (5) If new deploy is correlated: rollback procedure link.
+        <span class="concept-note good">✓ Reduces mean time to resolution (MTTR). New engineers can handle alerts without senior help. Runbooks should be updated after every incident — add what was missed.</span></div></div>
   </div>
 </section>
 
@@ -342,6 +350,27 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
     </div>
   </div>
 </section>
+
+<section id="otel">
+  <div class="sec-tag">08 · OpenTelemetry & Cost Control</div>
+  <h2>The emerging standard and the economics of observability</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">OpenTelemetry<br>Architecture</div><div class="concept-def"><strong>Vendor-neutral standard for collecting traces, metrics, and logs. The successor to proprietary SDKs.</strong><br>
+      Components: (1) <strong>SDK</strong>: instrument your code with otel-go, otel-java, otel-python etc. Auto-instrumentation: inject agent, zero code changes, frameworks instrumented automatically. (2) <strong>Collector</strong>: a daemon that receives telemetry from services, processes/filters/batches, and exports to backends. (3) <strong>Backend</strong>: Jaeger (traces), Prometheus (metrics), any OTLP-compatible backend (Datadog, Honeycomb, Grafana Tempo).<br>
+      Why OTel matters: write instrumentation once → switch backends without code changes. Instrument once: the OTel SDK emits spans, metrics, AND logs through a unified API. Previously: separate libraries for each signal type from each vendor.
+        <span class="concept-note good">✓ Adopted by: Google Cloud, AWS, Microsoft Azure, Datadog (OTel ingest), Honeycomb, Grafana, New Relic. CNCF graduated project — this is the industry standard for the next decade.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Tail-Based Sampling</div><div class="concept-def"><strong>Sample based on what happened in the trace — not randomly at the start.</strong><br>
+      Head-based sampling (bad): decide at the first span whether to sample the trace. 1% sample rate → 99% of slow/error traces discarded — the ones you actually need.<br>
+      Tail-based sampling (good): collect ALL spans. At the end of the trace, decide whether to keep it based on: did it have an error? Was the latency > 2s? Did it touch a critical service? Keep 100% of interesting traces, sample down boring fast-success traces to 1%.<br>
+      Implementation: OTel Collector with tail sampling processor. Collector holds spans in memory for 30 seconds (waiting for the trace to complete), then applies the sampling policy. Cost: 30s × trace_rate × span_size of memory in the collector. Use a collector cluster with consistent hashing on trace_id (all spans of one trace must go to the same collector node).</div></div>
+    <div class="concept-row"><div class="concept-term">Cardinality &<br>Observability Costs</div><div class="concept-def"><strong>High-cardinality dimensions (user_id, order_id as metric labels) explode storage costs.</strong><br>
+      Prometheus with label <code>user_id</code>: 10M users × 5 metrics each = 50M time series. Prometheus struggles above 10M time series (RAM for TSDB head). Monthly storage: 50M series × 2 bytes/sample × 15s scrape = catastrophic.</p><p><strong>The rule</strong>: metric labels must be low-cardinality (< 10,000 unique values). High-cardinality analysis belongs in traces (where each trace is a single row with any dimensions) or logs (Elasticsearch/Loki).<br>
+      Cost-control levers: (1) Recording rules: pre-compute expensive aggregations in Prometheus, delete the raw series. (2) Remote write with downsampling: 1s resolution for 24h, 1min for 30 days, 1h for 1 year (Thanos/Cortex). (3) Label cardinality alerts: alert when a metric series count grows by 10× (indicates a cardinality explosion from a code change).</div></div>
+  </div>
+</section>
+
+</div>
 <div class="footer">MONITORING · OBSERVABILITY · PROMETHEUS · JAEGER · SLO · ERROR BUDGET · GOLDEN SIGNALS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

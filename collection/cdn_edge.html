@@ -123,11 +123,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -135,7 +145,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <p class="hero-sub">PoP architecture, pull vs push, cache invalidation, HLS video streaming, edge compute, DDoS mitigation — every CDN concept for system design interviews.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Cloudflare</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">CloudFront</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">HLS/DASH</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Edge Compute</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">DDoS</span></div>
 </div></div>
-<nav class="nav"><a href="#what">What CDNs Do</a><a href="#how">How They Work</a><a href="#video">Video Streaming</a><a href="#edge-compute">Edge Compute</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#what">What CDNs Do</a><a href="#how">How They Work</a><a href="#video">Video Streaming</a><a href="#edge-compute">Edge Compute</a><a href="#followups">Follow-ups</a><a href="#cdn-advanced">Advanced CDN</a></nav>
 <div class="wrap">
 <section id="what">
   <div class="sec-tag">00 · What a CDN Does</div>
@@ -156,21 +166,18 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>PoP architecture, pull vs push, and cache invalidation</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">PoP & Anycast</div><div class="concept-def"><strong>CDNs have 200+ Points of Presence (PoPs) worldwide. Anycast routing sends users to the nearest PoP automatically.</strong><br>
-      Anycast: multiple PoPs announce the same IP address. BGP routing sends the user's packet to the geographically nearest PoP — no DNS lookup delay, no manual geo-routing config.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Cloudflare: 200+ cities. Akamai: 4,000+ PoPs. Fastly: 50+ PoPs but higher bandwidth capacity. User latency: &lt;20ms to nearest PoP anywhere in the world.</span></div></div>
+      Anycast: multiple PoPs announce the same IP address. BGP routing sends the user's packet to the geographically nearest PoP — no DNS lookup delay, no manual geo-routing config.
+        <span class="concept-note good">✓ Cloudflare: 200+ cities. Akamai: 4,000+ PoPs. Fastly: 50+ PoPs but higher bandwidth capacity. User latency: &lt;20ms to nearest PoP anywhere in the world.</span></div></div>
     <div class="concept-row"><div class="concept-term">Pull CDN (Lazy)</div><div class="concept-def"><strong>CDN fetches content from origin on the first request (cache miss), then caches it.</strong><br>
-      First user in Tokyo requests <code>/images/photo.jpg</code> → CDN Tokyo misses → fetches from origin → caches → serves. All subsequent Tokyo users get it from cache.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ No management needed. Content is cached on demand. Automatically distributes popular content globally. Suitable for most web assets.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ First user in each region gets origin latency (cache miss penalty). Content that is never requested globally stays uncached.</span></div></div>
+      First user in Tokyo requests <code>/images/photo.jpg</code> → CDN Tokyo misses → fetches from origin → caches → serves. All subsequent Tokyo users get it from cache.
+        <span class="concept-note good">✓ No management needed. Content is cached on demand. Automatically distributes popular content globally. Suitable for most web assets.</span>
+      <span class="concept-note warn">⚠ First user in each region gets origin latency (cache miss penalty). Content that is never requested globally stays uncached.</span></div></div>
     <div class="concept-row"><div class="concept-term">Push CDN (Eager)</div><div class="concept-def"><strong>You proactively upload content to all CDN PoPs before any user requests it.</strong><br>
-      Before a product launch: push all assets to 200+ PoPs. First user in Tokyo gets the asset from cache (zero miss).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Zero cache miss latency. Guaranteed availability. Ideal for: software releases, video premiere events, product launch assets.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Management overhead. You pay for storage at all PoPs even if content is never requested there. Not suitable for dynamic or user-specific content.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Cache Invalidation</div><div class="concept-def"><strong>When origin content changes, you need to tell CDN edge nodes to drop their cached copies.</strong><br>
-      <strong>TTL expiry</strong>: set a short <code>Cache-Control: max-age=300</code>. Stale for up to 5 minutes.<br>
-      <strong>Cache purge API</strong>: Cloudflare/CloudFront have APIs to immediately invalidate specific URLs or patterns. Used when you push a critical fix.<br>
-      <strong>Cache versioning</strong>: embed version in filename — <code>app.v2.3.js</code>. Old URL still cached (fine), new URL fetched fresh. Zero-downtime asset updates.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Best practice: use cache versioning for static assets (infinite TTL + version in URL). Use short TTL for semi-dynamic content. Use purge API for emergency fixes.</span></div></div>
+      Before a product launch: push all assets to 200+ PoPs. First user in Tokyo gets the asset from cache (zero miss).
+        <span class="concept-note good">✓ Zero cache miss latency. Guaranteed availability. Ideal for: software releases, video premiere events, product launch assets.</span>
+      <span class="concept-note warn">⚠ Management overhead. You pay for storage at all PoPs even if content is never requested there. Not suitable for dynamic or user-specific content.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Cache Invalidation</div><div class="concept-def"><strong>When origin content changes, you need to tell CDN edge nodes to drop their cached copies.</strong></p><p><strong>TTL expiry</strong>: set a short <code>Cache-Control: max-age=300</code>. Stale for up to 5 minutes.</p><p><strong>Cache purge API</strong>: Cloudflare/CloudFront have APIs to immediately invalidate specific URLs or patterns. Used when you push a critical fix.</p><p><strong>Cache versioning</strong>: embed version in filename — <code>app.v2.3.js</code>. Old URL still cached (fine), new URL fetched fresh. Zero-downtime asset updates.
+        <span class="concept-note good">✓ Best practice: use cache versioning for static assets (infinite TTL + version in URL). Use short TTL for semi-dynamic content. Use purge API for emergency fixes.</span></div></div>
   </div>
 </section>
 
@@ -180,15 +187,15 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Adaptive Bitrate (ABR)</div><div class="concept-def"><strong>Video is encoded at multiple quality levels. The player automatically switches quality based on network speed.</strong><br>
       A 2-hour movie is encoded at: 360p (1Mbps), 720p (4Mbps), 1080p (8Mbps), 4K (25Mbps).<br>
-      Player measures available bandwidth every few seconds and requests the appropriate quality.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Smooth playback despite varying network conditions. Starts at low quality (immediate playback) and upgrades as bandwidth permits.</span></div></div>
+      Player measures available bandwidth every few seconds and requests the appropriate quality.
+        <span class="concept-note good">✓ Smooth playback despite varying network conditions. Starts at low quality (immediate playback) and upgrades as bandwidth permits.</span></div></div>
     <div class="concept-row"><div class="concept-term">HLS Segmentation</div><div class="concept-def"><strong>Video is split into 2–10 second segments stored as individual files. A manifest file (.m3u8) lists all segments.</strong><br>
       Player downloads manifest → fetches segments sequentially → each segment is cached independently by CDN.<br>
-      <code>index.m3u8</code> → <code>segment001.ts, segment002.ts ...</code><br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ CDN caches each segment independently. Popular segments (the first 10 seconds every viewer watches) have extremely high cache hit rates. Seeks jump to the correct segment URL directly.</span></div></div>
+      <code>index.m3u8</code> → <code>segment001.ts, segment002.ts ...</code>
+        <span class="concept-note good">✓ CDN caches each segment independently. Popular segments (the first 10 seconds every viewer watches) have extremely high cache hit rates. Seeks jump to the correct segment URL directly.</span></div></div>
     <div class="concept-row"><div class="concept-term">CDN Role in Video</div><div class="concept-def"><strong>Video segments are static files → perfect for CDN caching.</strong><br>
-      Netflix: 3 copies of each segment stored in S3 (origin). CloudFront caches hot segments at 200+ PoPs. Popular shows: 99%+ cache hit rate. Long-tail content: served from origin.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Netflix offloads ~95% of video bytes to CDN. Origin bandwidth savings: enormous. User experience: consistent quality regardless of Netflix's origin capacity.</span></div></div>
+      Netflix: 3 copies of each segment stored in S3 (origin). CloudFront caches hot segments at 200+ PoPs. Popular shows: 99%+ cache hit rate. Long-tail content: served from origin.
+        <span class="concept-note good">✓ Netflix offloads ~95% of video bytes to CDN. Origin bandwidth savings: enormous. User experience: consistent quality regardless of Netflix's origin capacity.</span></div></div>
   </div>
 </section>
 
@@ -200,8 +207,8 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       Examples: Cloudflare Workers, AWS Lambda@Edge, Fastly Compute@Edge.<br>
       Use for: A/B testing (redirect 10% of users to new version at edge), auth token validation (validate JWT at edge, reject bad tokens before they hit origin), geo-based redirects, request transformation.</div></div>
     <div class="concept-row"><div class="concept-term">CDN for DDoS</div><div class="concept-def"><strong>CDN absorbs DDoS attacks at the edge — attack traffic never reaches your origin.</strong><br>
-      A 1Tbps DDoS attack is distributed across 200 PoPs. Each absorbs 5Gbps — trivial for a large PoP. Your 10Gbps origin link never sees the attack.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Cloudflare's network capacity: 100+ Tbps. The largest DDoS attacks ever recorded were absorbed by Cloudflare without origin impact. Used by: every large web property (including FAANG).</span></div></div>
+      A 1Tbps DDoS attack is distributed across 200 PoPs. Each absorbs 5Gbps — trivial for a large PoP. Your 10Gbps origin link never sees the attack.
+        <span class="concept-note good">✓ Cloudflare's network capacity: 100+ Tbps. The largest DDoS attacks ever recorded were absorbed by Cloudflare without origin impact. Used by: every large web property (including FAANG).</span></div></div>
   </div>
 </section>
 
@@ -297,6 +304,27 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <strong>What Workers cannot replace</strong>: anything requiring your primary database (Cloudflare KV has ~50ms global read latency but limited querying capabilities), long-running computations (&gt;30ms CPU limit per request), streaming heavy media processing.<br><br>
   <strong>The architecture</strong>: Workers as edge compute + your origin as the authority for dynamic data. Workers handle 90% of requests at the edge; only complex, personalised, or write requests reach your origin.</div></div>
 </section></div>
+
+<section id="cdn-advanced">
+  <div class="sec-tag">07 · Advanced CDN Topics</div>
+  <h2>Range requests, edge functions, and cache invalidation at scale</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Range Requests<br>for Video Seeking</div><div class="concept-def"><strong>HTTP Range header allows a client to request any byte range of a file — enabling video seeking without HLS segmentation.</strong><br>
+      HTTP: <code>GET /video.mp4 Range: bytes=45670000-45800000</code><br>
+      Server (or CDN): <code>206 Partial Content Content-Range: bytes 45670000-45800000/1073741824</code><br>
+      For a 1GB MP4: seek to 42 minutes → calculate byte offset (bitrate × time) → request only those bytes. CDN serves from cache if that range was previously requested (range is part of the cache key).<br>
+      Why CDN caches ranges: CDN can cache full files and serve any range from cache. The first range request for a file causes CDN to fetch the full file from origin (or the requested range — implementation-dependent). Subsequent range requests served from CDN cache. This is why YouTube scrubbing is fast — popular video ranges are cached at the CDN edge.</div></div>
+    <div class="concept-row"><div class="concept-term">Cache Invalidation<br>at Scale</div><div class="concept-def"><strong>Purging a URL from 200+ CDN PoPs simultaneously — and why URL versioning is better.</strong><br>
+      API-based purge: <code>DELETE https://api.cloudflare.com/zones/{id}/purge_cache</code>. Propagates to all PoPs in ~1 second (Cloudflare claims 150ms). CloudFront purge: ~60 seconds. Fastly: &lt;150ms with instant purge.<br>
+      The better solution — immutable URLs with versioning: instead of <code>/app.js</code> (must invalidate on deploy), use <code>/app.v3f4a9.js</code> (content hash in URL). Old URL forever cached (TTL=1 year). New deploy: new hash → new URL → automatically served. Zero invalidation needed.
+        <span class="concept-note good">✓ This is how Next.js, Vite, and Webpack handle static assets: hash in filename → set Cache-Control: max-age=31536000, immutable → CDN caches forever. Only HTML files with TTL=60s for the version pointers. Zero cache invalidation needed on deploy.</span></div></div>
+    <div class="concept-row"><div class="concept-term">CDN vs Reverse Proxy<br>vs API Gateway</div><div class="concept-def"><strong>Similar but different layers. Understanding the distinction is a Director-level signal.</strong></p><p><strong>CDN</strong>: globally distributed cache for static and cacheable content. Brings content closer to users. Origin sits behind it. Cache hit = CDN never calls origin. Examples: CloudFront, Cloudflare, Akamai.</p><p><strong>Reverse Proxy</strong>: single-location intermediary for routing, SSL termination, and caching. Sits in front of app servers in your data center. Nginx, HAProxy. Cache hit = doesn't hit app servers but still in your DC.</p><p><strong>API Gateway</strong>: application-level routing with business logic. Auth, rate limiting, request transformation, API versioning. Kong, AWS API Gateway. Not primarily a cache.
+        <span class="concept-note muted">Cloudflare Workers blurs these lines: it's a CDN with programmable logic at each PoP. Can do auth, routing, transformation at the edge — formerly only possible with origin API gateways.</span></div></div>
+  </div>
+</section>
+
+</div>
 <div class="footer">CDN · EDGE · CLOUDFLARE · CLOUDFRONT · HLS · ADAPTIVE BITRATE · DDOS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

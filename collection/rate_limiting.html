@@ -123,11 +123,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -135,7 +145,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <p class="hero-sub">Every algorithm from token bucket to sliding window counter, distributed implementation with Redis, multi-layer enforcement, and production system design examples.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Token Bucket</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Sliding Window</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Redis INCR/Lua</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Leaky Bucket</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Circuit Breaker</span></div>
 </div></div>
-<nav class="nav"><a href="#why">Why Rate Limit</a><a href="#algorithms">Algorithms</a><a href="#distributed">Distributed</a><a href="#layers">Layers</a><a href="#examples">System Design</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#why">Why Rate Limit</a><a href="#algorithms">Algorithms</a><a href="#distributed">Distributed</a><a href="#layers">Layers</a><a href="#examples">System Design</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a><a href="#rl-redis-impl">Redis Impl</a></nav>
 <div class="wrap">
 <section id="why">
   <div class="sec-tag">00 · Why Rate Limiting</div>
@@ -159,34 +169,34 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       <div class="concept-term">Token Bucket<br><span style="font-size:10px;font-weight:400;color:#6a6458">Industry Standard</span></div>
       <div class="concept-def"><strong>A bucket holds up to N tokens. Tokens refill at rate R per second. Each request consumes 1 token. Empty bucket = rejected request.</strong><br>
         Example: capacity=100 tokens, refill=10/sec. A burst of 100 requests is served immediately (empties the bucket). Then max 10/sec sustained.<br>
-        Implementation: store <code>(token_count, last_refill_time)</code>. On each request: <code>tokens = min(capacity, stored_tokens + (now - last_refill) × rate)</code>. If tokens ≥ 1: decrement and allow. Else: reject.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ Allows legitimate burst traffic. O(1) memory per user. Smooth average enforcement. The AWS API Gateway, Stripe, and Twilio algorithm.</span><br>
-        <span style="color:#b83030;font-size:12.5px;">⚠ Two users can both exhaust their buckets at the same moment and both immediately refill — two full bursts back-to-back at window boundaries.</span>
+        Implementation: store <code>(token_count, last_refill_time)</code>. On each request: <code>tokens = min(capacity, stored_tokens + (now - last_refill) × rate)</code>. If tokens ≥ 1: decrement and allow. Else: reject.
+        <span class="concept-note good">✓ Allows legitimate burst traffic. O(1) memory per user. Smooth average enforcement. The AWS API Gateway, Stripe, and Twilio algorithm.</span>
+        <span class="concept-note warn">⚠ Two users can both exhaust their buckets at the same moment and both immediately refill — two full bursts back-to-back at window boundaries.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Leaky Bucket</div>
       <div class="concept-def"><strong>Requests enter a fixed-size queue (the bucket). They drain at a fixed rate (the leak). Queue full = requests dropped.</strong><br>
-        Enforces exactly R requests/second regardless of arrival rate. A burst of 100 arrives — 100 enter the queue, they drain at 10/sec, all served over 10 seconds.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ Perfectly smooth outbound rate. Protects downstream services that can only handle a fixed rate (DB connection pool, third-party API with strict QPS). No traffic spikes ever reach the downstream.</span><br>
-        <span style="color:#b83030;font-size:12.5px;">⚠ Burst requests experience queuing latency, not fast rejection. A slow legitimate request queues behind a burst attacker's requests. If queue fills, the most recent requests (possibly legitimate) are dropped.</span>
+        Enforces exactly R requests/second regardless of arrival rate. A burst of 100 arrives — 100 enter the queue, they drain at 10/sec, all served over 10 seconds.
+        <span class="concept-note good">✓ Perfectly smooth outbound rate. Protects downstream services that can only handle a fixed rate (DB connection pool, third-party API with strict QPS). No traffic spikes ever reach the downstream.</span>
+        <span class="concept-note warn">⚠ Burst requests experience queuing latency, not fast rejection. A slow legitimate request queues behind a burst attacker's requests. If queue fills, the most recent requests (possibly legitimate) are dropped.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Fixed Window</div>
       <div class="concept-def"><strong>Count requests per fixed time window. Reset counter at the boundary.</strong><br>
         Example: 100 req/minute. Counter for window "14:03" resets at "14:04:00.000".<br>
-        Redis: <code>INCR ratelimit:user:123:14:03</code> → <code>EXPIRE key 60</code> → check count ≤ 100.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ Simplest implementation. Single Redis INCR per request. Minimal memory.</span><br>
-        <span style="color:#b83030;font-size:12.5px;">⚠ <strong>Boundary attack:</strong> 100 requests at 14:03:59 + 100 requests at 14:04:01 = 200 requests in 2 seconds — both within their respective windows. Set your limit 50% conservatively to compensate, or use sliding window.</span>
+        Redis: <code>INCR ratelimit:user:123:14:03</code> → <code>EXPIRE key 60</code> → check count ≤ 100.
+        <span class="concept-note good">✓ Simplest implementation. Single Redis INCR per request. Minimal memory.</span>
+        <span class="concept-note warn">⚠ <strong>Boundary attack:</strong> 100 requests at 14:03:59 + 100 requests at 14:04:01 = 200 requests in 2 seconds — both within their respective windows. Set your limit 50% conservatively to compensate, or use sliding window.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Sliding Window Log</div>
       <div class="concept-def"><strong>Store a timestamp for every request in a sorted set. Count entries in the last N seconds. Reject if over limit.</strong><br>
-        Redis: <code>ZADD log:user:123 {now_ms} {now_ms}</code> → <code>ZREMRANGEBYSCORE log 0 {now_ms - window_ms}</code> → <code>ZCARD log</code> → compare to limit.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ Perfectly accurate. No boundary attack possible. True rolling window at all times.</span><br>
-        <span style="color:#b83030;font-size:12.5px;">⚠ Memory: O(requests per window) per user. At 1,000 req/min and 1M users: 1 billion sorted set entries. Only viable for low-rate, high-value endpoints: login, payment, account creation.</span>
+        Redis: <code>ZADD log:user:123 {now_ms} {now_ms}</code> → <code>ZREMRANGEBYSCORE log 0 {now_ms - window_ms}</code> → <code>ZCARD log</code> → compare to limit.
+        <span class="concept-note good">✓ Perfectly accurate. No boundary attack possible. True rolling window at all times.</span>
+        <span class="concept-note warn">⚠ Memory: O(requests per window) per user. At 1,000 req/min and 1M users: 1 billion sorted set entries. Only viable for low-rate, high-value endpoints: login, payment, account creation.</span>
       </div>
     </div>
     <div class="concept-row">
@@ -194,8 +204,8 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       <div class="concept-def"><strong>Interpolate between current and previous fixed window counts to approximate a rolling window. O(1) memory, ~0.003% error rate.</strong><br>
         <code>count = prev_window_count × (1 - elapsed/window_size) + curr_window_count</code><br>
         Example: window=1min, 40% through current minute. prev_window had 80 requests, current has 30.<br>
-        Estimated rolling count: <code>80 × 0.6 + 30 = 78</code>. Compare to limit.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ O(1) memory (two counters per user). Accurate enough: Cloudflare uses this and measured &lt;0.003% incorrect rate limiting decisions. The practical production algorithm at scale.</span>
+        Estimated rolling count: <code>80 × 0.6 + 30 = 78</code>. Compare to limit.
+        <span class="concept-note good">✓ O(1) memory (two counters per user). Accurate enough: Cloudflare uses this and measured &lt;0.003% incorrect rate limiting decisions. The practical production algorithm at scale.</span>
       </div>
     </div>
   </div>
@@ -222,16 +232,16 @@ if current > limit then
 else
   return 1  -- allowed
 end</pre>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Lua executes atomically in Redis — no race between check and increment. One network round trip. Works correctly under any concurrency.</span></div></div>
+      <span class="concept-note good">✓ Lua executes atomically in Redis — no race between check and increment. One network round trip. Works correctly under any concurrency.</span></div></div>
     <div class="concept-row"><div class="concept-term">Token Bucket in Redis</div><div class="concept-def"><strong>Atomic token bucket using Lua: refill tokens based on elapsed time, check, consume.</strong><br>
       Key stores <code>[token_count, last_refill_timestamp]</code> as a hash.<br>
       Lua script: (1) read current tokens and last refill time, (2) compute new tokens = min(capacity, stored + elapsed × rate), (3) if tokens ≥ 1: set tokens−1, allow; else: reject.<br>
-      All in one atomic operation. Libraries: <code>redis-rate-limiter</code>, <code>redis-cell</code> (native Redis module).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Handles burst correctly in distributed context. Two servers both try to consume simultaneously → Lua serialises them → correct token count maintained.</span></div></div>
+      All in one atomic operation. Libraries: <code>redis-rate-limiter</code>, <code>redis-cell</code> (native Redis module).
+        <span class="concept-note good">✓ Handles burst correctly in distributed context. Two servers both try to consume simultaneously → Lua serialises them → correct token count maintained.</span></div></div>
     <div class="concept-row"><div class="concept-term">Local Approximation<br>+ Async Sync</div><div class="concept-def"><strong>Each server maintains a local counter. Sync to Redis every 100ms. Reduces Redis calls by 100x.</strong><br>
-      Each server allows up to <code>limit / server_count</code> requests locally before checking Redis. Every 100ms, flush local count to Redis, refresh local quota.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Reduces Redis round trips 100x at cost of slight inaccuracy. Burst of 200ms can exceed limit by up to <code>limit × (100ms / window)</code>. Acceptable for most APIs.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Not suitable for strict financial or security rate limiting where brief overages could be exploited.</span></div></div>
+      Each server allows up to <code>limit / server_count</code> requests locally before checking Redis. Every 100ms, flush local count to Redis, refresh local quota.
+        <span class="concept-note good">✓ Reduces Redis round trips 100x at cost of slight inaccuracy. Burst of 200ms can exceed limit by up to <code>limit × (100ms / window)</code>. Acceptable for most APIs.</span>
+      <span class="concept-note warn">⚠ Not suitable for strict financial or security rate limiting where brief overages could be exploited.</span></div></div>
   </div>
 </section>
 
@@ -325,6 +335,36 @@ end</pre>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle the circuit breaker pattern as it relates to rate limiting?<span class="tog">+</span></div>
   <div class="faq-a"><strong>Rate limiting and circuit breaking are complementary but solve different problems.</strong><br><br><strong>Rate limiting</strong>: "You are sending too many requests — slow down." Applied at the entry point to protect your service from external or internal overload. Proactive.<br><br><strong>Circuit breaking</strong>: "The downstream service is failing — stop sending requests to protect it and yourself." Applied at the exit point (your outbound calls to dependencies). Reactive to failure.<br><br>Circuit breaker states: Closed (normal, all requests pass through) → Open (downstream is failing, immediately return error without calling downstream) → Half-Open (probe with one request — if success, close; if failure, stay open).<br><br>They work together: rate limiting prevents your service from being overwhelmed. Circuit breaking prevents your service from overwhelming a failing dependency. In Envoy/Istio: configure both — rate limiting on the ingress side, circuit breaking on the egress side for each service call.</div></div>
 </section></div>
+
+<section id="rl-redis-impl">
+  <div class="sec-tag">07 · Redis Implementation — Atomicity & Lua Scripts</div>
+  <h2>How to implement rate limiting correctly in Redis without race conditions</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Sliding Window<br>with Lua Script</div><div class="concept-def"><strong>Lua scripts in Redis execute atomically — multiple Redis commands as one atomic operation.</strong><br>
+      The race condition without Lua: (1) GET count (2) if count &lt; limit → INCR (3) SET expiry. Between steps 1 and 2, another request can GET the same count and both increment — exceeding the limit.<br>
+      The Lua solution (runs as a single atomic transaction):<br>
+      <code>local key = KEYS[1]</code><br>
+      <code>local limit = tonumber(ARGV[1])</code><br>
+      <code>local window = tonumber(ARGV[2])</code><br>
+      <code>local current = redis.call('INCR', key)</code><br>
+      <code>if current == 1 then redis.call('EXPIRE', key, window) end</code><br>
+      <code>if current > limit then return 0 else return 1 end</code><br>
+      Redis executes this Lua script as one atomic unit — no other commands can interleave. No race condition possible.</div></div>
+    <div class="concept-row"><div class="concept-term">Token Bucket<br>with Redis</div><div class="concept-def"><strong>Precise token bucket using Redis MULTI/EXEC or Lua for atomicity:</strong><br>
+      Key: <code>ratelimit:{user_id}</code> → Hash with fields: tokens (current bucket level), last_refill (timestamp).<br>
+      On each request: calculate tokens to add since last_refill (rate × elapsed seconds). Cap at bucket capacity. Check if tokens ≥ 1. If yes: decrement tokens, allow request. If no: reject with 429.<br>
+      All of the above in a single Lua script to ensure atomicity. Returns: allowed (1) or rejected (0) + current token count + time until next token.<br>
+      <code>Retry-After</code> header: include <code>X-RateLimit-Reset: {unix_timestamp}</code> in 429 responses. Client knows exactly when to retry. Prevents exponential backoff pileup — all clients retry at the same informed time instead of random exponential times.</div></div>
+    <div class="concept-row"><div class="concept-term">Distributed Rate Limiting<br>Without Redis</div><div class="concept-def"><strong>When Redis is unavailable: fail open vs fail closed — a critical production decision.</strong><br>
+      Fail open: if Redis is unavailable, allow requests through. Rate limiting is a best-effort feature. Service stays available. Risk: unprotected during Redis outage — a DDoS during a Redis outage can overwhelm the service.<br>
+      Fail closed: if Redis is unavailable, reject all requests (or allow only a local-cache-based limit). Service is protected but unavailable. For authentication endpoints (brute force protection): fail closed is correct. For API quota limiting: fail open is usually correct.<br>
+      Local fallback: each app server maintains a local rate limiter (Guava RateLimiter) as a fallback. Less accurate (doesn't coordinate across servers) but better than either extreme.
+        <span class="concept-note muted">Circuit breaker on the rate limiter itself: if Redis is returning errors, switch to local limiter automatically. When Redis recovers, switch back. The rate limiter protecting your service must itself be resilient.</span></div></div>
+  </div>
+</section>
+
+</div>
 <div class="footer">RATE LIMITING · TOKEN BUCKET · SLIDING WINDOW · REDIS · CIRCUIT BREAKER · TIERED PLANS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

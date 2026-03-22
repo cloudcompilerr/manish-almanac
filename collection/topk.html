@@ -557,6 +557,18 @@ code {
   color: #3a3830;
   letter-spacing: 2px;
 }
+
+/* ── concept-note: coloured signal blocks ─────────── */
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
+/* ── concept-def paragraph spacing ────────────────── */
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.9;color:#2a2820;}
+.concept-def>strong:first-child{display:block;margin-bottom:8px;font-size:14px;}
+.concept-def p{margin:0 0 8px 0;}
+.concept-def p:last-child{margin-bottom:0;}
 </style>
 </head>
 <body>
@@ -565,7 +577,7 @@ code {
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-eyebrow">End-to-End System Design</div>
-    <h1>Top-K <span class="accent">Complete</span><br>Design Blueprint</h1>
+    <h1>Top-K <span class="accent">Complete</span>Design Blueprint</h1>
     <p class="hero-desc">
       Full system — from raw event to API response. Every component connected, every storage layer justified,
       OLAP integrated. Enough depth to answer any follow-up at Director level.
@@ -1457,39 +1469,35 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
       CMS alone: can answer "how often did item X appear?" but cannot enumerate which items are in the top K — it doesn't store item identities.<br>
       Min-heap alone: would require storing exact counts for all items — O(N) memory for N distinct items.<br>
       Together: CMS provides O(1) count estimate for any item in O(w×d) memory. Min-heap of size K holds only the K candidates. Total memory: O(w×d + K) — independent of item cardinality.</div></div>
-    <div class="concept-row"><div class="concept-term">Time Window<br>Strategy</div><div class="concept-def"><strong>Top-K is time-sensitive — "trending now" ≠ "most popular ever." Three windowing strategies:</strong><br>
-      <strong>Tumbling window</strong>: fixed 5-minute buckets. Top-K resets every 5 minutes. Simple, but the moment before reset and the moment after give very different results.<br>
-      <strong>Sliding window</strong>: rolling last 60 minutes. More accurate sense of "now" but requires maintaining multiple CMS buckets and merging them.<br>
-      <strong>Exponential decay</strong>: multiply counts by a decay factor on each time step. Recent events count more than old events. Most accurate "trending now" signal. Used by Twitter/TikTok for trending topics.</div></div>
+    <div class="concept-row"><div class="concept-term">Time Window<br>Strategy</div><div class="concept-def"><strong>Top-K is time-sensitive — "trending now" ≠ "most popular ever." Three windowing strategies:</strong></p><p><strong>Tumbling window</strong>: fixed 5-minute buckets. Top-K resets every 5 minutes. Simple, but the moment before reset and the moment after give very different results.</p><p><strong>Sliding window</strong>: rolling last 60 minutes. More accurate sense of "now" but requires maintaining multiple CMS buckets and merging them.</p><p><strong>Exponential decay</strong>: multiply counts by a decay factor on each time step. Recent events count more than old events. Most accurate "trending now" signal. Used by Twitter/TikTok for trending topics.</div></div>
     <div class="concept-row"><div class="concept-term">Partition Strategy<br>for Scale</div><div class="concept-def"><strong>At billions of events/sec, a single CMS/heap is a bottleneck. Shard the problem.</strong><br>
       Approach: N parallel Flink tasks, each maintaining a local CMS + min-heap for its partition of the input stream. Kafka partitioning by entity key ensures each item always goes to the same partition (consistent counts).<br>
-      Merge step: every 5 minutes, merge all N local CMS sketches (O(w×d) per merge) and merge all N min-heaps (O(K×N log K)) to produce the global Top-K.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Linear horizontal scaling. 10 partitions → 10x throughput. Merge overhead is negligible because K and w×d are small constants.</span></div></div>
+      Merge step: every 5 minutes, merge all N local CMS sketches (O(w×d) per merge) and merge all N min-heaps (O(K×N log K)) to produce the global Top-K.
+        <span class="concept-note good">✓ Linear horizontal scaling. 10 partitions → 10x throughput. Merge overhead is negligible because K and w×d are small constants.</span></div></div>
     <div class="concept-row"><div class="concept-term">Hot Item Problem</div><div class="concept-def"><strong>In a Top-K system, the top items get disproportionate traffic — the very thing you are measuring causes a feedback loop.</strong><br>
-      Showing a trending item → more clicks → increases its count → stays trending → more clicks. The Matthew effect: the rich get richer.<br>
-      <strong>Mitigation</strong>: time-decay (older trend scores decay), diversity constraints (cap any one category at 20% of top-K), freshness boost (newer items get a multiplier to break into the top-K even without full momentum).<br>
-      <span style="color:#5a5848;font-size:12.5px;">These are business logic layered on top of the pure CMS/heap mechanism. The interview answer is to acknowledge the feedback loop and propose a mitigation strategy.</span></div></div>
+      Showing a trending item → more clicks → increases its count → stays trending → more clicks. The Matthew effect: the rich get richer.</p><p><strong>Mitigation</strong>: time-decay (older trend scores decay), diversity constraints (cap any one category at 20% of top-K), freshness boost (newer items get a multiplier to break into the top-K even without full momentum).
+        <span class="concept-note muted">These are business logic layered on top of the pure CMS/heap mechanism. The interview answer is to acknowledge the feedback loop and propose a mitigation strategy.</span></div></div>
     <div class="concept-row"><div class="concept-term">Read Path:<br>Tiered Lookup</div><div class="concept-def"><strong>Serving the Top-K result requires a tiered lookup strategy for different time horizons.</strong><br>
       Real-time (last 5 min): Redis ZSET pre-populated by Flink every 30 seconds. Single ZREVRANGE command, &lt;1ms.<br>
       Recent (last 24h): ClickHouse query on 1-minute pre-aggregated rollup table. &lt;100ms.<br>
       Historical (last 30 days): ClickHouse on daily rollup table or Cassandra wide-column store. &lt;500ms.<br>
       The API blends these tiers: real-time result for the top strip, historical context for each item's trend line.</div></div>
     <div class="concept-row"><div class="concept-term">Exactly-Once<br>Counting</div><div class="concept-def"><strong>In a distributed system, events can be processed more than once — duplicate counts corrupt the Top-K.</strong><br>
-      Flink checkpointing with Kafka source: Flink checkpoints its consumer offset + CMS state atomically. On recovery from failure, Flink replays from the last checkpoint offset. With Kafka exactly-once transactions, each event is counted exactly once even after restarts.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Flink's two-phase commit checkpoint + Kafka transactions = exactly-once semantics end-to-end. The only way to guarantee exact counts in a distributed streaming system.</span></div></div>
+      Flink checkpointing with Kafka source: Flink checkpoints its consumer offset + CMS state atomically. On recovery from failure, Flink replays from the last checkpoint offset. With Kafka exactly-once transactions, each event is counted exactly once even after restarts.
+        <span class="concept-note good">✓ Flink's two-phase commit checkpoint + Kafka transactions = exactly-once semantics end-to-end. The only way to guarantee exact counts in a distributed streaming system.</span></div></div>
   </div>
 
   
     <div class="concept-row"><div class="concept-term">Space Savings<br>vs HashMap</div><div class="concept-def"><strong>At what scale does CMS beat a HashMap? Let's calculate.</strong><br>
       1 billion distinct items (all URLs ever visited): HashMap = 1B keys × ~50 bytes avg = 50GB RAM.<br>
       CMS at ε=0.001, δ=0.01: w=2718, d=5 → 13,590 cells × 8 bytes = 108KB.<br>
-      Ratio: 50GB / 108KB ≈ 500,000× more memory for exact counting.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ This is why CMS is non-negotiable at internet scale. No machine has 50GB of RAM dedicated to a single counter table. CMS solves this with 108KB and a bounded, predictable error.</span></div></div>
+      Ratio: 50GB / 108KB ≈ 500,000× more memory for exact counting.
+        <span class="concept-note good">✓ This is why CMS is non-negotiable at internet scale. No machine has 50GB of RAM dedicated to a single counter table. CMS solves this with 108KB and a bounded, predictable error.</span></div></div>
     <div class="concept-row"><div class="concept-term">Cassandra Wide-Column<br>for Top-K History</div><div class="concept-def"><strong>Storing Top-K results for historical queries: partition by (date, granularity), cluster by rank.</strong><br>
       Schema: <code>CREATE TABLE topk_results (date DATE, granularity TEXT, rank INT, item_id TEXT, score DOUBLE, PRIMARY KEY((date, granularity), rank))</code><br>
       Write: Flink emits the top-100 for each 1-minute window → 100 Cassandra writes per minute.<br>
-      Read: "Top 10 trending last Tuesday at 3pm" → single partition read → &lt;5ms.<br>
-      <span style="color:#5a5848;font-size:12.5px;">This is the warm store layer in the Top-K architecture. Redis holds real-time (last 5 min), Cassandra holds recent (last 90 days), ClickHouse holds long-term analytics (all time).</span></div></div>
+      Read: "Top 10 trending last Tuesday at 3pm" → single partition read → &lt;5ms.
+        <span class="concept-note muted">This is the warm store layer in the Top-K architecture. Redis holds real-time (last 5 min), Cassandra holds recent (last 90 days), ClickHouse holds long-term analytics (all time).</span></div></div>
 
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">YouTube — Top Trending Videos</div><span class="sd-example-tag">BILLION-SCALE · REAL-TIME</span></div>

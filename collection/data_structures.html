@@ -82,6 +82,101 @@ code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1p
 .oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
 .oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
 footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+
+/* ── Concept Grid: term/definition cards ─────────────── */
+.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);font-weight:700;}
+.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Knowledge Card: FAANG internals deep-dive ────────── */
+.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
+.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
+.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+.k-point{display:flex;flex-direction:column;gap:4px;}
+.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
+.k-point-text strong{color:var(--ink);}
+.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-divider{height:1px;background:var(--border);margin:4px 0;}
+.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
+.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
+/* ── FAQs: consistent across all files ────────────────── */
+.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
+.faq-q:hover{background:var(--surface);}
+.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
+.faq-item.open .tog{transform:rotate(45deg);}
+.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
+.faq-item.open .faq-a{display:block;}
+.faq-a strong{color:var(--ink);}
+.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
+/* ── SD Examples ──────────────────────────────────────── */
+.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
+.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
+.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
+.sd-example-body{padding:0;}
+.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border-bottom:none;}
+.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
+.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
+.choice-val strong{color:var(--ink);}
+.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Step block ───────────────────────────────────────── */
+.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
+.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
+.sb-icon{font-size:18px;}
+.step-block-body{padding:0;}
+.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.step-content{padding:16px 18px;}
+.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:8px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
+.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
+.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
+.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
+.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
+.opt-text{color:#2a2820;}
+.opt-text strong{color:var(--ink);}
+/* ── Analogy block ───────────────────────────────────── */
+.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
+.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
+.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
+/* ── Callout ──────────────────────────────────────────── */
+.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
+.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
+.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
+.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
+.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
+.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+/* ── DB pills ─────────────────────────────────────────── */
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
+/* ── hero-sub ─────────────────────────────────────────── */
+.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
+/* ── footer ───────────────────────────────────────────── */
+.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -111,13 +206,10 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       1 billion URLs, 1% false positive rate: m = -1B × ln(0.01) / 0.48 ≈ 9.6 bits/item = <strong>1.2 GB</strong>.<br>
       Compare: storing 1B URLs as SHA-256 hashes = 1B × 32 bytes = <strong>32 GB</strong>. Bloom filter is 26× more compact.<br>
       For 0.1% false positive: 1.8GB (50% more space, 10× less false positives).</div></div>
-    <div class="concept-row"><div class="concept-term">Production Uses</div><div class="concept-def"><strong>Everywhere a "probably not" check avoids an expensive lookup:</strong><br>
-      <strong>Cassandra/HBase</strong>: before reading an SSTable from disk (expensive), check a Bloom filter. If "definitely not in this SSTable" → skip the disk read entirely. Reduces read amplification by 60–80%.<br>
-      <strong>Chrome Safe Browsing</strong>: local Bloom filter of ~2M malicious URLs. Check locally before querying Google's server. 95% of URL checks are answered locally without a network round trip.<br>
-      <strong>Redis</strong>: native <code>BF.ADD</code> / <code>BF.EXISTS</code> commands. Used for: seen-URLs deduplication in crawlers, unique event deduplication in streaming pipelines.</div></div>
+    <div class="concept-row"><div class="concept-term">Production Uses</div><div class="concept-def"><strong>Everywhere a "probably not" check avoids an expensive lookup:</strong></p><p><strong>Cassandra/HBase</strong>: before reading an SSTable from disk (expensive), check a Bloom filter. If "definitely not in this SSTable" → skip the disk read entirely. Reduces read amplification by 60–80%.</p><p><strong>Chrome Safe Browsing</strong>: local Bloom filter of ~2M malicious URLs. Check locally before querying Google's server. 95% of URL checks are answered locally without a network round trip.</p><p><strong>Redis</strong>: native <code>BF.ADD</code> / <code>BF.EXISTS</code> commands. Used for: seen-URLs deduplication in crawlers, unique event deduplication in streaming pipelines.</div></div>
     <div class="concept-row"><div class="concept-term">When NOT to Use</div><div class="concept-def"><strong>Bloom filters cannot delete items. Once a bit is set, it stays set.</strong><br>
-      If you need deletion: use a <strong>Counting Bloom Filter</strong> (each "bit" is a counter, decrement on delete) at 4× the memory cost. Or use <strong>Cuckoo Filter</strong> (supports deletion, better practical performance at low false positive rates).<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Don't use Bloom filter when false positives are unacceptable (security checks where a false positive lets a malicious URL through). Don't use when you need exact set membership (financial deduplication).</span></div></div>
+      If you need deletion: use a <strong>Counting Bloom Filter</strong> (each "bit" is a counter, decrement on delete) at 4× the memory cost. Or use <strong>Cuckoo Filter</strong> (supports deletion, better practical performance at low false positive rates).
+        <span class="concept-note warn">⚠ Don't use Bloom filter when false positives are unacceptable (security checks where a false positive lets a malicious URL through). Don't use when you need exact set membership (financial deduplication).</span></div></div>
   </div>
 </section>
 
@@ -127,15 +219,15 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">How It Works</div><div class="concept-def"><strong>A tree where each node represents one character. Every path from root to a leaf node represents a word.</strong><br>
       Words "cat", "car", "card": root→c→a→t (end), root→c→a→r (end)→d (end). The prefix "ca" is shared — stored once.<br>
-      Prefix search: traverse to the node for the last char of your prefix ("ca") → return all words in the subtree below it. O(L + R) where L is prefix length and R is result count.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ O(L) lookup regardless of vocabulary size. Memory-efficient for shared prefixes. Every IP routing table in routers uses a trie variant (Patricia trie). DNS resolution uses tries for domain suffix matching.</span></div></div>
+      Prefix search: traverse to the node for the last char of your prefix ("ca") → return all words in the subtree below it. O(L + R) where L is prefix length and R is result count.
+        <span class="concept-note good">✓ O(L) lookup regardless of vocabulary size. Memory-efficient for shared prefixes. Every IP routing table in routers uses a trie variant (Patricia trie). DNS resolution uses tries for domain suffix matching.</span></div></div>
     <div class="concept-row"><div class="concept-term">Autocomplete Design</div><div class="concept-def"><strong>Trie + frequency scores = autocomplete system.</strong><br>
       Each end-of-word node stores a popularity score. Query "redis" → traverse to 's' node → return top-K words in subtree by score (use a min-heap of size K during traversal).<br>
       At FAANG scale (1M+ vocabulary): store trie in memory on dedicated autocomplete servers. Update scores in background from click-through logs. Shard by first letter if needed (26 shards, each holds 1/26 of vocabulary).<br>
       Alternative at scale: Elasticsearch Completion Suggester (FST in memory), or Redis ZSET prefix trick for simpler cases.</div></div>
     <div class="concept-row"><div class="concept-term">IP Routing</div><div class="concept-def"><strong>Routers use Patricia Tries (compressed tries) to match IP prefixes in nanoseconds.</strong><br>
-      IP 192.168.1.100: look up in the trie bit by bit. The longest matching prefix determines the next hop. With millions of routing table entries, a trie provides O(32) lookup (32 bits in IPv4, 128 in IPv6).<br>
-      <span style="color:#5a5848;font-size:12.5px;">CIDR blocks in AWS security groups use trie-based matching. Firewall rules use trie prefix matching. Every packet routing decision in the internet uses this data structure.</span></div></div>
+      IP 192.168.1.100: look up in the trie bit by bit. The longest matching prefix determines the next hop. With millions of routing table entries, a trie provides O(32) lookup (32 bits in IPv4, 128 in IPv6).
+        <span class="concept-note muted">CIDR blocks in AWS security groups use trie-based matching. Firewall rules use trie prefix matching. Every packet routing decision in the internet uses this data structure.</span></div></div>
   </div>
 </section>
 
@@ -145,11 +237,10 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">How It Works</div><div class="concept-def"><strong>A tree where every leaf node contains the hash of a data block. Every internal node contains the hash of its children's hashes.</strong><br>
       Root hash = hash(hash(hash(data1)+hash(data2)) + hash(hash(data3)+hash(data4)))<br>
-      If data3 changes → its leaf hash changes → its parent hash changes → the root hash changes.<br>
-      <strong>Key property</strong>: to verify that data3 is correct, you only need: hash(data3) + hash(data4) + left subtree root hash. You verify 3 values to prove 1 item in a tree of N items. O(log N) proof.</div></div>
+      If data3 changes → its leaf hash changes → its parent hash changes → the root hash changes.</p><p><strong>Key property</strong>: to verify that data3 is correct, you only need: hash(data3) + hash(data4) + left subtree root hash. You verify 3 values to prove 1 item in a tree of N items. O(log N) proof.</div></div>
     <div class="concept-row"><div class="concept-term">Cassandra Anti-Entropy</div><div class="concept-def"><strong>Cassandra uses Merkle trees to efficiently find which data diverges between two replicas.</strong><br>
-      Each replica builds a Merkle tree of its data. Exchange only the root hashes (cheap). If different: compare child hashes, recursively narrowing down until you find exactly which token ranges have divergent data. Repair only those ranges.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Without Merkle trees: comparing two replicas requires comparing every single row (petabytes). With Merkle trees: O(log N) exchanges to find divergent segments — then repair only the divergent data. <code>nodetool repair</code> uses this internally.</span></div></div>
+      Each replica builds a Merkle tree of its data. Exchange only the root hashes (cheap). If different: compare child hashes, recursively narrowing down until you find exactly which token ranges have divergent data. Repair only those ranges.
+        <span class="concept-note good">✓ Without Merkle trees: comparing two replicas requires comparing every single row (petabytes). With Merkle trees: O(log N) exchanges to find divergent segments — then repair only the divergent data. <code>nodetool repair</code> uses this internally.</span></div></div>
     <div class="concept-row"><div class="concept-term">Blockchain / Git</div><div class="concept-def"><strong>Bitcoin blocks use Merkle trees for transaction verification. Git uses Merkle DAGs.</strong><br>
       Bitcoin: a block contains thousands of transactions in a Merkle tree. To prove transaction X is in a block, provide the Merkle proof (O(log N) hashes). Light nodes verify without downloading all transactions.<br>
       Git: every commit is a Merkle DAG snapshot. Two commits differ → traverse the tree to find which files changed. <code>git diff</code> uses Merkle comparison. Identical files across commits share hash nodes — this is why git is space-efficient.</div></div>
@@ -162,12 +253,12 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Quadtree</div><div class="concept-def"><strong>A tree that recursively divides 2D space into four quadrants. Each node covers a geographic region.</strong><br>
       Start: root covers the entire world. If a region has too many points (e.g., &gt;4 drivers), split into 4 sub-regions. Recurse until each leaf has ≤4 points.<br>
-      Query "find drivers within 2km of 12.9716°N, 77.5946°E": traverse the quadtree, finding all leaf nodes that overlap with the 2km circle. Return all points in those leaves. O(log N + result size).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Dense urban areas (Mumbai, New York) get many small cells. Sparse rural areas get large cells. Automatically adapts to data density. Used for: Uber driver proximity, Yelp nearby restaurants, Twitter geosearch.</span></div></div>
+      Query "find drivers within 2km of 12.9716°N, 77.5946°E": traverse the quadtree, finding all leaf nodes that overlap with the 2km circle. Return all points in those leaves. O(log N + result size).
+        <span class="concept-note good">✓ Dense urban areas (Mumbai, New York) get many small cells. Sparse rural areas get large cells. Automatically adapts to data density. Used for: Uber driver proximity, Yelp nearby restaurants, Twitter geosearch.</span></div></div>
     <div class="concept-row"><div class="concept-term">Geohash / S2 Cells</div><div class="concept-def"><strong>Encode geographic coordinates into a string or cell ID. Nearby locations share a common prefix.</strong><br>
       Geohash: "tdr1w" covers a ~5km × 5km area in Bangalore. "tdr1wx" is a sub-cell. All geohashes starting with "tdr1w" are within that bounding box. Nearby query: find all geohashes within 1 level of precision of the target.<br>
-      S2 cells (Google): hierarchical cell decomposition of the sphere (not a flat map). Level 0 = whole Earth. Level 30 = ~1cm². Each cell has a 64-bit integer ID. Used by: Google Maps, Uber (S2 library open-sourced by Google).<br>
-      <span style="color:#5a5848;font-size:12.5px;">Geohash is simpler and widely supported. S2 is more accurate (handles sphere curvature) and better for large-radius queries near poles. Redis GEORADIUS uses geohash internally.</span></div></div>
+      S2 cells (Google): hierarchical cell decomposition of the sphere (not a flat map). Level 0 = whole Earth. Level 30 = ~1cm². Each cell has a 64-bit integer ID. Used by: Google Maps, Uber (S2 library open-sourced by Google).
+        <span class="concept-note muted">Geohash is simpler and widely supported. S2 is more accurate (handles sphere curvature) and better for large-radius queries near poles. Redis GEORADIUS uses geohash internally.</span></div></div>
     <div class="concept-row"><div class="concept-term">Proximity System<br>Design</div><div class="concept-def"><strong>The standard architecture for "find N nearest entities" at FAANG scale:</strong><br>
       Driver locations → update Redis GEOADD every 4 seconds → <code>GEORADIUS pickup_location 2 km ASC COUNT 10</code> → nearest 10 drivers, sorted by distance, in &lt;1ms.<br>
       At very high scale: shard by geohash prefix (all drivers in "tdr" geohash shard → same Redis instance). Prevents hotspots in dense cities.<br>
@@ -183,13 +274,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       Level 0: every element → [1] → [3] → [7] → [12] → [19] → [25]<br>
       Level 1: every 2nd element → [1] → [7] → [19] → [25]<br>
       Level 2: every 4th element → [1] → [19]<br>
-      Find 12: start at highest level, jump to 19 (too big), drop to level 1, jump to 7, drop to level 0, walk to 12. O(log N) expected.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Same O(log N) as a balanced BST. But skip list is lock-free for concurrent access (CAS on pointers). Simpler to implement correctly. Cache-friendlier (linked list, not tree nodes scattered in memory). Redis chose skip list for ZSET for exactly these reasons.</span></div></div>
+      Find 12: start at highest level, jump to 19 (too big), drop to level 1, jump to 7, drop to level 0, walk to 12. O(log N) expected.
+        <span class="concept-note good">✓ Same O(log N) as a balanced BST. But skip list is lock-free for concurrent access (CAS on pointers). Simpler to implement correctly. Cache-friendlier (linked list, not tree nodes scattered in memory). Redis chose skip list for ZSET for exactly these reasons.</span></div></div>
     <div class="concept-row"><div class="concept-term">Redis ZSET<br>Internals</div><div class="concept-def"><strong>Redis Sorted Sets use a skip list + hash table hybrid.</strong><br>
       Hash table: O(1) score lookup by member ("what is user:123's score?").<br>
       Skip list: O(log N) rank queries ("what rank is user:123?") and range queries ("return members with score 100–200").<br>
-      ZADD: O(log N). ZRANK: O(log N). ZRANGEBYSCORE: O(log N + result size). ZSCORE: O(1).<br>
-      <span style="color:#5a5848;font-size:12.5px;">The skip list is why ZREVRANGE (return top-K by score) is efficient. A simple sorted array would be O(1) read but O(N) insert. The skip list gives O(log N) for both — the right trade-off for a leaderboard that's constantly updated and queried.</span></div></div>
+      ZADD: O(log N). ZRANK: O(log N). ZRANGEBYSCORE: O(log N + result size). ZSCORE: O(1).
+        <span class="concept-note muted">The skip list is why ZREVRANGE (return top-K by score) is efficient. A simple sorted array would be O(1) read but O(N) insert. The skip list gives O(log N) for both — the right trade-off for a leaderboard that's constantly updated and queried.</span></div></div>
   </div>
 </section>
 

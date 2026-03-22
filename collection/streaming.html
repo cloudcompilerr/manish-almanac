@@ -96,6 +96,101 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .use-card ul{padding-left:16px;font-size:13px;color:#4a4e60;line-height:1.7;}
 .use-card ul li{margin-bottom:4px;}
 .footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#1a1e30;letter-spacing:2px;}
+
+/* ── Concept Grid: term/definition cards ─────────────── */
+.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);font-weight:700;}
+.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Knowledge Card: FAANG internals deep-dive ────────── */
+.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
+.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
+.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+.k-point{display:flex;flex-direction:column;gap:4px;}
+.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
+.k-point-text strong{color:var(--ink);}
+.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-divider{height:1px;background:var(--border);margin:4px 0;}
+.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
+.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
+/* ── FAQs: consistent across all files ────────────────── */
+.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
+.faq-q:hover{background:var(--surface);}
+.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
+.faq-item.open .tog{transform:rotate(45deg);}
+.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
+.faq-item.open .faq-a{display:block;}
+.faq-a strong{color:var(--ink);}
+.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
+/* ── SD Examples ──────────────────────────────────────── */
+.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
+.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
+.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
+.sd-example-body{padding:0;}
+.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border-bottom:none;}
+.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
+.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
+.choice-val strong{color:var(--ink);}
+.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Step block ───────────────────────────────────────── */
+.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
+.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
+.sb-icon{font-size:18px;}
+.step-block-body{padding:0;}
+.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.step-content{padding:16px 18px;}
+.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:8px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
+.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
+.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
+.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
+.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
+.opt-text{color:#2a2820;}
+.opt-text strong{color:var(--ink);}
+/* ── Analogy block ───────────────────────────────────── */
+.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
+.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
+.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
+/* ── Callout ──────────────────────────────────────────── */
+.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
+.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
+.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
+.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
+.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
+.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+/* ── DB pills ─────────────────────────────────────────── */
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
+/* ── hero-sub ─────────────────────────────────────────── */
+.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
+/* ── footer ───────────────────────────────────────────── */
+.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style>
 </head>
 <body>
@@ -482,24 +577,24 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>Kafka internals every FAANG interviewer tests</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Consumer Group<br>Rebalancing</div><div class="concept-def"><strong>When a consumer joins or leaves a group, Kafka reassigns partition ownership — this is a rebalance.</strong><br>
-      During rebalance: all consumption stops (stop-the-world). Duration: seconds to minutes for large groups. All consumers in the group coordinate via the group coordinator broker.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Frequent rebalances (pod restarts, rolling deploys) cause processing gaps. Fix: incremental cooperative rebalancing (Kafka 2.4+) — only reassigns affected partitions, others keep processing. Also: set session.timeout.ms appropriately (not too short).</span></div></div>
+      During rebalance: all consumption stops (stop-the-world). Duration: seconds to minutes for large groups. All consumers in the group coordinate via the group coordinator broker.
+        <span class="concept-note warn">⚠ Frequent rebalances (pod restarts, rolling deploys) cause processing gaps. Fix: incremental cooperative rebalancing (Kafka 2.4+) — only reassigns affected partitions, others keep processing. Also: set session.timeout.ms appropriately (not too short).</span></div></div>
     <div class="concept-row"><div class="concept-term">Exactly-Once<br>Semantics (EOS)</div><div class="concept-def"><strong>Kafka guarantees at-least-once by default. Exactly-once requires explicit configuration.</strong><br>
       Producer side: <code>enable.idempotence=true</code> + <code>transactional.id</code>. Prevents duplicate messages on retries.<br>
       Consumer side: <code>isolation.level=read_committed</code>. Only reads messages from committed transactions.<br>
-      Flink + Kafka: two-phase commit checkpoint. Flink checkpoints aligned with Kafka offsets — exactly-once end-to-end.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ EOS adds ~10–20% throughput overhead. Use for: financial event streams, inventory updates. Skip for: metrics, logs, analytics where duplicates are tolerable.</span></div></div>
+      Flink + Kafka: two-phase commit checkpoint. Flink checkpoints aligned with Kafka offsets — exactly-once end-to-end.
+        <span class="concept-note warn">⚠ EOS adds ~10–20% throughput overhead. Use for: financial event streams, inventory updates. Skip for: metrics, logs, analytics where duplicates are tolerable.</span></div></div>
     <div class="concept-row"><div class="concept-term">Log Compaction</div><div class="concept-def"><strong>Instead of deleting old messages by time, keep only the latest value per key.</strong><br>
-      Compacted topic: Kafka runs a background compaction thread that removes old records for the same key, retaining only the most recent. Result: the topic always contains the current state of every key — like a changelog.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Used for: materialising database changelogs (Debezium → Kafka compacted topic = current DB state). New consumers can bootstrap from the compacted topic to get current state without reading the full history. Used by: Kafka Connect, ksqlDB state stores.</span></div></div>
+      Compacted topic: Kafka runs a background compaction thread that removes old records for the same key, retaining only the most recent. Result: the topic always contains the current state of every key — like a changelog.
+        <span class="concept-note good">✓ Used for: materialising database changelogs (Debezium → Kafka compacted topic = current DB state). New consumers can bootstrap from the compacted topic to get current state without reading the full history. Used by: Kafka Connect, ksqlDB state stores.</span></div></div>
     <div class="concept-row"><div class="concept-term">Backpressure in<br>Flink</div><div class="concept-def"><strong>Flink propagates backpressure upstream through its credit-based flow control.</strong><br>
       If a sink (Cassandra write) is slow → output buffer fills → upstream operators slow down → eventually the Kafka consumer slows its poll rate → Kafka consumer lag grows → natural backpressure signal.<br>
-      Monitor: Flink Web UI shows backpressure ratio per operator. High backpressure (red) = that operator is the bottleneck. Fix: increase parallelism for that operator, or optimise the slow operation.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Flink's backpressure propagation is automatic and zero-copy — no application code needed. It prevents out-of-memory failures when sinks are overwhelmed.</span></div></div>
+      Monitor: Flink Web UI shows backpressure ratio per operator. High backpressure (red) = that operator is the bottleneck. Fix: increase parallelism for that operator, or optimise the slow operation.
+        <span class="concept-note muted">Flink's backpressure propagation is automatic and zero-copy — no application code needed. It prevents out-of-memory failures when sinks are overwhelmed.</span></div></div>
     <div class="concept-row"><div class="concept-term">Watermarks &amp;<br>Late Data</div><div class="concept-def"><strong>Event time vs processing time: events arrive out of order. Watermarks tell Flink when a time window is "complete enough" to compute.</strong><br>
       Watermark = current_event_time - allowed_lateness. When watermark passes window end time, Flink triggers the window computation.<br>
-      Example: 1-minute tumbling window with 5-second allowed lateness. Window closes at 14:01:00. Flink waits until it sees events with timestamps ≥ 14:01:05 before computing. Events up to 5 seconds late are included.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Handles network delays and out-of-order mobile events gracefully. Later events (beyond allowed lateness) go to a side output for separate handling.</span></div></div>
+      Example: 1-minute tumbling window with 5-second allowed lateness. Window closes at 14:01:00. Flink waits until it sees events with timestamps ≥ 14:01:05 before computing. Events up to 5 seconds late are included.
+        <span class="concept-note good">✓ Handles network delays and out-of-order mobile events gracefully. Later events (beyond allowed lateness) go to a side output for separate handling.</span></div></div>
   </div>
 
   <div class="step-block">
@@ -524,21 +619,35 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid" style="margin-top:16px;">
     <div class="concept-row"><div class="concept-term">Kafka Consumer<br>Lag</div><div class="concept-def"><strong>Consumer lag = the difference between the latest offset in a partition and the consumer's current offset. The most important Kafka operational metric.</strong><br>
       Lag = 0: consumer is keeping up with producers in real time.<br>
-      Lag growing: consumer is falling behind. Causes: slow processing logic, insufficient consumer parallelism, downstream bottleneck (DB writes too slow).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">Monitor with: Kafka's consumer-groups.sh, Burrow (LinkedIn's open-source lag monitor), or CloudWatch (MSK). Alert when lag &gt; N minutes worth of events — this defines your data staleness SLO.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Flink State<br>Backends</div><div class="concept-def"><strong>Flink's stateful operations (aggregations, joins, windows) store state in a configurable backend.</strong><br>
-      <strong>HashMap (in-memory)</strong>: fastest, state in JVM heap. Limited by available RAM. Use for: small state (&lt;1GB), latency-sensitive operations.<br>
-      <strong>RocksDB (on-disk)</strong>: state on local SSD, spills to disk. Handles terabytes of state. Slightly slower than HashMap. Use for: large state (user session data, 30-day aggregations).<br>
-      <span style="color:#5a5848;font-size:12.5px;">RocksDB is the production default for most Flink jobs. RAM is the bottleneck in streaming systems — RocksDB removes that constraint at the cost of ~2x latency (SSD read vs RAM read).</span></div></div>
-    <div class="concept-row"><div class="concept-term">Kinesis vs Kafka</div><div class="concept-def"><strong>Both are event streaming systems — the choice is almost always cloud commitment and ops budget.</strong><br>
-      <strong>Kinesis</strong>: fully managed, AWS-native, limited to 7-day retention, max 1MB/record, shard-based scaling (manual). Simple, zero ops. Best for: AWS-native orgs, moderate throughput (&lt;1GB/sec per stream).<br>
-      <strong>Kafka (MSK or self-managed)</strong>: configurable retention (unlimited), higher throughput, richer ecosystem (Kafka Connect, Kafka Streams, ksqlDB, Flink). Best for: complex streaming pipelines, multi-cloud, high throughput, need replay.<br>
-      <span style="color:#5a5848;font-size:12.5px;">At FAANG scale: Kafka. For simple AWS pipelines at moderate scale: Kinesis. For new systems with limited ops capacity: consider Confluent Cloud (managed Kafka without the operational burden).</span></div></div>
+      Lag growing: consumer is falling behind. Causes: slow processing logic, insufficient consumer parallelism, downstream bottleneck (DB writes too slow).
+        <span class="concept-note good">Monitor with: Kafka's consumer-groups.sh, Burrow (LinkedIn's open-source lag monitor), or CloudWatch (MSK). Alert when lag &gt; N minutes worth of events — this defines your data staleness SLO.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Flink State<br>Backends</div><div class="concept-def"><strong>Flink's stateful operations (aggregations, joins, windows) store state in a configurable backend.</strong></p><p><strong>HashMap (in-memory)</strong>: fastest, state in JVM heap. Limited by available RAM. Use for: small state (&lt;1GB), latency-sensitive operations.</p><p><strong>RocksDB (on-disk)</strong>: state on local SSD, spills to disk. Handles terabytes of state. Slightly slower than HashMap. Use for: large state (user session data, 30-day aggregations).
+        <span class="concept-note muted">RocksDB is the production default for most Flink jobs. RAM is the bottleneck in streaming systems — RocksDB removes that constraint at the cost of ~2x latency (SSD read vs RAM read).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Kinesis vs Kafka</div><div class="concept-def"><strong>Both are event streaming systems — the choice is almost always cloud commitment and ops budget.</strong></p><p><strong>Kinesis</strong>: fully managed, AWS-native, limited to 7-day retention, max 1MB/record, shard-based scaling (manual). Simple, zero ops. Best for: AWS-native orgs, moderate throughput (&lt;1GB/sec per stream).</p><p><strong>Kafka (MSK or self-managed)</strong>: configurable retention (unlimited), higher throughput, richer ecosystem (Kafka Connect, Kafka Streams, ksqlDB, Flink). Best for: complex streaming pipelines, multi-cloud, high throughput, need replay.
+        <span class="concept-note muted">At FAANG scale: Kafka. For simple AWS pipelines at moderate scale: Kinesis. For new systems with limited ops capacity: consider Confluent Cloud (managed Kafka without the operational burden).</span></div></div>
   </div>
 v>
   </div>
 </section>
 <div class="footer">STREAMING · KAFKA · FLINK · KINESIS · SPARK · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+
+<section id="kafka-deep">
+  <div class="sec-tag">09 · Kafka Internals Deep Dive</div>
+  <h2>The settings interviewers probe — ISR, acks, min.insync.replicas</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">ISR (In-Sync Replicas)<br>& acks Configuration</div><div class="concept-def"><strong>ISR: the set of replicas that are "caught up" with the leader within replica.lag.time.max.ms.</strong><br>
+      Producer acks=0: no acknowledgment. Fire and forget. Fastest, no durability. Data loss on broker crash.<br>
+      Producer acks=1: leader acknowledges immediately after writing to its local log. Fast. Data loss if leader crashes before replicating — followers don't have the message yet.<br>
+      Producer acks=all (acks=-1): leader waits until ALL ISR replicas have acknowledged. Strongest durability guarantee. Latency: depends on slowest ISR replica.</p><p><strong>min.insync.replicas=2</strong>: producer with acks=all requires at least 2 ISR replicas to acknowledge. If only 1 replica is in-sync (e.g., one broker is down), producer receives a <code>NotEnoughReplicasException</code>. Better to reject the write than accept it without durability.
+        <span class="concept-note muted">Production standard: acks=all + min.insync.replicas=2 + replication.factor=3. Tolerates one broker failure without data loss. Use acks=1 only for high-throughput low-criticality data (metrics, logs).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Log Retention &<br>Log Compaction</div><div class="concept-def"><strong>Two retention modes with fundamentally different semantics:</strong></p><p><strong>Time-based retention</strong>: delete segments older than retention.ms (default: 7 days). All events eventually deleted. Right for: event logs, metrics, audit trails.</p><p><strong>Log compaction</strong>: for each key, keep only the latest value. Old values with the same key are deleted during compaction. Right for: "current state" topics (user profiles, inventory levels, config changes). Kafka acts like a durable, compacted key-value store.<br>
+      Tombstone: to delete a key, publish a message with the key and a null value. Compaction will eventually remove all messages with that key.
+        <span class="concept-note good">✓ Log compaction powers Kafka Streams' KTable abstraction (current state of each key). Also used by Debezium CDC: the "latest state" of each DB row is compacted into a Kafka topic — new consumers can read the full current state without replaying all history.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Consumer Group<br>Rebalancing</div><div class="concept-def"><strong>When a consumer joins or leaves a group, Kafka redistributes partition assignments — this temporarily pauses consumption.</strong><br>
+      Trigger: consumer joins/leaves, partition count changes, consumer heartbeat timeout (session.timeout.ms, default 10s).<br>
+      During rebalance: all consumers stop consuming and commit their offsets. The group coordinator assigns partitions to consumers. Consumers resume. Duration: 100ms–30s depending on group size and coordinator load.</p><p><strong>Cooperative rebalancing</strong> (Kafka 2.4+, incremental rebalance): only partitions that need to move are revoked. Other consumers continue consuming unaffected partitions. Reduces pause from "all stop" to "only affected partitions stop." Use <code>CooperativeStickyAssignor</code>.
+        <span class="concept-note muted">Production issue: a consumer that processes messages too slowly triggers heartbeat timeout → kicked from group → rebalance → partition reassigned → rebalance again → "rebalance storm." Fix: increase max.poll.interval.ms, reduce processing time, or add more consumers.</span></div></div>
+  </div>
+</section></body>
 </html>

@@ -82,6 +82,101 @@ code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1p
 .oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
 .oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
 footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+
+/* ── Concept Grid: term/definition cards ─────────────── */
+.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);font-weight:700;}
+.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Knowledge Card: FAANG internals deep-dive ────────── */
+.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
+.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
+.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+.k-point{display:flex;flex-direction:column;gap:4px;}
+.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
+.k-point-text strong{color:var(--ink);}
+.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-divider{height:1px;background:var(--border);margin:4px 0;}
+.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
+.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
+/* ── FAQs: consistent across all files ────────────────── */
+.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
+.faq-q:hover{background:var(--surface);}
+.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
+.faq-item.open .tog{transform:rotate(45deg);}
+.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
+.faq-item.open .faq-a{display:block;}
+.faq-a strong{color:var(--ink);}
+.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
+/* ── SD Examples ──────────────────────────────────────── */
+.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
+.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
+.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
+.sd-example-body{padding:0;}
+.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border-bottom:none;}
+.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
+.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
+.choice-val strong{color:var(--ink);}
+.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Step block ───────────────────────────────────────── */
+.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
+.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
+.sb-icon{font-size:18px;}
+.step-block-body{padding:0;}
+.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.step-content{padding:16px 18px;}
+.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:8px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
+.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
+.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
+.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
+.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
+.opt-text{color:#2a2820;}
+.opt-text strong{color:var(--ink);}
+/* ── Analogy block ───────────────────────────────────── */
+.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
+.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
+.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
+/* ── Callout ──────────────────────────────────────────── */
+.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
+.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
+.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
+.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
+.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
+.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+/* ── DB pills ─────────────────────────────────────────── */
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
+/* ── hero-sub ─────────────────────────────────────────── */
+.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
+/* ── footer ───────────────────────────────────────────── */
+.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -109,29 +204,29 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       <code>1 month ≈ 2.5M seconds</code><br>
       <code>1 year ≈ 31M seconds</code><br>
       <code>Avg tweet: 140 bytes. Avg photo: 200KB. Avg video min: 10MB.</code><br>
-      <code>SSD read: 500MB/s. Network: 10Gbps = 1.25GB/s. RAM: 50GB/s.</code><br>
-      <span style="color:#5a5848;font-size:12.5px;">You don't need exact numbers. You need the right order of magnitude.</span></div></div>
+      <code>SSD read: 500MB/s. Network: 10Gbps = 1.25GB/s. RAM: 50GB/s.</code>
+        <span class="concept-note muted">You don't need exact numbers. You need the right order of magnitude.</span></div></div>
     <div class="concept-row"><div class="concept-term">QPS Estimation<br>Formula</div><div class="concept-def"><strong>QPS = Daily Active Users × Actions per day ÷ Seconds per day</strong><br>
       Twitter example: 300M DAU. Average user reads feed 5× per day + writes 0.1 tweet/day.<br>
       Read QPS = 300M × 5 ÷ 86,400 = <strong>~17,000 reads/sec</strong><br>
       Write QPS = 300M × 0.1 ÷ 86,400 = <strong>~350 writes/sec</strong><br>
-      Peak QPS ≈ 3× average = 51,000 reads/sec, 1,050 writes/sec.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Always calculate peak, not average. Systems fail at peak. Design for peak × 20% headroom.</span></div></div>
+      Peak QPS ≈ 3× average = 51,000 reads/sec, 1,050 writes/sec.
+        <span class="concept-note muted">Always calculate peak, not average. Systems fail at peak. Design for peak × 20% headroom.</span></div></div>
     <div class="concept-row"><div class="concept-term">Storage Estimation<br>Formula</div><div class="concept-def"><strong>Storage per year = QPS_writes × payload_size × seconds_per_year × replication_factor</strong><br>
       Twitter: 350 writes/sec × 300 bytes/tweet × 31M sec/year × 3 replicas = <strong>~10TB/year</strong><br>
-      Instagram photos: 1M uploads/day × 200KB = 200GB/day = <strong>73TB/year</strong> (before CDN caching and compression).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Once you have storage/year, you know: if &gt;100TB → object storage (S3), if &gt;10TB → distributed DB (Cassandra), if &lt;1TB → single PostgreSQL might work.</span></div></div>
+      Instagram photos: 1M uploads/day × 200KB = 200GB/day = <strong>73TB/year</strong> (before CDN caching and compression).
+        <span class="concept-note good">✓ Once you have storage/year, you know: if &gt;100TB → object storage (S3), if &gt;10TB → distributed DB (Cassandra), if &lt;1TB → single PostgreSQL might work.</span></div></div>
     <div class="concept-row"><div class="concept-term">Bandwidth Estimation</div><div class="concept-def"><strong>Bandwidth = QPS × payload size</strong><br>
       Twitter reads: 17,000 req/sec × 10KB per feed response = <strong>170 MB/sec = 1.4 Gbps</strong>. A 10Gbps network link handles this easily.<br>
-      YouTube: 1B views/day × 10MB avg video = 10PB/day = <strong>~1TB/sec outbound bandwidth</strong>. This is why YouTube needs a CDN — no single origin could serve 1TB/sec.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Bandwidth estimation tells you: do you need a CDN? Is a single datacenter connection enough? What's the egress cost?</span></div></div>
+      YouTube: 1B views/day × 10MB avg video = 10PB/day = <strong>~1TB/sec outbound bandwidth</strong>. This is why YouTube needs a CDN — no single origin could serve 1TB/sec.
+        <span class="concept-note muted">Bandwidth estimation tells you: do you need a CDN? Is a single datacenter connection enough? What's the egress cost?</span></div></div>
     <div class="concept-row"><div class="concept-term">Latency Numbers<br>Every Engineer Knows</div><div class="concept-def"><strong>These guide architecture decisions — always quote them in interviews:</strong><br>
       L1 cache: 1ns · L2 cache: 4ns · L3 cache: 10ns<br>
       RAM read: 100ns · SSD read: 100μs · HDD read: 10ms<br>
       Same-datacenter network: 0.5ms · Cross-region (US-EU): 150ms<br>
       Redis GET: 0.1ms · PostgreSQL query (indexed): 1ms<br>
-      DynamoDB: 1ms · S3 GET: 50ms · DNS lookup: 20ms<br>
-      <span style="color:#b83030;font-size:12.5px;">Key insight: RAM is 1,000× faster than SSD, which is 100× faster than HDD. A cache miss that hits disk is 10,000× slower than a cache hit. This is why caching exists.</span></div></div>
+      DynamoDB: 1ms · S3 GET: 50ms · DNS lookup: 20ms
+        <span class="concept-note warn">Key insight: RAM is 1,000× faster than SSD, which is 100× faster than HDD. A cache miss that hits disk is 10,000× slower than a cache hit. This is why caching exists.</span></div></div>
   </div>
 </section>
 
@@ -145,30 +240,28 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       Level 3: Add caching (Redis). Offloads 80–90% of read DB traffic. Works to ~50K req/sec.<br>
       Level 4: Horizontal scale app servers behind a load balancer. Works to ~500K req/sec.<br>
       Level 5: Database sharding. Handles unlimited write throughput and unlimited data size.<br>
-      Level 6: CDN for static assets + geographic distribution. Handles global scale with low latency.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Most systems never need Level 5+. Jumping to sharding before exhausting caching is premature optimisation. In interviews: always state where on this ladder the system sits.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Vertical vs<br>Horizontal Scaling</div><div class="concept-def"><strong>Vertical: bigger machine. Horizontal: more machines.</strong><br>
-      <strong>Vertical (scale-up)</strong>: upgrade from 16-core to 64-core server. Simple — no code changes. Limit: biggest available machine is fixed (~128 cores, ~24TB RAM). Single point of failure.<br>
-      <strong>Horizontal (scale-out)</strong>: add more servers of the same size. Unlimited scale in theory. Requires stateless services (session state in Redis, not in-process). Complexity: load balancing, distributed coordination, consistent hashing for data.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Databases scale vertically first (biggest possible primary), then horizontally (read replicas, then sharding). Stateless app servers scale horizontally trivially. This asymmetry is why the database is always the bottleneck.</span></div></div>
+      Level 6: CDN for static assets + geographic distribution. Handles global scale with low latency.
+        <span class="concept-note good">✓ Most systems never need Level 5+. Jumping to sharding before exhausting caching is premature optimisation. In interviews: always state where on this ladder the system sits.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Vertical vs<br>Horizontal Scaling</div><div class="concept-def"><strong>Vertical: bigger machine. Horizontal: more machines.</strong></p><p><strong>Vertical (scale-up)</strong>: upgrade from 16-core to 64-core server. Simple — no code changes. Limit: biggest available machine is fixed (~128 cores, ~24TB RAM). Single point of failure.</p><p><strong>Horizontal (scale-out)</strong>: add more servers of the same size. Unlimited scale in theory. Requires stateless services (session state in Redis, not in-process). Complexity: load balancing, distributed coordination, consistent hashing for data.
+        <span class="concept-note muted">Databases scale vertically first (biggest possible primary), then horizontally (read replicas, then sharding). Stateless app servers scale horizontally trivially. This asymmetry is why the database is always the bottleneck.</span></div></div>
     <div class="concept-row"><div class="concept-term">CQRS<br>(Command Query Responsibility Segregation)</div><div class="concept-def"><strong>Split your read model and write model into separate services with separate data stores.</strong><br>
       Commands (writes): go to a normalised write DB (PostgreSQL). Optimised for data integrity and write throughput.<br>
       Queries (reads): go to a denormalised read DB (Elasticsearch, Redis, Cassandra). Pre-computed views optimised for specific query patterns.<br>
-      Sync: write DB publishes change events → consumer builds and updates read models asynchronously.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Each store optimised for its purpose. Read store can be rebuilt from scratch by replaying the event log. Used by: e-commerce (write to OLTP, serve product catalog from Elasticsearch), social feeds (write to PostgreSQL, serve feed from pre-computed Redis list).</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Eventual consistency: reads lag writes by milliseconds to seconds. Complexity: two data stores, sync pipeline. Only justified when read and write patterns are fundamentally different.</span></div></div>
+      Sync: write DB publishes change events → consumer builds and updates read models asynchronously.
+        <span class="concept-note good">✓ Each store optimised for its purpose. Read store can be rebuilt from scratch by replaying the event log. Used by: e-commerce (write to OLTP, serve product catalog from Elasticsearch), social feeds (write to PostgreSQL, serve feed from pre-computed Redis list).</span>
+      <span class="concept-note warn">⚠ Eventual consistency: reads lag writes by milliseconds to seconds. Complexity: two data stores, sync pipeline. Only justified when read and write patterns are fundamentally different.</span></div></div>
     <div class="concept-row"><div class="concept-term">Event Sourcing</div><div class="concept-def"><strong>Store every change as an immutable event. Derive current state by replaying events. The event log is the source of truth.</strong><br>
-      Instead of storing "account balance = ₹5,000", store: [AccountOpened(₹0), Deposited(₹3,000), Deposited(₹2,500), Withdrawn(₹500)]. Balance = sum of events.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Complete audit log by default. Time-travel: reconstruct state at any point in history. Rebuild any read model from scratch. Events are immutable — no update anomalies. Used by: banking systems, e-commerce order history, git (event sourcing for code changes).</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Query complexity: to get current balance, replay all events (use snapshots for long-lived aggregates). Schema evolution: old events must remain valid when the event schema changes. Steep learning curve for teams accustomed to CRUD.</span></div></div>
+      Instead of storing "account balance = ₹5,000", store: [AccountOpened(₹0), Deposited(₹3,000), Deposited(₹2,500), Withdrawn(₹500)]. Balance = sum of events.
+        <span class="concept-note good">✓ Complete audit log by default. Time-travel: reconstruct state at any point in history. Rebuild any read model from scratch. Events are immutable — no update anomalies. Used by: banking systems, e-commerce order history, git (event sourcing for code changes).</span>
+      <span class="concept-note warn">⚠ Query complexity: to get current balance, replay all events (use snapshots for long-lived aggregates). Schema evolution: old events must remain valid when the event schema changes. Steep learning curve for teams accustomed to CRUD.</span></div></div>
     <div class="concept-row"><div class="concept-term">Circuit Breaker</div><div class="concept-def"><strong>Stop sending requests to a failing dependency. Return a fast fallback instead of waiting for timeouts.</strong><br>
       States: <strong>Closed</strong> (normal — requests pass through) → <strong>Open</strong> (failure threshold exceeded — all requests rejected instantly, return fallback) → <strong>Half-Open</strong> (after cooldown — send probe requests to test recovery).<br>
-      Example: Recommendation Service is down. Without circuit breaker: every request waits 30 seconds for timeout. With circuit breaker: immediately returns cached/default recommendations. 30s timeout → 5ms fallback.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Prevents cascade failures. Fast failure response. Gives downstream service time to recover. Netflix Hystrix (original), Resilience4j (Java), Polly (.NET), Envoy (service mesh — no code changes).</span></div></div>
+      Example: Recommendation Service is down. Without circuit breaker: every request waits 30 seconds for timeout. With circuit breaker: immediately returns cached/default recommendations. 30s timeout → 5ms fallback.
+        <span class="concept-note good">✓ Prevents cascade failures. Fast failure response. Gives downstream service time to recover. Netflix Hystrix (original), Resilience4j (Java), Polly (.NET), Envoy (service mesh — no code changes).</span></div></div>
     <div class="concept-row"><div class="concept-term">Bulkhead Pattern</div><div class="concept-def"><strong>Isolate failures to a subset of resources, like watertight compartments in a ship.</strong><br>
       Without bulkhead: one slow downstream service exhausts your entire thread pool → all requests fail.<br>
-      With bulkhead: separate thread pools per dependency. "Payment service pool" has 10 threads. If payments are slow, only payment requests are affected. Feed requests use their own 50-thread pool — unaffected.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Failure isolation. One misbehaving tenant/feature cannot starve others. Combined with circuit breaker: bulkhead prevents exhaustion, circuit breaker prevents cascades. Used by: Netflix (separate thread pools per microservice dependency).</span></div></div>
+      With bulkhead: separate thread pools per dependency. "Payment service pool" has 10 threads. If payments are slow, only payment requests are affected. Feed requests use their own 50-thread pool — unaffected.
+        <span class="concept-note good">✓ Failure isolation. One misbehaving tenant/feature cannot starve others. Combined with circuit breaker: bulkhead prevents exhaustion, circuit breaker prevents cascades. Used by: Netflix (separate thread pools per microservice dependency).</span></div></div>
   </div>
 </section>
 
@@ -177,14 +270,12 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <h2>When to break synchrony — the most consequential architectural decision</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">When Sync is Right</div><div class="concept-def"><strong>Use synchronous calls when the caller needs the result to proceed.</strong><br>
-      Examples: user login (need auth token immediately), payment processing (need success/failure to show user), inventory check before order placement (need to know if in stock).<br>
-      <span style="color:#5a5848;font-size:12.5px;">The test: "If the downstream service is slow, should the user wait, or can I proceed without the result?" If the user must wait: synchronous. If you can proceed: asynchronous.</span></div></div>
+      Examples: user login (need auth token immediately), payment processing (need success/failure to show user), inventory check before order placement (need to know if in stock).
+        <span class="concept-note muted">The test: "If the downstream service is slow, should the user wait, or can I proceed without the result?" If the user must wait: synchronous. If you can proceed: asynchronous.</span></div></div>
     <div class="concept-row"><div class="concept-term">When Async is Right</div><div class="concept-def"><strong>Use asynchronous processing when: (1) the operation takes longer than a user will wait, (2) multiple downstream systems need to be notified, (3) operations can be retried safely.</strong><br>
-      Examples: sending order confirmation email (user doesn't wait for email to send), video transcoding (user uploads and continues — gets email when done), search index update (user doesn't wait for Elasticsearch to index their new post).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Decouples producers from consumers. Absorbs traffic spikes (queue buffers). Enables retry on failure. Reduces user-facing latency by doing work in the background.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Async Patterns:<br>Fire-and-Forget vs<br>Request-Reply</div><div class="concept-def"><strong>Two async models with different guarantees:</strong><br>
-      <strong>Fire-and-forget</strong>: publish event, don't wait for result. Order placed → publish OrderCreated event → return 200 to user. Fulfillment, email, inventory updates happen in background. Risk: if any step fails, user doesn't know synchronously.<br>
-      <strong>Async Request-Reply</strong>: client sends request + callback URL. Server processes async, POSTs result to callback URL when done. OR: client polls a status endpoint. Used for: long-running operations (video export, report generation, ML inference).</div></div>
+      Examples: sending order confirmation email (user doesn't wait for email to send), video transcoding (user uploads and continues — gets email when done), search index update (user doesn't wait for Elasticsearch to index their new post).
+        <span class="concept-note good">✓ Decouples producers from consumers. Absorbs traffic spikes (queue buffers). Enables retry on failure. Reduces user-facing latency by doing work in the background.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Async Patterns:<br>Fire-and-Forget vs<br>Request-Reply</div><div class="concept-def"><strong>Two async models with different guarantees:</strong></p><p><strong>Fire-and-forget</strong>: publish event, don't wait for result. Order placed → publish OrderCreated event → return 200 to user. Fulfillment, email, inventory updates happen in background. Risk: if any step fails, user doesn't know synchronously.</p><p><strong>Async Request-Reply</strong>: client sends request + callback URL. Server processes async, POSTs result to callback URL when done. OR: client polls a status endpoint. Used for: long-running operations (video export, report generation, ML inference).</div></div>
   </div>
 </section>
 

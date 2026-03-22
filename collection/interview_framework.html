@@ -82,6 +82,101 @@ code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1p
 .oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
 .oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
 footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+
+/* ── Concept Grid: term/definition cards ─────────────── */
+.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);font-weight:700;}
+.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Knowledge Card: FAANG internals deep-dive ────────── */
+.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
+.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
+.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+.k-point{display:flex;flex-direction:column;gap:4px;}
+.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
+.k-point-text strong{color:var(--ink);}
+.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-divider{height:1px;background:var(--border);margin:4px 0;}
+.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
+.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
+/* ── FAQs: consistent across all files ────────────────── */
+.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
+.faq-q:hover{background:var(--surface);}
+.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
+.faq-item.open .tog{transform:rotate(45deg);}
+.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
+.faq-item.open .faq-a{display:block;}
+.faq-a strong{color:var(--ink);}
+.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
+/* ── SD Examples ──────────────────────────────────────── */
+.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
+.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
+.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
+.sd-example-body{padding:0;}
+.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border-bottom:none;}
+.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
+.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
+.choice-val strong{color:var(--ink);}
+.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Step block ───────────────────────────────────────── */
+.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
+.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
+.sb-icon{font-size:18px;}
+.step-block-body{padding:0;}
+.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.step-content{padding:16px 18px;}
+.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:8px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
+.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
+.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
+.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
+.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
+.opt-text{color:#2a2820;}
+.opt-text strong{color:var(--ink);}
+/* ── Analogy block ───────────────────────────────────── */
+.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
+.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
+.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
+/* ── Callout ──────────────────────────────────────────── */
+.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
+.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
+.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
+.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
+.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
+.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+/* ── DB pills ─────────────────────────────────────────── */
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
+/* ── hero-sub ─────────────────────────────────────────── */
+.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
+/* ── footer ───────────────────────────────────────────── */
+.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -100,28 +195,25 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
     <p>The biggest mistake: jumping into the architecture without clarifying requirements. Interviewers give negative marks for this.</p>
   </div>
   <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Phase 1 (0–5 min)<br>Requirements</div><div class="concept-def"><strong>Never start designing. Start asking.</strong><br>
-      <strong>Functional requirements</strong>: "What are the core features? What should the system do?" For "Design Twitter": post tweets, follow users, see a feed, search. Agree on scope — you cannot design everything in 45 minutes.<br>
-      <strong>Non-functional requirements</strong>: "What are the scale expectations? What latency is acceptable? Is consistency or availability more important for this use case?"<br>
-      <strong>Out of scope</strong>: explicitly state what you're NOT designing. "I'll focus on the feed generation and tweet storage — not ads, not direct messages, not trending." This shows maturity.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Template: "Before I start designing, let me clarify a few things. [Ask 3-5 targeted questions]. Based on your answers, here's what I'll focus on: [summarise scope]."</span></div></div>
+    <div class="concept-row"><div class="concept-term">Phase 1 (0–5 min)<br>Requirements</div><div class="concept-def"><strong>Never start designing. Start asking.</strong></p><p><strong>Functional requirements</strong>: "What are the core features? What should the system do?" For "Design Twitter": post tweets, follow users, see a feed, search. Agree on scope — you cannot design everything in 45 minutes.</p><p><strong>Non-functional requirements</strong>: "What are the scale expectations? What latency is acceptable? Is consistency or availability more important for this use case?"</p><p><strong>Out of scope</strong>: explicitly state what you're NOT designing. "I'll focus on the feed generation and tweet storage — not ads, not direct messages, not trending." This shows maturity.
+        <span class="concept-note muted">Template: "Before I start designing, let me clarify a few things. [Ask 3-5 targeted questions]. Based on your answers, here's what I'll focus on: [summarise scope]."</span></div></div>
     <div class="concept-row"><div class="concept-term">Phase 2 (5–10 min)<br>Estimation</div><div class="concept-def"><strong>Estimate the scale. The numbers drive every subsequent design decision.</strong><br>
       State your assumptions: "Let me assume 100M DAU, each user reads their feed 5 times/day and posts once/week."<br>
       Calculate: QPS (reads + writes), storage per year, bandwidth.<br>
-      Derive implications: "At 50K read QPS, a single DB won't handle this — I'll need read replicas and caching. At 100TB/year, I'll need distributed storage."<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ The estimation isn't tested for precision — it's tested for reasoning. Show how the numbers inform your design. "Because reads are 10× writes, I'll optimise heavily for the read path."</span></div></div>
+      Derive implications: "At 50K read QPS, a single DB won't handle this — I'll need read replicas and caching. At 100TB/year, I'll need distributed storage."
+        <span class="concept-note good">✓ The estimation isn't tested for precision — it's tested for reasoning. Show how the numbers inform your design. "Because reads are 10× writes, I'll optimise heavily for the read path."</span></div></div>
     <div class="concept-row"><div class="concept-term">Phase 3 (10–25 min)<br>High-Level Design</div><div class="concept-def"><strong>Draw the architecture. Start simple, then add components as needed.</strong><br>
       Start with: clients → API gateway → [core services] → [data stores]. Label every arrow with the protocol (REST/gRPC/Kafka). Label every box with its role.<br>
-      Walk through the main flows: "For a tweet post: client → API gateway → Tweet Service → [DB write + Kafka event]. For feed read: client → API gateway → Feed Service → Redis cache [cache hit] OR PostgreSQL [cache miss]."<br>
-      <span style="color:#5a5848;font-size:12.5px;">Speak while drawing. Interviewers follow your thought process. Silence while drawing is a red flag — they can't assess reasoning they can't hear.</span></div></div>
+      Walk through the main flows: "For a tweet post: client → API gateway → Tweet Service → [DB write + Kafka event]. For feed read: client → API gateway → Feed Service → Redis cache [cache hit] OR PostgreSQL [cache miss]."
+        <span class="concept-note muted">Speak while drawing. Interviewers follow your thought process. Silence while drawing is a red flag — they can't assess reasoning they can't hear.</span></div></div>
     <div class="concept-row"><div class="concept-term">Phase 4 (25–40 min)<br>Deep Dive</div><div class="concept-def"><strong>The interviewer picks the hardest component. Justify every choice.</strong><br>
       Common deep dives: "How does the feed generation work at scale?" / "How does search work?" / "How do you handle a hot user with 50M followers?"<br>
-      Structure your answer: "Here's the problem, here's my approach, here's why I chose X over Y, here are the trade-offs."<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Depth is what separates L5 from L6 at Google. Having an answer is table stakes. Having a better answer AND knowing why it's better is what gets you the senior hire.</span></div></div>
+      Structure your answer: "Here's the problem, here's my approach, here's why I chose X over Y, here are the trade-offs."
+        <span class="concept-note good">✓ Depth is what separates L5 from L6 at Google. Having an answer is table stakes. Having a better answer AND knowing why it's better is what gets you the senior hire.</span></div></div>
     <div class="concept-row"><div class="concept-term">Phase 5 (40–45 min)<br>Trade-offs & Wrap-up</div><div class="concept-def"><strong>Proactively identify weaknesses in your design before the interviewer does.</strong><br>
       "My design uses eventual consistency for the feed — users might see a tweet from someone they follow 200ms after it's posted. For most use cases this is acceptable, but if we needed strong consistency here's how I'd approach it..."<br>
-      "The bottleneck in my design is the feed fan-out for celebrity users. Here's how I'd handle the hot key problem..."<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Self-aware trade-off discussion is a strong positive signal. It shows you understand the design holistically, not just the happy path.</span></div></div>
+      "The bottleneck in my design is the feed fan-out for celebrity users. Here's how I'd handle the hot key problem..."
+        <span class="concept-note good">✓ Self-aware trade-off discussion is a strong positive signal. It shows you understand the design holistically, not just the happy path.</span></div></div>
   </div>
 </section>
 

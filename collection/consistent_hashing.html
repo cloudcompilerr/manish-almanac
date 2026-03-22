@@ -123,11 +123,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -135,7 +145,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <p class="hero-sub">Why naive hashing breaks, the ring explained step by step, virtual nodes, hot spot mitigation, and how Cassandra, Redis Cluster and DynamoDB actually implement it.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Hash Ring</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Virtual Nodes</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Hash Slots</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Hot Spots</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Rendezvous Hashing</span></div>
 </div></div>
-<nav class="nav"><a href="#problem">The Problem</a><a href="#ring">The Ring</a><a href="#partitioning">Strategies</a><a href="#hotspot">Hot Spots</a><a href="#real">Real Systems</a><a href="#rendezvous">Rendezvous</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#problem">The Problem</a><a href="#ring">The Ring</a><a href="#partitioning">Strategies</a><a href="#hotspot">Hot Spots</a><a href="#real">Real Systems</a><a href="#rendezvous">Rendezvous</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a><a href="#ch-production">Production Failures</a></nav>
 <div class="wrap">
 <section id="problem">
   <div class="sec-tag">00 · The Problem With Naive Hashing</div>
@@ -165,24 +175,24 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       <code>hash("user:123") → 900M</code> → walk clockwise → hit Server-B at 1.8B → Server-B owns this key.</div></div>
     <div class="concept-row"><div class="concept-term">Adding a Server</div><div class="concept-def"><strong>New Server-D hashes to position 1.2B — between Server-A (120M) and Server-B (1.8B).</strong><br>
       Before D: keys between 120M and 1.8B → Server-B.<br>
-      After D: keys between 120M and 1.2B → Server-D. Keys between 1.2B and 1.8B → still Server-B.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Only keys previously on Server-B (in that arc) move to Server-D. All keys on Server-A and Server-C are completely unaffected. Exactly 1/N of keys move when adding the Nth server.</span></div></div>
+      After D: keys between 120M and 1.2B → Server-D. Keys between 1.2B and 1.8B → still Server-B.
+        <span class="concept-note good">✓ Only keys previously on Server-B (in that arc) move to Server-D. All keys on Server-A and Server-C are completely unaffected. Exactly 1/N of keys move when adding the Nth server.</span></div></div>
     <div class="concept-row"><div class="concept-term">Removing a Server</div><div class="concept-def"><strong>Server-B crashes. Its keys now walk clockwise to Server-C.</strong><br>
       Before crash: keys between 1.2B and 1.8B → Server-B.<br>
-      After crash: keys between 1.2B and 1.8B → Server-C (next clockwise).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Only 1/N of keys experience a cache miss (the ones that were on Server-B). Every other server's keys are completely unaffected. Compare to naive hashing: 100% of keys remapped.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">The database only absorbs 1/N of normal traffic from cold cache misses — not a complete collapse.</span></div></div>
+      After crash: keys between 1.2B and 1.8B → Server-C (next clockwise).
+        <span class="concept-note good">✓ Only 1/N of keys experience a cache miss (the ones that were on Server-B). Every other server's keys are completely unaffected. Compare to naive hashing: 100% of keys remapped.</span>
+      <span class="concept-note muted">The database only absorbs 1/N of normal traffic from cold cache misses — not a complete collapse.</span></div></div>
     <div class="concept-row"><div class="concept-term">Virtual Nodes (Vnodes)</div><div class="concept-def"><strong>Problem: with 3 physical servers, one might own 60% of the ring. Uneven load.</strong><br>
       Solution: each physical server gets 100–300 positions on the ring by hashing variations of its ID:<br>
       <code>hash("server-A#1"), hash("server-A#2"), ..., hash("server-A#150")</code><br>
-      Server-A now has 150 small arcs scattered across the ring instead of one large arc.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Load distributes much more evenly — law of large numbers applies. Larger servers get more vnodes. Cassandra default: 256 vnodes. Redis Cluster: 16,384 fixed slots.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ More vnodes = larger routing table (must store all vnode→server mappings). 1000 servers × 256 vnodes = 256,000 entries. Still small enough to fit in memory easily.</span></div></div>
+      Server-A now has 150 small arcs scattered across the ring instead of one large arc.
+        <span class="concept-note good">✓ Load distributes much more evenly — law of large numbers applies. Larger servers get more vnodes. Cassandra default: 256 vnodes. Redis Cluster: 16,384 fixed slots.</span>
+      <span class="concept-note warn">⚠ More vnodes = larger routing table (must store all vnode→server mappings). 1000 servers × 256 vnodes = 256,000 entries. Still small enough to fit in memory easily.</span></div></div>
     <div class="concept-row"><div class="concept-term">Replication on the Ring</div><div class="concept-def"><strong>Store each key on the next N servers clockwise — replication factor N gives N-way redundancy.</strong><br>
       Replication factor 3: <code>hash("user:123") → 900M</code> → primary Server-B (1.8B) → replica Server-C (3.1B) → replica Server-A (120M + wraparound).<br>
-      Writes go to all 3. Reads can come from any of 3.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ If Server-B crashes, Server-C and Server-A still have the data — zero data loss for RF=3. Used by: Cassandra (RF typically 3), DynamoDB (transparently behind the scenes).</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">The ring simultaneously handles partitioning (which nodes own which keys) and replication (which N nodes store each key). One data structure, two concerns.</span></div></div>
+      Writes go to all 3. Reads can come from any of 3.
+        <span class="concept-note good">✓ If Server-B crashes, Server-C and Server-A still have the data — zero data loss for RF=3. Used by: Cassandra (RF typically 3), DynamoDB (transparently behind the scenes).</span>
+      <span class="concept-note muted">The ring simultaneously handles partitioning (which nodes own which keys) and replication (which N nodes store each key). One data structure, two concerns.</span></div></div>
   </div>
 </section>
 
@@ -211,20 +221,20 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Key Salting</div><div class="concept-def"><strong>Distribute one logical key across multiple physical keys with a random or deterministic suffix.</strong><br>
       Instead of writing to <code>celebrity:456:post_count</code>, write to one of <code>celebrity:456:post_count#0</code> through <code>celebrity:456:post_count#15</code> (16 shards, chosen randomly).<br>
-      Reads: scatter-gather all 16 shards, sum the counts.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ 16x write throughput for that key. Distributes across 16 different servers. Used for: view counters, like counts, follower counts on celebrities.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Reads require 16 parallel requests + aggregation — adds latency. Tradeoff: write scale vs read complexity.</span></div></div>
+      Reads: scatter-gather all 16 shards, sum the counts.
+        <span class="concept-note good">✓ 16x write throughput for that key. Distributes across 16 different servers. Used for: view counters, like counts, follower counts on celebrities.</span>
+      <span class="concept-note warn">⚠ Reads require 16 parallel requests + aggregation — adds latency. Tradeoff: write scale vs read complexity.</span></div></div>
     <div class="concept-row"><div class="concept-term">Fan-Out on Write</div><div class="concept-def"><strong>Push content to every follower's personal shard at write time — so reads are O(1) per user.</strong><br>
-      Celebrity posts: instead of one write + 50M lazy reads, pre-write the post to each follower's feed. Each follower's feed is stored on their own shard — reads are local.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Feed reads are sub-millisecond. Twitter uses fan-out on write for most users.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Celebrity with 50M followers = 50M writes per post. Hybrid approach: fan-out for regular users, fan-out on read (lazy) for celebrities. Twitter's actual system uses this hybrid.</span></div></div>
+      Celebrity posts: instead of one write + 50M lazy reads, pre-write the post to each follower's feed. Each follower's feed is stored on their own shard — reads are local.
+        <span class="concept-note good">✓ Feed reads are sub-millisecond. Twitter uses fan-out on write for most users.</span>
+      <span class="concept-note warn">⚠ Celebrity with 50M followers = 50M writes per post. Hybrid approach: fan-out for regular users, fan-out on read (lazy) for celebrities. Twitter's actual system uses this hybrid.</span></div></div>
     <div class="concept-row"><div class="concept-term">In-Process Local Cache</div><div class="concept-def"><strong>Cache hot keys on every app server in-memory — zero network hop for reads.</strong><br>
-      Celebrity profile read 10M times/minute: Caffeine (Java) or dict (Python) on each of 1,000 app servers. Each serves from local RAM. Total: 1M reads/sec per app server absorbed locally.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Eliminates hot spot on the distributed cache entirely for pure reads. Used for: config data, feature flags, celebrity profiles, reference data.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Each server has its own copy → inconsistency across servers. Short TTL (10–60s) + push invalidation on write. Acceptable for eventually-consistent data only.</span></div></div>
+      Celebrity profile read 10M times/minute: Caffeine (Java) or dict (Python) on each of 1,000 app servers. Each serves from local RAM. Total: 1M reads/sec per app server absorbed locally.
+        <span class="concept-note good">✓ Eliminates hot spot on the distributed cache entirely for pure reads. Used for: config data, feature flags, celebrity profiles, reference data.</span>
+      <span class="concept-note warn">⚠ Each server has its own copy → inconsistency across servers. Short TTL (10–60s) + push invalidation on write. Acceptable for eventually-consistent data only.</span></div></div>
     <div class="concept-row"><div class="concept-term">Adaptive Routing</div><div class="concept-def"><strong>Detect hot keys in real time and replicate them to additional nodes dynamically.</strong><br>
-      DynamoDB's adaptive capacity: automatically provides additional read/write capacity to hot partitions by splitting them. The partition that is hot gets a larger slice of the underlying capacity automatically, with no manual intervention.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Transparent to the application. No manual key salting needed. Used by: DynamoDB (built-in), Google Spanner (automatic split on hot ranges).</span></div></div>
+      DynamoDB's adaptive capacity: automatically provides additional read/write capacity to hot partitions by splitting them. The partition that is hot gets a larger slice of the underlying capacity automatically, with no manual intervention.
+        <span class="concept-note good">✓ Transparent to the application. No manual key salting needed. Used by: DynamoDB (built-in), Google Spanner (automatic split on hot ranges).</span></div></div>
   </div>
 </section>
 
@@ -272,8 +282,8 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
     <div class="concept-row"><div class="concept-term">vs Consistent Hashing</div><div class="concept-def"><strong>Rendezvous achieves the same minimal disruption property (1/N keys move on server removal) without a ring data structure.</strong><br>
       Advantages: No ring, no vnodes, perfect load distribution by default, any client can compute independently without shared state.<br>
       Disadvantage: O(N) computation per key (hash against every server). With 1,000 servers and 1M requests/sec, this becomes expensive.<br>
-      Consistent hashing with a sorted ring: O(log N) lookup.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Used by: Akamai CDN (original design), some load balancers. Not common in databases where consistent hashing dominates.</span></div></div>
+      Consistent hashing with a sorted ring: O(log N) lookup.
+        <span class="concept-note muted">Used by: Akamai CDN (original design), some load balancers. Not common in databases where consistent hashing dominates.</span></div></div>
   </div>
 </section>
 
@@ -327,6 +337,27 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How would you design a globally distributed sharding scheme across 3 data centres?<span class="tog">+</span></div>
   <div class="faq-a"><strong>Geo-distributed sharding combines consistent hashing with geo-routing and topology-aware replication.</strong><br><br>Approach 1 — Single global ring with DC-aware placement: one ring, vnodes spread across all 3 DCs. NetworkTopologyStrategy ensures each DC holds its share of replicas. Cassandra supports this natively. Write to LOCAL_QUORUM (majority within one DC), replicate asynchronously to other DCs.<br><br>Approach 2 — Regional sharding + global routing: each DC is an independent cluster owning its regional data. A global routing layer (DNS geo-routing + application-level user-to-DC affinity) routes each user to their home DC. Cross-DC reads are forwarded to the owning DC. Used by: Shopify (data residency), WhatsApp (region-based data sovereignty).<br><br>Approach 3 — Active-active multi-master: data is replicated to all DCs, any DC can serve any user. CRDTs or LWW handle conflicts. Used by: DynamoDB Global Tables, Cassandra multi-DC active-active. Highest availability, most complex conflict handling.</div></div>
 </section></div>
+
+<section id="ch-production">
+  <div class="sec-tag">08 · Production Failure Modes</div>
+  <h2>What actually breaks in consistent hashing — real incidents</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Virtual Node Count<br>Trade-offs</div><div class="concept-def"><strong>More virtual nodes = more uniform distribution. But: more metadata to store and more keys to move on node addition/removal.</strong><br>
+      With 3 nodes and 1 virtual node each: each node owns 1/3 of the ring. Token assignment might be 33%, 35%, 32% (slightly uneven due to hash function distribution).<br>
+      With 3 nodes and 150 virtual nodes each: each node owns ~1/3 of 450 ring positions. Statistical uniformity: ±2% variance. Adding a 4th node: it claims 150 ring positions from ALL other nodes (not just its neighbours). Keys migrate from all existing nodes, not one. 25% of keys move — exactly what you want.
+        <span class="concept-note muted">Cassandra default: 256 virtual nodes (vnodes) per node. This means a new node steals a small amount of data from every existing node simultaneously — parallelising the data migration and rebalancing faster than stealing all data from one neighbour.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Hot Spot Failure<br>in the Ring</div><div class="concept-def"><strong>Real incident pattern: a node's virtual nodes cluster together, creating an uneven load distribution.</strong><br>
+      With bad luck in random virtual node placement: Node A gets token positions [0, 1, 3, 5, 8]. Node B gets [10, 15, 25, 50, 100]. Node C gets [2, 4, 6, 7, 9]. The "space" between positions is uneven — B owns huge ranges (10→15, 50→100), A owns tiny ranges. B gets 60% of traffic, A and C share 40%.<br>
+      Detection: monitor "data skew" — compare data size across nodes. If any node holds 2× the average data, the vnode placement is causing skew.<br>
+      Fix: Cassandra's "token allocation algorithm" (vnodes=256 + Cassandra 3.0+) generates virtual node positions that are mathematically guaranteed to produce balanced token ranges. Earlier versions used random placement — skew was possible.</div></div>
+    <div class="concept-row"><div class="concept-term">Cascading Failure<br>Pattern</div><div class="concept-def"><strong>Node failure → neighbour takes extra load → neighbour fails → cascade until cluster collapse.</strong><br>
+      Consistent hashing ring: Node A fails. Its token range transfers to Node B. Node B now handles 2× its normal load. If Node B was already at 70% capacity → now at 140% → Node B fails. Node C gets 3× normal load. Cascade.<br>
+      Prevention: capacity planning — never run nodes above 50% utilisation. The extra 50% headroom absorbs a neighbour's load without pushing into failure. Admission control: when a node's CPU > 80%, start rejecting new requests (503) rather than accepting them and degrading further. Circuit breaker at the client: stop sending traffic to an overloaded node.</div></div>
+  </div>
+</section>
+
+</div>
 <div class="footer">CONSISTENT HASHING · PARTITIONING · VNODES · REDIS CLUSTER · CASSANDRA · HOT SPOTS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

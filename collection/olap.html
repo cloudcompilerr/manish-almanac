@@ -83,6 +83,101 @@ code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1p
 .oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
 .oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);line-height:1.65;color:#e8e0d0;font-style:italic;}
 footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+
+/* ── Concept Grid: term/definition cards ─────────────── */
+.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);font-weight:700;}
+.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Knowledge Card: FAANG internals deep-dive ────────── */
+.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
+.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
+.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+.k-point{display:flex;flex-direction:column;gap:4px;}
+.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
+.k-point-text strong{color:var(--ink);}
+.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-divider{height:1px;background:var(--border);margin:4px 0;}
+.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
+.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
+/* ── FAQs: consistent across all files ────────────────── */
+.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
+.faq-q:hover{background:var(--surface);}
+.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
+.faq-item.open .tog{transform:rotate(45deg);}
+.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
+.faq-item.open .faq-a{display:block;}
+.faq-a strong{color:var(--ink);}
+.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
+/* ── SD Examples ──────────────────────────────────────── */
+.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
+.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
+.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
+.sd-example-body{padding:0;}
+.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border-bottom:none;}
+.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
+.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
+.choice-val strong{color:var(--ink);}
+.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Step block ───────────────────────────────────────── */
+.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
+.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
+.sb-icon{font-size:18px;}
+.step-block-body{padding:0;}
+.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.step-content{padding:16px 18px;}
+.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:8px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
+.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
+.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
+.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
+.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
+.opt-text{color:#2a2820;}
+.opt-text strong{color:var(--ink);}
+/* ── Analogy block ───────────────────────────────────── */
+.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
+.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
+.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
+/* ── Callout ──────────────────────────────────────────── */
+.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
+.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
+.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
+.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
+.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
+.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+/* ── DB pills ─────────────────────────────────────────── */
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
+/* ── hero-sub ─────────────────────────────────────────── */
+.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
+/* ── footer ───────────────────────────────────────────── */
+.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style>
 </head>
 <body>
@@ -104,7 +199,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <a href="#engines">The Engines</a><a href="#internals">How They Work</a>
   <a href="#dimensions">Every Dimension</a><a href="#when-to-use">When to Use</a>
   <a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a>
-</nav>
+<a href="#olap-advanced">Advanced OLAP</a></nav>
 <div class="wrap">
 
 <section id="what-is-olap">
@@ -365,30 +460,44 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </div>
 <footer>OLAP · CLICKHOUSE · DRUID · BIGQUERY · REDSHIFT · MANISH-ALMANAC</footer>
 <script>function toggle(el){var item=el.parentElement;var isOpen=item.classList.contains('open');document.querySelectorAll('.faq.open').forEach(function(f){f.classList.remove('open');});if(!isOpen)item.classList.add('open');}</script>
-</body></html>
+
+<section id="olap-advanced">
+  <div class="sec-tag">10 · Advanced OLAP Topics</div>
+  <h2>ClickHouse MergeTree internals and the data lakehouse</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">ClickHouse<br>MergeTree Internals</div><div class="concept-def"><strong>ClickHouse's secret: sorted, compressed columnar storage with sparse indexing.</strong><br>
+      Insert: data written to parts (immutable, sorted by ORDER BY key). Background merge: small parts merged into larger parts. Reads: scan only parts that overlap with the query's WHERE clause (partition pruning + primary key range scan).<br>
+      Sparse index: ClickHouse doesn't index every row. It keeps one index entry per "granule" (8192 rows by default). To find rows where user_id = 12345: scan the sparse index to find which granule ranges might contain it → decompress those granules → scan within. Index is small enough to fit in RAM; scanned granules are sequential reads.
+        <span class="concept-note good">✓ Result: ClickHouse can scan 1 billion rows/second/server. For a query like "count events by country for the last 7 days": partition pruning eliminates all but the last 7 days' partitions → sparse index finds the relevant granules → columnar scan of just the country and timestamp columns. Often 100-1000× faster than row-oriented OLAP.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Apache Iceberg<br>& the Data Lakehouse</div><div class="concept-def"><strong>Iceberg brings ACID transactions and schema evolution to data lakes stored in S3.</strong><br>
+      Problem with plain S3 as a data lake: no transactions (concurrent writes → corrupted partitions), no schema evolution (adding a column requires full rewrite), no time travel (can't query "how did the data look last Tuesday?").<br>
+      Iceberg solves this: maintains a metadata layer (JSON manifests) that tracks all files, their statistics, and versions. ACID writes: create new files, update the manifest atomically. Time travel: each manifest version is immutable — query the manifest from any point in time. Schema evolution: add/remove/rename columns by updating metadata only (no data rewrite).
+        <span class="concept-note good">✓ Iceberg is the new standard for lakehouse architecture. Supported by: Snowflake, BigQuery (in preview), Athena, Spark, Flink, Trino. Paired with object storage (S3/GCS), it provides data warehouse semantics without the cost of a managed data warehouse.</span></div></div>
+  </div>
+</section>
 <section id="concepts-olap">
   <div class="sec-tag">08 · Core Concepts</div>
   <h2>OLAP internals every interviewer tests</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Columnar Storage</div><div class="concept-def"><strong>OLAP stores data column-by-column, not row-by-row. This is the single most important architectural difference from OLTP.</strong><br>
       Row store: <code>[id=1, name=Alice, age=30, country=IN] | [id=2, ...]</code> — all columns for one row are adjacent.<br>
-      Column store: <code>[age: 30,25,41,28...] [country: IN,US,IN,UK...]</code> — all values for one column are adjacent.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Analytics queries read 2–3 columns from 100M rows. Column store reads only those 2–3 columns from disk. Row store must read all columns even if only 2 are needed — 50x more I/O. Compression ratio also dramatically better: a column of country codes compresses 100:1 (dict encoding).</span></div></div>
+      Column store: <code>[age: 30,25,41,28...] [country: IN,US,IN,UK...]</code> — all values for one column are adjacent.
+        <span class="concept-note good">✓ Analytics queries read 2–3 columns from 100M rows. Column store reads only those 2–3 columns from disk. Row store must read all columns even if only 2 are needed — 50x more I/O. Compression ratio also dramatically better: a column of country codes compresses 100:1 (dict encoding).</span></div></div>
     <div class="concept-row"><div class="concept-term">Vectorised Execution</div><div class="concept-def"><strong>ClickHouse processes data in vectors (batches of 1,024 values) rather than row-by-row.</strong><br>
-      Traditional row-by-row: per-row function call overhead, poor CPU cache utilisation. Vectorised: load 1,024 values into SIMD registers, apply operation to all 1,024 simultaneously using CPU vector instructions.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ 10–100x faster for aggregations (SUM, AVG, COUNT) compared to row-by-row execution. ClickHouse benchmarks: 1 billion row aggregation in &lt;1 second on a single node. DuckDB also uses vectorised execution for embedded analytics.</span></div></div>
+      Traditional row-by-row: per-row function call overhead, poor CPU cache utilisation. Vectorised: load 1,024 values into SIMD registers, apply operation to all 1,024 simultaneously using CPU vector instructions.
+        <span class="concept-note good">✓ 10–100x faster for aggregations (SUM, AVG, COUNT) compared to row-by-row execution. ClickHouse benchmarks: 1 billion row aggregation in &lt;1 second on a single node. DuckDB also uses vectorised execution for embedded analytics.</span></div></div>
     <div class="concept-row"><div class="concept-term">Pre-Aggregation<br>(Rollup / Materialization)</div><div class="concept-def"><strong>Pre-compute aggregations at ingest time so queries read pre-rolled-up data instead of raw events.</strong><br>
-      Apache Druid: at ingest, rolls up <code>(timestamp, country, device) → count</code>. If 10,000 events have the same (minute, country, device) tuple, they become 1 row. Query on pre-aggregated data is 10,000x smaller.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Dramatic query speedup and storage reduction. Perfect for: dashboard metrics (DAU, event counts, revenue). Trade-off: cannot reconstruct individual events — only aggregated data is stored.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Must define aggregation dimensions at ingest time. Changing dimensions later requires full reingestion.</span></div></div>
+      Apache Druid: at ingest, rolls up <code>(timestamp, country, device) → count</code>. If 10,000 events have the same (minute, country, device) tuple, they become 1 row. Query on pre-aggregated data is 10,000x smaller.
+        <span class="concept-note good">✓ Dramatic query speedup and storage reduction. Perfect for: dashboard metrics (DAU, event counts, revenue). Trade-off: cannot reconstruct individual events — only aggregated data is stored.</span>
+      <span class="concept-note warn">⚠ Must define aggregation dimensions at ingest time. Changing dimensions later requires full reingestion.</span></div></div>
     <div class="concept-row"><div class="concept-term">Partitioning &amp;<br>Pruning</div><div class="concept-def"><strong>Partition data by time (day/month). Queries with time filters only scan relevant partitions.</strong><br>
       ClickHouse: <code>PARTITION BY toYYYYMM(timestamp)</code>. Query for March 2026: reads only the March partition. Other months never touched.<br>
-      BigQuery: partition by date column. A query for last 7 days scans only 7 partitions regardless of total table size. Billing is based on bytes scanned — partitioning directly reduces query cost.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Always partition OLAP tables by time. Most analytics queries have a time filter — partition pruning turns full-table scans into partition scans. 100x reduction in data scanned is typical.</span></div></div>
+      BigQuery: partition by date column. A query for last 7 days scans only 7 partitions regardless of total table size. Billing is based on bytes scanned — partitioning directly reduces query cost.
+        <span class="concept-note good">✓ Always partition OLAP tables by time. Most analytics queries have a time filter — partition pruning turns full-table scans into partition scans. 100x reduction in data scanned is typical.</span></div></div>
     <div class="concept-row"><div class="concept-term">Dremel / BigQuery<br>Execution Model</div><div class="concept-def"><strong>BigQuery uses a distributed execution engine (Dremel) that dynamically allocates thousands of workers for a single query.</strong><br>
       A query on 10TB of data: BigQuery spins up 10,000 workers, each reading 1GB of Parquet from Colossus (Google's distributed filesystem). Workers aggregate in a shuffle step. Result returned in seconds.<br>
-      No indexes — BigQuery relies entirely on columnar scan parallelism. Works because: fast network (100Gbps), columnar compression (read only needed columns), massive parallelism.<br>
-      <span style="color:#5a5848;font-size:12.5px;">You pay per query (bytes scanned). Use partitioning + column selection to minimise scan cost. Clustering (sorting by commonly filtered columns) further reduces bytes scanned.</span></div></div>
+      No indexes — BigQuery relies entirely on columnar scan parallelism. Works because: fast network (100Gbps), columnar compression (read only needed columns), massive parallelism.
+        <span class="concept-note muted">You pay per query (bytes scanned). Use partitioning + column selection to minimise scan cost. Clustering (sorting by commonly filtered columns) further reduces bytes scanned.</span></div></div>
   </div>
 
   <div class="step-block">
@@ -438,14 +547,14 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   </div>
   <div class="concept-grid" style="margin-top:16px;">
     <div class="concept-row"><div class="concept-term">ClickHouse<br>MergeTree</div><div class="concept-def"><strong>ClickHouse's primary table engine. Data is written in "parts" and merged in the background — like LSM trees but for columnar OLAP.</strong><br>
-      Insert: data written as a new sorted part (like an SSTable). Background merge: parts are periodically merged and sorted. Query: reads only relevant parts (primary key pruning) + relevant columns.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Extremely fast inserts (sequential writes). Background merge keeps reads fast. Variants: SummingMergeTree (aggregates on merge), ReplacingMergeTree (deduplicates on merge), AggregatingMergeTree (stores pre-aggregated state).</span></div></div>
+      Insert: data written as a new sorted part (like an SSTable). Background merge: parts are periodically merged and sorted. Query: reads only relevant parts (primary key pruning) + relevant columns.
+        <span class="concept-note good">✓ Extremely fast inserts (sequential writes). Background merge keeps reads fast. Variants: SummingMergeTree (aggregates on merge), ReplacingMergeTree (deduplicates on merge), AggregatingMergeTree (stores pre-aggregated state).</span></div></div>
     <div class="concept-row"><div class="concept-term">Redshift Spectrum</div><div class="concept-def"><strong>Query S3 data directly from Redshift without loading it into Redshift storage first.</strong><br>
-      Create an external table pointing to S3 Parquet files. JOIN it with internal Redshift tables. Spectrum pushes predicates and column selection to the S3 layer — only relevant data is transferred.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Hot data in Redshift (fast). Cold/archive data in S3 (cheap). Query both in one SQL statement. Ideal for: historical analysis where only recent data needs Redshift's full speed.</span></div></div>
+      Create an external table pointing to S3 Parquet files. JOIN it with internal Redshift tables. Spectrum pushes predicates and column selection to the S3 layer — only relevant data is transferred.
+        <span class="concept-note good">✓ Hot data in Redshift (fast). Cold/archive data in S3 (cheap). Query both in one SQL statement. Ideal for: historical analysis where only recent data needs Redshift's full speed.</span></div></div>
     <div class="concept-row"><div class="concept-term">BigQuery Slots</div><div class="concept-def"><strong>BigQuery allocates "slots" (units of compute) to each query dynamically from a shared pool.</strong><br>
-      On-demand pricing: up to 2,000 slots per project. Pay per TB scanned. Flat-rate: buy reserved slots (500 minimum) for predictable cost at high query volume. At Shopify/Airbnb scale, flat-rate is dramatically cheaper.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Slot contention: if your project runs many concurrent queries, they compete for slots. One very large query can starve smaller dashboard queries. Use workload management (reservations + assignments) to allocate slots per team or use case.</span></div></div>
+      On-demand pricing: up to 2,000 slots per project. Pay per TB scanned. Flat-rate: buy reserved slots (500 minimum) for predictable cost at high query volume. At Shopify/Airbnb scale, flat-rate is dramatically cheaper.
+        <span class="concept-note muted">Slot contention: if your project runs many concurrent queries, they compete for slots. One very large query can starve smaller dashboard queries. Use workload management (reservations + assignments) to allocate slots per team or use case.</span></div></div>
   </div>
 </section>
 
@@ -475,3 +584,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>Data Lakehouse</strong> (Databricks Delta Lake, Apache Iceberg on S3): combine both. S3/GCS storage cost + columnar Parquet performance + ACID transactions from Delta/Iceberg metadata layer. Query directly from S3 with warehouse-like performance. This is the modern standard — most new data platform designs use the lakehouse pattern.<br><br>
   <strong>Interview answer</strong>: "I'd start with a data lake on S3 using Parquet + Delta Lake for ACID. Query with Athena for ad-hoc, Spark for batch processing, and ClickHouse for dashboard queries. This gives warehouse performance at lake economics."</div></div>
 </section>
+
+</div>
+</body>
+</html>

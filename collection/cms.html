@@ -565,6 +565,18 @@
       .opt-arrow{min-width:80px;}
       .choice-row{grid-template-columns:1fr;}
     }
+
+/* ── concept-note: coloured signal blocks ─────────── */
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
+.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
+/* ── concept-def paragraph spacing ────────────────── */
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.9;color:#2a2820;}
+.concept-def>strong:first-child{display:block;margin-bottom:8px;font-size:14px;}
+.concept-def p{margin:0 0 8px 0;}
+.concept-def p:last-child{margin-bottom:0;}
 </style>
 </head>
 <body>
@@ -572,7 +584,7 @@
 <!-- HERO -->
 <div class="hero">
   <div class="hero-label">System Design Interview Prep</div>
-  <h1>Count-<span>Min</span><br>Sketch</h1>
+  <h1>Count-<span>Min</span>Sketch</h1>
   <p class="hero-sub">The probabilistic data structure that counts millions of events using just kilobytes of memory — and how hash functions make it work.</p>
   <div class="scroll-cue">↓ SCROLL TO LEARN</div>
 </div>
@@ -599,17 +611,15 @@
     <h3>// Step-by-step: hashing "video_42" into a 6-column grid</h3>
 
     <div class="hash-math">
-      <span class="comment">// Hash Function 0: a simple polynomial hash</span><br>
-      "video_42" → <span class="comment">add up (character codes × prime powers)</span><br>
-      = <span class="num">118</span>×31⁰ + <span class="num">105</span>×31¹ + <span class="num">100</span>×31² + ... = <span class="num">big number: 8,472,193</span><br>
-      column = <span class="num">8,472,193</span> <span class="op">%</span> <span class="num">6</span> (grid width) = <span class="res">→ Col 3</span>
-      <br><br>
-      <span class="comment">// Hash Function 1: a different seed / multiplier</span><br>
-      "video_42" → same chars, different math → <span class="num">5,291,847</span><br>
-      column = <span class="num">5,291,847</span> <span class="op">%</span> <span class="num">6</span> = <span class="res">→ Col 2</span>
-      <br><br>
-      <span class="comment">// Hash Function 2: yet another seed</span><br>
-      "video_42" → <span class="num">3,104,522</span><br>
+      <span class="comment">// Hash Function 0: a simple polynomial hash</span>
+      "video_42" → <span class="comment">add up (character codes × prime powers)</span>
+      = <span class="num">118</span>×31⁰ + <span class="num">105</span>×31¹ + <span class="num">100</span>×31² + ... = <span class="num">big number: 8,472,193</span>
+      column = <span class="num">8,472,193</span> <span class="op">%</span> <span class="num">6</span> (grid width) = <span class="res">→ Col 3</span><br>
+      <span class="comment">// Hash Function 1: a different seed / multiplier</span>
+      "video_42" → same chars, different math → <span class="num">5,291,847</span>
+      column = <span class="num">5,291,847</span> <span class="op">%</span> <span class="num">6</span> = <span class="res">→ Col 2</span><br>
+      <span class="comment">// Hash Function 2: yet another seed</span>
+      "video_42" → <span class="num">3,104,522</span>
       column = <span class="num">3,104,522</span> <span class="op">%</span> <span class="num">6</span> = <span class="res">→ Col 4</span>
     </div>
 
@@ -952,23 +962,23 @@
 <div class="concept-grid">
   <div class="concept-row"><div class="concept-term">Hash Width<br>(w)</div><div class="concept-def"><strong>Number of columns in the CMS table — controls error magnitude.</strong><br>
     Guarantee: estimation error ≤ <code>e/w</code> where e is the base of natural log (~2.718). Set <code>w = ⌈e/ε⌉</code> where ε is your acceptable error rate.<br>
-    Example: ε=0.01 (1% error) → w = ⌈2.718/0.01⌉ = 272 columns. With total count N=1,000,000: max overcount = 10,000 (1% of N).<br>
-    <span style="color:#5a5848;font-size:12.5px;">Wider table = smaller error. Each row is independent — width scales linearly with required accuracy.</span></div></div>
+    Example: ε=0.01 (1% error) → w = ⌈2.718/0.01⌉ = 272 columns. With total count N=1,000,000: max overcount = 10,000 (1% of N).
+        <span class="concept-note muted">Wider table = smaller error. Each row is independent — width scales linearly with required accuracy.</span></div></div>
   <div class="concept-row"><div class="concept-term">Hash Depth<br>(d)</div><div class="concept-def"><strong>Number of rows (independent hash functions) — controls error probability.</strong><br>
     Guarantee: probability of exceeding the error bound ≤ <code>δ^d</code>. Set <code>d = ⌈ln(1/δ)⌉</code> where δ is acceptable failure probability.<br>
-    Example: δ=0.01 (99% confidence) → d = ⌈ln(100)⌉ = 5 rows. With 5 independent hash functions, probability that ALL 5 collide for the same key is (0.01)^5 = 0.0000000001.<br>
-    <span style="color:#5a5848;font-size:12.5px;">More rows = higher confidence. Depth grows logarithmically — 5 rows gives 99% confidence, 10 rows gives 99.9999%. Depth has diminishing returns.</span></div></div>
+    Example: δ=0.01 (99% confidence) → d = ⌈ln(100)⌉ = 5 rows. With 5 independent hash functions, probability that ALL 5 collide for the same key is (0.01)^5 = 0.0000000001.
+        <span class="concept-note muted">More rows = higher confidence. Depth grows logarithmically — 5 rows gives 99% confidence, 10 rows gives 99.9999%. Depth has diminishing returns.</span></div></div>
   <div class="concept-row"><div class="concept-term">Why Minimum?</div><div class="concept-def"><strong>The CMS query returns the minimum across all d rows — not sum, not average, minimum.</strong><br>
-    Each row's counter is always ≥ the true count (due to hash collisions adding counts from other keys). The minimum across all rows is the closest to the true count — but still an upper bound.<br>
-    <span style="color:#1a7a4a;font-size:12.5px;">✓ Mathematically proven: min(rows) ≥ true_count always. And min(rows) − true_count ≤ error_bound with high probability. This is why CMS only over-estimates, never under-estimates.</span></div></div>
+    Each row's counter is always ≥ the true count (due to hash collisions adding counts from other keys). The minimum across all rows is the closest to the true count — but still an upper bound.
+        <span class="concept-note good">✓ Mathematically proven: min(rows) ≥ true_count always. And min(rows) − true_count ≤ error_bound with high probability. This is why CMS only over-estimates, never under-estimates.</span></div></div>
   <div class="concept-row"><div class="concept-term">Space Complexity</div><div class="concept-def"><strong>O(w × d) — constant space regardless of the number of distinct keys.</strong><br>
     A CMS with ε=0.01, δ=0.01: w=272, d=5. Total cells: 272 × 5 = 1,360 integers. At 4 bytes each: 5,440 bytes = 5.3KB.<br>
-    Compare: tracking 1 billion unique keys in a HashMap = ~24GB. CMS achieves similar functionality in 5.3KB — a 4.5 million times reduction.<br>
-    <span style="color:#1a7a4a;font-size:12.5px;">✓ This is why CMS is used in production for counting at scale: it fits in L1 CPU cache, enabling billions of updates per second.</span></div></div>
+    Compare: tracking 1 billion unique keys in a HashMap = ~24GB. CMS achieves similar functionality in 5.3KB — a 4.5 million times reduction.
+        <span class="concept-note good">✓ This is why CMS is used in production for counting at scale: it fits in L1 CPU cache, enabling billions of updates per second.</span></div></div>
   <div class="concept-row"><div class="concept-term">CMS vs HyperLogLog</div><div class="concept-def"><strong>CMS counts frequency of each item. HyperLogLog counts the number of distinct items. Different problems.</strong><br>
     CMS answers: "how many times did user X appear?" → frequency/count estimation.<br>
-    HyperLogLog answers: "how many distinct users appeared?" → cardinality estimation.<br>
-    <span style="color:#5a5848;font-size:12.5px;">Both are probabilistic, both use constant space. Use CMS for Top-K (need per-item counts). Use HyperLogLog for DAU / unique visitor counts (need distinct count). Redis supports both natively.</span></div></div>
+    HyperLogLog answers: "how many distinct users appeared?" → cardinality estimation.
+        <span class="concept-note muted">Both are probabilistic, both use constant space. Use CMS for Top-K (need per-item counts). Use HyperLogLog for DAU / unique visitor counts (need distinct count). Redis supports both natively.</span></div></div>
 </div>
 
 <div class="sec-tag" style="margin-top:24px;">06 · System Design Examples</div>

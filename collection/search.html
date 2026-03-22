@@ -123,11 +123,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
 .concept-row:last-child{border-bottom:none;}
 .concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
-.concept-def{padding:13px 16px;flex:1;font-size:13.5px;color:#3a3830;line-height:1.7;background:#fff;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
 .concept-def strong{color:var(--ink);}
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -135,7 +145,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <p class="hero-sub">How search works from first principles — inverted index, BM25 relevance, Elasticsearch architecture, typeahead design, and vector search.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Elasticsearch</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Inverted Index</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">BM25</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Typeahead</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Vector Search</span></div>
 </div></div>
-<nav class="nav"><a href="#intuition">Why Search</a><a href="#inverted">Inverted Index</a><a href="#elasticsearch">ES Architecture</a><a href="#typeahead">Typeahead</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#intuition">Why Search</a><a href="#inverted">Inverted Index</a><a href="#elasticsearch">ES Architecture</a><a href="#typeahead">Typeahead</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#vector-search">Vector Search</a></nav>
 <div class="wrap">
 <section id="intuition">
   <div class="sec-tag">00 · Core Intuition</div>
@@ -170,13 +180,10 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
       1. <strong>Tokenization</strong>: "Redis is Fast!" → ["Redis", "is", "Fast"]<br>
       2. <strong>Lowercasing</strong>: → ["redis", "is", "fast"]<br>
       3. <strong>Stop word removal</strong>: → ["redis", "fast"] (removes "is")<br>
-      4. <strong>Stemming/Lemmatization</strong>: "running" → "run", "faster" → "fast"<br>
-      <span style="color:#5a5848;font-size:12.5px;">The same pipeline must run at query time. "Running Redis" → ["run", "redis"] → matches documents containing "run" or "redis" in any form.</span></div></div>
-    <div class="concept-row"><div class="concept-term">TF-IDF / BM25</div><div class="concept-def"><strong>Relevance scoring: not all matches are equal.</strong><br>
-      <strong>TF (Term Frequency)</strong>: how often does the term appear in this document? More occurrences = more relevant.<br>
-      <strong>IDF (Inverse Document Frequency)</strong>: how rare is the term across all documents? "the" appears everywhere — low IDF, low importance. "Kafka" appears rarely — high IDF, high importance.<br>
-      <strong>BM25</strong>: modern improvement over TF-IDF used by Elasticsearch. Prevents very long documents from dominating just because they mention a term more times.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Elasticsearch uses BM25 by default. You can boost specific fields (title matches worth 3x body matches).</span></div></div>
+      4. <strong>Stemming/Lemmatization</strong>: "running" → "run", "faster" → "fast"
+        <span class="concept-note muted">The same pipeline must run at query time. "Running Redis" → ["run", "redis"] → matches documents containing "run" or "redis" in any form.</span></div></div>
+    <div class="concept-row"><div class="concept-term">TF-IDF / BM25</div><div class="concept-def"><strong>Relevance scoring: not all matches are equal.</strong></p><p><strong>TF (Term Frequency)</strong>: how often does the term appear in this document? More occurrences = more relevant.</p><p><strong>IDF (Inverse Document Frequency)</strong>: how rare is the term across all documents? "the" appears everywhere — low IDF, low importance. "Kafka" appears rarely — high IDF, high importance.</p><p><strong>BM25</strong>: modern improvement over TF-IDF used by Elasticsearch. Prevents very long documents from dominating just because they mention a term more times.
+        <span class="concept-note muted">Elasticsearch uses BM25 by default. You can boost specific fields (title matches worth 3x body matches).</span></div></div>
   </div>
 </section>
 
@@ -185,19 +192,19 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>How ES scales to billions of documents</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Index → Shards</div><div class="concept-def"><strong>An Elasticsearch index is split into N primary shards. Each shard is a complete, independent Lucene index.</strong><br>
-      Index "tweets" with 5 shards: each shard holds ~20% of documents. Queries fan out to all 5 shards in parallel, results merged by the coordinator.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Shard count is set at creation and cannot be changed (except via reindex). Over-sharding (too many small shards) is as harmful as under-sharding (too few large ones). Rule of thumb: aim for 10–50GB per shard.</span></div></div>
+      Index "tweets" with 5 shards: each shard holds ~20% of documents. Queries fan out to all 5 shards in parallel, results merged by the coordinator.
+        <span class="concept-note warn">⚠ Shard count is set at creation and cannot be changed (except via reindex). Over-sharding (too many small shards) is as harmful as under-sharding (too few large ones). Rule of thumb: aim for 10–50GB per shard.</span></div></div>
     <div class="concept-row"><div class="concept-term">Replication</div><div class="concept-def"><strong>Each primary shard has N replica shards on different nodes.</strong><br>
       Writes: go to primary, primary replicates to replicas.<br>
       Reads: can be served by primary or any replica — distributes read load.<br>
-      Node failure: replica promoted to primary automatically.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Replicas both provide HA and increase read throughput. 5 shards × 2 replicas = 15 Lucene indexes total across the cluster.</span></div></div>
+      Node failure: replica promoted to primary automatically.
+        <span class="concept-note good">✓ Replicas both provide HA and increase read throughput. 5 shards × 2 replicas = 15 Lucene indexes total across the cluster.</span></div></div>
     <div class="concept-row"><div class="concept-term">Near Real-Time<br>(NRT) Search</div><div class="concept-def"><strong>Newly indexed documents are searchable within ~1 second, not immediately.</strong><br>
-      Lucene writes to an in-memory buffer → every 1 second, refreshed to a new segment (searchable) → eventually merged into larger segments.<br>
-      <span style="color:#5a5848;font-size:12.5px;">This is why Elasticsearch is "near real-time" not "real-time." To force immediate visibility: <code>?refresh=true</code> on indexing — forces a refresh but hurts write throughput. Only use for critical flows.</span></div></div>
+      Lucene writes to an in-memory buffer → every 1 second, refreshed to a new segment (searchable) → eventually merged into larger segments.
+        <span class="concept-note muted">This is why Elasticsearch is "near real-time" not "real-time." To force immediate visibility: <code>?refresh=true</code> on indexing — forces a refresh but hurts write throughput. Only use for critical flows.</span></div></div>
     <div class="concept-row"><div class="concept-term">Lucene Segments</div><div class="concept-def"><strong>Lucene (the underlying library) writes data in immutable segments.</strong><br>
-      New documents → write buffer → periodic flush → new immutable segment. Background merges combine small segments into larger ones (like Cassandra SSTables, like ClickHouse parts).<br>
-      <span style="color:#5a5848;font-size:12.5px;">Deletes are soft-deletes (marked, not removed) until a merge happens. This is why delete-heavy workloads require periodic forced merges to reclaim space.</span></div></div>
+      New documents → write buffer → periodic flush → new immutable segment. Background merges combine small segments into larger ones (like Cassandra SSTables, like ClickHouse parts).
+        <span class="concept-note muted">Deletes are soft-deletes (marked, not removed) until a merge happens. This is why delete-heavy workloads require periodic forced merges to reclaim space.</span></div></div>
   </div>
 </section>
 
@@ -206,18 +213,18 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <h2>Design: search-as-you-type at FAANG scale</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Prefix Trie</div><div class="concept-def"><strong>A tree where each node is a character. Every path from root to leaf is a word. O(L) lookup for a prefix of length L — regardless of vocabulary size.</strong><br>
-      To find all words starting with "redis": traverse to node 'r'→'e'→'d'→'i'→'s', return all words in subtree.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Fast prefix lookup. Memory-efficient with shared prefixes. Used by: Google Suggest backend, IDE autocomplete.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Storing popularity scores in a trie and returning top-K results requires augmenting each node with a max-heap — complex. Sharding a trie across machines is non-trivial.</span></div></div>
+      To find all words starting with "redis": traverse to node 'r'→'e'→'d'→'i'→'s', return all words in subtree.
+        <span class="concept-note good">✓ Fast prefix lookup. Memory-efficient with shared prefixes. Used by: Google Suggest backend, IDE autocomplete.</span>
+      <span class="concept-note warn">⚠ Storing popularity scores in a trie and returning top-K results requires augmenting each node with a max-heap — complex. Sharding a trie across machines is non-trivial.</span></div></div>
     <div class="concept-row"><div class="concept-term">Elasticsearch<br>Completion Suggester</div><div class="concept-def"><strong>Built-in completion suggester using an in-memory FST (Finite State Transducer) — more memory-efficient than a trie.</strong><br>
       Index time: store completion field with weight (popularity score).<br>
       Query: <code>suggest: {prefix: "red", field: "title.completion", size: 5}</code><br>
-      Returns top-5 completions by weight instantly.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Easy to implement on top of existing ES infrastructure. Handles millions of suggestions in milliseconds.</span></div></div>
+      Returns top-5 completions by weight instantly.
+        <span class="concept-note good">✓ Easy to implement on top of existing ES infrastructure. Handles millions of suggestions in milliseconds.</span></div></div>
     <div class="concept-row"><div class="concept-term">Redis ZSET Approach</div><div class="concept-def"><strong>Store all prefixes as ZSET members scored by popularity. For "redis", store "r", "re", "red", "redi", "redis" all pointing to the suggestion with its popularity score.</strong><br>
-      <code>ZRANGEBYLEX suggestions "[redis" "[redisÿ" LIMIT 0 5</code><br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Extremely fast (sub-ms). Works well for known vocabulary (hashtags, product names). Easy to update popularity in real time with ZINCRBY.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Storage: O(L × V) where L is avg word length and V is vocabulary size. For a 10M-word vocabulary, this becomes large.</span></div></div>
+      <code>ZRANGEBYLEX suggestions "[redis" "[redisÿ" LIMIT 0 5</code>
+        <span class="concept-note good">✓ Extremely fast (sub-ms). Works well for known vocabulary (hashtags, product names). Easy to update popularity in real time with ZINCRBY.</span>
+      <span class="concept-note warn">⚠ Storage: O(L × V) where L is avg word length and V is vocabulary size. For a 10M-word vocabulary, this becomes large.</span></div></div>
   </div>
 </section>
 
@@ -243,17 +250,14 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
     <div class="concept-row"><div class="concept-term">Multi-Stage Ranking</div><div class="concept-def"><strong>Modern search uses a pipeline: cheap retrieval first, expensive re-ranking after.</strong><br>
       Stage 1 — <strong>Recall</strong>: BM25/inverted index retrieves top 10,000 candidates. Fast, cheap.<br>
       Stage 2 — <strong>Re-rank</strong>: ML model (LambdaMART, BERT-based) scores the top 1,000. Considers personalisation, freshness, engagement signals.<br>
-      Stage 3 — <strong>Business rules</strong>: Apply boosts (promoted listings), filters (safety), and diversity rules (not all results from same author).<br>
-      <span style="color:#5a5848;font-size:12.5px;">Why multi-stage: running a BERT model on 10M documents per query is too slow. Run it on 1,000 pre-filtered candidates → acceptable latency.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Relevance Signals</div><div class="concept-def"><strong>Beyond term frequency, production search incorporates:</strong><br>
-      <strong>Query-document signals</strong>: BM25 score, field match (title match worth 3x body match), exact phrase match bonus.<br>
-      <strong>Document-level signals</strong>: freshness (newer content boosted), authority (PageRank-style link graph), engagement (CTR, dwell time, shares).<br>
-      <strong>Personalisation</strong>: user's past clicks, location, language, search history.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Elasticsearch Rescore API: retrieve top 10K by BM25, rescore top 500 with a more expensive function. Balances speed and quality.</span></div></div>
+      Stage 3 — <strong>Business rules</strong>: Apply boosts (promoted listings), filters (safety), and diversity rules (not all results from same author).
+        <span class="concept-note muted">Why multi-stage: running a BERT model on 10M documents per query is too slow. Run it on 1,000 pre-filtered candidates → acceptable latency.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Relevance Signals</div><div class="concept-def"><strong>Beyond term frequency, production search incorporates:</strong></p><p><strong>Query-document signals</strong>: BM25 score, field match (title match worth 3x body match), exact phrase match bonus.</p><p><strong>Document-level signals</strong>: freshness (newer content boosted), authority (PageRank-style link graph), engagement (CTR, dwell time, shares).</p><p><strong>Personalisation</strong>: user's past clicks, location, language, search history.
+        <span class="concept-note muted">Elasticsearch Rescore API: retrieve top 10K by BM25, rescore top 500 with a more expensive function. Balances speed and quality.</span></div></div>
     <div class="concept-row"><div class="concept-term">Faceted Search</div><div class="concept-def"><strong>Filter and aggregate search results by multiple dimensions simultaneously — the e-commerce standard.</strong><br>
       Query: "laptop" → results filtered by brand (Apple/Dell/HP), RAM (8GB/16GB/32GB), price range. Counts shown per facet: "Apple (234), Dell (189)..."<br>
-      Elasticsearch implementation: use <code>aggregations</code> alongside the query. One request returns both the matched documents AND the facet counts. No separate aggregation query needed.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Helps users narrow results without reformulating queries. Amazon, Flipkart, Zalando — all use faceted search as the primary product discovery interface.</span></div></div>
+      Elasticsearch implementation: use <code>aggregations</code> alongside the query. One request returns both the matched documents AND the facet counts. No separate aggregation query needed.
+        <span class="concept-note good">✓ Helps users narrow results without reformulating queries. Amazon, Flipkart, Zalando — all use faceted search as the primary product discovery interface.</span></div></div>
   </div>
 </section>
 
@@ -336,6 +340,23 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
     </div>
   </div>
 </section>
+
+<section id="vector-search">
+  <div class="sec-tag">09 · Vector Search & ML Ranking</div>
+  <h2>Beyond keyword matching — the AI layer modern search requires</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Vector Embeddings<br>for Semantic Search</div><div class="concept-def"><strong>Convert text to dense vectors. Find semantically similar documents even without keyword overlap.</strong><br>
+      Query "cheap flights to goa" → embed with text-embedding-3-small → 1536-dimensional vector [0.23, -0.91, ...]. Documents in the index also embedded at index time. Find documents whose embedding is cosine-closest to the query embedding. Returns results about "affordable airfare Goa" even with zero keyword overlap.<br>
+      Index: FAISS (Facebook AI Similarity Search), pgvector (PostgreSQL extension), Pinecone, Weaviate, or Elasticsearch's dense_vector field. All support approximate nearest neighbour (ANN) with HNSW index. O(log N) search over billions of vectors.
+        <span class="concept-note good">✓ Hybrid search: combine BM25 (keyword) score + vector similarity score with a weighted sum. BM25 wins for exact product codes and names. Vectors win for semantic and intent-based queries. LinkedIn People Search, Notion AI Search, and Google Shopping all use hybrid.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Multi-Stage Ranking<br>Pipeline</div><div class="concept-def"><strong>Narrow from billions to thousands (retrieval) → score thousands (ranking) → rerank top-100 (re-ranking).</strong></p><p><strong>Stage 1 — Retrieval</strong>: BM25 or ANN vector search. Fast, approximate. Returns 1,000 candidates from billions of documents in &lt;50ms.</p><p><strong>Stage 2 — Ranking</strong>: ML model (gradient boosted trees or a small neural net) scores each candidate on: relevance signals (BM25 score, vector score, freshness), behavioural signals (CTR for this query, dwell time, position bias-corrected), personalisation (user's historical preferences). Scores 1,000 candidates in &lt;100ms.</p><p><strong>Stage 3 — Re-ranking</strong>: large cross-encoder model (BERT-based) scores top-100 pairs (query, document) together — captures deep semantic interaction. Expensive but only for 100 items. Runs in &lt;200ms on GPU.<br>
+      Total pipeline: 350ms. Parallelise stages 1+2, run stage 3 on stage 2 top-100.</div></div>
+    <div class="concept-row"><div class="concept-term">Index Freshness<br>Strategies</div><div class="concept-def"><strong>How fast do new documents appear in search results? The answer changes the architecture.</strong></p><p><strong>Batch indexing</strong>: rebuild the full index nightly. Freshness: 24h lag. Simple. Right for: product catalogs with daily updates, static content.</p><p><strong>Near-real-time (NRT)</strong>: Elasticsearch refreshes the in-memory index segment every 1 second (<code>index.refresh_interval=1s</code>). New documents visible in 1 second. Default Elasticsearch behaviour. Right for: most applications.</p><p><strong>Real-time</strong>: Elasticsearch with <code>refresh=true</code> on write (forces immediate segment refresh). Visible immediately. Cost: 10–100× more write overhead. Right for: financial transactions, legal documents where freshness is critical.</p><p><strong>Dual-index</strong>: a large, rarely-updated "base index" + a small, frequently-updated "delta index." Merge results at query time. Right for: trillion-document indexes where full daily rebuilds take days.</div></div>
+  </div>
+</section>
+
+</div>
 <div class="footer">SEARCH · ELASTICSEARCH · INVERTED INDEX · BM25 · TYPEAHEAD · VECTOR SEARCH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+</body>
+</html>

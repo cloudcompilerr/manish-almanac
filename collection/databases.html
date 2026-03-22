@@ -85,6 +85,101 @@ code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1p
 .oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
 .oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
 footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+
+/* ── Concept Grid: term/definition cards ─────────────── */
+.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);font-weight:700;}
+.concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Knowledge Card: FAANG internals deep-dive ────────── */
+.k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
+.k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
+.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+.k-point{display:flex;flex-direction:column;gap:4px;}
+.k-point-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.k-point-text{font-size:13.5px;line-height:1.8;color:#2a2820;}
+.k-point-text strong{color:var(--ink);}
+.k-point-text code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-divider{height:1px;background:var(--border);margin:4px 0;}
+.k-insight{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border-radius:5px;padding:10px 14px;margin-top:4px;}
+.k-insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.k-insight-text{font-size:12.5px;line-height:1.7;color:#3a3830;}
+/* ── FAQs: consistent across all files ────────────────── */
+.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
+.faq-q:hover{background:var(--surface);}
+.tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
+.faq-item.open .tog{transform:rotate(45deg);}
+.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
+.faq-item.open .faq-a{display:block;}
+.faq-a strong{color:var(--ink);}
+.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:#1a4f8a;border:1px solid var(--border);}
+/* ── SD Examples ──────────────────────────────────────── */
+.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
+.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
+.sd-example-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#f0ede6;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
+.sd-example-body{padding:0;}
+.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border-bottom:none;}
+.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
+.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
+.choice-val strong{color:var(--ink);}
+.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+/* ── Step block ───────────────────────────────────────── */
+.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
+.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;}
+.sb-icon{font-size:18px;}
+.step-block-body{padding:0;}
+.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.step-content{padding:16px 18px;}
+.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:8px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
+.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
+.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
+.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
+.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
+.opt-text{color:#2a2820;}
+.opt-text strong{color:var(--ink);}
+/* ── Analogy block ───────────────────────────────────── */
+.analogy{background:linear-gradient(135deg,#fdf8ee 0%,#f8f0e0 100%);border:1px solid #e8d8b0;border-radius:8px;padding:20px 22px;margin:20px 0;position:relative;}
+.analogy::before{content:'💡';position:absolute;top:-12px;left:18px;font-size:20px;background:white;padding:0 4px;border-radius:50%;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#8a7040;text-transform:uppercase;margin-bottom:10px;font-weight:700;}
+.analogy-text{font-size:14px;line-height:1.85;color:#3a3020;}
+/* ── Callout ──────────────────────────────────────────── */
+.callout{border-radius:8px;padding:16px 20px;margin:20px 0;border-left:4px solid;}
+.cl-blue{background:#eef2fb;border-color:#1a4f8a;}.cl-blue .cl-lbl{color:#1a4f8a;}
+.cl-green{background:#edf7f0;border-color:#1a7a4a;}.cl-green .cl-lbl{color:#1a7a4a;}
+.cl-amber{background:#fdf5e3;border-color:#b8720a;}.cl-amber .cl-lbl{color:#b8720a;}
+.cl-red{background:#fdf0f0;border-color:#b83030;}.cl-red .cl-lbl{color:#b83030;}
+.cl-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+/* ── DB pills ─────────────────────────────────────────── */
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;font-weight:600;border:1px solid;letter-spacing:.3px;}
+/* ── hero-sub ─────────────────────────────────────────── */
+.hero-sub{font-size:14px;color:#7a7868;max-width:640px;line-height:1.7;margin:10px 0 0;}
+/* ── footer ───────────────────────────────────────────── */
+.footer{text-align:center;padding:32px 20px;font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--border);margin-top:40px;}
+
+/* ── Concept-def sub-points ────────────────────────── */
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+.concept-def br+br{display:none;}
 </style>
 </head>
 <body>
@@ -106,7 +201,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <a href="#dimensions">Every Dimension</a><a href="#sharding">Sharding</a>
   <a href="#cap">CAP Theorem</a><a href="#when-to-use">When to Use</a>
   <a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a>
-</nav>
+<a href="#db-advanced">Advanced DB</a></nav>
 <div class="wrap">
 
 <section id="mental-model">
@@ -384,26 +479,46 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </div>
 <footer>DATABASES · POSTGRESQL · MONGODB · DYNAMODB · CASSANDRA · MANISH-ALMANAC</footer>
 <script>function toggle(el){var item=el.parentElement;var isOpen=item.classList.contains('open');document.querySelectorAll('.faq.open').forEach(function(f){f.classList.remove('open');});if(!isOpen)item.classList.add('open');}</script>
-</body></html>
+
+<section id="db-advanced">
+  <div class="sec-tag">10 · Advanced DB Topics</div>
+  <h2>The database internals that separate senior engineers in interviews</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">B-Tree vs LSM Tree<br>— The Fundamental Split</div><div class="concept-def"><strong>B-Tree: optimised for reads. LSM Tree: optimised for writes. Every major DB chooses one.</strong></p><p><strong>B-Tree (PostgreSQL, MySQL)</strong>: data stored in a balanced tree on disk. Reads: O(log N) — traverse tree to find data. Writes: random I/O — find the correct leaf node, write in place. At scale: random writes cause "write amplification" (each write updates the B-Tree index). Great for: frequent reads, mixed read-write, OLTP with read-heavy patterns.</p><p><strong>LSM Tree (Cassandra, RocksDB, LevelDB)</strong>: writes go to an in-memory buffer (MemTable) first — always sequential. MemTable flushed to SSTable on disk when full. Background compaction merges SSTables. Reads: must check MemTable + every SSTable level (mitigated by Bloom filters). Great for: write-heavy workloads (IoT, logging, time-series).
+        <span class="concept-note muted">Write amplification: B-Tree writes amplify by 2–10× (update the page + write-ahead log). LSM writes amplify by 10–30× during compaction. But LSM writes are sequential (fast SSD I/O) vs B-Tree random writes. Net effect: LSM is faster for write throughput on modern SSDs.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Zero-Downtime Schema<br>Migration</div><div class="concept-def"><strong>Expand-Contract pattern: never ALTER TABLE on a live table with millions of rows.</strong><br>
+      Example: rename column <code>user_name</code> → <code>display_name</code> on 100M row table.</p><p><strong>Step 1 — Expand</strong>: <code>ALTER TABLE users ADD COLUMN display_name VARCHAR(255)</code>. PostgreSQL 11+: instant (no table rewrite for nullable columns). Start writing BOTH columns in application code.</p><p><strong>Step 2 — Backfill</strong>: background job: <code>UPDATE users SET display_name = user_name WHERE display_name IS NULL LIMIT 1000</code>. Repeat with 100ms sleep between batches. Runs in background for hours — zero user impact.</p><p><strong>Step 3 — Switch</strong>: once backfill complete, switch reads to display_name. Deploy. Verify for 1 week.</p><p><strong>Step 4 — Contract</strong>: <code>ALTER TABLE users DROP COLUMN user_name</code>. Done.
+        <span class="concept-note good">Tools: gh-ost (GitHub's online schema migration for MySQL), pgroll (Postgres), Liquibase/Flyway for migration management.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Read Replica Lag —<br>Detection & Handling</div><div class="concept-def"><strong>Replica lag is the delay between a write on the primary and it being visible on a replica.</strong><br>
+      Measuring lag: <code>SHOW SLAVE STATUS</code> → Seconds_Behind_Master. Or: write a heartbeat row to primary every second, read it from replica, compare timestamps. Alert if lag > 5 seconds.<br>
+      Causes: replica on underpowered hardware, long-running transactions on primary holding replication slot, high write throughput saturating replica's single-threaded replay (PostgreSQL parallel apply helps).</p><p><strong>Read-your-own-writes with replicas</strong>: after a write, subsequent reads must go to the primary (or a replica that has caught up). Pattern: track the LSN (log sequence number) of the last write per session. Before reading from a replica, verify it has replayed up to that LSN. If not: route to primary.
+        <span class="concept-note warn">⚠ Common bug: user updates their profile → reads from replica → sees old data → "the update didn't work!" → contacts support. Always route reads to primary for a few seconds after a user-visible write.</span></div></div>
+    <div class="concept-row"><div class="concept-term">DynamoDB Hot Partition<br>Problem & Solutions</div><div class="concept-def"><strong>DynamoDB shards data by partition key. A "hot" partition key sends all traffic to one shard.</strong><br>
+      Example: <code>partition_key = user_id</code>, but user:123 is a celebrity with 50M followers. All writes for user:123 go to one DynamoDB partition. That partition has a throughput limit of 3,000 RCUs / 1,000 WCUs. Exceeded = throttling errors.</p><p><strong>Solutions:</strong><br>
+      (1) <strong>Key sharding</strong>: append a random suffix to the partition key: <code>user:123#1</code>, <code>user:123#2</code>, ..., <code>user:123#10</code>. Writes distributed across 10 partitions. Reads: query all 10 suffixes + merge. Cost: 10× read units for hot keys.<br>
+      (2) <strong>DynamoDB Adaptive Capacity</strong>: automatically redistributes capacity across partitions. Enables a single partition to use up to 2× its provisioned throughput for a short burst. Handles temporary spikes but not sustained hot keys.<br>
+      (3) <strong>Application-level caching</strong>: cache hot partition reads in Redis. Dramatically reduces RCU consumption for the hot partition.</div></div>
+  </div>
+</section>
 <section id="concepts-db">
   <div class="sec-tag">08 · Concepts Deep Dive</div>
   <h2>The database internals every interviewer probes</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">B-Tree Index</div><div class="concept-def"><strong>The default index structure in PostgreSQL and MySQL. Balanced tree, O(log N) read/write.</strong><br>
-      Nodes store sorted keys + pointers to child nodes or rows. Range queries efficient: scan leaf nodes sequentially. Updates maintain balance via splits and merges.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Excellent for: equality lookups, range scans, ORDER BY, multi-column indexes. The right default for 90% of indexing needs.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Write amplification on updates — every write may trigger re-balancing. LSM trees (Cassandra, RocksDB) are better for write-heavy workloads.</span></div></div>
+      Nodes store sorted keys + pointers to child nodes or rows. Range queries efficient: scan leaf nodes sequentially. Updates maintain balance via splits and merges.
+        <span class="concept-note good">✓ Excellent for: equality lookups, range scans, ORDER BY, multi-column indexes. The right default for 90% of indexing needs.</span>
+      <span class="concept-note warn">⚠ Write amplification on updates — every write may trigger re-balancing. LSM trees (Cassandra, RocksDB) are better for write-heavy workloads.</span></div></div>
     <div class="concept-row"><div class="concept-term">LSM Tree<br>(Log-Structured Merge)</div><div class="concept-def"><strong>Write-optimised tree: writes always go to an in-memory buffer (memtable), then sequential disk writes (SSTables). Used by Cassandra, RocksDB, LevelDB.</strong><br>
-      Write: append to WAL + write to memtable (in-memory sorted tree). Memtable flushes to SSTable on disk when full. Background compaction merges SSTables.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Sequential writes only → 10–100x faster writes than B-Tree on spinning disks. Even on SSDs: fewer random writes = better endurance. Used for: Cassandra, ClickHouse MergeTree, RocksDB (used by MyRocks, TiKV).</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Read amplification: must check multiple SSTables for a key (fixed with Bloom filters). Space amplification during compaction.</span></div></div>
+      Write: append to WAL + write to memtable (in-memory sorted tree). Memtable flushes to SSTable on disk when full. Background compaction merges SSTables.
+        <span class="concept-note good">✓ Sequential writes only → 10–100x faster writes than B-Tree on spinning disks. Even on SSDs: fewer random writes = better endurance. Used for: Cassandra, ClickHouse MergeTree, RocksDB (used by MyRocks, TiKV).</span>
+      <span class="concept-note warn">⚠ Read amplification: must check multiple SSTables for a key (fixed with Bloom filters). Space amplification during compaction.</span></div></div>
     <div class="concept-row"><div class="concept-term">MVCC<br>(Multi-Version Concurrency)</div><div class="concept-def"><strong>PostgreSQL and MySQL InnoDB use MVCC to allow readers and writers to not block each other.</strong><br>
-      Every write creates a new version of the row with a transaction timestamp. Readers see the consistent snapshot from when their transaction started — never see uncommitted data, never blocked by writers.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ No reader-writer locking. Long-running queries do not block inserts/updates. The foundation of Postgres's excellent read performance under concurrent writes.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Dead tuples accumulate — old row versions must be cleaned up by VACUUM. High write volume without VACUUM → table bloat → performance degradation.</span></div></div>
+      Every write creates a new version of the row with a transaction timestamp. Readers see the consistent snapshot from when their transaction started — never see uncommitted data, never blocked by writers.
+        <span class="concept-note good">✓ No reader-writer locking. Long-running queries do not block inserts/updates. The foundation of Postgres's excellent read performance under concurrent writes.</span>
+      <span class="concept-note warn">⚠ Dead tuples accumulate — old row versions must be cleaned up by VACUUM. High write volume without VACUUM → table bloat → performance degradation.</span></div></div>
     <div class="concept-row"><div class="concept-term">Connection Pooling</div><div class="concept-def"><strong>PostgreSQL spawns one OS process per connection. 1,000 connections = 1,000 processes = severe memory and context-switching overhead.</strong><br>
-      PgBouncer in transaction-mode pooling: application connects to PgBouncer (thousands of connections OK). PgBouncer maintains a pool of 50–100 real PostgreSQL connections. Real connection only held during an active transaction.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ 1,000 app connections → 50 real DB connections. Reduces memory from ~50MB/connection to near-zero overhead for idle connections. Standard for any PostgreSQL production deployment.</span></div></div>
+      PgBouncer in transaction-mode pooling: application connects to PgBouncer (thousands of connections OK). PgBouncer maintains a pool of 50–100 real PostgreSQL connections. Real connection only held during an active transaction.
+        <span class="concept-note good">✓ 1,000 app connections → 50 real DB connections. Reduces memory from ~50MB/connection to near-zero overhead for idle connections. Standard for any PostgreSQL production deployment.</span></div></div>
   </div>
 
   <div class="step-block">
@@ -439,8 +554,8 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   </div>
   <div class="concept-grid" style="margin-top:16px;">
     <div class="concept-row"><div class="concept-term">Write-Ahead Log<br>(WAL)</div><div class="concept-def"><strong>Every write in PostgreSQL is first written to the WAL before the actual data pages are modified.</strong><br>
-      On crash: replay the WAL from the last checkpoint to recover all committed transactions. This is why PostgreSQL can guarantee durability (D in ACID) without fsyncing every data page on every write.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ WAL is also used for replication: streaming replication sends WAL records to replicas in real time. And for CDC: Debezium reads the WAL to capture every insert/update/delete for streaming to Kafka.</span></div></div>
+      On crash: replay the WAL from the last checkpoint to recover all committed transactions. This is why PostgreSQL can guarantee durability (D in ACID) without fsyncing every data page on every write.
+        <span class="concept-note good">✓ WAL is also used for replication: streaming replication sends WAL records to replicas in real time. And for CDC: Debezium reads the WAL to capture every insert/update/delete for streaming to Kafka.</span></div></div>
   <div class="sd-example" style="margin-top:16px;">
     <div class="sd-example-head"><div class="sd-example-title">Uber — Database-per-Service Architecture</div><span class="sd-example-tag">MICROSERVICES · POLYGLOT</span></div>
     <div class="sd-example-body">
@@ -451,14 +566,14 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   </div>
     <div class="concept-row"><div class="concept-term">DynamoDB Single-Table<br>Design</div><div class="concept-def"><strong>DynamoDB is designed for one table per application — not one table per entity like SQL.</strong><br>
       All entities (users, orders, products, sessions) coexist in one table with different partition keys. Overloaded attributes: the same attribute name means different things per entity type.<br>
-      Access patterns must be designed upfront: each GSI (Global Secondary Index) is a pre-planned access pattern. Adding a new access pattern after launch may require a new GSI or table migration.<br>
-      <span style="color:#5a5848;font-size:12.5px;">This is the hardest part of DynamoDB. The "working backwards from access patterns" discipline is what separates DynamoDB experts from novices.</span></div></div>
+      Access patterns must be designed upfront: each GSI (Global Secondary Index) is a pre-planned access pattern. Adding a new access pattern after launch may require a new GSI or table migration.
+        <span class="concept-note muted">This is the hardest part of DynamoDB. The "working backwards from access patterns" discipline is what separates DynamoDB experts from novices.</span></div></div>
     <div class="concept-row"><div class="concept-term">MongoDB Change<br>Streams</div><div class="concept-def"><strong>MongoDB change streams allow applications to subscribe to all data changes in real time — similar to PostgreSQL WAL-based CDC.</strong><br>
-      Use for: real-time notifications (user's order status changed → push notification), cache invalidation (MongoDB write → invalidate Redis cache), event sourcing (stream all changes to Kafka for downstream consumers).<br>
-      <span style="color:#5a5848;font-size:12.5px;">Change streams require a replica set (at least 3-node), not standalone MongoDB. Each change event includes the full document before and after the change.</span></div></div>
+      Use for: real-time notifications (user's order status changed → push notification), cache invalidation (MongoDB write → invalidate Redis cache), event sourcing (stream all changes to Kafka for downstream consumers).
+        <span class="concept-note muted">Change streams require a replica set (at least 3-node), not standalone MongoDB. Each change event includes the full document before and after the change.</span></div></div>
     <div class="concept-row"><div class="concept-term">Cassandra Tombstones</div><div class="concept-def"><strong>Cassandra "deletes" are actually tombstone markers — the data is not removed immediately.</strong><br>
-      Delete a row: Cassandra writes a tombstone (a deletion marker with a timestamp). Compaction eventually removes both the tombstone and the original data when tombstone gc_grace_seconds (default 10 days) expires.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Tombstone accumulation: high-delete workloads (e.g., TTL expiry, message queues) can create millions of tombstones that Cassandra must scan on every read. Monitor tombstone warnings in query logs. Anti-pattern: using Cassandra as a queue where messages are constantly deleted.</span></div></div>
+      Delete a row: Cassandra writes a tombstone (a deletion marker with a timestamp). Compaction eventually removes both the tombstone and the original data when tombstone gc_grace_seconds (default 10 days) expires.
+        <span class="concept-note warn">⚠ Tombstone accumulation: high-delete workloads (e.g., TTL expiry, message queues) can create millions of tombstones that Cassandra must scan on every read. Monitor tombstone warnings in query logs. Anti-pattern: using Cassandra as a queue where messages are constantly deleted.</span></div></div>
   </div>
 </section>
 
@@ -490,3 +605,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>Read path on node failure (QUORUM consistency):</strong> Coordinator requests from 2 of 3 replicas. If the healthy 2 respond, read succeeds. Read repair: if those 2 have inconsistent data, Cassandra repairs the stale one asynchronously. If only 1 replica is available (2 nodes down): QUORUM fails — you need to drop to ONE consistency level to keep reading (at the cost of possible stale data).<br><br>
   <strong>The key point:</strong> with RF=3 and QUORUM, you can lose 1 node (out of 3) without any service impact. With RF=3 and ONE consistency, you can lose 2 nodes. Design your RF and consistency level based on your availability and consistency requirements.</div></div>
 </section>
+
+</div>
+</body>
+</html>
