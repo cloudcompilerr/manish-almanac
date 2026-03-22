@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>API Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
+.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
+h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
+h1 .acc{color:#e8b84b;}
+.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
+.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
+.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
+h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.steps{list-style:none;margin:16px 0;counter-reset:s;}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
+.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
+.blist{list-style:none;margin:12px 0;}
+.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
+.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
+.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
+.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
+.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
+.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
+.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
+.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
+.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
+.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
+.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
+.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
+.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
+.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
+.faq-q:hover{background:var(--surface);}
+.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
+.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
+.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
+.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
+.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
+.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.dtree-node:last-child{border:none;}
+.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
+.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
+.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
+.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
+.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
+.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
+footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>API Design<br><em>REST principles, pagination patterns, versioning, idempotency, GraphQL schema design, error standards — building APIs that last.</em></h1>
+  <p class="hero-sub">REST principles, pagination patterns, versioning, idempotency, GraphQL schema design, error standards — building APIs that last.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">REST</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Pagination</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Idempotency</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Versioning</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">GraphQL</span></div>
+</div></div>
+<nav class="nav"><a href="#rest-design">REST Design</a><a href="#graphql-grpc-design">GraphQL/gRPC</a><a href="#sd-api">Examples</a><a href="#followups-api">Follow-ups</a></nav>
+<div class="wrap">
+<section id="rest-design">
+  <div class="sec-tag">00 · REST API Design</div>
+  <h2>What makes an API genuinely good — the principles interviewers test</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Resource Naming</div><div class="concept-def"><strong>URLs are nouns, HTTP methods are verbs. Never put verbs in URLs.</strong><br>
+      Bad: <code>POST /getUser</code>, <code>POST /deleteOrder</code>, <code>GET /createProduct</code><br>
+      Good: <code>GET /users/{id}</code>, <code>DELETE /orders/{id}</code>, <code>POST /products</code><br>
+      Collections vs singletons: <code>/users</code> (collection), <code>/users/123</code> (singleton), <code>/users/123/orders</code> (nested resource).<br>
+      <span style="color:#5a5848;font-size:12.5px;">Rule: if you have a verb in your URL path, you're doing it wrong. The HTTP method IS the verb. Exception: actions that don't map to CRUD: <code>POST /orders/123/cancel</code> — "cancel" is an action, this is acceptable.</span></div></div>
+    <div class="concept-row"><div class="concept-term">HTTP Status Codes<br>That Matter</div><div class="concept-def"><strong>Use the right status code — clients depend on them for error handling.</strong><br>
+      <code>200 OK</code> — success with body. <code>201 Created</code> — resource created (include Location header). <code>204 No Content</code> — success, no body (DELETE, UPDATE with no return).<br>
+      <code>400 Bad Request</code> — client sent invalid data (validation error). <code>401 Unauthorized</code> — not authenticated. <code>403 Forbidden</code> — authenticated but not authorised. <code>404 Not Found</code> — resource doesn't exist. <code>409 Conflict</code> — state conflict (duplicate create, version mismatch). <code>422 Unprocessable Entity</code> — syntactically valid but semantically wrong.<br>
+      <code>429 Too Many Requests</code> — rate limited. <code>500 Internal Server Error</code> — server bug. <code>503 Service Unavailable</code> — overloaded/down. <code>504 Gateway Timeout</code> — upstream timeout.<br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Never return 200 with an error in the body (<code>{"status": "error", "code": 404}</code>). This breaks every HTTP client library and monitoring tool that interprets status codes.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Pagination Patterns</div><div class="concept-def"><strong>Three patterns — choose based on your use case:</strong><br>
+      <strong>Offset pagination</strong>: <code>GET /posts?offset=40&limit=20</code>. Simple. SQL: <code>LIMIT 20 OFFSET 40</code>. Problem: if items are inserted at the top while paginating, you skip items or see duplicates on the next page. O(N) DB scan for high offsets.<br>
+      <strong>Cursor pagination</strong>: <code>GET /posts?cursor=post_id_xyz&limit=20</code>. Cursor = encoded last seen ID or timestamp. SQL: <code>WHERE id < cursor ORDER BY id DESC LIMIT 20</code>. Stable — insertions don't cause skipping. O(log N) with index. Used by: Twitter, Facebook, Instagram.<br>
+      <strong>Keyset pagination</strong>: similar to cursor but uses multiple columns for stable sort: <code>WHERE (created_at, id) &lt; (last_seen_at, last_seen_id)</code>. Best for time-ordered feeds.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Always use cursor pagination for user-facing feeds. Offset pagination is acceptable for admin panels with small datasets where page drift doesn't matter.</span></div></div>
+    <div class="concept-row"><div class="concept-term">API Versioning</div><div class="concept-def"><strong>Three strategies — each with different trade-offs:</strong><br>
+      <strong>URL versioning</strong>: <code>/v1/users</code>, <code>/v2/users</code>. Most common, most visible. Easy to test, route, and cache. Downside: proliferates URL space, clients must explicitly upgrade.<br>
+      <strong>Header versioning</strong>: <code>Accept: application/vnd.myapi.v2+json</code>. Clean URLs. Harder to test in browser. Less discoverable.<br>
+      <strong>Query parameter</strong>: <code>/users?version=2</code>. Simplest for client implementation. Clutters URLs. Harder to cache (version becomes a cache key dimension).<br>
+      <span style="color:#5a5848;font-size:12.5px;">Production recommendation: URL versioning for major breaking changes. Additive changes (new fields) never require versioning — just add the field. Remove fields only after deprecation period (6–12 months) with Deprecation header warnings.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Idempotency</div><div class="concept-def"><strong>Making the same request multiple times has the same effect as making it once. Critical for safe retries.</strong><br>
+      GET, PUT, DELETE are idempotent by definition. POST is not — calling <code>POST /orders</code> twice creates two orders.<br>
+      <strong>Making POST idempotent</strong>: client generates a UUID idempotency key per request. Sends as <code>Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000</code>. Server stores (idempotency_key → response) in Redis for 24h. Duplicate request returns stored response without re-executing.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Stripe, Razorpay, Braintree all require idempotency keys on payment APIs. Network failures + retries without idempotency = double charges. This is non-negotiable for financial APIs.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Error Response<br>Standard</div><div class="concept-def"><strong>Consistent error format makes client code predictable. Use RFC 7807 "Problem Details":</strong><br>
+      <code>{"type": "https://api.example.com/errors/validation-failed",</code><br>
+      <code> "title": "Validation Failed",</code><br>
+      <code> "status": 422,</code><br>
+      <code> "detail": "The 'email' field must be a valid email address.",</code><br>
+      <code> "instance": "/users/register",</code><br>
+      <code> "errors": [{"field": "email", "message": "Invalid format"}]}</code><br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Machine-readable type URI (clients can branch on error type). Human-readable detail. Field-level errors for form validation. Consistent structure across all endpoints.</span></div></div>
+  </div>
+</section>
+
+<section id="graphql-grpc-design">
+  <div class="sec-tag">01 · GraphQL & gRPC Design</div>
+  <h2>When REST is the wrong tool</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">GraphQL Schema<br>Design</div><div class="concept-def"><strong>The schema is a contract between frontend and backend. Design it around the UI's data needs, not the DB schema.</strong><br>
+      Bad: expose DB tables as types directly. Frontend gets all fields even if it needs two.<br>
+      Good: define types around what the UI renders. <code>type FeedItem { id, author { name, avatar }, content, likeCount, commentCount }</code> — exactly what the feed card needs, nothing more.<br>
+      Mutations: use input types. <code>mutation CreatePost($input: CreatePostInput!) { createPost(input: $input) { id, createdAt } }</code> — strongly typed, validated automatically.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Schema-first development: define the schema, generate client types (TypeScript) and server stubs. Frontend and backend can develop in parallel against the schema contract.</span></div></div>
+    <div class="concept-row"><div class="concept-term">gRPC Proto Design</div><div class="concept-def"><strong>Proto files define the contract. Design service boundaries, not object maps.</strong><br>
+      Bad proto: thin wrapper around DB model — <code>service UserService { rpc GetUser(GetUserRequest) returns (User); }</code> where User mirrors DB table exactly.<br>
+      Good proto: service-oriented messages — <code>service RecommendationService { rpc GetRecommendedFeed(FeedRequest) returns (FeedResponse); }</code> where FeedResponse contains exactly what the consumer needs, assembled from multiple data sources.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Field numbers never change once deployed. Adding fields is always backward compatible. Removing fields requires deprecation. Use <code>reserved</code> keyword for removed field numbers to prevent accidental reuse.</span></div></div>
+  </div>
+</section>
+
+<section id="sd-api">
+  <div class="sec-tag">02 · System Design Examples</div>
+  <h2>API design decisions in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Stripe API Design</div><span class="sd-example-tag">GOLD STANDARD REST</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">RESOURCE DESIGN</div><div class="choice-val">Stripe's API is widely considered the best-designed REST API. Resources: <code>/customers</code>, <code>/payment_intents</code>, <code>/charges</code>, <code>/subscriptions</code>. Every noun is a resource. Every action is an HTTP verb. Complex flows use sub-resources: <code>POST /payment_intents/{id}/confirm</code>.</div></div>
+      <div class="choice-row"><div class="choice-label">IDEMPOTENCY</div><div class="choice-val">Every mutating API requires an <code>Idempotency-Key</code> header. Network failures are safe to retry. Stripe stores (key → result) for 24h. Retry with same key: get same result. Without idempotency key: Stripe still accepts the request but warns in the response.</div></div>
+      <div class="choice-row"><div class="choice-label">PAGINATION</div><div class="choice-val">Cursor-based: <code>GET /charges?starting_after=ch_abc123&limit=20</code>. Stable even as new charges are created. <code>has_more: true</code> in response. Cursor is the ID of the last item in the current page. No total count (too expensive to compute).</div></div>
+      <div class="choice-row"><div class="choice-label">VERSIONING</div><div class="choice-val">Date-based versioning: <code>Stripe-Version: 2023-10-16</code> header. Breaking changes only on new API version dates. Your integration is pinned to the version when you first called the API. You explicitly opt in to new versions when ready. This is more flexible than URL versioning for rapid iteration.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups-api">
+  <div class="sec-tag">03 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle breaking API changes when clients are out of your control?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>The Postel's Law / Robustness Principle: be conservative in what you send, be liberal in what you accept.</strong><br><br>
+  <strong>Non-breaking changes</strong> (always safe): add new optional fields to responses, add new optional request parameters, add new endpoints, add new enum values (if clients use a default/fallback for unknown values).<br><br>
+  <strong>Breaking changes</strong> (require versioning): remove fields, rename fields, change field types, change semantics of existing fields, make optional fields required.<br><br>
+  <strong>Migration path</strong>: (1) Deprecate the old field — add it to a deprecation list, return <code>Deprecation: Sat, 01 Jan 2026 00:00:00 GMT</code> header on responses that include the field. (2) Monitor usage — track which clients still use the deprecated field (via API analytics). (3) Notify affected clients with sufficient notice (6–12 months for external APIs). (4) Remove after sunset date.<br><br>
+  <strong>API changelog</strong>: maintain a public changelog. Every change is documented. Clients can subscribe to be notified. GitHub's API changelog is the gold standard example.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you design an API for a mobile app that has users on old versions?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Mobile apps cannot be force-updated — some users stay on old versions for months or years. API design must account for this.</strong><br><br>
+  <strong>Minimum supported version</strong>: define a policy (e.g., support the last 3 major versions). When a version falls outside support, return <code>410 Gone</code> or a specific error code that the app translates to "please update." Use <code>Min-Version</code> header in responses to signal when an upgrade is needed.<br><br>
+  <strong>Additive-only changes</strong>: never remove or rename fields. Old clients ignore new fields (good API clients are written this way). Add new fields alongside old ones during transition: <code>{"user_name": "alice", "display_name": "Alice Smith"}</code> — old clients use user_name, new clients use display_name.<br><br>
+  <strong>Feature flags via API</strong>: instead of versioning, return capability flags: <code>{"features": {"new_checkout": true, "dark_mode": false}}</code>. App code branches on capabilities, not version numbers. Deploy new features to specific versions or cohorts without a version bump.<br><br>
+  <strong>Version in the client header</strong>: require <code>X-App-Version: 3.4.2</code> on every request. Server-side analytics: see exactly which API clients are calling which endpoints. Know when it's safe to remove old behaviour (when 0% of requests come from versions that use it).</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between REST and HATEOAS — do you need HATEOAS?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>HATEOAS (Hypermedia As The Engine Of Application State) is the "fully RESTful" constraint that almost no real-world API implements.</strong><br><br>
+  HATEOAS means: each response contains links to related actions. The client discovers the API dynamically through these links rather than hard-coding URLs.<br><br>
+  Example: <code>GET /orders/123</code> returns:<br>
+  <code>{"id": 123, "status": "pending", "_links": {"self": "/orders/123", "cancel": "/orders/123/cancel", "pay": "/orders/123/payment"}}</code><br><br>
+  The client doesn't need to know the URL for cancelling — it reads it from the response.<br><br>
+  <strong>Why almost no one uses it</strong>: real clients (mobile apps, SPAs) hard-code the API URLs anyway. The dynamic discovery adds complexity without real benefit for most APIs. HATEOAS is theoretically elegant but pragmatically unused in production systems at FAANG.<br><br>
+  <strong>The interview answer</strong>: "I'm aware of HATEOAS as the full REST constraint, but in practice I'd implement REST Level 2 (resources + HTTP verbs + status codes) which is what every major API uses. I'd add HATEOAS only if clients genuinely need dynamic discovery — which is rare."</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you design pagination for a real-time feed where items are constantly being added?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>The core problem: offset-based pagination breaks when new items are inserted at the top.</strong><br><br>
+  Scenario: user requests page 1 (items 1-20). 5 new items arrive. User requests page 2 with offset=20 — but now items 1-5 are new, so offset=20 returns items 16-35 of the original list. Items 16-20 appear on both pages. Items 21-25 were skipped.<br><br>
+  <strong>Solution: cursor-based pagination with a stable cursor</strong>.<br>
+  Initial load: <code>GET /feed?limit=20</code> → returns items + <code>next_cursor: "2026-03-21T14:23:01Z_post_789"</code> (timestamp + ID of last item).<br>
+  Next page: <code>GET /feed?cursor=2026-03-21T14:23:01Z_post_789&limit=20</code> → <code>WHERE (created_at, id) &lt; (cursor_time, cursor_id) ORDER BY created_at DESC</code>.<br>
+  New items arriving: they have timestamps AFTER the initial load. They don't affect pagination of older items. New items appear when the user pulls-to-refresh (separate from pagination).<br><br>
+  <strong>The "new items" indicator</strong>: on pull-to-refresh, return items newer than the cursor used for the FIRST page load. Show "X new items" banner. User taps → page reloads from the top. This is exactly how Twitter, Instagram, and LinkedIn handle feed pagination.</div></div>
+</section></div>
+<div class="footer">API DESIGN · REST · PAGINATION · VERSIONING · IDEMPOTENCY · GRAPHQL · GRPC · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>

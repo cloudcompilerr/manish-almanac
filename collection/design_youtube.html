@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Design YouTube</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
+.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
+h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
+h1 .acc{color:#e8b84b;}
+.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
+.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
+.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
+h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.steps{list-style:none;margin:16px 0;counter-reset:s;}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
+.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
+.blist{list-style:none;margin:12px 0;}
+.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
+.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
+.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
+.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
+.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
+.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
+.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
+.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
+.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
+.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
+.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
+.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
+.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
+.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
+.faq-q:hover{background:var(--surface);}
+.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
+.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
+.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
+.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
+.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
+.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.dtree-node:last-child{border:none;}
+.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
+.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
+.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
+.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
+.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
+.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
+footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Design YouTube<br><em>Complete system design: resumable upload, transcoding pipeline, HLS adaptive streaming, CDN architecture, view counting, recommendations.</em></h1>
+  <p class="hero-sub">Complete system design: resumable upload, transcoding pipeline, HLS adaptive streaming, CDN architecture, view counting, recommendations.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">HLS Streaming</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Transcoding</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">CDN</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Adaptive Bitrate</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Recommendations</span></div>
+</div></div>
+<nav class="nav"><a href="#requirements">Requirements</a><a href="#architecture">Architecture</a><a href="#followups-yt">Follow-ups</a></nav>
+<div class="wrap">
+<section id="requirements">
+  <div class="sec-tag">00 · Requirements</div>
+  <h2>Scope and scale</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Functional</div><div class="concept-def">Upload video. Process/transcode to multiple resolutions. Stream video adaptively. Search by title/description. Recommendations. Like/dislike, comments. Channel subscriptions. View count.</div></div>
+    <div class="concept-row"><div class="concept-term">Non-Functional</div><div class="concept-def">2B users, 500 hours of video uploaded/minute. 1B hours watched/day. Video upload: resume on failure. Streaming: adaptive bitrate, &lt;2s start time. Global delivery: &lt;50ms latency for video chunks anywhere. Availability: 99.99%.</div></div>
+    <div class="concept-row"><div class="concept-term">Estimation</div><div class="concept-def">Upload: 500 hrs/min = 8.3 hrs/sec. At 1GB/hr for 720p source: 8.3 GB/sec ingest. Storage: 8.3 GB/sec × 31M sec/year = ~260 PB/year raw. After transcoding to 5 resolutions + compression: ~520 PB/year total. CDN bandwidth: 1B hrs watched/day at 2Mbps avg = 2Pbps/day = ~23 Gbps sustained.</div></div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="sec-tag">01 · Architecture</div>
+  <h2>Upload pipeline, transcoding, and delivery</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Upload Pipeline</div><div class="concept-def"><strong>Resumable upload → GCS → transcoding pipeline.</strong><br>
+      Client splits video into 5MB chunks. Pre-signed GCS upload URL per chunk. Chunk uploads in parallel (5 concurrent). If network drops: resume from last successful chunk (using HTTP Range header). On completion: GCS event triggers transcoding pipeline.<br>
+      Why chunked? A 2GB video uploaded as one HTTP request fails on any network interruption. Chunked upload with checksum per chunk gives resumability. YouTube uses their own resumable upload protocol; the open standard is tus.io.</div></div>
+    <div class="concept-row"><div class="concept-term">Transcoding Pipeline</div><div class="concept-def"><strong>GCS upload complete → Pub/Sub event → Transcoding Cluster → 5 quality variants + thumbnails → back to GCS.</strong><br>
+      Source video → split into segments → parallel encode: 360p (1Mbps), 720p (4Mbps), 1080p (8Mbps), 1440p (16Mbps), 4K (25Mbps). Each quality encoded independently in parallel across a cluster. GPU instances for H.264/VP9 encoding. Also: extract audio track (AAC), generate thumbnails every 10 seconds, extract metadata.<br>
+      Time to availability: simple 5-min video: 2–5 minutes to transcode to 720p (first available). 4K takes 30–60 minutes for a 2-hour movie. YouTube shows 360p first, upgrades to 4K as transcoding completes.</div></div>
+    <div class="concept-row"><div class="concept-term">HLS Streaming</div><div class="concept-def"><strong>Video split into 2-second segments. Manifest file (.m3u8) lists all segments per quality.</strong><br>
+      Each quality variant has a manifest: <code>720p.m3u8</code> → lists URLs for seg_001.ts, seg_002.ts, ... Player downloads the manifest → downloads segments sequentially, fetching the next one while playing the current one (2s buffer ahead). Adaptive: if bandwidth drops, player switches to 360p manifest seamlessly.<br>
+      Segment caching: each 2-second segment is an independent file in GCS → served through Cloud CDN. Popular videos: CDN cache hit rate for the first 60 segments (first 2 minutes) exceeds 99% — that's where everyone starts watching.</div></div>
+    <div class="concept-row"><div class="concept-term">CDN Architecture</div><div class="concept-def"><strong>Google's own CDN (not third-party): cache servers co-located in ISPs worldwide.</strong><br>
+      Popular videos pre-pushed to ISP cache servers before peak viewing hours (midnight local time). User watches "Gangnam Style" in Mumbai → served from Jio's cache server in the same data center as Jio's users. Zero long-distance network traffic.<br>
+      Long-tail videos: served from GCS origin. GCS → Cloud CDN regional cache → user. Most videos are long-tail (watched &lt;10 times) — CDN caching is not worth it for these. Origin serve is fine for the occasional viewer.</div></div>
+    <div class="concept-row"><div class="concept-term">View Count</div><div class="concept-def"><strong>Approximate count acceptable. Write-behind pattern to prevent DB overload.</strong><br>
+      Each view: <code>INCR view:count:{video_id}</code> in Redis. Background job: flush to BigQuery every 60 seconds (batch of all incremented keys). Display: read from Redis for hot videos (fresh), BigQuery for analytics dashboards.<br>
+      Why BigQuery? YouTube needs complex view analytics: views by country, by device, by time-of-day, cohort retention. BigQuery handles these analytical queries on trillions of view events. Redis is for the live counter only.</div></div>
+  </div>
+</section>
+
+<section id="followups-yt">
+  <div class="sec-tag">02 · Follow-ups</div>
+  <h2>The questions your interviewer will ask</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does YouTube's recommendation system work at a high level?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Two-stage: candidate generation (narrow to thousands) → ranking (score and order).</strong><br><br>
+  Stage 1 — Candidate Generation: for each user, generate a few hundred candidate videos from: (a) collaborative filtering (users similar to you watched these), (b) content-based filtering (similar to videos you've watched), (c) trending in your language/region, (d) subscribed channels' recent uploads. This is done with approximate nearest neighbour search in an embedding space. Each video and user has a dense vector embedding (trained by a neural network). Find videos whose embeddings are close to the user's interest embedding.<br><br>
+  Stage 2 — Ranking: a deep neural network scores each candidate on: predicted watch time (not just click probability), freshness, diversity (don't show all music videos), satisfaction signals (like/dislike rate, surveys). Top-25 are shown on the home page.<br><br>
+  The infrastructure: embeddings stored in a vector index (FAISS, ScaNN). Candidate generation runs in ~50ms on pre-computed embeddings. Ranking neural network inference: ~100ms for 500 candidates. Total recommendation latency: ~200ms. Embeddings updated nightly from batch training jobs on YouTube's watch history.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle video seeking — jumping to 45:30 in a 2-hour video?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>HLS segmentation makes seeking O(1). Each segment is an independent file.</strong><br><br>
+  The manifest file (.m3u8) contains the start time of each segment: seg_001.ts (0s), seg_002.ts (2s), seg_003.ts (4s)... To seek to 45:30: calculate which segment contains that timestamp → seg_1395.ts (1395th segment at 2s each). Player discards buffered segments. Fetches seg_1395.ts and continues from there.<br><br>
+  The player doesn't need to download the video from the beginning — it directly fetches the segment at the desired timestamp. This is why YouTube seeking is instantaneous: it's just a different HTTP GET to a CDN, not a stream seek operation on the server.<br><br>
+  Byte range requests: alternatively, for progressive download (MP4 without HLS segmentation), the HTTP Range header allows seeking: <code>Range: bytes=45000000-</code>. Server (or CDN) returns from that byte offset. CDN must support range requests — all major CDNs do. HLS is preferred for adaptive bitrate; range requests are simpler for short videos.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you detect duplicate video uploads (copyright infringement)?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Content ID system: generate a fingerprint of every video, match against a database of copyrighted content.</strong><br><br>
+  Audio fingerprinting: extract audio features (frequency spectrum over time) → generate a compact fingerprint (Chromaprint algorithm). One 3-minute song → a 50-byte fingerprint. Match against database of 100M copyrighted songs → perceptual hash similarity search. Works even if the audio is re-encoded, pitch-shifted slightly, or has background noise.<br><br>
+  Video fingerprinting: sample frames periodically → generate perceptual hash (pHash) per frame → compare against fingerprint database. Works even if video is cropped, watermarked, or colour-adjusted.<br><br>
+  The database: ~100M copyrighted works × 50-byte fingerprint = ~5GB. Fits in RAM for brute-force similarity search. Or use ANN (approximate nearest neighbour) with FAISS for faster lookup.<br><br>
+  Timing: fingerprinting happens during the transcoding pipeline. Video available to public only after fingerprint check completes (&lt;5 minutes). If a match is found: content owner is notified. They choose: block, monetise (ads revenue split), or allow.</div></div>
+</section></div>
+<div class="footer">DESIGN YOUTUBE · FAANG SYSTEM DESIGN WALKTHROUGH · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>

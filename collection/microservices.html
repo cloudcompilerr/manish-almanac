@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Microservices Patterns</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
+.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
+h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
+h1 .acc{color:#e8b84b;}
+.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
+.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
+.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
+h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.steps{list-style:none;margin:16px 0;counter-reset:s;}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
+.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
+.blist{list-style:none;margin:12px 0;}
+.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
+.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
+.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
+.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
+.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
+.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
+.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
+.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
+.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
+.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
+.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
+.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
+.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
+.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
+.faq-q:hover{background:var(--surface);}
+.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
+.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
+.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
+.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
+.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
+.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.dtree-node:last-child{border:none;}
+.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
+.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
+.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
+.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
+.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
+.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
+footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Microservices Patterns<br><em>Service discovery, Saga orchestration vs choreography, Strangler Fig, Sidecar, Outbox pattern — every pattern needed to design and operate microservices at scale.</em></h1>
+  <p class="hero-sub">Service discovery, Saga orchestration vs choreography, Strangler Fig, Sidecar, Outbox pattern — every pattern needed to design and operate microservices at scale.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Saga</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Service Mesh</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Strangler Fig</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Outbox</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">BFF</span></div>
+</div></div>
+<nav class="nav"><a href="#why-micro">Why Microservices</a><a href="#sd-micro">Examples</a><a href="#followups-micro">Follow-ups</a></nav>
+<div class="wrap">
+<section id="why-micro">
+  <div class="sec-tag">00 · Why Microservices</div>
+  <h2>What microservices actually solve — and what they don't</h2>
+  <div class="analogy">
+    <div class="analogy-label">The restaurant analogy</div>
+    <div class="analogy-text">
+      A monolith is a restaurant where one chef does everything: takes orders, cooks, plates, serves, handles billing. When busy, everything slows together. If the chef is sick, the whole restaurant closes.<br><br>
+      Microservices is a restaurant with specialists: one takes orders, one cooks, one plates, one serves. Each can work at their own pace. If the dessert chef is sick, you still serve main courses. But now you need a manager (orchestrator), communication protocols between stations, and coordination — way more overhead than one chef.<br><br>
+      <strong>The lesson: microservices solve organisational and scaling problems, not technical ones. A well-written monolith is almost always simpler and faster than a poorly-designed microservices architecture.</strong>
+    </div>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Service Discovery</div><div class="concept-def"><strong>How does Service A find Service B when B's IP changes every time it restarts?</strong><br>
+      <strong>Client-side discovery</strong>: each service queries a registry (Consul, Eureka) for the addresses of its dependencies. The client does load balancing.<br>
+      <strong>Server-side discovery</strong>: the client sends requests to a load balancer or API gateway. The gateway queries the registry and routes. Client doesn't need to know about other services.<br>
+      <strong>Kubernetes DNS</strong>: every Service gets a stable DNS name (<code>payment-service.default.svc.cluster.local</code>). kube-proxy handles routing. Services never hard-code IPs — they use DNS names. This is the de-facto standard in modern architectures.</div></div>
+    <div class="concept-row"><div class="concept-term">Saga: Orchestration<br>vs Choreography</div><div class="concept-def"><strong>Two ways to coordinate multi-step distributed transactions:</strong><br>
+      <strong>Choreography</strong>: each service publishes events. Other services react to events they care about. No central coordinator. OrderService publishes OrderCreated → InventoryService listens and reserves stock → publishes StockReserved → PaymentService charges → publishes PaymentComplete → ShipmentService ships.<br>
+      <strong>Orchestration</strong>: a central saga orchestrator calls each service in sequence. If a step fails, the orchestrator calls compensating transactions. OrderSaga.execute() → call Inventory → if success, call Payment → if fail, call Inventory.rollback().<br>
+      <span style="color:#5a5848;font-size:12.5px;">Choreography: more decoupled, harder to debug ("why didn't the shipment happen?"). Orchestration: easier to understand and debug, single saga class shows the full flow. Temporal.io is the modern orchestration choice at FAANG.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Strangler Fig Pattern</div><div class="concept-def"><strong>Incrementally extract services from a monolith without a risky big-bang rewrite.</strong><br>
+      Step 1: put a facade/proxy in front of the monolith. All traffic goes through the proxy.<br>
+      Step 2: extract one capability (e.g., user authentication) into a new service. Update the proxy to route auth requests to the new service, everything else to the monolith.<br>
+      Step 3: repeat. One service at a time. The monolith shrinks. The services grow. The monolith eventually handles nothing and is decommissioned.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Used by: Amazon (2001–2010), Twitter, Shopify. No downtime. Risk is isolated to each extraction. Easy rollback (just reroute the proxy). Takes 1–3 years for a large monolith — that's fine.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Sidecar Pattern</div><div class="concept-def"><strong>Deploy a helper container alongside each service container to handle cross-cutting concerns without modifying service code.</strong><br>
+      Istio/Envoy: inject an Envoy proxy sidecar next to every service pod. The sidecar handles: mTLS encryption, distributed tracing, circuit breaking, rate limiting, retries — all without changing a single line of application code.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Cross-cutting concerns (security, observability, reliability) implemented once in the sidecar, applied uniformly across all services. New service inherits all capabilities automatically. Used by: Lyft (created Envoy), Google (created Istio), Netflix (Zuul as an API gateway sidecar).</span></div></div>
+    <div class="concept-row"><div class="concept-term">API Gateway Pattern</div><div class="concept-def"><strong>Single entry point for all client requests. Routes, transforms, and enforces policies across services.</strong><br>
+      External clients call the API gateway. Gateway handles: routing to the right service, authentication (validate JWT once at gateway, pass user identity downstream), rate limiting (per-user quotas at a single enforcement point), request transformation (translate mobile API format to internal gRPC), response aggregation (call multiple services, combine results for one client response).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Clients talk to one address. Backend services can change independently. Cross-cutting policies enforced consistently. Backend For Frontend (BFF) variant: separate gateway per client type (mobile BFF, web BFF, partner BFF) — each optimises responses for its client's needs.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Outbox Pattern</div><div class="concept-def"><strong>Guarantee that a DB write and an event publication happen atomically — or neither happens.</strong><br>
+      Problem: order service writes order to DB → publishes OrderCreated to Kafka → process crashes between the two → order exists but event never published → downstream services never know the order was placed.<br>
+      Solution: in the same DB transaction, write the order AND write an "outbox" record (a pending event). A separate outbox processor reads pending events → publishes to Kafka → marks as sent. If processor crashes: it re-reads unpublished events on restart. Exactly-once publishing via idempotency key in the event.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Atomicity between DB write and event publication without 2PC. The pattern powering reliable event-driven microservices. Tools: Debezium (CDC from DB outbox table → Kafka automatically).</span></div></div>
+  </div>
+</section>
+
+<section id="sd-micro">
+  <div class="sec-tag">01 · System Design Examples</div>
+  <h2>Microservices patterns in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Netflix Microservices Architecture</div><span class="sd-example-tag">500+ SERVICES · CHAOS ENGINEERING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">DISCOVERY</div><div class="choice-val">Netflix uses Eureka for service registration. Each service registers at startup. Client-side load balancing via Ribbon (now Envoy). Every service instance has a health check endpoint. Eureka removes unhealthy instances from the registry within 90 seconds.</div></div>
+      <div class="choice-row"><div class="choice-label">RESILIENCE</div><div class="choice-val">Hystrix (circuit breaker) on every external call. If Recommendation Service fails, fallback returns a cached/default list — users still see content. Chaos Monkey randomly kills production instances — forces engineers to design for failure. "Anything that can fail will fail" is the operating assumption.</div></div>
+      <div class="choice-row"><div class="choice-label">API GATEWAY</div><div class="choice-val">Zuul (API gateway) handles: dynamic routing, A/B testing (1% of users get new recommendation algorithm), authentication (JWT validation before any service is called), request fanout (one /home request → calls 10 services in parallel for personalised content sections).</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">E-Commerce Order Flow — Saga Orchestration</div><span class="sd-example-tag">SAGA · TEMPORAL · COMPENSATION</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">HAPPY PATH</div><div class="choice-val">User places order → OrderSaga starts → (1) Reserve inventory [InventoryService] → (2) Charge payment [PaymentService] → (3) Create shipment [ShipmentService] → (4) Send confirmation [NotificationService] → Order complete. All steps orchestrated by Temporal workflow.</div></div>
+      <div class="choice-row"><div class="choice-label">FAILURE: PAYMENT FAILS</div><div class="choice-val">Step 2 fails → Saga triggers compensations in reverse: (1) Release inventory reservation [InventoryService.release()] → (2) Send "payment failed" notification → Order marked FAILED. User sees: "Payment declined. Your item reservation has been released."</div></div>
+      <div class="choice-row"><div class="choice-label">TEMPORAL</div><div class="choice-val">Temporal.io persists saga state to a DB. If the orchestrator crashes mid-saga, it resumes exactly where it left off. Each step is idempotent — retried safely. Long-running sagas (payment pending for 24h) handled naturally as Temporal workflows can sleep for days.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups-micro">
+  <div class="sec-tag">02 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle distributed transactions in microservices — is 2PC ever appropriate?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>2PC is almost never appropriate for microservices. The Saga pattern is the right tool.</strong><br><br>
+  2PC requires a coordinator that holds locks on all participant resources until all confirm. In microservices: the coordinator must hold a DB lock on Service A, B, and C simultaneously. Service B is slow or unavailable → all locks held indefinitely → System A and C are blocked. In a distributed system where services fail independently, 2PC creates a blocking dependency that defeats the purpose of having independent services.<br><br>
+  <strong>When 2PC IS appropriate</strong>: within a single database (PostgreSQL's internal transaction manager), or when using a database with built-in distributed transaction support (Google Spanner's TrueTime-based transactions, CockroachDB). These use optimised distributed commit protocols within a controlled infrastructure — very different from cross-service 2PC.<br><br>
+  <strong>The Saga alternative</strong>: each service has a local transaction + compensating transaction. The saga orchestrates them. Failure at any step triggers compensations for already-completed steps. Eventual consistency is the price — for most business flows (order placement, user registration), this is perfectly acceptable.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you test microservices — integration tests are too slow and unit tests don't catch contract breaks?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>The testing pyramid for microservices: unit tests → contract tests → integration tests → E2E tests (minimal).</strong><br><br>
+  <strong>Contract testing (Consumer-Driven Contracts)</strong>: Pact framework. Service A (consumer) defines what it expects from Service B's API (a "contract"). Service B's test suite runs against these contracts. If Service B changes its API and breaks Service A's contract, Service B's build fails — immediately, without a full integration environment.<br>br>
+  <strong>Service virtualisation / mocks</strong>: in tests, dependencies are replaced with recorded responses (WireMock, Testcontainers). Service A's tests use a mock Service B that returns predefined responses. Fast, isolated, reproducible.<br><br>
+  <strong>Component tests</strong>: deploy one service in isolation with its real database (Testcontainers spins up a real PostgreSQL in Docker) but mock all external services. Tests the full service behaviour without needing a live environment.<br><br>
+  <strong>E2E tests (minimal)</strong>: run a subset of critical user journeys in a staging environment after every deploy. Not every code path — just the happy path for the most critical flows. Heavy E2E test suites are slow and brittle; use them sparingly.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the Backend for Frontend (BFF) pattern and when do you use it?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>BFF: separate API gateway per client type (mobile, web, third-party), each optimised for its client's needs.</strong><br><br>
+  Problem: a general-purpose API must return enough data for all possible clients. Mobile app needs small payloads (limited bandwidth, small screen). Web app needs rich data (multiple sections on screen at once). Each client ends up calling many APIs and assembling data client-side — over-fetching or under-fetching.<br><br>
+  BFF solution: Mobile BFF aggregates multiple microservice calls into one endpoint optimised for mobile: small payload, single round trip, mobile-specific fields. Web BFF returns richer payloads with different field sets. Partner API BFF exposes only what partners are permitted to see.<br><br>
+  <strong>When to use it</strong>: when different clients have significantly different data needs. When mobile performance is critical (reduce round trips). When you need to version mobile and web APIs independently without coupling.<br><br>
+  <strong>When NOT to use it</strong>: small teams where maintaining multiple gateways is too expensive. When clients have similar data needs. A single well-designed API with GraphQL (client-specified field selection) can replace multiple BFFs — clients request exactly the fields they need, no BFF required.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does service mesh differ from an API gateway — why do you need both?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>API gateway handles north-south traffic (external clients to your services). Service mesh handles east-west traffic (service to service).</strong><br><br>
+  <strong>API Gateway</strong>: sits at the edge. Handles: external authentication, rate limiting per external client, request routing to the right microservice, response transformation for external clients, API versioning. Knows about business-level concepts (user tiers, API keys).<br><br>
+  <strong>Service Mesh (Istio/Envoy)</strong>: sits between every pair of services. Handles: mTLS (service-to-service encryption and authentication), circuit breaking (stop calling a failing service), distributed tracing (record timing for every hop), load balancing within the cluster, retries with exponential backoff. No business logic — purely infrastructure.<br><br>
+  <strong>Why both</strong>: the API gateway handles external concerns (business-level policies), the service mesh handles internal concerns (infrastructure-level reliability). They operate at different layers and don't overlap. In practice: Kong/AWS API GW at the edge + Istio inside the cluster. Each handles what it's designed for.</div></div>
+</section></div>
+<div class="footer">MICROSERVICES · SAGA · SERVICE MESH · STRANGLER FIG · OUTBOX · BFF · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>

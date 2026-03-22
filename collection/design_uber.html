@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Design Uber</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
+.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
+h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
+h1 .acc{color:#e8b84b;}
+.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
+.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
+.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
+h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.steps{list-style:none;margin:16px 0;counter-reset:s;}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
+.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
+.blist{list-style:none;margin:12px 0;}
+.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
+.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
+.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
+.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
+.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
+.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
+.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
+.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
+.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
+.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
+.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
+.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
+.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
+.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
+.faq-q:hover{background:var(--surface);}
+.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
+.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
+.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
+.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
+.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
+.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.dtree-node:last-child{border:none;}
+.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
+.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
+.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
+.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
+.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
+.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
+footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Design Uber<br><em>Complete system design: driver location tracking, geospatial matching engine, surge pricing, trip management, WebSocket real-time communication.</em></h1>
+  <p class="hero-sub">Complete system design: driver location tracking, geospatial matching engine, surge pricing, trip management, WebSocket real-time communication.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Geospatial</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Matching</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Redis GEO</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">WebSocket</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Surge Pricing</span></div>
+</div></div>
+<nav class="nav"><a href="#requirements">Requirements</a><a href="#architecture">Architecture</a><a href="#deep-dive">Matching Deep Dive</a><a href="#followups-uber">Follow-ups</a></nav>
+<div class="wrap">
+<section id="requirements">
+  <div class="sec-tag">00 · Requirements</div>
+  <h2>Clarify before designing</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Functional</div><div class="concept-def">Rider requests a ride (location → destination). Nearby drivers notified. Driver accepts → trip starts. Real-time location tracking. Fare calculation. Payment. Trip history.</div></div>
+    <div class="concept-row"><div class="concept-term">Non-Functional</div><div class="concept-def">100M rides/day. Driver location update every 4 seconds. Match rider to nearest driver in &lt;5 seconds. Location accuracy: &lt;100m. High availability (no rider stranded). 1M concurrent drivers globally.</div></div>
+    <div class="concept-row"><div class="concept-term">Estimation</div><div class="concept-def">1M active drivers × 1 location update/4s = 250K location updates/sec. 100M rides/day = 1,157 ride requests/sec. Location data: 250K × 50 bytes = 12.5 MB/sec = 1TB/day (stored in time-series). Geospatial index: 1M drivers × 50 bytes = 50MB in Redis (trivial).</div></div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="sec-tag">01 · Architecture</div>
+  <h2>The complete system — four core flows</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Driver Location<br>Tracking</div><div class="concept-def"><strong>WebSocket from driver app → Location Service → Redis GEO.</strong><br>
+      Persistent WebSocket connection from each driver app. Driver sends GPS every 4 seconds. Location Service receives update → <code>GEOADD drivers:city {lng} {lat} driver:{id}</code> in Redis. Also writes to Cassandra (time-series for trip replay + analytics): <code>(driver_id, timestamp, lat, lng)</code>.<br>
+      Why WebSocket vs HTTP polling? HTTP polling at 4s interval = 250K × 1 HTTP request/4s = 62,500 HTTP requests/sec. WebSocket: one persistent connection per driver, push updates. 10× less server overhead. Uber uses WebSocket for all real-time communication.</div></div>
+    <div class="concept-row"><div class="concept-term">Matching Engine</div><div class="concept-def"><strong>Rider requests ride → find nearest available driver → notify driver → driver accepts → match confirmed.</strong><br>
+      Rider sends pickup location. Matching Service: <code>GEORADIUS drivers:city {rider_lng} {rider_lat} 5 km ASC COUNT 10</code> → 10 nearest drivers. Check availability (each driver has a status in Redis: available/on_trip). Notify available drivers via WebSocket (push notification to driver app). First driver to accept: lock the match atomically using Redis SET NX (prevent two riders matching the same driver). Confirm match, start trip.</div></div>
+    <div class="concept-row"><div class="concept-term">Surge Pricing</div><div class="concept-def"><strong>Supply/demand ratio per geospatial cell determines the surge multiplier.</strong><br>
+      Kafka stream: ride requests + driver availability per S2 cell. Flink aggregation: rolling 5-minute window, count (requests, available_drivers) per cell. Surge multiplier = f(demand/supply). Store in Redis: <code>surge:city:s2cell → multiplier</code>. Pricing Service reads multiplier from Redis on every fare calculation. Druid for historical surge analytics (which zones, which times).</div></div>
+    <div class="concept-row"><div class="concept-term">Trip Management</div><div class="concept-def"><strong>In-progress trips tracked in Redis for real-time access, written to PostgreSQL for persistence.</strong><br>
+      Active trip: <code>trip:active:{trip_id} → {driver_id, rider_id, status, route}</code> in Redis (TTL=4h). Written to PostgreSQL on completion with full metadata. Payment triggers on completion: ride fare + tip + surge = total → Stripe charge → write payment record to PostgreSQL. Kafka event: TripCompleted → downstream (rating request, analytics, driver earnings).</div></div>
+  </div>
+</section>
+
+<section id="deep-dive">
+  <div class="sec-tag">02 · Deep Dive — Driver Matching</div>
+  <h2>The complete matching flow in detail</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Ride Request to Driver Acceptance</div><span class="sd-example-tag">&lt;5 SECONDS END-TO-END</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">T+0ms</div><div class="choice-val">Rider taps "Request Ride." App sends: <code>POST /rides {"pickup": {lat,lng}, "dropoff": {lat,lng}}</code>. API Gateway authenticates JWT. Routes to Ride Service.</div></div>
+      <div class="choice-row"><div class="choice-label">T+10ms</div><div class="choice-val">Ride Service → Matching Service. <code>GEORADIUS drivers:bangalore {pickup_lat} {pickup_lng} 3 km ASC COUNT 5</code> → [driver:123, driver:456, driver:789]. Check status: <code>HGET driver:status:123</code> = "available." Found 2 available drivers in 3km.</div></div>
+      <div class="choice-row"><div class="choice-label">T+20ms</div><div class="choice-val">Push notification via WebSocket to both available drivers: "New ride request nearby — accept?" Driver apps show the request with pickup location, estimated distance.</div></div>
+      <div class="choice-row"><div class="choice-label">T+1500ms</div><div class="choice-val">Driver:123 taps "Accept." Matching Service: <code>SET driver:trip:123 {trip_id} NX EX 3600</code> — atomic "claim" of this driver. NX = only set if not exists — prevents two riders matching the same driver. Returns success.</div></div>
+      <div class="choice-row"><div class="choice-label">T+1520ms</div><div class="choice-val">Notify rider: driver accepted. ETA: 3 minutes. Start trip record in Redis. Update driver status to "on_trip." Notify driver:456 that the request is no longer available.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups-uber">
+  <div class="sec-tag">03 · Follow-ups</div>
+  <h2>The questions your interviewer will ask</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What happens if the driver's GPS is inaccurate or they go offline mid-trip?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>GPS inaccuracy: dead reckoning + Kalman filter. Connectivity loss: client-side buffering + reconnect.</strong><br><br>
+  GPS inaccuracy: mobile GPS is ±10–50m in cities (building reflection). Uber's driver app applies a Kalman filter — a statistical technique that combines GPS readings with accelerometer/gyroscope data to estimate the most likely position. Road snapping: the estimated position is "snapped" to the nearest road (Uber uses their own road graph). A driver teleporting across a building is corrected to the road they're on.<br><br>
+  Driver goes offline during trip: driver app buffers location updates locally (SQLite on device). When connectivity restores, the app batch-sends all buffered updates with original timestamps. Location Service accepts out-of-order updates with timestamps — writes to Cassandra in order. Gap in location data is handled gracefully: straight-line interpolation between last known and first reconnect point.<br><br>
+  WebSocket reconnect: exponential backoff. Connection state stored in Redis — on reconnect, driver receives the current trip state and can resume seamlessly.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle the city-scale sharding of driver location data?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Shard by city initially, then by geohash within dense cities.</strong><br><br>
+  One Redis GEO key per city: <code>drivers:bangalore</code>, <code>drivers:mumbai</code>, <code>drivers:delhi</code>. Bangalore has ~50,000 active drivers during peak — this is a 50K member ZSET in Redis, trivially fast (&lt;1ms queries).<br><br>
+  For mega-cities (London, NYC, São Paulo) with 200,000 concurrent drivers: split by 4-character geohash prefix (each cell is ~40km × 40km). NYC becomes ~20 cells covering the metropolitan area. GEORADIUS query: determine which cells overlap with the 5km search radius → query those cells only → merge results.<br><br>
+  The lookup function: given a rider's location, determine which geohash cells are within 5km → issue parallel GEORADIUS queries against those Redis keys → merge and sort results. At most 4–5 Redis keys need to be queried for any given pickup location.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does Uber prevent "ghost rides" — a driver falsely claiming they completed a trip?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Multiple independent verification systems cross-reference trip legitimacy.</strong><br><br>
+  GPS trace verification: the full GPS trace is stored in Cassandra. After trip completion, the route is compared to the claimed start/end points. A trip from MG Road to Indiranagar that has GPS points in Whitefield is flagged as anomalous.<br><br>
+  Time-distance consistency: calculate the minimum possible time to travel the claimed distance. If the trip took 2 minutes but the claimed distance requires 30 minutes of driving — fraud signal.<br><br>
+  Rider confirmation: rider app must confirm trip end (tap "Arrived"). Rider and driver GPS positions are compared at "trip end" — they should be within 500m of each other.<br><br>
+  Machine learning fraud detection: features include: driver's historical trip patterns, rider's complaint history, GPS trace anomalies, payment patterns, device fingerprints. Model flags suspicious trips for manual review before payment is released to driver.</div></div>
+</section></div>
+<div class="footer">DESIGN UBER · FAANG SYSTEM DESIGN WALKTHROUGH · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>

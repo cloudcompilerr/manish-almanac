@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Scalability Patterns</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1814;--page:#faf8f4;--surface:#f0ede6;--border:#e0dbd0;--muted:#7a7468;--pg:#2d6a9f;--pg-bg:#eef4fb;--mg:#1a8a45;--mg-bg:#edfaf2;--dy:#c47a00;--dy-bg:#fdf5e8;--ca:#0e7a8a;--ca-bg:#eaf6f8;--red:#b83030;--red-bg:#fdf0f0;--green:#1a6e40;--green-bg:#edf7f0;--amber:#b87010;--amber-bg:#fdf5e3;--blue:#1a4a90;--blue-bg:#eef2fb;--mono:'JetBrains Mono',monospace;--sans:'Source Sans 3',sans-serif;--serif:'Playfair Display',serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#f0ede6;padding:52px 24px 44px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 40px);}
+.hero-inner{max-width:920px;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6858;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:24px;height:1px;background:#3a3828;}
+h1{font-family:var(--serif);font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:16px;}
+h1 .acc{color:#e8b84b;}
+.hero-desc{font-size:15px;color:#7a7868;max-width:600px;line-height:1.7;margin-bottom:24px;}
+.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;}
+.db-pg{background:var(--pg);color:#fff;}.db-mg{background:var(--mg);color:#fff;}.db-dy{background:var(--dy);color:#fff;}.db-ca{background:var(--ca);color:#fff;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1d18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#5a5850;text-decoration:none;padding:13px 13px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+section{padding:48px 0 32px;border-bottom:2px solid var(--border);}section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.3px;line-height:1.15;margin-bottom:14px;color:var(--ink);}
+h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:28px 0 10px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;max-width:760px;}strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.callout{border-radius:4px;padding:14px 18px;margin:16px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;max-width:none;}.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2808;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0808;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.steps{list-style:none;margin:16px 0;counter-reset:s;}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.steps li::before{content:counter(s);font-family:var(--mono);font-size:11px;font-weight:700;color:white;background:var(--ink);min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-title{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;}
+.step-desc{font-size:13px;color:#5a5848;line-height:1.65;}
+.step-desc ul{margin:6px 0 0 16px;}.step-desc li{margin-bottom:4px;font-size:13px;color:#5a5848;}
+.blist{list-style:none;margin:12px 0;}
+.blist li{padding:7px 0 7px 20px;position:relative;font-size:14px;color:#3a3830;border-bottom:1px solid var(--border);line-height:1.65;}
+.blist li:last-child{border:none;}.blist li::before{content:'→';position:absolute;left:0;color:var(--amber);font-weight:700;}
+.codeblock{background:var(--ink);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;}
+.db-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+@media(max-width:640px){.db-grid{grid-template-columns:1fr;}}
+.db-card{background:white;border:1px solid var(--border);border-radius:6px;padding:18px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}.db-card.mg::before{background:var(--mg);}.db-card.dy::before{background:var(--dy);}.db-card.ca::before{background:var(--ca);}
+.db-card-name{font-family:var(--serif);font-size:18px;font-weight:700;margin:10px 0 4px;}
+.db-card.pg .db-card-name{color:var(--pg);}.db-card.mg .db-card-name{color:var(--mg);}.db-card.dy .db-card-name{color:var(--dy);}.db-card.ca .db-card-name{color:var(--ca);}
+.db-card-role{font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono);}
+.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
+.db-k{color:var(--muted);flex-shrink:0;width:110px;}.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
+.db-v.g{color:var(--green);}.db-v.a{color:var(--amber);}.db-v.r{color:var(--red);}
+.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
+.matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
+.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}.b-b{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.faq{border:1px solid var(--border);border-radius:5px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:600;user-select:none;transition:background .15s;}
+.faq-q:hover{background:var(--surface);}
+.faq-tog{font-size:18px;color:var(--amber);transition:transform .2s;flex-shrink:0;margin-left:12px;}
+.faq-a{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;color:#3a3830;line-height:1.75;}
+.faq.open .faq-a{display:block;}.faq.open .faq-tog{transform:rotate(45deg);}
+.faq-a ul,.faq-a ol{padding-left:20px;margin:8px 0;}.faq-a li{margin-bottom:6px;font-size:13.5px;color:#3a3830;line-height:1.65;}
+.dtree{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0;}
+.dtree-node{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
+.dtree-node:last-child{border:none;}
+.dtree-q{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;}
+.dtree-a{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;flex-shrink:0;margin-left:8px;border:1px solid;}
+.dtree-a.pg{background:var(--pg-bg);color:var(--pg);border-color:var(--pg);}.dtree-a.mg{background:var(--mg-bg);color:var(--mg);border-color:var(--mg);}.dtree-a.dy{background:var(--dy-bg);color:var(--dy);border-color:var(--dy);}.dtree-a.ca{background:var(--ca-bg);color:var(--ca);border-color:var(--ca);}.dtree-a.ask{background:var(--surface);color:var(--muted);border-color:var(--border);}
+.oneliner{background:var(--ink);color:var(--page);border-radius:10px;padding:32px 28px;text-align:center;margin:44px 0;}
+.oneliner .lbl{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#5a5850;margin-bottom:14px;}
+.oneliner blockquote{font-family:var(--serif);font-size:clamp(14px,2.2vw,18px);font-weight:700;line-height:1.65;color:#e8e0d0;font-style:italic;}
+footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var(--mono);font-size:10px;color:#3a3828;letter-spacing:2px;}
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Scalability Patterns<br><em>Back-of-envelope estimation, CQRS, Event Sourcing, Circuit Breaker, Bulkhead, and the complete scaling journey from 0 to 10M users.</em></h1>
+  <p class="hero-sub">Back-of-envelope estimation, CQRS, Event Sourcing, Circuit Breaker, Bulkhead, and the complete scaling journey from 0 to 10M users.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">CQRS</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Event Sourcing</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Circuit Breaker</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Estimation</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Async Patterns</span></div>
+</div></div>
+<nav class="nav"><a href="#estimation">Estimation</a><a href="#scaling-patterns">Scaling Patterns</a><a href="#async">Async vs Sync</a><a href="#sd-scalability">0→10M Users</a><a href="#decision-scale">Decision Tree</a><a href="#followups-scale">Follow-ups</a></nav>
+<div class="wrap">
+<section id="estimation">
+  <div class="sec-tag">00 · Back-of-Envelope Estimation</div>
+  <h2>The skill that separates senior engineers in interviews</h2>
+  <div class="analogy">
+    <div class="analogy-label">Why interviewers ask this</div>
+    <div class="analogy-text">
+      Before designing a system, engineers estimate its scale. A design that works for 1,000 users fails at 1,000,000 — not because the architecture is wrong, but because the numbers change which components you need. Estimation gives you the numbers that drive design decisions.<br><br>
+      The goal is not precision — it's an order-of-magnitude answer. "About 10,000 requests/second" is correct. "Exactly 9,847" is wasted effort. <strong>2× wrong is fine. 100× wrong changes the design.</strong>
+    </div>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Numbers to Memorise</div><div class="concept-def"><strong>These are the building blocks of every estimation:</strong><br>
+      <code>1 million seconds ≈ 11.5 days</code><br>
+      <code>1 billion seconds ≈ 31 years</code><br>
+      <code>1 day = 86,400 seconds ≈ 100K seconds</code><br>
+      <code>1 month ≈ 2.5M seconds</code><br>
+      <code>1 year ≈ 31M seconds</code><br>
+      <code>Avg tweet: 140 bytes. Avg photo: 200KB. Avg video min: 10MB.</code><br>
+      <code>SSD read: 500MB/s. Network: 10Gbps = 1.25GB/s. RAM: 50GB/s.</code><br>
+      <span style="color:#5a5848;font-size:12.5px;">You don't need exact numbers. You need the right order of magnitude.</span></div></div>
+    <div class="concept-row"><div class="concept-term">QPS Estimation<br>Formula</div><div class="concept-def"><strong>QPS = Daily Active Users × Actions per day ÷ Seconds per day</strong><br>
+      Twitter example: 300M DAU. Average user reads feed 5× per day + writes 0.1 tweet/day.<br>
+      Read QPS = 300M × 5 ÷ 86,400 = <strong>~17,000 reads/sec</strong><br>
+      Write QPS = 300M × 0.1 ÷ 86,400 = <strong>~350 writes/sec</strong><br>
+      Peak QPS ≈ 3× average = 51,000 reads/sec, 1,050 writes/sec.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Always calculate peak, not average. Systems fail at peak. Design for peak × 20% headroom.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Storage Estimation<br>Formula</div><div class="concept-def"><strong>Storage per year = QPS_writes × payload_size × seconds_per_year × replication_factor</strong><br>
+      Twitter: 350 writes/sec × 300 bytes/tweet × 31M sec/year × 3 replicas = <strong>~10TB/year</strong><br>
+      Instagram photos: 1M uploads/day × 200KB = 200GB/day = <strong>73TB/year</strong> (before CDN caching and compression).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Once you have storage/year, you know: if &gt;100TB → object storage (S3), if &gt;10TB → distributed DB (Cassandra), if &lt;1TB → single PostgreSQL might work.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Bandwidth Estimation</div><div class="concept-def"><strong>Bandwidth = QPS × payload size</strong><br>
+      Twitter reads: 17,000 req/sec × 10KB per feed response = <strong>170 MB/sec = 1.4 Gbps</strong>. A 10Gbps network link handles this easily.<br>
+      YouTube: 1B views/day × 10MB avg video = 10PB/day = <strong>~1TB/sec outbound bandwidth</strong>. This is why YouTube needs a CDN — no single origin could serve 1TB/sec.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Bandwidth estimation tells you: do you need a CDN? Is a single datacenter connection enough? What's the egress cost?</span></div></div>
+    <div class="concept-row"><div class="concept-term">Latency Numbers<br>Every Engineer Knows</div><div class="concept-def"><strong>These guide architecture decisions — always quote them in interviews:</strong><br>
+      L1 cache: 1ns · L2 cache: 4ns · L3 cache: 10ns<br>
+      RAM read: 100ns · SSD read: 100μs · HDD read: 10ms<br>
+      Same-datacenter network: 0.5ms · Cross-region (US-EU): 150ms<br>
+      Redis GET: 0.1ms · PostgreSQL query (indexed): 1ms<br>
+      DynamoDB: 1ms · S3 GET: 50ms · DNS lookup: 20ms<br>
+      <span style="color:#b83030;font-size:12.5px;">Key insight: RAM is 1,000× faster than SSD, which is 100× faster than HDD. A cache miss that hits disk is 10,000× slower than a cache hit. This is why caching exists.</span></div></div>
+  </div>
+</section>
+
+<section id="scaling-patterns">
+  <div class="sec-tag">01 · Scaling Patterns</div>
+  <h2>The layered approach — how every large system actually scales</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">The Scaling Ladder</div><div class="concept-def"><strong>Scale problems are solved in layers. Add each layer only when the previous one is insufficient.</strong><br>
+      Level 1: Single server + single DB. Works to ~1K req/sec and ~100GB data.<br>
+      Level 2: Add read replicas. 3–5 replicas handle ~5K read req/sec.<br>
+      Level 3: Add caching (Redis). Offloads 80–90% of read DB traffic. Works to ~50K req/sec.<br>
+      Level 4: Horizontal scale app servers behind a load balancer. Works to ~500K req/sec.<br>
+      Level 5: Database sharding. Handles unlimited write throughput and unlimited data size.<br>
+      Level 6: CDN for static assets + geographic distribution. Handles global scale with low latency.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Most systems never need Level 5+. Jumping to sharding before exhausting caching is premature optimisation. In interviews: always state where on this ladder the system sits.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Vertical vs<br>Horizontal Scaling</div><div class="concept-def"><strong>Vertical: bigger machine. Horizontal: more machines.</strong><br>
+      <strong>Vertical (scale-up)</strong>: upgrade from 16-core to 64-core server. Simple — no code changes. Limit: biggest available machine is fixed (~128 cores, ~24TB RAM). Single point of failure.<br>
+      <strong>Horizontal (scale-out)</strong>: add more servers of the same size. Unlimited scale in theory. Requires stateless services (session state in Redis, not in-process). Complexity: load balancing, distributed coordination, consistent hashing for data.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Databases scale vertically first (biggest possible primary), then horizontally (read replicas, then sharding). Stateless app servers scale horizontally trivially. This asymmetry is why the database is always the bottleneck.</span></div></div>
+    <div class="concept-row"><div class="concept-term">CQRS<br>(Command Query Responsibility Segregation)</div><div class="concept-def"><strong>Split your read model and write model into separate services with separate data stores.</strong><br>
+      Commands (writes): go to a normalised write DB (PostgreSQL). Optimised for data integrity and write throughput.<br>
+      Queries (reads): go to a denormalised read DB (Elasticsearch, Redis, Cassandra). Pre-computed views optimised for specific query patterns.<br>
+      Sync: write DB publishes change events → consumer builds and updates read models asynchronously.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Each store optimised for its purpose. Read store can be rebuilt from scratch by replaying the event log. Used by: e-commerce (write to OLTP, serve product catalog from Elasticsearch), social feeds (write to PostgreSQL, serve feed from pre-computed Redis list).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Eventual consistency: reads lag writes by milliseconds to seconds. Complexity: two data stores, sync pipeline. Only justified when read and write patterns are fundamentally different.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Event Sourcing</div><div class="concept-def"><strong>Store every change as an immutable event. Derive current state by replaying events. The event log is the source of truth.</strong><br>
+      Instead of storing "account balance = ₹5,000", store: [AccountOpened(₹0), Deposited(₹3,000), Deposited(₹2,500), Withdrawn(₹500)]. Balance = sum of events.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Complete audit log by default. Time-travel: reconstruct state at any point in history. Rebuild any read model from scratch. Events are immutable — no update anomalies. Used by: banking systems, e-commerce order history, git (event sourcing for code changes).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Query complexity: to get current balance, replay all events (use snapshots for long-lived aggregates). Schema evolution: old events must remain valid when the event schema changes. Steep learning curve for teams accustomed to CRUD.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Circuit Breaker</div><div class="concept-def"><strong>Stop sending requests to a failing dependency. Return a fast fallback instead of waiting for timeouts.</strong><br>
+      States: <strong>Closed</strong> (normal — requests pass through) → <strong>Open</strong> (failure threshold exceeded — all requests rejected instantly, return fallback) → <strong>Half-Open</strong> (after cooldown — send probe requests to test recovery).<br>
+      Example: Recommendation Service is down. Without circuit breaker: every request waits 30 seconds for timeout. With circuit breaker: immediately returns cached/default recommendations. 30s timeout → 5ms fallback.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Prevents cascade failures. Fast failure response. Gives downstream service time to recover. Netflix Hystrix (original), Resilience4j (Java), Polly (.NET), Envoy (service mesh — no code changes).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Bulkhead Pattern</div><div class="concept-def"><strong>Isolate failures to a subset of resources, like watertight compartments in a ship.</strong><br>
+      Without bulkhead: one slow downstream service exhausts your entire thread pool → all requests fail.<br>
+      With bulkhead: separate thread pools per dependency. "Payment service pool" has 10 threads. If payments are slow, only payment requests are affected. Feed requests use their own 50-thread pool — unaffected.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Failure isolation. One misbehaving tenant/feature cannot starve others. Combined with circuit breaker: bulkhead prevents exhaustion, circuit breaker prevents cascades. Used by: Netflix (separate thread pools per microservice dependency).</span></div></div>
+  </div>
+</section>
+
+<section id="async">
+  <div class="sec-tag">02 · Async vs Sync</div>
+  <h2>When to break synchrony — the most consequential architectural decision</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">When Sync is Right</div><div class="concept-def"><strong>Use synchronous calls when the caller needs the result to proceed.</strong><br>
+      Examples: user login (need auth token immediately), payment processing (need success/failure to show user), inventory check before order placement (need to know if in stock).<br>
+      <span style="color:#5a5848;font-size:12.5px;">The test: "If the downstream service is slow, should the user wait, or can I proceed without the result?" If the user must wait: synchronous. If you can proceed: asynchronous.</span></div></div>
+    <div class="concept-row"><div class="concept-term">When Async is Right</div><div class="concept-def"><strong>Use asynchronous processing when: (1) the operation takes longer than a user will wait, (2) multiple downstream systems need to be notified, (3) operations can be retried safely.</strong><br>
+      Examples: sending order confirmation email (user doesn't wait for email to send), video transcoding (user uploads and continues — gets email when done), search index update (user doesn't wait for Elasticsearch to index their new post).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Decouples producers from consumers. Absorbs traffic spikes (queue buffers). Enables retry on failure. Reduces user-facing latency by doing work in the background.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Async Patterns:<br>Fire-and-Forget vs<br>Request-Reply</div><div class="concept-def"><strong>Two async models with different guarantees:</strong><br>
+      <strong>Fire-and-forget</strong>: publish event, don't wait for result. Order placed → publish OrderCreated event → return 200 to user. Fulfillment, email, inventory updates happen in background. Risk: if any step fails, user doesn't know synchronously.<br>
+      <strong>Async Request-Reply</strong>: client sends request + callback URL. Server processes async, POSTs result to callback URL when done. OR: client polls a status endpoint. Used for: long-running operations (video export, report generation, ML inference).</div></div>
+  </div>
+</section>
+
+<section id="sd-scalability">
+  <div class="sec-tag">03 · System Design Examples</div>
+  <h2>Scaling decisions in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Scaling from 0 to 10M Users — Step by Step</div><span class="sd-example-tag">THE FULL JOURNEY</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">0 → 1K users</div><div class="choice-val">Single server: Nginx + Node.js + PostgreSQL on one EC2 instance. $50/month. Works fine. Don't optimise what doesn't hurt yet.</div></div>
+      <div class="choice-row"><div class="choice-label">1K → 50K</div><div class="choice-val">Separate app server from DB. Add read replica for PostgreSQL. Add Redis for sessions and hot queries. Add S3 + CloudFront for images. Now: 3 servers, ~$300/month. Latency drops 50% from CDN.</div></div>
+      <div class="choice-row"><div class="choice-label">50K → 500K</div><div class="choice-val">Horizontal scale app servers (2→10) behind ALB. Add Redis cluster (not single node). Add Elasticsearch for search. Async email/notifications via SQS + Lambda. DB is still single primary with 3 read replicas. ~$3,000/month.</div></div>
+      <div class="choice-row"><div class="choice-label">500K → 5M</div><div class="choice-val">Database starts to be the bottleneck. Shard by user_id across 4 PostgreSQL primaries. Add Cassandra for time-series data (feeds, activity logs). Deploy to 2 AWS regions (US + EU). CDN at edge absorbs 90% of traffic. ~$30,000/month.</div></div>
+      <div class="choice-row"><div class="choice-label">5M → 10M+</div><div class="choice-val">Full microservices split by domain (user service, feed service, notification service). Each with its own DB. Kafka for inter-service events. Kubernetes for orchestration. Istio for service mesh. Multi-region active-active. ~$300,000/month.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="decision-scale">
+  <div class="sec-tag">04 · Decision Framework</div>
+  <h2>The interview framework — how to structure a scaling discussion</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Scaling Decision Tree — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">What is the bottleneck? (Always measure before optimising)</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">CPU-bound →</span><span class="opt-text">Horizontal scale app servers. Add more cores. Optimise hot code paths. Profile with sampling profiler first — never optimise blind.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">DB-bound (reads) →</span><span class="opt-text"><strong>Cache first</strong> (Redis cache-aside). Then read replicas. Only shard if cache + replicas are insufficient. 80% of DB read problems are solved by a properly sized cache.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">DB-bound (writes) →</span><span class="opt-text"><strong>Async writes</strong> (queue + batch). Write-behind cache. Then horizontal sharding. Write throughput is the hardest to scale — minimise synchronous writes in the hot path.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Is this a read-heavy or write-heavy system?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Read-heavy (&gt;10:1) →</span><span class="opt-text"><strong>CQRS + pre-computation.</strong> Denormalise read models. Pre-compute expensive queries. Cache aggressively. CDN for static/semi-static content. Twitter serves 300K reads/sec but only 6K writes/sec — the ratio drives everything.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Write-heavy →</span><span class="opt-text"><strong>LSM-tree databases</strong> (Cassandra, RocksDB). Write-behind caching. Async processing for non-critical writes. Partition writes across shards. Accept eventual consistency on read side.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Do you have hot spots (some data accessed much more than others)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (celebrity users, viral content) →</span><span class="opt-text"><strong>Local in-process cache</strong> for ultra-hot keys (bypasses Redis network hop). Key salting/sharding for hot write keys. Fan-out on read for celebrity content (don't pre-compute their feed — too many followers). Adaptive replication of hot data.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (uniform access) →</span><span class="opt-text"><strong>Standard horizontal scaling.</strong> Consistent hashing distributes evenly. Redis cluster handles load. No special treatment needed.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="followups-scale">
+  <div class="sec-tag">05 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you estimate the number of servers you need?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Servers needed = Peak QPS × avg response time / target CPU utilisation</strong><br><br>
+  Example: 50,000 req/sec peak, each request takes 50ms to process, target 70% CPU utilisation.<br>
+  One server (32 cores, 4 threads/core = 128 concurrent requests): can handle 128 concurrent × (1000ms/50ms) = 2,560 req/sec per server.<br>
+  Servers needed = 50,000 / 2,560 / 0.70 = ~28 servers. Round up to 32 for headroom.<br><br>
+  Memory: 32 servers × 8GB RAM for app = 256GB total. Does your session store / in-process cache fit? If not, externalise to Redis.<br><br>
+  The key insight: servers are cheap and elastic. The bottleneck is almost always the database, not the app servers. Size your DB first, then size app servers to saturate the DB without overwhelming it.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">When should you split a monolith into microservices?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Split on organisational boundaries, not technical ones. The right trigger is team size and deployment independence, not performance.</strong><br><br>
+  <strong>Stay monolith when:</strong> Team is small (&lt;30 engineers). Deployment happens together anyway. Data model is tightly coupled. Latency of network calls between services would hurt performance. Most startups should stay monolith until ~50+ engineers.<br><br>
+  <strong>Split when:</strong> Different parts of the system need to scale independently (payment processing at 100× normal on Black Friday, but user profiles don't). Different teams need to deploy independently without coordination. Different parts need different tech stacks. A failure in one part should not bring down the whole system.<br><br>
+  <strong>The Strangler Fig pattern</strong>: don't rewrite from scratch. Incrementally extract one service at a time. New traffic goes to the new service. Old monolith handles everything else. Over 18 months, the monolith shrinks and the services grow. This is how Shopify, Twitter, and Amazon migrated — never a "big bang rewrite."<br><br>
+  <strong>The hidden cost</strong>: microservices multiply operational complexity by 10×. You need: service discovery, distributed tracing, service mesh, per-service CI/CD, per-service monitoring, distributed transactions. Don't pay this cost before you need it.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does CQRS handle the read model becoming stale?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>CQRS accepts eventual consistency — the read model lags the write model by the processing time of the async pipeline. The question is: is that acceptable for your use case?</strong><br><br>
+  Typical lag: 50ms–2s (Kafka + consumer processing). For most read models (product catalog, user feeds, leaderboards), this is imperceptible.<br><br>
+  <strong>When staleness is not acceptable</strong>: immediately after a user action, they should see their own change (read-your-own-writes). Solutions:<br>
+  (1) After a write, also update the read model cache synchronously for the writing user's session. Other users get eventual consistency; the writer gets immediate consistency.<br>
+  (2) Client-side optimistic update: frontend immediately shows the change locally (before server confirms), reconciles when the server eventually confirms.<br>
+  (3) Version/timestamp in the response: client sends the last-seen version. If the read model hasn't caught up to that version yet, return a loading indicator and poll.<br><br>
+  <strong>The mental model</strong>: CQRS is like a newspaper. The printing press (write DB) prints the paper. Distribution takes time. By the time you read it (read model), it might be hours old. That's fine for news — not fine if you need to know "did my bank transfer arrive yet?"</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the N+1 query problem and how do you fix it?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>The N+1 problem: fetching N records then making 1 query per record instead of one query for all N records at once.</strong><br><br>
+  Example: you fetch 20 posts (1 query). For each post, you fetch the author's profile (20 queries). Total: 21 queries instead of 2.<br><br>
+  <strong>SQL fix — JOIN or IN clause:</strong><br>
+  Instead of: <code>for post in posts: author = db.query("SELECT * FROM users WHERE id = ?", post.user_id)</code><br>
+  Do: <code>db.query("SELECT posts.*, users.* FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id IN (?)", post_ids)</code><br><br>
+  <strong>ORM fix — eager loading:</strong><br>
+  SQLAlchemy: <code>session.query(Post).options(joinedload(Post.author)).all()</code><br>
+  ActiveRecord: <code>Post.includes(:author).all</code><br>
+  Prisma: <code>prisma.post.findMany({ include: { author: true } })</code><br><br>
+  <strong>GraphQL fix — DataLoader:</strong> batches all user ID lookups from a single GraphQL request into one DB query. Returns them in the same tick via Promise.all. Facebook's DataLoader is the standard pattern for N+1 in GraphQL resolvers.<br><br>
+  <strong>Detection</strong>: ORM query logging in development. If you see the same query pattern repeated N times with different IDs — you have an N+1 problem. SQL monitoring tools (pg_stat_statements, DataDog APM) surface this in production.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you do a zero-downtime database schema migration on a table with 100M rows?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Never ALTER TABLE on a large live table. It locks the table for hours. Use an expand-contract (parallel change) pattern instead.</strong><br><br>
+  Scenario: you need to rename column <code>user_name</code> to <code>display_name</code> on a 100M row users table.<br><br>
+  <strong>Step 1 — Expand</strong>: Add the new column <code>display_name</code> (with a default). This is a fast metadata operation in PostgreSQL 11+ (no table rewrite for nullable columns). Start writing to BOTH columns in application code. New code writes to display_name; old code still reads user_name.<br><br>
+  <strong>Step 2 — Backfill</strong>: Run a background job that copies user_name → display_name in batches of 1,000 rows (with sleep between batches to avoid overwhelming the DB). This takes hours on 100M rows — that's fine, it runs in the background with zero user impact.<br><br>
+  <strong>Step 3 — Switch reads</strong>: Once backfill is complete and verified, change the application to read from display_name. Deploy. Monitor for errors.<br><br>
+  <strong>Step 4 — Contract</strong>: Stop writing to user_name. After one deploy cycle with no rollback, drop user_name column (fast — metadata only). Migration complete, zero downtime, zero table locks.<br><br>
+  Tools: gh-ost (GitHub's online schema migration for MySQL), pgroll (Postgres), Flyway/Liquibase (migration management).</div></div>
+</section></div>
+<div class="footer">SCALABILITY · CQRS · EVENT SOURCING · CIRCUIT BREAKER · ESTIMATION · BULKHEAD · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+</body></html>
