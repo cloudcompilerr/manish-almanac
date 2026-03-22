@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Distributed Systems: Fundamentals</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -129,204 +128,189 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
-</style>
-</head><body>
+</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Distributed Systems<br><em>Fundamentals</em></h1>
-  <p class="hero-sub">CAP theorem, PACELC, consensus (Raft), distributed transactions (Saga vs 2PC), distributed locking (Redlock), and vector clocks — from first principles to production patterns.</p>
-  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">CAP</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Raft</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Saga</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">2PC</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:rgba(96,64,160,.08)">Redlock</span></div>
+  <p class="hero-sub">CAP theorem, PACELC, quorum reads/writes, Raft consensus, 2PC vs Saga, distributed locking with fencing tokens, vector clocks, CRDTs — from first principles to production patterns.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">CAP / PACELC</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Raft Consensus</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Saga / 2PC</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Redlock / Fencing</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">CRDTs</span></div>
 </div></div>
-<nav class="nav"><a href="#cap">CAP Theorem</a><a href="#consensus">Consensus</a><a href="#transactions">Distributed Tx</a><a href="#locks">Distributed Locks</a><a href="#clocks">Clocks & Ordering</a><a href="#followups">Follow-ups</a></nav>
+<nav class="nav"><a href="#cap">CAP Theorem</a><a href="#consensus">Raft Consensus</a><a href="#transactions">Distributed Tx</a><a href="#locks">Distributed Locks</a><a href="#clocks">Clocks & CRDTs</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a></nav>
 <div class="wrap">
 <section id="cap">
   <div class="sec-tag">00 · CAP Theorem</div>
-  <h2>The constraint every distributed system lives with</h2>
-  <p>CAP theorem: a distributed system can guarantee at most two of Consistency, Availability, and Partition Tolerance. Since network partitions <em>always happen</em> in real distributed systems, the real choice is <strong>CP vs AP</strong> — not "do we handle partitions."</p>
+  <h2>The fundamental constraint every distributed system lives with</h2>
+  <p>CAP theorem states that a distributed system can guarantee at most two of: Consistency, Availability, and Partition Tolerance. Since network partitions are inevitable in any real distributed system, the practical choice is always <strong>CP vs AP</strong> — you are choosing what to sacrifice during a network partition.</p>
   <div class="analogy">
-    <div class="analogy-label">CAP in plain English</div>
+    <div class="analogy-label">CAP as a bank branch analogy</div>
     <div class="analogy-text">
-      Your bank has two branches. The network between them goes down.<br><br>
-      <strong>CP (Consistency + Partition Tolerance):</strong> Both branches stop accepting deposits until the network is restored. No one gets a wrong balance. But the service is unavailable during the outage.<br><br>
-      <strong>AP (Availability + Partition Tolerance):</strong> Both branches keep accepting deposits and serving customers independently. Service stays up. But when the network restores, one branch might show ₹5,000 and the other ₹7,000 for the same account — they need to reconcile.<br><br>
-      <strong>The choice is: would you rather return an error, or return potentially stale data?</strong>
+      Two bank branches connected by a telephone line. The line goes down (partition).<br><br>
+      <strong>CP — Consistency + Partition Tolerance:</strong> Both branches close to customers until the line is restored. No one gets incorrect balance info, but service is unavailable during the outage.<br><br>
+      <strong>AP — Availability + Partition Tolerance:</strong> Both branches stay open, serving customers independently. Service stays up. But when the line is restored, one branch shows ₹50,000 and the other ₹72,000 for the same account — they need to reconcile.<br><br>
+      <strong>The question is: would you rather return an error, or return potentially stale data?</strong> Both are wrong — the choice is about which kind of wrong is less harmful to your users.
     </div>
   </div>
   <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">PACELC Extension</div><div class="concept-def"><strong>CAP only describes behaviour during a partition. PACELC also describes the trade-off during normal operation:</strong><br>
-      If Partition → choose Availability or Consistency (the CA in CAP)<br>
-      Else (normal) → choose Latency or Consistency<br>
-      <span style="color:#5a5848;font-size:12.5px;">Even when no partition exists, you must decide: do you want the lowest latency (return from nearest replica, may be slightly stale) or the strongest consistency (always read from primary, higher latency)?<br>DynamoDB: PA/EL — available during partition, low latency during normal. HBase: PC/EC — consistent always, higher latency.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Linearisability</div><div class="concept-def"><strong>The strongest consistency model. Every operation appears to happen at a single point in time, in the order clients observe.</strong><br>
-      If client A writes X=1 and client B subsequently reads X, B must see 1 — not a previous value.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Operations look as if they happened on a single machine. No surprises. Required for: financial transactions, distributed locks, leader election.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Requires coordination (consensus) across nodes. High latency. Not scalable to high throughput across geographies.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Eventual Consistency</div><div class="concept-def"><strong>If no new updates are made, all replicas will eventually converge to the same value.</strong><br>
-      Reads may return stale data during the convergence window (typically milliseconds to seconds).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Highest availability and lowest latency. Scales globally. Acceptable for: social feeds, product descriptions, DNS, shopping carts.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Applications must handle stale reads gracefully. Conflicts (two writes to the same key) need resolution strategy (LWW, CRDT, vector clocks).</span></div></div>
+    <div class="concept-row"><div class="concept-term">PACELC Extension</div><div class="concept-def"><strong>CAP only describes partition behaviour. PACELC adds the normal-operation trade-off.</strong><br>
+      P → A vs C (partition: choose availability or consistency)<br>
+      E → L vs C (else: choose latency or consistency)<br>
+      Even without partitions, you must decide: serve reads from the nearest replica (low latency, possibly stale) or always read from primary (consistent, higher latency).<br>
+      <span style="color:#5a5848;font-size:12.5px;">DynamoDB: PA/EL — available during partition, low latency normally (reads from local region).<br>HBase: PC/EC — consistent during partition (stops accepting writes), consistent normally (always read from primary).<br>Cassandra: PA/EL by default — configurable per operation via consistency level.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Linearisability</div><div class="concept-def"><strong>The strongest consistency model. Every operation appears to happen instantaneously at a single point in time, visible to all nodes simultaneously.</strong><br>
+      If write(X=1) completes before read(X) starts, read must return 1 — not a previous value, even from a stale replica.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ System behaves as if running on a single machine. No surprises. Required for: distributed locks, financial transactions, leader election, inventory decrement.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Requires consensus (Raft/Paxos round trip) on every write. High latency. Cannot scale across geographies without extremely high write latency (speed of light constraints).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Eventual Consistency</div><div class="concept-def"><strong>If no new updates are made, all replicas will eventually converge to the same value. Reads during convergence may return stale data.</strong><br>
+      Convergence window: typically milliseconds to seconds in practice (not hours as the name might imply).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Highest availability and lowest latency. Scales globally with no cross-region coordination. Used by: DNS, CDN caches, social feed reads, product descriptions, shopping carts.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Applications must handle stale reads gracefully. Concurrent writes to the same key create conflicts — need resolution strategy: Last Write Wins (LWW), CRDTs, or application-level merge.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Quorum Reads/Writes</div><div class="concept-def"><strong>Configurable consistency between linearisable and eventual: require acknowledgement from W of N write replicas, and read from R of N read replicas.</strong><br>
+      Strong consistency condition: W + R &gt; N (read and write quorums overlap).<br>
+      Example: N=3, W=2, R=2 → W+R=4 &gt; 3 → any read will see the latest write.<br>
+      Example: N=3, W=1, R=1 → W+R=2 ≤ 3 → eventual consistency (reads may miss latest write).<br>
+      <span style="color:#5a5848;font-size:12.5px;">Cassandra: <code>QUORUM</code> = ceiling(N/2)+1. <code>LOCAL_QUORUM</code> = quorum within one DC only (lower latency). <code>ALL</code> = all N replicas (linearisable but fails if any replica is down).</span></div></div>
   </div>
 </section>
 
 <section id="consensus">
-  <div class="sec-tag">01 · Consensus</div>
-  <h2>Raft — how distributed systems agree on one truth</h2>
-  <p>Consensus is the problem of getting multiple nodes to agree on a single value even when some nodes crash or messages are delayed. Every distributed database, distributed lock, and leader election uses consensus internally.</p>
+  <div class="sec-tag">01 · Consensus — Raft</div>
+  <h2>How distributed systems agree on a single truth without a central coordinator</h2>
   <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Leader Election</div><div class="concept-def"><strong>Raft elects one leader at a time. All writes go through the leader. Followers only accept writes from the current leader.</strong><br>
-      If no heartbeat from leader for election timeout (150–300ms), followers start a new election. Candidate requests votes. First to get majority (N/2 + 1) becomes new leader.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Simple mental model: one leader, clear authority. Used by: etcd, CockroachDB, TiKV, Kafka (KRaft mode).</span></div></div>
-    <div class="concept-row"><div class="concept-term">Log Replication</div><div class="concept-def"><strong>Every write is appended to the leader's log. Leader replicates to followers. Once a majority acknowledges, the write is committed and applied.</strong><br>
-      Committed = durable even if the leader crashes. Followers will elect a new leader and apply the committed log.<br>
-      <span style="color:#5a5848;font-size:12.5px;">This is exactly how Kafka replication works (ISR — in-sync replicas). Exactly how etcd stores Kubernetes cluster state. Exactly how CockroachDB achieves ACID transactions across nodes.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Why Not Paxos</div><div class="concept-def"><strong>Paxos is theoretically equivalent to Raft but notoriously difficult to understand and implement correctly.</strong><br>
-      Raft was explicitly designed to be understandable — the original paper is titled "Raft: In Search of an Understandable Consensus Algorithm."<br>
-      <span style="color:#5a5848;font-size:12.5px;">In interviews: say "I'd use Raft" — it is the modern consensus algorithm of choice and you can explain it. Paxos is largely of historical interest.</span></div></div>
+    <div class="concept-row"><div class="concept-term">The Problem</div><div class="concept-def"><strong>5 nodes must agree on the value of X despite any 2 nodes being down or sending wrong values.</strong><br>
+      Without consensus: node A believes X=1, node B believes X=2, node C is unreachable. What is the correct answer? Who breaks the tie? How do you ensure a decision made today is honoured after a crash and restart?<br>
+      <span style="color:#5a5848;font-size:12.5px;">Consensus is what makes etcd, ZooKeeper, Kafka (KRaft), and CockroachDB reliable — it is the foundation every distributed database is built on.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Raft — Leader Election</div><div class="concept-def"><strong>Raft elects exactly one leader at a time. All writes go through the leader. Followers only accept log entries from the current leader.</strong><br>
+      Startup: all nodes start as followers with a random election timeout (150–300ms). First node to time out becomes a candidate, increments term counter, requests votes from all nodes. First to receive majority (N/2+1) becomes leader — sends heartbeats to suppress new elections.<br>
+      Leader failure: followers stop receiving heartbeats → timeout → new election → new leader. Takes 150–600ms in practice.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ At most one leader per term. Clear authority. Simple mental model. Used by: etcd (Kubernetes), CockroachDB, TiKV, Kafka (KRaft), Consul.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Raft — Log Replication</div><div class="concept-def"><strong>Every write is appended to the leader's log as an entry. Leader replicates to all followers. Entry is committed when a majority acknowledges it.</strong><br>
+      Flow: client write → leader appends entry → sends AppendEntries RPC to all followers → majority acknowledge → leader commits → applies to state machine → responds to client → followers commit on next AppendEntries.<br>
+      Committed = durable. Even if the leader immediately crashes, the entry will be present on a majority of nodes and any new leader will have it.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Exactly how Kafka replication works (ISR). How etcd stores Kubernetes cluster state. How CockroachDB achieves ACID transactions across nodes.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Raft vs Paxos</div><div class="concept-def"><strong>Paxos is theoretically equivalent but notoriously difficult to understand and implement correctly.</strong><br>
+      Raft was designed explicitly for understandability — the original paper's subtitle is "In Search of an Understandable Consensus Algorithm." Raft makes stronger design choices (single strong leader, log matching) that simplify implementation at the cost of some theoretical flexibility.<br>
+      <span style="color:#5a5848;font-size:12.5px;">In interviews: always say Raft. You can explain it end-to-end. Paxos is of historical significance but Raft has replaced it in essentially all new distributed systems. Multi-Paxos (used in Chubby) is even more complex.</span></div></div>
   </div>
 </section>
 
 <section id="transactions">
   <div class="sec-tag">02 · Distributed Transactions</div>
-  <h2>2PC and the Saga pattern — when ACID crosses service boundaries</h2>
+  <h2>2PC, Saga pattern, and when to use each</h2>
   <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Two-Phase Commit (2PC)</div><div class="concept-def"><strong>A coordinator asks all participants to prepare (can you commit?), then commits only if all say yes.</strong><br>
-      Phase 1 (Prepare): Coordinator asks all nodes to lock resources and vote yes/no.<br>
-      Phase 2 (Commit): If all voted yes → commit. If any voted no → rollback all.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Atomicity guaranteed across nodes. All commit or none do.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ <strong>Blocking protocol:</strong> if coordinator crashes after Phase 1, participants are locked waiting forever (holding resources). Tight coupling between services. Performance: 2 round trips minimum. Used in: traditional databases (PostgreSQL distributed transactions, XA protocol). <strong>Avoid in microservices.</strong></span></div></div>
-    <div class="concept-row"><div class="concept-term">Saga Pattern</div><div class="concept-def"><strong>Break a distributed transaction into a sequence of local transactions, each with a compensating transaction to undo it on failure.</strong><br>
-      Example — e-commerce order: (1) Reserve inventory → (2) Charge payment → (3) Create shipment. If step 3 fails: cancel shipment + refund payment (compensation) + release inventory.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ No distributed locks. Services remain independent. Failures handled gracefully via compensation. The correct pattern for microservices.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Eventual consistency only — other services see intermediate states (payment charged before shipment confirmed). Compensation logic must be idempotent. Complex to reason about.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Two implementations: Choreography (events trigger next step) or Orchestration (a saga coordinator directs each step). Orchestration is easier to monitor and debug.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Idempotency</div><div class="concept-def"><strong>Making the same operation multiple times has the same effect as doing it once.</strong><br>
-      Critical for: retries (network failures mean requests may be delivered twice), payment processing (charge card once even if confirmed twice).<br>
-      Implementation: client sends a unique <code>idempotency-key</code> header. Server stores <code>(idempotency_key → result)</code>. On duplicate: return stored result without re-executing.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Safe retries. Exactly-once semantics. Used by: Stripe (idempotency keys on all payment APIs), Kafka producers (enable.idempotence=true).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Two-Phase Commit<br>(2PC)</div><div class="concept-def"><strong>A coordinator asks all participants to prepare, then commits only if all vote yes.</strong><br>
+      Phase 1 (Prepare): Coordinator sends "can you commit?" to all participants. Each participant: locks resources, writes prepare record to WAL, votes yes/no.<br>
+      Phase 2 (Commit/Abort): If all voted yes → send commit to all. Any voted no → send abort to all. Participants release locks.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ True ACID atomicity across multiple databases. All commit or none do.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ <strong>Blocking protocol:</strong> if coordinator crashes after Phase 1, participants hold locks indefinitely. Tight coupling — all participants must be available. 2 round trips minimum. Used in: PostgreSQL distributed (XA), Oracle, MySQL XA. <strong>Never use across microservice boundaries.</strong></span></div></div>
+    <div class="concept-row"><div class="concept-term">Saga Pattern</div><div class="concept-def"><strong>Decompose a distributed transaction into local transactions, each with a compensating transaction to undo on failure.</strong><br>
+      Order saga: (1) Reserve inventory → (2) Charge payment → (3) Create shipment → (4) Send confirmation.<br>
+      If step 3 fails: compensating transactions run in reverse — cancel shipment (no-op) → refund payment → release inventory.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ No distributed locks. Services remain autonomous. Failures handled by compensation. The correct pattern for microservices. Eventually consistent — other services may see intermediate states.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Compensation logic must be idempotent and durable. Other services see partially-committed state during execution. Complex to reason about ordering. Requires careful saga state management.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Choreography vs<br>Orchestration Saga</div><div class="concept-def"><strong>Two implementation styles for Saga — fundamentally different operational characteristics.</strong><br>
+      <strong>Choreography:</strong> each service publishes an event after completing its step. The next service listens for the event and acts. No central coordinator. Services communicate through events (Kafka).<br>
+      <em>Problem: hard to debug. "Where is my order?" requires tracing events across multiple services and queues.</em><br><br>
+      <strong>Orchestration:</strong> a saga orchestrator (Temporal, AWS Step Functions, a dedicated service) explicitly calls each step and decides what to do on failure.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Orchestration is easier to monitor, debug, and reason about. The orchestrator maintains full saga state. Temporal.io is the modern standard for saga orchestration.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Idempotency</div><div class="concept-def"><strong>An operation that produces the same result whether executed once or many times.</strong><br>
+      Critical because: network failures cause retries, message queues deliver at-least-once, and saga compensation steps may run multiple times if they fail mid-way.<br>
+      Implementation: client includes a unique <code>idempotency_key</code> per operation. Server stores <code>(idempotency_key → result)</code> in DB. On duplicate: return stored result without re-executing.<br>
+      Database pattern: <code>INSERT INTO orders ... ON CONFLICT (idempotency_key) DO NOTHING</code> — atomic, no need for an explicit lookup first.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Safe retries under any failure scenario. Stripe, PayPal, Twilio all require idempotency keys on mutating API calls.</span></div></div>
   </div>
 </section>
 
 <section id="locks">
   <div class="sec-tag">03 · Distributed Locking</div>
-  <h2>Redlock and why distributed locks are hard</h2>
+  <h2>Redlock, etcd, and the fencing token pattern</h2>
   <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Redis SETNX Pattern</div><div class="concept-def"><strong>Simple distributed lock using Redis SET NX EX.</strong><br>
-      <code>SET lock:{resource} {unique_id} NX EX 30</code><br>
-      NX = only set if not exists (acquire lock). EX 30 = auto-expire in 30 seconds (prevent deadlock if holder crashes).<br>
-      Release: Lua script to atomically check owner + delete: <code>if GET == unique_id then DEL lock</code><br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Works correctly with a single Redis instance. Simple, widely used.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Single Redis node is a single point of failure. If Redis crashes, lock is lost. Works for most use cases where brief lock loss is acceptable.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Redlock Algorithm</div><div class="concept-def"><strong>Acquire lock on majority of N independent Redis nodes (N=5 recommended). Lock is held only if majority acquired within timeout.</strong><br>
-      Steps: (1) Get current time. (2) Try acquiring lock on all 5 nodes in sequence. (3) Lock succeeds if acquired on ≥3 nodes AND total elapsed time &lt; lock TTL. (4) Release all on failure.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Survives failure of minority of Redis nodes. No single point of failure.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Martin Kleppmann identified a flaw: clock skew and GC pauses can cause two clients to both believe they hold the lock. For truly critical systems (financial), use a CP system like ZooKeeper or etcd for locks.</span></div></div>
-    <div class="concept-row"><div class="concept-term">etcd / ZooKeeper Locks</div><div class="concept-def"><strong>For strong guarantees: use a CP distributed system built on Raft consensus.</strong><br>
-      etcd <code>PUT /locks/resource?prevExist=false</code> — atomic compare-and-set. Uses Raft to ensure only one leader can acquire the lock cluster-wide.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Correct under all failure scenarios. Linearisable — no two clients can simultaneously believe they hold the lock. Used by: Kubernetes for leader election, distributed job schedulers.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Higher latency than Redis (Raft round trip). Operational complexity of running etcd/ZooKeeper cluster.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Redis SETNX Lock</div><div class="concept-def"><strong>Simple distributed lock: SET key value NX EX ttl.</strong><br>
+      Acquire: <code>SET lock:resource unique_id NX EX 30</code> — NX = only if not exists, EX 30 = auto-expire in 30s.<br>
+      Release (atomic via Lua): check owner then delete: <code>if GET(key) == unique_id then DEL(key)</code>.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Works correctly with a single Redis instance. Simple, fast (&lt;1ms). Adequate for most use cases where brief lock loss on Redis failure is acceptable.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Single Redis node = single point of failure. If Redis crashes between SETNX and EXPIRE (in older implementations): lock held forever. Use the atomic <code>SET NX EX</code> single command to avoid this.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Redlock Algorithm</div><div class="concept-def"><strong>Acquire lock on majority (3 of 5) independent Redis nodes.</strong><br>
+      Steps: (1) Record start time. (2) Sequentially try to acquire lock on all 5 independent Redis nodes with small timeout (5ms each). (3) Lock acquired if: ≥3 nodes succeeded AND total elapsed time &lt; lock TTL minus clock drift margin. (4) On failure: release lock on all nodes.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Survives failure of 2 of 5 Redis nodes. No single point of failure.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Martin Kleppmann published a critique: GC pauses and clock skew can cause two clients to both believe they hold the lock. For truly critical systems (financial, coordination): use etcd/ZooKeeper with fencing tokens.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Fencing Tokens</div><div class="concept-def"><strong>Every time a lock is granted, issue a monotonically increasing fencing token. The protected resource rejects writes with older tokens.</strong><br>
+      Client A acquires lock, gets token=33. Client A pauses (GC). Lock expires. Client B acquires lock, gets token=34. Client A resumes, sends write with token=33. Storage rejects it: "I've already seen token=34."<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Correct under all failure scenarios including GC pauses, clock skew, and slow networks. The only fully safe distributed locking pattern.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">etcd provides this natively: each lease has a revision number. Store systems like S3 conditionally (ETag + If-Match) and databases with optimistic locking implement the same pattern.</span></div></div>
+    <div class="concept-row"><div class="concept-term">etcd / ZooKeeper</div><div class="concept-def"><strong>CP systems built on Raft consensus — correct distributed locking under all failure scenarios.</strong><br>
+      etcd: <code>PUT /locks/resource?prevExist=false</code> with a lease TTL. Raft ensures only one leader can grant the lock cluster-wide. Linearisable reads guarantee no stale state.<br>
+      ZooKeeper: ephemeral znodes — the lock is an ephemeral node. If the lock holder's session expires (crash), ZooKeeper automatically deletes the ephemeral node, releasing the lock.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Correct under all scenarios. Used by: Kubernetes leader election (etcd), distributed job schedulers, Kafka broker coordination (ZooKeeper historically, now KRaft).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Higher latency than Redis (Raft round trip = 5–10ms). Operational complexity of running a Raft cluster.</span></div></div>
   </div>
 </section>
 
 <section id="clocks">
   <div class="sec-tag">04 · Clocks & Ordering</div>
-  <h2>Why you cannot trust timestamps in distributed systems</h2>
+  <h2>Why you cannot trust wall-clock timestamps in distributed systems</h2>
   <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Clock Skew</div><div class="concept-def"><strong>Different servers have slightly different clocks, even with NTP. Typical skew: 1–100ms. Maximum observed: seconds.</strong><br>
-      Problem: Server A timestamps event at 14:00:01.000, Server B at 14:00:00.998. B's event appears "before" A's despite happening after.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Never use wall-clock timestamps for event ordering in distributed systems. "Last Write Wins" based on timestamps will silently discard correct data.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Logical Clocks<br>(Lamport)</div><div class="concept-def"><strong>A counter that increments on every event and is included in every message. Receiving a message with counter C → set local counter to max(local, C) + 1.</strong><br>
-      Guarantees: if event A causally precedes event B, then Lamport(A) &lt; Lamport(B).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Causal ordering without synchronized clocks. Simple to implement.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Cannot tell if two events are concurrent (no causal relationship between them).</span></div></div>
-    <div class="concept-row"><div class="concept-term">Vector Clocks</div><div class="concept-def"><strong>One counter per node. Captures causality and detects concurrent events.</strong><br>
-      Node A: [A:1, B:0, C:0]. Sends to B: B updates to [A:1, B:1, C:0]. If two events have incomparable vector clocks, they are concurrent (conflict).<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Detects conflicts precisely. Amazon Dynamo uses vector clocks for conflict detection in shopping carts.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Vector grows with number of nodes. Conflict resolution still needs application logic.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Google TrueTime</div><div class="concept-def"><strong>Google Spanner's approach: GPS + atomic clocks provide a bounded uncertainty interval [earliest, latest] for the current time. Spanner waits out this uncertainty before committing.</strong><br>
-      Uncertainty: ~7ms. Spanner commits with at least 7ms delay to ensure all nodes agree on ordering.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Enables external consistency (linearisability) globally across datacenters. The only system that achieves this at global scale.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">You cannot replicate TrueTime without specialized hardware. For most systems: use logical clocks or a single-region Raft-based system.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Clock Skew</div><div class="concept-def"><strong>Servers in different data centres have different clocks, even with NTP. Typical skew: 1–100ms. Worst case: seconds.</strong><br>
+      Server A timestamps event at 14:00:01.000. Server B timestamps its event at 14:00:00.998. B appears to have happened first — but it actually happened after A's event.<br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Never use wall-clock timestamps for causal ordering. "Last Write Wins" based on timestamps will silently discard correct writes when clocks are skewed. Cassandra's LWW uses this — it works in practice because NTP skew is usually small, but it is theoretically unsound.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Lamport Clocks</div><div class="concept-def"><strong>Logical clock: a counter that captures "happened-before" relationships without requiring synchronised clocks.</strong><br>
+      Rules: (1) Increment counter on every local event. (2) When sending a message, include current counter. (3) On receiving a message with counter C: set local counter to max(local, C) + 1.<br>
+      Guarantee: if event A happened-before event B (causally), then Lamport(A) &lt; Lamport(B). But the converse is not true — two events with comparable Lamport times might not be causally related.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Used by: Cassandra timestamps (wall clock + client-side Lamport), logical replication in PostgreSQL.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Vector Clocks</div><div class="concept-def"><strong>One Lamport counter per node. Captures causality and detects concurrent events precisely.</strong><br>
+      Node A: [A:2, B:1, C:0]. A sends message to B. B updates to [A:2, B:2, C:0].<br>
+      Compare two events: if every element of clock1 ≤ clock2 and any element is strictly less, clock1 happened-before clock2. If neither dominates the other: they are concurrent (a conflict).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Detects concurrent writes precisely. Amazon Dynamo original paper used vector clocks for shopping cart conflict detection. Riak database uses them.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Vector size grows with number of nodes. Conflict resolution still needs application logic (merge, user choice, or CRDT).</span></div></div>
+    <div class="concept-row"><div class="concept-term">CRDTs</div><div class="concept-def"><strong>Conflict-free Replicated Data Types: data structures that can be merged from any two replicas without conflict, by design.</strong><br>
+      G-Counter (grow-only): each node has its own counter. Merge = take max of each node's counter. Sum = total across all nodes. Concurrent increments on different nodes are automatically merged correctly.<br>
+      PN-Counter (positive-negative): two G-counters. Supports increment and decrement. Used for: like counts, view counts, inventory.<br>
+      OR-Set: add-wins set. Can add and remove elements concurrently — add wins on conflict.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ No coordination needed for merging. Perfect for: shared documents (Google Docs uses CRDT-like structures), distributed counters, real-time collaboration. Used by: Riak, Redis (some data types), Apple Notes.</span></div></div>
   </div>
 </section>
 
-
-<section id="quorum">
-  <div class="sec-tag">05 · Quorum in Practice</div>
-  <h2>How quorum reads and writes work — the math every interviewer expects</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">The Formula</div><div class="concept-def"><strong>For strong consistency: W + R > N</strong><br>
-      N = replication factor (total copies), W = nodes that must acknowledge a write, R = nodes that must respond to a read.<br>
-      If W + R > N, then the write and read sets must overlap — you are guaranteed to read at least one node that has the latest write.<br>
-      <span style="color:#5a5848;font-size:12.5px;">Example: N=3, W=2, R=2. W+R=4 > 3. Any read of 2 nodes will include at least 1 node that acknowledged the write. Strong consistency.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Example: N=3, W=1, R=1. W+R=2 < 3. You might read from the one node that did NOT get the write. Eventual consistency.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Quorum vs QUORUM</div><div class="concept-def"><strong>Cassandra's QUORUM consistency level = (N/2)+1 nodes.</strong><br>
-      N=3: QUORUM = 2 nodes. W=QUORUM, R=QUORUM → W+R=4 > 3 → strong consistency.<br>
-      N=5: QUORUM = 3 nodes. W=QUORUM, R=QUORUM → W+R=6 > 5 → strong consistency.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ QUORUM is the "safe default" — survives N/2 node failures while maintaining consistency. Used for: user account data, session state, anything where stale reads are unacceptable.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Read Repair</div><div class="concept-def"><strong>During a QUORUM read, if replicas return different values, Cassandra repairs the stale replica.</strong><br>
-      Read returns 2 responses: node A says value=7, node B says value=5. Node A is more recent (higher timestamp). Cassandra returns 7 to the client AND asynchronously sends the correct value (7) to node B to repair it.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Self-healing. Stale replicas are corrected on read. No manual repair needed for recently-read data.</span><br>
-      <span style="color:#5a5848;font-size:12.5px;">Anti-entropy repair (nodetool repair) handles data that is never read — run weekly in production.</span></div></div>
-  </div>
-
-  <h3>Conflict Resolution — What Happens When Two Writes Race</h3>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Last Write Wins (LWW)</div><div class="concept-def"><strong>The write with the higher timestamp wins. Simple. Used by Cassandra by default.</strong><br>
-      Risk: clock skew. If node A's clock is 100ms ahead of node B's, a write to A at t=100 beats a write to B at t=150 even though B's write was actually later in wall-clock time.<br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ LWW silently discards "losing" writes with no error. Acceptable for: counters (use CRDT instead), cache values, ephemeral data. NOT acceptable for: financial records, user content.</span></div></div>
-    <div class="concept-row"><div class="concept-term">CRDT<br>(Conflict-free Replicated Data Types)</div><div class="concept-def"><strong>Data structures designed so concurrent updates always merge correctly — no conflicts possible.</strong><br>
-      <strong>G-Counter</strong>: each node maintains its own count, total is the sum. Two nodes incrementing simultaneously always converge correctly — no lost increments.<br>
-      <strong>G-Set</strong>: elements can only be added, never removed. Any two nodes merging always converge to the union.<br>
-      <strong>LWW-Register</strong>: last-write-wins with vector clocks instead of wall clocks — resolves the clock skew problem.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Used by: Redis CRDT (Enterprise), Riak, Apple Notes syncing, collaborative text editors (Figma, Notion use CRDT for real-time collaboration). No coordinator needed — every replica can accept writes and they all converge.</span></div></div>
-  </div>
-</section>
-
-<section id="sd-examples-ds">
-  <div class="sec-tag">06 · System Design Examples</div>
+<section id="examples">
+  <div class="sec-tag">05 · System Design Examples</div>
   <h2>Distributed systems patterns in real production systems</h2>
   <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Payment System — Exactly-Once Money Movement</div><span class="sd-example-tag">ACID · SAGA · IDEMPOTENCY</span></div>
+    <div class="sd-example-head"><div class="sd-example-title">Kubernetes — etcd as the Brain</div><span class="sd-example-tag">CP · RAFT · LINEARISABLE</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">THE PROBLEM</div><div class="choice-val">Debit user A ₹1000 AND credit user B ₹1000 must happen atomically across two DB shards. A network failure between the two operations would leave A debited but B not credited — money disappears.</div></div>
-      <div class="choice-row"><div class="choice-label">SAGA APPROACH</div><div class="choice-val">Step 1: Debit A (with idempotency key = txn_id). Step 2: Credit B (with same txn_id). If Step 2 fails: compensating transaction — re-credit A. Each step is idempotent — retrying with same txn_id is safe. The payment processor (Stripe, Razorpay) exposes idempotency keys on all APIs for exactly this reason.</div></div>
-      <div class="choice-row"><div class="choice-label">CONSISTENCY</div><div class="choice-val">The Saga achieves eventual consistency — there is a brief window where A is debited but B is not yet credited. For most payment systems this is acceptable (milliseconds). For truly atomic cross-bank transfers, 2PC via a distributed transaction coordinator (XA) is used, accepting its higher latency and blocking risk.</div></div>
-      <div class="choice-row"><div class="choice-label">IDEMPOTENCY KEY</div><div class="choice-val">Client generates UUID v4 for each payment attempt. Server stores (idempotency_key → result) in Redis for 24h. If same key arrives twice (network retry): return stored result without re-executing. Prevents double-charge on network timeouts — the most dangerous failure mode in payment systems.</div></div>
+      <div class="choice-row"><div class="choice-label">WHAT etcd STORES</div><div class="choice-val">All cluster state: which pods are running on which nodes, service definitions, config maps, secrets, RBAC rules. etcd is a CP system — during a partition, it stops accepting writes rather than risk divergent cluster state.</div></div>
+      <div class="choice-row"><div class="choice-label">LEADER ELECTION</div><div class="choice-val">Only one API server writes to etcd at a time (via Raft). kube-controller-manager and kube-scheduler use etcd-backed leases for leader election — only the leader instance processes changes. etcd's fencing token (revision number) prevents stale leaders from writing.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY NOT AP</div><div class="choice-val">If Kubernetes used an AP datastore and two controller-manager replicas disagreed about cluster state during a partition, they'd both try to schedule pods — creating duplicate deployments, split-brain scheduling, or conflicting resource allocation. CP is the only safe choice for infrastructure coordination.</div></div>
     </div>
   </div>
   <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Google Spanner — Global Transactions</div><span class="sd-example-tag">LINEARISABLE · GLOBAL</span></div>
+    <div class="sd-example-head"><div class="sd-example-title">Food Delivery App — Order Saga</div><span class="sd-example-tag">SAGA PATTERN · TEMPORAL</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">TRUETIME</div><div class="choice-val">GPS + atomic clocks at each data center. Each operation has a time range [earliest, latest]. Spanner commits after waiting out the uncertainty interval (~7ms). Guarantees that any read after a commit will see that commit — even from a different continent. External consistency (linearisability) at global scale.</div></div>
-      <div class="choice-row"><div class="choice-label">WHY IT MATTERS</div><div class="choice-val">Without TrueTime, a transaction committed at 14:00:00.000 in Mumbai might be assigned timestamp 13:59:59.950 due to clock skew. A read starting at 14:00:00.001 in Tokyo might not see it. TrueTime's wait-out-uncertainty approach eliminates this class of bug entirely.</div></div>
-      <div class="choice-row"><div class="choice-label">FOR INTERVIEWS</div><div class="choice-val">You cannot replicate TrueTime without GPS hardware. For most systems: use single-region Raft for strong consistency, or accept eventual consistency with vector clocks for global distribution. Spanner is the "what if money was no object" answer.</div></div>
+      <div class="choice-row"><div class="choice-label">SAGA STEPS</div><div class="choice-val">(1) Create order record → (2) Reserve restaurant slot → (3) Charge customer → (4) Assign delivery partner → (5) Notify customer. Each step is a local transaction. Each has a compensating transaction.</div></div>
+      <div class="choice-row"><div class="choice-label">FAILURE AT STEP 3</div><div class="choice-val">Payment fails. Compensating transactions: cancel restaurant reservation (step 2 compensation) → mark order as failed (step 1 compensation). Customer sees "payment failed" immediately. No money was charged. Restaurant slot is freed. Delivery partner was never assigned — no compensation needed.</div></div>
+      <div class="choice-row"><div class="choice-label">ORCHESTRATION</div><div class="choice-val">Temporal workflow manages the saga state durably. Each step is a Temporal activity. If the Temporal worker crashes mid-saga, it resumes from the last completed step on restart. The saga state is stored in Temporal's backend database. No lost orders, no orphaned state.</div></div>
+      <div class="choice-row"><div class="choice-label">EVENTUAL CONSISTENCY</div><div class="choice-val">Between step 2 (restaurant reserved) and step 3 (payment charged), the restaurant service sees a reservation that might get cancelled. This intermediate state is visible. The restaurant app must handle "pending" states gracefully — not assume all reservations become confirmed orders.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Google Spanner — Globally Linearisable</div><span class="sd-example-tag">CP · TRUETIME · GLOBAL</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">TRUETIME</div><div class="choice-val">GPS + atomic clocks provide bounded time uncertainty: current time is somewhere in interval [earliest, latest]. Uncertainty typically 7ms. Spanner waits out this uncertainty window before committing — ensures all nodes agree on transaction ordering without a Raft round trip per write.</div></div>
+      <div class="choice-row"><div class="choice-label">LINEARISABLE GLOBALLY</div><div class="choice-val">A transaction committed in Singapore is immediately visible to a read in Frankfurt — even though those data centres are separated by 150ms of latency. Spanner achieves this by assigning commit timestamps from TrueTime and delaying reads until their timestamp is safely in the past.</div></div>
+      <div class="choice-row"><div class="choice-label">REPLICATION</div><div class="choice-label">WHY UNIQUE</div><div class="choice-val">You cannot replicate Spanner without GPS/atomic clock hardware. CockroachDB approximates it with NTP (larger uncertainty window, uses Raft where Spanner uses TrueTime). For your system design: use Spanner for truly global ACID at the cost of 7ms commit latency. Use CockroachDB as an open-source alternative.</div></div>
     </div>
   </div>
 </section>
 
 <section id="followups">
-  <div class="sec-tag">05 · Follow-ups</div>
+  <div class="sec-tag">06 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle split-brain in a distributed system?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Split-brain: a network partition causes two groups of nodes to both believe they are the leader/primary, leading to divergent writes.</strong><br><br><strong>Prevention strategies:</strong><br>1. <strong>Quorum writes</strong>: a write only succeeds if acknowledged by majority (N/2+1). During partition, the minority partition cannot achieve quorum and stops accepting writes. Only the majority side proceeds. Used by: Raft, Cassandra QUORUM writes.<br><br>2. <strong>Fencing tokens</strong>: every time a new leader is elected, it receives a monotonically increasing token. Storage systems reject writes with older tokens. Even if the old leader thinks it is still active, its writes are rejected.<br><br>3. <strong>Lease-based leadership</strong>: leader holds a lease (timed lock). If it cannot renew before expiry, it steps down voluntarily. Used by: Kubernetes leader election via etcd.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does split-brain happen and how do you prevent it?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Split-brain: a network partition causes two groups of nodes to both believe they are the active primary, leading to divergent writes and data corruption.</strong><br><br>Example: 6-node cluster, partition splits into group of 4 and group of 2. Both groups try to elect a leader. Both succeed (within their own group). Both accept writes. When partition heals: two divergent histories, conflicting data.<br><br><strong>Prevention:</strong><br>1. <strong>Quorum writes</strong>: require majority (N/2+1) acknowledgement. The minority partition (2 nodes) cannot achieve quorum and stops accepting writes. Only the majority (4 nodes) proceeds. Raft enforces this automatically.<br><br>2. <strong>Fencing tokens</strong>: new leader gets a higher epoch/term number. Old leader's writes are rejected by storage systems that have seen the higher epoch.<br><br>3. <strong>Witness nodes</strong>: a lightweight tiebreaker node with no data — only votes. 2-node cluster → add a 3rd witness. Split 1+1+witness: majority requires 2 votes. Used by: SQL Server Availability Groups, some Cassandra configurations.</div></div>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between linearisability and serializability?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>These are often confused but refer to different properties at different levels.</strong><br><br><strong>Linearisability</strong> is about <em>single operations</em> on a single object (key). It means every read-write operation appears to happen atomically at a single point in time. It is a property of a single key's history.<br><br><strong>Serializability</strong> is about <em>transactions</em> (groups of operations, possibly on multiple keys). It means the result of concurrent transactions is equivalent to some serial (one-at-a-time) execution. It is a property of the database's transaction isolation.<br><br><strong>Strict Serializability (Linearisable Serializability)</strong> = both: transactions are serialized AND operations appear instantaneous. This is what Spanner and CockroachDB provide. The strongest guarantee, but most expensive.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does the Saga pattern handle a payment failure mid-order?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Compensating transactions undo the effects of already-completed steps.</strong><br><br>Order saga steps: Reserve Inventory → Charge Payment → Create Shipment → Send Confirmation.<br><br>Failure at step 2 (payment declined):<br>1. Shipment not yet created — skip<br>2. <strong>Compensating transaction for step 1</strong>: call Inventory Service with "release reservation for order X." Must be idempotent — if this fails and retries, it should not double-release.<br>3. Return "payment failed" to user.<br><br><strong>Key insight</strong>: compensating transactions must be idempotent and durable. Store the saga state in a database so you can resume compensation after a crash. This is what orchestration-based Sagas (e.g., AWS Step Functions, Temporal.io) manage for you automatically.</div></div>
-
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you make a distributed counter that never loses increments?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Three approaches in increasing sophistication:</strong><br><br>
-  <strong>1. Redis INCR</strong>: atomic, no data loss, sub-millisecond. Limitation: single node bottleneck at extreme throughput. Solution: Redis Cluster shards counters across nodes.<br><br>
-  <strong>2. Write-behind flush</strong>: accumulate increments in memory, flush to DB every 30 seconds. Checkpointing ensures no increments lost on crash. Accepts up to 30-second delay. Used by: YouTube view counter.<br><br>
-  <strong>3. CRDT G-Counter</strong>: each node maintains per-node count. Total = sum of all nodes. Merging always converges correctly — no coordination needed. Used by: distributed game leaderboards, eventually-consistent like counts.<br><br>
-  <strong>Which to use</strong>: Redis INCR for simplicity. Write-behind for high-volume where staleness is acceptable. CRDT for multi-region active-active with expected partitions.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">When does eventual consistency cause real user-facing problems?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Most common: "I just updated my profile but it still shows my old name."</strong><br><br>
-  This happens because the write went to the primary but the next read hits a secondary replica with replication lag (10–200ms typically).<br><br>
-  <strong>Read-your-own-writes consistency</strong>: after a user writes, route their subsequent reads to the primary for a short window (5 seconds). After the window, return to reading from replicas. Implementation: store last_write_timestamp in session. If current_time - last_write &lt; 5s, force primary reads.<br><br>
-  <strong>Monotonic reads</strong>: once a user sees version V of data, never show them version &lt;V again. Store last-seen version in session. Route reads to replicas that have caught up.<br><br>
-  <strong>Practical answer for interviews</strong>: implement read-your-own-writes for user-facing mutations. Accept eventual consistency for other users seeing the same data. This covers 90% of cases.</div></div>
+  <div class="faq-a"><strong>They solve different problems at different granularities — commonly confused in interviews.</strong><br><br><strong>Linearisability</strong>: applies to single operations on individual keys. Every read/write appears to happen atomically at a single point in time, globally visible. "If you write X=1 and then I read X, I must see 1." A property of the key's operation history.<br><br><strong>Serializability</strong>: applies to transactions (groups of operations across potentially many keys). The result of concurrent transactions is equivalent to some serial execution order. "My multi-step bank transfer looks as if no other transaction interleaved with it." A property of the database's transaction isolation.<br><br><strong>Strict Serializability</strong> (= Linearisable + Serializable): transactions are both serialised AND appear instantaneous. The gold standard. Spanner and CockroachDB provide this globally. Most expensive guarantee, but the one you want for financial systems.<br><br>Common systems: PostgreSQL SERIALIZABLE isolation is serializable but not linearisable (a replica read can be stale). Spanner is strictly serializable. Cassandra with QUORUM is neither (it provides tunable consistency, not transactions).</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle the compensating transaction failing in a Saga?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Compensating transactions must be idempotent and retried with exponential backoff until they succeed. They should never be allowed to permanently fail.</strong><br><br>Make compensating transactions idempotent: "cancel reservation for order X" executed twice should have the same effect as once (the second execution finds the reservation already cancelled — this is success, not an error).<br><br>Retry strategy: persistent retry queue (Kafka DLQ or dedicated retry table in DB). Each failed compensation attempt is re-enqueued with exponential backoff (1s, 2s, 4s, 8s...) and a max retry count.<br><br>What if compensation is permanently impossible? Example: payment refund fails because customer's card is closed. This is a "business exception" — not a technical failure. Route to a manual operations queue. Ops team handles it (alternative refund method, store credit, etc.). This is expected in production at large scale — Saga frameworks like Temporal provide a UI for exactly this: paused sagas requiring human intervention.<br><br>Design principle: compensation must always eventually succeed or escalate to human handling. Never silently drop a failed compensation — that leaves orphaned state in your system.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does Cassandra handle concurrent writes to the same key?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Cassandra uses Last Write Wins (LWW) — the write with the highest timestamp wins. This is correct most of the time but has known edge cases.</strong><br><br>Two concurrent writes to the same key from different nodes: write A has timestamp 14:00:01.000, write B has timestamp 14:00:00.998 (clock skewed). Write A wins — it has the higher timestamp. Write B is silently discarded, even though B might have been the "correct" or "intended" final value from the application's perspective.<br><br>Why Cassandra accepts this tradeoff: NTP clock skew is typically &lt;1ms on modern hardware. The probability of two writes in the same millisecond to the same key is very low for most workloads. And Cassandra is optimised for write-heavy, high-scale workloads where this tradeoff (very rare silent overwrites vs guaranteed write availability) is acceptable.<br><br>When it is not acceptable: financial data, counters (use Cassandra counters with conditional updates), any data where silent overwrites are unacceptable. For these: use CAS (Compare-And-Set with Lightweight Transactions) which uses Paxos for coordination — but at 4x the latency cost.</div></div>
 </section></div>
-<div class="footer">DISTRIBUTED SYSTEMS · CAP · RAFT · SAGA · IDEMPOTENCY · VECTOR CLOCKS · MANISH-ALMANAC</div>
+<div class="footer">DISTRIBUTED SYSTEMS · CAP · RAFT · SAGA · IDEMPOTENCY · VECTOR CLOCKS · CRDTs · FENCING · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body></html>
