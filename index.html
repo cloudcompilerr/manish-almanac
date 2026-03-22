@@ -39,8 +39,8 @@
     <div class="section-divider">My Collection</div>
     <button class="note-row" id="btn_collection">
       <div class="note-icon">📚</div>
-      <div class="note-preview"><div class="note-title">My Collection</div><div class="note-snippet">Security · API Design · DS · Microservices · Design Twitter/Uber/WhatsApp · +22 more</div></div>
-      <div class="note-date">28 items</div>
+      <div class="note-preview"><div class="note-title">My Collection</div><div class="note-snippet">Caching · Load Balancing · Consistent Hashing · Rate Limiting · +13 more</div></div>
+      <div class="note-date">17 items</div>
     </button>
   </div>
 </div>
@@ -225,7 +225,12 @@ document.addEventListener('DOMContentLoaded',function(){
   <div id="db-results" class="db-body" style="display:none">
     <div id="db-results-inner"></div>
     <button class="db-run" style="background:var(--ts);margin-top:8px" onclick="resetDebate()">← New debate</button>
-  </div>    
+  </div>
+</div>
+
+
+
+
 <!-- MY COLLECTION — list panel -->
 <div id="coll-panel">
   <div class="coll-header">
@@ -476,7 +481,7 @@ document.addEventListener('DOMContentLoaded',function(){
     <div class="ci-title" id="ci-title">Item</div>
   </div>
   <iframe id="ci-iframe" 
-    sandbox="allow-scripts"
+    sandbox="allow-scripts allow-same-origin"
     style="border:none;width:100%;flex:1;display:block;"
     src="about:blank"></iframe>
 </div>
