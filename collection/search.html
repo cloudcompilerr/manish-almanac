@@ -235,6 +235,49 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
+
+<section id="ranking">
+  <div class="sec-tag">04 · Search Ranking</div>
+  <h2>How search results are ordered — beyond BM25</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Multi-Stage Ranking</div><div class="concept-def"><strong>Modern search uses a pipeline: cheap retrieval first, expensive re-ranking after.</strong><br>
+      Stage 1 — <strong>Recall</strong>: BM25/inverted index retrieves top 10,000 candidates. Fast, cheap.<br>
+      Stage 2 — <strong>Re-rank</strong>: ML model (LambdaMART, BERT-based) scores the top 1,000. Considers personalisation, freshness, engagement signals.<br>
+      Stage 3 — <strong>Business rules</strong>: Apply boosts (promoted listings), filters (safety), and diversity rules (not all results from same author).<br>
+      <span style="color:#5a5848;font-size:12.5px;">Why multi-stage: running a BERT model on 10M documents per query is too slow. Run it on 1,000 pre-filtered candidates → acceptable latency.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Relevance Signals</div><div class="concept-def"><strong>Beyond term frequency, production search incorporates:</strong><br>
+      <strong>Query-document signals</strong>: BM25 score, field match (title match worth 3x body match), exact phrase match bonus.<br>
+      <strong>Document-level signals</strong>: freshness (newer content boosted), authority (PageRank-style link graph), engagement (CTR, dwell time, shares).<br>
+      <strong>Personalisation</strong>: user's past clicks, location, language, search history.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Elasticsearch Rescore API: retrieve top 10K by BM25, rescore top 500 with a more expensive function. Balances speed and quality.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Faceted Search</div><div class="concept-def"><strong>Filter and aggregate search results by multiple dimensions simultaneously — the e-commerce standard.</strong><br>
+      Query: "laptop" → results filtered by brand (Apple/Dell/HP), RAM (8GB/16GB/32GB), price range. Counts shown per facet: "Apple (234), Dell (189)..."<br>
+      Elasticsearch implementation: use <code>aggregations</code> alongside the query. One request returns both the matched documents AND the facet counts. No separate aggregation query needed.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Helps users narrow results without reformulating queries. Amazon, Flipkart, Zalando — all use faceted search as the primary product discovery interface.</span></div></div>
+  </div>
+</section>
+
+<section id="more-sd-search">
+  <div class="sec-tag">05 · More System Design Examples</div>
+  <h2>Search architecture in Uber, LinkedIn, and GitHub</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Uber — Driver and Restaurant Search</div><span class="sd-example-tag">GEO-SPATIAL · REAL-TIME</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">GEO INDEX</div><div class="choice-val">Uber stores driver locations in a geospatial index. S2 cells (Google's geo library) divide the world into hierarchical cells. Finding drivers within 2km of a rider = find all occupied S2 cells at the appropriate level within radius. Elasticsearch's geo_point field type with <code>geo_distance</code> query handles this natively.</div></div>
+      <div class="choice-row"><div class="choice-label">REAL-TIME UPDATE</div><div class="choice-val">Driver positions update every 4 seconds via WebSocket. Writes go to a Redis Geo hash (GEOADD) for the hot, live view. Elasticsearch index updated async for the search layer. Two stores: Redis for real-time dispatch, Elasticsearch for search/analytics.</div></div>
+      <div class="choice-row"><div class="choice-label">RESTAURANT SEARCH</div><div class="choice-val">Uber Eats: full-text BM25 on restaurant name + cuisine tags + menu items. Geo filter applied first (only restaurants within delivery range). Ranked by: rating, estimated delivery time, sponsored placement (business rules layer), and personalisation (user's order history).</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">LinkedIn — People and Job Search</div><span class="sd-example-tag">PERSONALISED · SOCIAL GRAPH</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PEOPLE SEARCH</div><div class="choice-val">LinkedIn's Galene search engine (Elasticsearch-based): indexes 900M+ member profiles. Query "data scientist in Bangalore" → BM25 retrieval → ML re-ranking using network distance (1st/2nd degree connections ranked higher), engagement prediction, and profile completeness score.</div></div>
+      <div class="choice-row"><div class="choice-label">JOB SEARCH</div><div class="choice-val">Semantic matching: your profile embedding (skills, title, experience) is compared to job embedding using cosine similarity (vector search). Keyword match + semantic similarity combined (hybrid search). Jobs at companies where you have connections get a boost.</div></div>
+      <div class="choice-row"><div class="choice-label">TYPEAHEAD</div><div class="choice-val">Job title suggestions: Redis ZSET with ~50K common job titles, scored by global frequency. Prefix query on typed characters returns top 5 suggestions in &lt;5ms. Personalised layer re-ranks suggestions based on user's profile and connections.</div></div>
+    </div>
+  </div>
+</section>
+
 <section id="followups">
   <div class="sec-tag">05 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
@@ -242,6 +285,18 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="faq-a"><strong>Two patterns, with very different trade-offs:</strong><br><br><strong>1. Dual write</strong>: Application writes to DB AND ES in the same request. Simple but dangerous — if ES write fails, you have inconsistency with no way to detect it. Acceptable only for non-critical search.<br><br><strong>2. Change Data Capture (CDC)</strong>: Debezium (or similar) reads the PostgreSQL WAL (Write-Ahead Log) and publishes every change to Kafka. An ES indexing consumer reads from Kafka and keeps ES in sync. This is the production approach:<br>— Source of truth is always the DB<br>— ES is an eventually consistent read replica<br>— On ES failure, reindex from DB<br>— Typical lag: 100ms–2s<br><br>Tools: Debezium + Kafka + Elasticsearch Kafka Connector. Used by: LinkedIn, Airbnb, Shopify.</div></div>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is vector search and when do you need it?<span class="tog">+</span></div>
   <div class="faq-a"><strong>Vector search finds documents semantically similar to a query, not just exact keyword matches.</strong><br><br>Classic inverted index search for "fast database" would not return a document about "high-performance data store" — different words, even if same meaning. Vector search uses ML embeddings (e.g., OpenAI text-embedding-ada-002) to convert both query and documents to dense vectors in the same semantic space. Documents near the query vector in that space are semantically similar.<br><br><strong>Implementation</strong>: index document embeddings in a vector database (Pinecone, Weaviate, Milvus, or Elasticsearch with kNN). Query: embed the query text → find K nearest neighbours using approximate nearest neighbour (HNSW algorithm).<br><br><strong>When to use</strong>: semantic search ("show me articles about making databases fast"), recommendation ("more content like this"), Q&A (RAG — Retrieval Augmented Generation for LLMs).<br><br><strong>Hybrid search</strong>: combine keyword BM25 + vector KNN scores (Reciprocal Rank Fusion). Best of both worlds — used by production AI search systems.</div></div>
+
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do search engines handle spelling mistakes — "gogle" instead of "google"?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Three techniques, typically combined:</strong><br><br>
+  <strong>1. Edit distance (Levenshtein)</strong>: for each query term, find indexed terms within edit distance 2 (2 character insertions/deletions/substitutions). "gogle" is distance 1 from "google." Return results for the nearest match. Elasticsearch has a <code>fuzziness</code> parameter that does this automatically.<br><br>
+  <strong>2. N-gram index</strong>: at index time, break "google" into trigrams: [goo, oog, ogl, gle]. Index each trigram. At query time, break "gogle" into [gog, ogl, gle]. Overlap of 2 trigrams → likely a match. Faster than edit distance for large indexes.<br><br>
+  <strong>3. Query rewriting with spell checker</strong>: maintain a dictionary of correct terms with frequencies. For each query term not in dictionary, suggest the closest term. "Did you mean: google?" Google famously implemented this with a neural spell checker trained on query logs — "what users typed → what they actually meant."<br><br>
+  <strong>Production approach</strong>: use Elasticsearch's built-in fuzzy matching for simple cases. For high-traffic queries, maintain a learned correction model trained on click-through data (if users click the 2nd result for query X, X was likely a misspelling of result 2's title).</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you keep search results fresh when new content is added every second?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Elasticsearch's NRT (Near Real-Time) makes documents searchable within ~1 second of indexing — usually sufficient. For truly real-time requirements, different approaches are needed.</strong><br><br>
+  <strong>Standard NRT path</strong>: write to ES → in-memory buffer → refresh every 1s → new segment → searchable. For most use cases (news articles, tweets), 1-second lag is imperceptible.<br><br>
+  <strong>For sub-second freshness</strong> (stock prices, live sports scores): do not use ES for the hot data. Use Redis Sorted Sets or a dedicated real-time index (Druid) for the last few minutes. ES handles historical data. The search UI blends real-time results (from Redis) with historical results (from ES).<br><br>
+  <strong>Index update strategy</strong>: full reindex (expensive, for schema changes), partial update via Update API (efficient for changing specific fields), delete + reindex (for major changes to a document). Avoid full reindexes for high-traffic indexes during peak hours — they consume significant I/O.</div></div>
 </section></div>
 <div class="footer">SEARCH · ELASTICSEARCH · INVERTED INDEX · BM25 · TYPEAHEAD · VECTOR SEARCH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

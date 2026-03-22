@@ -226,6 +226,77 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
+
+<section id="deploy-strategies">
+  <div class="sec-tag">04 · Deployment Strategies</div>
+  <h2>Blue-green, canary, and rolling — how the LB enables zero-downtime deploys</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Blue-Green Deploy</div><div class="concept-def"><strong>Run two identical production environments (blue = current, green = new). Switch traffic instantly by updating the LB.</strong><br>
+      Blue = v1.0 serving 100% traffic. Deploy v1.1 to green (idle). Run smoke tests on green. Switch LB: 0% → blue, 100% → green. Instant cutover. Rollback: flip LB back to blue in seconds.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Zero downtime. Instant rollback. Full production test on idle environment before cutover. Used for: high-stakes deploys where any version mixing is unacceptable.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Requires double infrastructure temporarily. DB schema changes must be backwards-compatible (both blue and green must work with same schema during transition).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Canary Deploy</div><div class="concept-def"><strong>Route a small percentage of real traffic to the new version. Gradually increase if metrics look good.</strong><br>
+      Week 1: 1% → new version. Week 2: 10%. Week 3: 50%. Week 4: 100%. At each stage, monitor error rates, latency, and business metrics. Automated rollback if anomaly detected.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Real user validation before full rollout. Limits blast radius of bugs to 1% of users initially. Used by: Google, Netflix, Amazon for all feature releases.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">Implementation: Nginx <code>split_clients</code>, Envoy weighted clusters, AWS ALB weighted target groups. Route by: random (statistical), user ID hash (consistent experience), header flag (beta testers).</span></div></div>
+    <div class="concept-row"><div class="concept-term">Rolling Deploy</div><div class="concept-def"><strong>Replace instances one at a time. At any point, some instances run old version, some run new.</strong><br>
+      10 instances: replace 1 → 2 → 3... until all 10 run new version. LB automatically routes to healthy instances (health checks remove in-progress instances from rotation).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ No extra infrastructure. Gradual. Works with any LB.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Both versions run simultaneously — APIs must be backwards-compatible. Rollback requires rolling back all instances (slow). Default strategy for Kubernetes Deployments.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Connection Draining</div><div class="concept-def"><strong>Before removing a server from rotation, wait for in-flight requests to complete.</strong><br>
+      1. Mark server as "draining" in LB — no new connections routed to it.<br>
+      2. Wait for existing connections to finish (or timeout after 30 seconds).<br>
+      3. Server reports zero active connections → safely terminate/redeploy.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Zero dropped requests. Users in the middle of a long operation (file upload, ML inference) are not interrupted. AWS ALB calls this "deregistration delay" (default 300s).</span></div></div>
+  </div>
+</section>
+
+<section id="nginx-envoy">
+  <div class="sec-tag">05 · Nginx vs Envoy vs HAProxy</div>
+  <h2>Choosing the right proxy for each layer</h2>
+  <table class="comp-table">
+    <thead><tr><th>Dimension</th><th>Nginx</th><th>Envoy</th><th>HAProxy</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Primary role</td><td>Web server + reverse proxy</td><td>Service mesh sidecar + edge proxy</td><td>High-performance TCP/HTTP LB</td></tr>
+      <tr><td class="row-head">Configuration</td><td>Declarative config files</td><td>xDS dynamic API (no reload needed)</td><td>Declarative config, hot reload</td></tr>
+      <tr><td class="row-head">Dynamic config</td><td><span class="warn">Requires reload (brief pause)</span></td><td><span class="good">Real-time via xDS — zero downtime</span></td><td><span class="warn">Requires reload</span></td></tr>
+      <tr><td class="row-head">Observability</td><td>Access logs, basic metrics</td><td><span class="good">Built-in tracing, rich metrics, access logs</span></td><td>Good stats, logs</td></tr>
+      <tr><td class="row-head">Service mesh</td><td><span class="bad">Not designed for it</span></td><td><span class="good">Built for it — Istio uses Envoy</span></td><td><span class="bad">Not designed for it</span></td></tr>
+      <tr><td class="row-head">L4 performance</td><td>Good</td><td>Good</td><td><span class="good">Excellent — purpose-built for throughput</span></td></tr>
+      <tr><td class="row-head">Ops simplicity</td><td><span class="good">Simple — widely understood</span></td><td><span class="warn">Complex xDS, steep learning curve</span></td><td><span class="good">Simple</span></td></tr>
+      <tr><td class="row-head">Use at</td><td>Web server, simple edge proxy, static serving</td><td>Service mesh sidecar, complex routing, microservices</td><td>High-throughput TCP LB, database proxies</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout cl-blue">
+    <div class="cl-lbl">How Envoy's xDS works — interviewers love this</div>
+    <p><strong>Traditional proxies require a reload to pick up config changes.</strong> During reload, there's a brief pause. With 1000 Envoy sidecars, reloading all of them for every config change is impractical.</p>
+    <p><strong>xDS (Discovery Service):</strong> Envoy maintains a persistent gRPC connection to a control plane (Istio Pilot). The control plane pushes config updates in real time. Envoy applies them instantly with zero connection drops. Adding a new backend node? Control plane updates all Envoy instances in seconds — no reload, no downtime, no deployment needed.</p>
+  </div>
+</section>
+
+<section id="more-sd-lb">
+  <div class="sec-tag">06 · More System Design Examples</div>
+  <h2>Load balancing in complex real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Netflix — Multi-Tier Global LB</div><span class="sd-example-tag">GLOBAL · VIDEO STREAMING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">DNS / GLOBAL</div><div class="choice-val">AWS Route 53 latency-based routing → nearest AWS region. Anycast via CloudFront for video segments. User in Singapore → Singapore edge, never touches US origin for cached video.</div></div>
+      <div class="choice-row"><div class="choice-label">EDGE (L7)</div><div class="choice-val">AWS ALB in each region. Path-based routing: <code>/api/*</code> → microservices, <code>/video/*</code> → streaming service. SSL termination at ALB. mTLS to internal services via Envoy service mesh.</div></div>
+      <div class="choice-row"><div class="choice-label">INTERNAL</div><div class="choice-val">Envoy sidecars on every microservice (Zuul 2 at the edge, Envoy internally). Circuit breaking: if Recommendation Service fails, Envoy automatically falls back to cached recommendations. Zero code changes — configured in Istio control plane.</div></div>
+      <div class="choice-row"><div class="choice-label">CANARY</div><div class="choice-val">New recommendation algorithm deployed to 1% of users via weighted routing in Envoy. A/B test measured on play rate and watch time metrics. Full rollout only after statistically significant improvement confirmed.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Database Proxy — PgBouncer for PostgreSQL</div><span class="sd-example-tag">CONNECTION POOLING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">THE PROBLEM</div><div class="choice-val">PostgreSQL supports ~100–400 concurrent connections before performance degrades (each connection is a process). A web app with 50 servers × 20 threads each = 1,000 connections. Postgres falls over.</div></div>
+      <div class="choice-row"><div class="choice-label">PGBOUNCER</div><div class="choice-val">PgBouncer sits between app servers and PostgreSQL. App servers open connections to PgBouncer (thousands of connections OK). PgBouncer maintains a pool of 50–100 real connections to PostgreSQL. Transaction-mode pooling: a real connection is only needed during an active transaction — idle app connections share the real connection pool.</div></div>
+      <div class="choice-row"><div class="choice-label">LB FOR DB</div><div class="choice-val">HAProxy in front of PostgreSQL read replicas: <code>balance leastconn</code> routes read queries to the least-loaded replica. Primary write goes direct. This is an L4 LB — HAProxy does not inspect SQL, just routes TCP connections.</div></div>
+    </div>
+  </div>
+</section>
+
 <section id="followups">
   <div class="sec-tag">05 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
@@ -241,6 +312,17 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   For managed cloud LBs (AWS ALB/NLB): AWS runs them as a managed service across multiple AZs automatically. Not your problem.<br><br>
   For self-managed LBs: run two Nginx/HAProxy instances in active-passive with keepalived. keepalived uses VRRP (Virtual Router Redundancy Protocol) — a virtual IP floats to whichever Nginx is healthy. If primary dies, virtual IP moves to secondary in &lt;1 second. DNS points to the virtual IP, not to either specific host.<br><br>
   At Google/Netflix scale: use anycast routing — the same IP address is announced from multiple data centers. BGP routing automatically sends users to the nearest available one. Individual LB failures are invisible to users.</div></div>
+
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does a load balancer handle sticky sessions without storing state?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Sticky sessions route the same user to the same server, but the LB itself should not store per-user state (that would make the LB stateful and harder to scale).</strong><br><br>
+  <strong>Cookie-based stickiness (L7)</strong>: LB injects a cookie (AWSALB, JSESSIONID) containing a hashed identifier for the target server. On subsequent requests, LB reads the cookie and routes to the indicated server. LB is stateless — the routing information lives in the client's cookie.<br><br>
+  <strong>Consistent hash by IP/User-ID (L4)</strong>: hash the source IP (or a user ID from headers) to deterministically select the same server. No state stored anywhere. Downside: if server counts change, the hash remaps — consistent hashing mitigates this.<br><br>
+  <strong>When to avoid sticky sessions</strong>: sticky sessions make scaling and rolling deploys harder (you must drain a server of its sticky sessions before removing it). If your application needs stickiness, consider moving the stateful data to a shared store (Redis) instead, so any server can handle any request.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between a load balancer and an API gateway?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>All API gateways are load balancers, but not all load balancers are API gateways.</strong><br><br>
+  A <strong>load balancer</strong> distributes traffic across servers. It may be L4 (TCP-level) or L7 (HTTP-level). Its primary concern is traffic distribution and availability.<br><br>
+  An <strong>API gateway</strong> is a superset: it also load balances, but adds: authentication (JWT validation), authorisation (RBAC checks), rate limiting (per-user quotas), request transformation (add/remove headers, transform body), API versioning (route /v1/ and /v2/ to different backend versions), observability (per-endpoint metrics and logging), and developer portal integration.<br><br>
+  <strong>Rule of thumb for interviews</strong>: if the component needs to understand your business logic (who is this user? what plan are they on? is this request authorised?), it is an API gateway. If it just needs to distribute traffic reliably, it is a load balancer. In production, you typically have both: an L4 NLB at the outer edge (raw throughput), an L7 API gateway behind it (business logic), and internal load balancers between services.</div></div>
 </section></div>
 <div class="footer">LOAD BALANCING · L4 · L7 · NGINX · ENVOY · CIRCUIT BREAKER · API GATEWAY · SERVICE MESH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

@@ -205,6 +205,69 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
+
+<section id="decision-cdn">
+  <div class="sec-tag">04 · Decision Framework</div>
+  <h2>How to talk about CDN in a system design interview</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>CDN Strategy Selection — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Is the content static (same for all users)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (static) →</span><span class="opt-text"><strong>Definitely use CDN.</strong> Images, videos, JS/CSS bundles, compiled HTML. Cache at edge with long TTL (1 year for versioned assets). This is the highest-ROI CDN use case — zero origin load for cached content.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (dynamic/personalised) →</span><span class="opt-text">Consider edge caching only for public, cacheable API responses. User-specific content cannot be cached at CDN without per-user cache keys (defeats the purpose). Go to Step 3.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">For static content: push or pull CDN?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Known ahead of time →</span><span class="opt-text"><strong>Push CDN.</strong> Proactively distribute to all PoPs before users request. Zero first-request miss. Use for: software releases, product launch assets, video premieres where you know demand will spike immediately.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Demand unpredictable →</span><span class="opt-text"><strong>Pull CDN (default).</strong> First request per PoP hits origin. Subsequent requests served from cache. Automatically distributes popular content globally. Works for 99% of use cases.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Do you need logic at the edge (auth, A/B testing, geo-routing)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Edge Compute</strong> (Cloudflare Workers, Lambda@Edge). Validate JWTs at edge (reject invalid tokens before they hit origin), A/B test routing (redirect 10% to new version), geo-based content (show Indian prices to Indian users). Sub-ms overhead, no origin round-trip.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text"><strong>Standard CDN caching.</strong> Just set appropriate Cache-Control headers on your origin responses. Cloudflare/CloudFront respects them automatically.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">04</div><div class="step-content">
+        <div class="step-q">What is your cache invalidation strategy?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Versioned filenames →</span><span class="opt-text"><strong>Best approach for static assets.</strong> <code>app.v2.3.7.js</code> — old URL stays cached forever, new URL fetched fresh. Zero-downtime deploy. Infinite TTL (Cache-Control: max-age=31536000, immutable).</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Purge API →</span><span class="opt-text"><strong>For emergencies.</strong> <code>POST api.cloudflare.com/cache/purge</code> with specific URLs. Propagates globally in &lt;150ms (Fastly) to ~30s (CloudFront). Use sparingly — not designed for high-frequency changes.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Short TTL →</span><span class="opt-text"><strong>For semi-dynamic content.</strong> <code>Cache-Control: max-age=300</code>. Stale for up to 5 minutes. Acceptable for: news articles, product prices, API responses that change infrequently.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="sd-examples-cdn">
+  <div class="sec-tag">05 · System Design Examples</div>
+  <h2>CDN architecture in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Netflix — Global Video Delivery</div><span class="sd-example-tag">PETABYTES · ADAPTIVE STREAMING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">OPEN CONNECT</div><div class="choice-val">Netflix runs its own CDN called Open Connect. Netflix appliances are co-located in ISP data centers worldwide (1,000+ locations). ISPs host these appliances for free in exchange for reduced peering costs. Result: ~95% of Netflix traffic served from inside the ISP's own network — no internet backbone traversal for the user's last mile.</div></div>
+      <div class="choice-row"><div class="choice-label">PROACTIVE CACHING</div><div class="choice-val">Netflix pre-loads popular content to Open Connect appliances during off-peak hours (2–4am local time). Trending shows are pushed to all regional appliances before peak viewing. Cache hit rate for popular titles: ~99%. Long-tail content served from S3 origin via CloudFront.</div></div>
+      <div class="choice-row"><div class="choice-label">HLS SEGMENTS</div><div class="choice-val">Each 2-hour movie = ~720 × 10-second HLS segments per quality level × 5 quality levels = 3,600 cached files. The first 60 seconds (6 segments) of every show is pre-loaded to all major PoPs — zero wait time when users press play. Subsequent segments loaded as user watches.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY OWN CDN</div><div class="choice-val">At Netflix's scale (~500Tbps peak bandwidth), commercial CDN costs would be $500M+/year. Open Connect amortises over company lifetime and gives Netflix full control over caching policy, health monitoring, and routing decisions.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">E-Commerce — Asset Pipeline & API Caching</div><span class="sd-example-tag">MIXED STATIC + DYNAMIC</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">STATIC ASSETS</div><div class="choice-val">Product images, CSS, JS bundled with content hash in filename (<code>main.3f2c9a.js</code>). Deployed to S3 → CloudFront. Cache-Control: max-age=31536000, immutable. Images CDN served from nearest PoP in &lt;10ms globally. Origin S3 never receives image requests after initial population.</div></div>
+      <div class="choice-row"><div class="choice-label">PRODUCT API</div><div class="choice-val"><code>GET /api/products/{id}</code> response: Cache-Control: public, max-age=300, s-maxage=3600. Browser caches 5 minutes, CDN caches 1 hour. Product catalog changes are infrequent — 1-hour CDN TTL is acceptable. CloudFront serves ~80% of product API requests without touching origin.</div></div>
+      <div class="choice-row"><div class="choice-label">PERSONALISED</div><div class="choice-val"><code>GET /api/cart</code>, <code>GET /api/user</code>: Cache-Control: private, no-store. CDN never caches user-specific data. These requests always reach origin. Keep non-cacheable API calls minimal — design your API to maximise cacheable endpoints.</div></div>
+      <div class="choice-row"><div class="choice-label">FLASH SALE</div><div class="choice-val">Flash sale landing page pre-pushed to all CDN PoPs 5 minutes before launch. Warm cache ensures zero origin load when 1M users hit the page simultaneously. Origin only handles the purchase API calls — which cannot be cached.</div></div>
+    </div>
+  </div>
+</section>
+
 <section id="followups">
   <div class="sec-tag">04 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
@@ -219,6 +282,20 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <strong>CloudFront (AWS)</strong>: Best choice if you are already on AWS. Native integration with S3 (origin), ALB, API Gateway, Lambda@Edge. Pricing: per-GB transfer + per-request. Can get expensive at very high volume. Management via AWS Console/IaC (Terraform, CDK).<br><br>
   <strong>Cloudflare</strong>: Independent of cloud provider. Largest network (200+ PoPs, 100+ Tbps). Best DDoS protection. Workers are the most capable edge compute. Generous free tier. Flat pricing at enterprise scale (often cheaper than CloudFront for high-volume). Best choice for: security-first setups, cloud-agnostic architectures, maximising CDN network size.<br><br>
   <strong>Fastly</strong>: Fewer PoPs but very high capacity at each. Instant purge API (&lt;150ms globally) — critical for news sites and real-time content. Varnish-based — very developer-friendly cache configuration. Best choice for: media companies, news sites, any use case where sub-second cache invalidation is critical.</div></div>
+
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does CDN handle HTTPS — does the CDN see your encrypted traffic?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Yes — the CDN terminates TLS on your behalf. The CDN can see the decrypted content.</strong><br><br>
+  When a user connects to your CDN (Cloudflare, CloudFront), TLS is terminated at the CDN edge. The CDN decrypts the request, makes a routing decision (cache hit or origin fetch), and re-encrypts for the origin if needed.<br><br>
+  <strong>End-to-end encryption</strong>: configure your CDN to also use HTTPS when fetching from origin (origin pull over HTTPS). This means: User → TLS → CDN edge → TLS → Origin. Two separate TLS sessions, both encrypted. The CDN can see the plaintext in the middle — this is a trust question, not a technical limitation.<br><br>
+  <strong>TLS certificates</strong>: CDNs provision and renew TLS certificates automatically (Cloudflare's Universal SSL, CloudFront ACM). You do not need to manage certificate rotation. The CDN's certificate covers your domain (<code>yourdomain.com</code>) via SNI (Server Name Indication) — one IP address serves HTTPS for thousands of domains on shared infrastructure.<br><br>
+  <strong>For regulated industries</strong> (healthcare, finance): check your compliance requirements. Some regulations require end-to-end encryption where only the final recipient can decrypt. In practice, most enterprises use CDNs for HTTPS with contractual data processing agreements (DPAs) with the CDN provider.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between a CDN and a reverse proxy — can Cloudflare Workers replace your backend?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>A CDN is a distributed reverse proxy network optimised for caching and delivery. Workers extend it to run arbitrary code at the edge.</strong><br><br>
+  <strong>CDN without Workers</strong>: caches and delivers static/cacheable content. Cannot make database queries, cannot run business logic, cannot access your internal APIs. Acts as a transparent pass-through for uncached requests.<br><br>
+  <strong>Cloudflare Workers</strong>: V8 JavaScript/WASM runtime at every PoP. Can: read/write KV store (Cloudflare KV, Durable Objects), make HTTP requests to external services, modify request/response on the fly, implement rate limiting logic, run ML inference (Workers AI).<br><br>
+  <strong>What Workers can replace</strong>: stateless edge functions (JWT validation, header manipulation, A/B testing, geo-routing, simple redirects), static API responses (config, feature flags), lightweight personalization.<br><br>
+  <strong>What Workers cannot replace</strong>: anything requiring your primary database (Cloudflare KV has ~50ms global read latency but limited querying capabilities), long-running computations (&gt;30ms CPU limit per request), streaming heavy media processing.<br><br>
+  <strong>The architecture</strong>: Workers as edge compute + your origin as the authority for dynamic data. Workers handle 90% of requests at the edge; only complex, personalised, or write requests reach your origin.</div></div>
 </section></div>
 <div class="footer">CDN · EDGE · CLOUDFLARE · CLOUDFRONT · HLS · ADAPTIVE BITRATE · DDOS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

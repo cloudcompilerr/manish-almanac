@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rate Limiting & Throttling</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-
 :root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
 body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
@@ -132,79 +128,74 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
-
-
-</style>
-</head>
-<body>
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
-    <h1>Rate Limiting & Throttling<br><em>Token bucket, leaky bucket, sliding window — every algorithm explained with distributed implementation patterns and real system design examples.</em></h1>
-    <p class="hero-sub">Token bucket, leaky bucket, sliding window — every algorithm explained with distributed implementation patterns and real system design examples.</p>
-    <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Token Bucket</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">Sliding Window</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">Redis INCR</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Leaky Bucket</span></div>
-  </div>
-</div>
-<nav class="nav"><a href="#why">Why Rate Limit</a><a href="#algorithms">Algorithms</a><a href="#distributed">Distributed</a><a href="#examples">System Design</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a></nav>
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Rate Limiting & Throttling<br><em>Every algorithm from token bucket to sliding window counter, distributed implementation with Redis, multi-layer enforcement, and production system design examples.</em></h1>
+  <p class="hero-sub">Every algorithm from token bucket to sliding window counter, distributed implementation with Redis, multi-layer enforcement, and production system design examples.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Token Bucket</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Sliding Window</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Redis INCR/Lua</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Leaky Bucket</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Circuit Breaker</span></div>
+</div></div>
+<nav class="nav"><a href="#why">Why Rate Limit</a><a href="#algorithms">Algorithms</a><a href="#distributed">Distributed</a><a href="#layers">Layers</a><a href="#examples">System Design</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a></nav>
 <div class="wrap">
-
 <section id="why">
   <div class="sec-tag">00 · Why Rate Limiting</div>
-  <h2>What breaks without it</h2>
-  <p>Without rate limiting: one bad actor (or a bug in a client) sends 100K requests/second to your API. Your database collapses. Every other user is impacted. Rate limiting is the first line of defence — it protects your system from both malicious abuse and accidental overload.</p>
-  <div class="callout cl-amber">
-    <div class="cl-lbl">Real examples of why this matters</div>
-    <p><strong>Stripe:</strong> Charges per API call. A bug in customer code loops 10K calls/sec. Without rate limiting: customer pays $10K/sec unexpectedly AND Stripe's infra is impacted.</p>
-    <p><strong>Twitter API:</strong> 300 requests per 15-minute window per user. Prevents scrapers from harvesting all tweets while ensuring legitimate app developers can build.</p>
-    <p><strong>Payment APIs:</strong> Max 10 login attempts per minute per IP. Prevents brute-force credential stuffing attacks.</p>
+  <h2>What collapses without it — the three failure modes</h2>
+  <p>A single misbehaving client, a buggy retry loop, or a credential-stuffing bot can send 100,000 requests per second to your API. Without rate limiting, your database absorbs all of it until it falls over — and every other user is impacted. Rate limiting is the contract between your API and the outside world.</p>
+  <div class="analogy">
+    <div class="analogy-label">Three failure modes you are actually defending against</div>
+    <div class="analogy-text">
+      <strong>1. Accidental overload</strong>: A customer's backend has a bug — their retry loop goes infinite. They go from 10 req/sec to 100,000 req/sec. Without rate limiting: your API goes down for all customers. With it: their requests get 429s, your other customers are unaffected.<br><br>
+      <strong>2. Abuse / scraping</strong>: A competitor scrapes your entire product catalogue. Without limits: they steal your data and you pay the egress bill. With it: they hit limits at 1,000 requests/minute and give up.<br><br>
+      <strong>3. Brute force</strong>: An attacker tries 10M password combinations against your login endpoint. Without limits: they eventually succeed. With per-IP limits (5 attempts/minute): they'd need 32 years to try 10M passwords.
+    </div>
   </div>
 </section>
 
 <section id="algorithms">
-  <div class="sec-tag">01 · The Four Algorithms</div>
-  <h2>Token bucket, leaky bucket, fixed window, sliding window log</h2>
+  <div class="sec-tag">01 · The Five Algorithms</div>
+  <h2>Token bucket, leaky bucket, fixed window, sliding window log, sliding window counter</h2>
   <div class="concept-grid">
     <div class="concept-row">
-      <div class="concept-term">Token Bucket</div>
-      <div class="concept-def"><strong>A bucket holds up to N tokens. Tokens refill at rate R per second. Each request consumes 1 token. No tokens = rejected.</strong><br>
-        Example: bucket capacity=100, refill rate=10/sec. A burst of 100 requests is allowed immediately (uses all tokens). Then max 10/sec until refilled.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ Allows bursts up to bucket size. Smooth average rate enforcement. Memory: O(1) per user (just store token count + last refill time).</span><br>
-        <span style="color:#b83030;font-size:12.5px;">⚠ Allows requests at exactly the boundary — two full bursts are possible at the start and end of a window.</span><br>
-        <span style="color:#5a5848;font-size:12.5px;">Used by: AWS API Gateway, Stripe, most REST API rate limiters. <strong>The industry standard algorithm.</strong></span>
+      <div class="concept-term">Token Bucket<br><span style="font-size:10px;font-weight:400;color:#6a6458">Industry Standard</span></div>
+      <div class="concept-def"><strong>A bucket holds up to N tokens. Tokens refill at rate R per second. Each request consumes 1 token. Empty bucket = rejected request.</strong><br>
+        Example: capacity=100 tokens, refill=10/sec. A burst of 100 requests is served immediately (empties the bucket). Then max 10/sec sustained.<br>
+        Implementation: store <code>(token_count, last_refill_time)</code>. On each request: <code>tokens = min(capacity, stored_tokens + (now - last_refill) × rate)</code>. If tokens ≥ 1: decrement and allow. Else: reject.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Allows legitimate burst traffic. O(1) memory per user. Smooth average enforcement. The AWS API Gateway, Stripe, and Twilio algorithm.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Two users can both exhaust their buckets at the same moment and both immediately refill — two full bursts back-to-back at window boundaries.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Leaky Bucket</div>
-      <div class="concept-def"><strong>Requests enter a queue (the bucket). They are processed at a fixed rate (the leak). If the queue is full, requests are dropped.</strong><br>
-        Example: process 10 requests/sec regardless of how many arrive. Smooths out bursts entirely.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ Perfectly smooth outbound rate. No bursts. Protects downstream services from traffic spikes.</span><br>
-        <span style="color:#b83030;font-size:12.5px;">⚠ Bursts are queued, not served fast — legitimate spikes experience latency, not rejection. If queue fills, recent requests are dropped even if earlier ones were slow.</span><br>
-        <span style="color:#5a5848;font-size:12.5px;">Used by: traffic shaping in networking, protecting database connection pools.</span>
+      <div class="concept-def"><strong>Requests enter a fixed-size queue (the bucket). They drain at a fixed rate (the leak). Queue full = requests dropped.</strong><br>
+        Enforces exactly R requests/second regardless of arrival rate. A burst of 100 arrives — 100 enter the queue, they drain at 10/sec, all served over 10 seconds.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Perfectly smooth outbound rate. Protects downstream services that can only handle a fixed rate (DB connection pool, third-party API with strict QPS). No traffic spikes ever reach the downstream.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Burst requests experience queuing latency, not fast rejection. A slow legitimate request queues behind a burst attacker's requests. If queue fills, the most recent requests (possibly legitimate) are dropped.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Fixed Window</div>
-      <div class="concept-def"><strong>Count requests per fixed time window (e.g., per minute). Reset counter at window boundary.</strong><br>
-        Example: 100 requests/minute. Counter at 14:03:00 resets at 14:04:00.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ Simplest to implement. <code>INCR counter:user:minute:1403</code> in Redis.</span><br>
-        <span style="color:#b83030;font-size:12.5px;">⚠ <strong>Boundary attack</strong>: 100 requests at 14:03:59 + 100 requests at 14:04:01 = 200 requests in 2 seconds (both within their respective windows). Actual rate is 2x the limit at the window boundary.</span>
+      <div class="concept-def"><strong>Count requests per fixed time window. Reset counter at the boundary.</strong><br>
+        Example: 100 req/minute. Counter for window "14:03" resets at "14:04:00.000".<br>
+        Redis: <code>INCR ratelimit:user:123:14:03</code> → <code>EXPIRE key 60</code> → check count ≤ 100.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Simplest implementation. Single Redis INCR per request. Minimal memory.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ <strong>Boundary attack:</strong> 100 requests at 14:03:59 + 100 requests at 14:04:01 = 200 requests in 2 seconds — both within their respective windows. Set your limit 50% conservatively to compensate, or use sliding window.</span>
       </div>
     </div>
     <div class="concept-row">
       <div class="concept-term">Sliding Window Log</div>
-      <div class="concept-def"><strong>Store a timestamp log of every request. For each new request, count logs in the last N seconds. Reject if count exceeds limit.</strong><br>
-        Redis: <code>ZADD log:user:123 {timestamp} {timestamp}</code>. <code>ZREMRANGEBYSCORE log 0 (now-window)</code>. <code>ZCARD log</code> = request count.<br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ Perfectly accurate. No boundary attack. Truly enforces the rolling window.</span><br>
-        <span style="color:#b83030;font-size:12.5px;">⚠ Memory: O(requests) per user. At 1000 req/min and 1M users, that is 1 billion log entries. Only practical for low-rate, critical endpoints (login, payment).</span>
+      <div class="concept-def"><strong>Store a timestamp for every request in a sorted set. Count entries in the last N seconds. Reject if over limit.</strong><br>
+        Redis: <code>ZADD log:user:123 {now_ms} {now_ms}</code> → <code>ZREMRANGEBYSCORE log 0 {now_ms - window_ms}</code> → <code>ZCARD log</code> → compare to limit.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ Perfectly accurate. No boundary attack possible. True rolling window at all times.</span><br>
+        <span style="color:#b83030;font-size:12.5px;">⚠ Memory: O(requests per window) per user. At 1,000 req/min and 1M users: 1 billion sorted set entries. Only viable for low-rate, high-value endpoints: login, payment, account creation.</span>
       </div>
     </div>
     <div class="concept-row">
-      <div class="concept-term">Sliding Window Counter</div>
-      <div class="concept-def"><strong>Hybrid: fixed window counters with interpolation to approximate sliding window. Best of both.</strong><br>
-        Store counter for current window and previous window. Weighted estimate:<br>
-        <code>count = prev_window * (1 - elapsed/window_size) + curr_window</code><br>
-        <span style="color:#1a7a4a;font-size:12.5px;">✓ O(1) memory. Accurate enough (Cloudflare uses this — they found &lt;0.003% of requests are incorrectly rate-limited). The practical production choice.</span><br>
-        <span style="color:#5a5848;font-size:12.5px;">Used by: Cloudflare, most high-scale rate limiting systems.</span>
+      <div class="concept-term">Sliding Window Counter<br><span style="font-size:10px;font-weight:400;color:#6a6458">Production Choice</span></div>
+      <div class="concept-def"><strong>Interpolate between current and previous fixed window counts to approximate a rolling window. O(1) memory, ~0.003% error rate.</strong><br>
+        <code>count = prev_window_count × (1 - elapsed/window_size) + curr_window_count</code><br>
+        Example: window=1min, 40% through current minute. prev_window had 80 requests, current has 30.<br>
+        Estimated rolling count: <code>80 × 0.6 + 30 = 78</code>. Compare to limit.<br>
+        <span style="color:#1a7a4a;font-size:12.5px;">✓ O(1) memory (two counters per user). Accurate enough: Cloudflare uses this and measured &lt;0.003% incorrect rate limiting decisions. The practical production algorithm at scale.</span>
       </div>
     </div>
   </div>
@@ -212,80 +203,110 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 
 <section id="distributed">
   <div class="sec-tag">02 · Distributed Rate Limiting</div>
-  <h2>How to rate limit across 100 app servers</h2>
+  <h2>How to enforce limits correctly across 100 app servers</h2>
   <div class="callout cl-blue">
-    <div class="cl-lbl">The core challenge</div>
-    <p>Each app server sees only its fraction of total traffic. If you rate-limit locally (100 req/min per server × 100 servers = 10,000 req/min global), your rate limit means nothing. You need a shared counter that all servers update atomically.</p>
+    <div class="cl-lbl">The core problem</div>
+    <p>Each app server sees only 1/100th of total traffic. If you rate-limit locally at 100 req/min per server with 100 servers, your effective global limit is 10,000 req/min — 100x too permissive. You need a shared counter that all servers update atomically.</p>
   </div>
   <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Redis INCR Pattern</div><div class="concept-def"><strong>The standard approach: shared Redis counter with atomic increment.</strong><br>
-      <code>MULTI</code><br>
-      <code>INCR ratelimit:{user_id}:{window}</code><br>
-      <code>EXPIRE ratelimit:{user_id}:{window} 60</code><br>
-      <code>EXEC</code><br>
-      If result &gt; limit → reject with 429. Redis's single-threaded INCR is atomic — no race conditions.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Simple, correct, fast (&lt;1ms). Works for token bucket too: Lua script atomically checks and decrements token count.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Redis Lua Script</div><div class="concept-def"><strong>For token bucket — atomically check and decrement in one round trip.</strong><br>
-      <code>local tokens = redis.call('GET', KEYS[1])</code><br>
-      <code>if tokens and tonumber(tokens) > 0 then</code><br>
-      <code>  redis.call('DECR', KEYS[1]); return 1</code><br>
-      <code>else return 0 end</code><br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Lua scripts execute atomically in Redis — no race between check and decrement. Libraries like redis-rate-limiter use exactly this.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Local Approximate<br>+ Sync</div><div class="concept-def"><strong>Each server maintains a local counter, periodically syncing to Redis.</strong><br>
-      Each server allows up to limit/N requests locally (N = server count). Every 100ms, sync actual count to Redis and refresh local quota.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Reduces Redis calls by 100x. Much more scalable for high-throughput APIs.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Up to 100ms window where slightly over-limit requests are allowed. Acceptable for most use cases.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Redis INCR<br>with Lua Script</div><div class="concept-def"><strong>Atomic increment + check in a single Redis round trip using Lua.</strong><br>
+      <pre style="background:#f0ede6;padding:12px;border-radius:4px;font-size:11.5px;overflow-x:auto">local key = KEYS[1]
+local limit = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local current = redis.call('INCR', key)
+if current == 1 then
+  redis.call('EXPIRE', key, window)
+end
+if current > limit then
+  return 0  -- rejected
+else
+  return 1  -- allowed
+end</pre>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Lua executes atomically in Redis — no race between check and increment. One network round trip. Works correctly under any concurrency.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Token Bucket in Redis</div><div class="concept-def"><strong>Atomic token bucket using Lua: refill tokens based on elapsed time, check, consume.</strong><br>
+      Key stores <code>[token_count, last_refill_timestamp]</code> as a hash.<br>
+      Lua script: (1) read current tokens and last refill time, (2) compute new tokens = min(capacity, stored + elapsed × rate), (3) if tokens ≥ 1: set tokens−1, allow; else: reject.<br>
+      All in one atomic operation. Libraries: <code>redis-rate-limiter</code>, <code>redis-cell</code> (native Redis module).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Handles burst correctly in distributed context. Two servers both try to consume simultaneously → Lua serialises them → correct token count maintained.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Local Approximation<br>+ Async Sync</div><div class="concept-def"><strong>Each server maintains a local counter. Sync to Redis every 100ms. Reduces Redis calls by 100x.</strong><br>
+      Each server allows up to <code>limit / server_count</code> requests locally before checking Redis. Every 100ms, flush local count to Redis, refresh local quota.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Reduces Redis round trips 100x at cost of slight inaccuracy. Burst of 200ms can exceed limit by up to <code>limit × (100ms / window)</code>. Acceptable for most APIs.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Not suitable for strict financial or security rate limiting where brief overages could be exploited.</span></div></div>
   </div>
 </section>
 
+<section id="layers">
+  <div class="sec-tag">03 · Rate Limiting Layers</div>
+  <h2>Where to enforce — gateway vs application vs service mesh</h2>
+  <table class="comp-table">
+    <thead><tr><th>Layer</th><th>Where</th><th>Enforces On</th><th>Best For</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">API Gateway</td><td>Before any service code runs</td><td>IP, API key, user</td><td>External API protection, global limits per API plan, DDoS mitigation</td><td>AWS API Gateway, Kong, Apigee</td></tr>
+      <tr><td class="row-head">Reverse Proxy / CDN</td><td>At edge, before origin</td><td>IP, ASN, geo</td><td>Absorbing DDoS before it hits your infra at all; IP-level throttling</td><td>Cloudflare, Nginx rate_limit module</td></tr>
+      <tr><td class="row-head">Application</td><td>Inside your service</td><td>User ID, plan tier, feature</td><td>Business logic rate limits: plan-based (free/pro), per-feature, per-resource</td><td>Custom Redis middleware</td></tr>
+      <tr><td class="row-head">Service Mesh</td><td>Sidecar proxy (Envoy)</td><td>Service-to-service</td><td>Protecting internal services from runaway microservices; circuit breaking</td><td>Istio, Envoy local rate limit</td></tr>
+      <tr><td class="row-head">Database</td><td>DB connection pool</td><td>Connections, queries/sec</td><td>Preventing connection exhaustion; protecting DB from spike traffic</td><td>PgBouncer max_client_conn, HikariCP</td></tr>
+    </tbody>
+  </table>
+</section>
+
 <section id="examples">
-  <div class="sec-tag">03 · System Design Examples</div>
-  <h2>Rate limiting in real systems</h2>
+  <div class="sec-tag">04 · System Design Examples</div>
+  <h2>Rate limiting in production systems</h2>
   <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">API Gateway Rate Limiting</div><span class="sd-example-tag">MULTI-DIMENSIONAL</span></div>
+    <div class="sd-example-head"><div class="sd-example-title">Stripe — Multi-Dimensional API Rate Limiting</div><span class="sd-example-tag">PAYMENTS · TIERED</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">PER USER</div><div class="choice-val"><span class="badge b-g">Token Bucket ✓</span> 1000 req/min per authenticated user. Key: <code>ratelimit:user:{id}:minute</code>. Allows legitimate burst traffic (developer hitting API in a loop) while preventing abuse.</div></div>
-      <div class="choice-row"><div class="choice-label">PER IP</div><div class="choice-val"><span class="badge b-g">Sliding Window ✓</span> 100 req/min per IP for unauthenticated requests. Stops credential stuffing (many login attempts from same IP). Key: <code>ratelimit:ip:{hash(ip)}:minute</code>. Hash the IP to avoid storing raw IPs (privacy).</div></div>
-      <div class="choice-row"><div class="choice-label">PER ENDPOINT</div><div class="choice-val">Different limits per endpoint: <code>POST /login</code> = 5/min, <code>GET /feed</code> = 300/min, <code>POST /payment</code> = 10/min. The sensitivity of the endpoint determines the limit.</div></div>
-      <div class="choice-row"><div class="choice-label">RESPONSE HEADERS</div><div class="choice-val">Always return: <code>X-RateLimit-Limit: 1000</code>, <code>X-RateLimit-Remaining: 743</code>, <code>X-RateLimit-Reset: 1742383200</code>. Clients use these to back off gracefully before hitting 429.</div></div>
+      <div class="choice-row"><div class="choice-label">DIMENSIONS</div><div class="choice-val">Stripe enforces rate limits on 3 independent dimensions simultaneously: per API key (100 req/sec), per endpoint (POST /charges: 25/sec separate from GET /customers), and per live/test mode (separate limits for test keys so testing doesn't consume production quota).</div></div>
+      <div class="choice-row"><div class="choice-label">ALGORITHM</div><div class="choice-val"><span class="badge b-g">Token Bucket ✓</span> Allows burst traffic from legitimate API integrations (a customer's batch job), while enforcing sustained average limits. Idempotency keys work with rate limiting — duplicate requests use the cached response without consuming a new token.</div></div>
+      <div class="choice-row"><div class="choice-label">HEADERS</div><div class="choice-val"><code>Ratelimit-Limit: 100</code>, <code>Ratelimit-Remaining: 73</code>, <code>Ratelimit-Reset: 1742383260</code>. On 429: <code>Retry-After: 1</code> (seconds until next token available). Clients use these to implement exponential backoff + jitter before retrying.</div></div>
+      <div class="choice-row"><div class="choice-label">TIERED LIMITS</div><div class="choice-val">API key's plan tier stored in JWT or Redis hash. Free: 25/sec, Pro: 100/sec, Enterprise: custom. Tier checked once per request from JWT claim — zero extra Redis lookup for tier. Only limit counter needs Redis.</div></div>
     </div>
   </div>
   <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Notification System</div><span class="sd-example-tag">SPAM PREVENTION</span></div>
+    <div class="sd-example-head"><div class="sd-example-title">Login Endpoint — Security Rate Limiting</div><span class="sd-example-tag">BRUTE FORCE · AUTH</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">PER USER/CHANNEL</div><div class="choice-val">Max 2 SMS per user per 10 minutes. Max 5 emails per user per hour. Max 10 push notifications per user per day. Multi-dimensional limits using separate Redis counters per dimension: <code>ratelimit:sms:{user}:10min</code>.</div></div>
-      <div class="choice-row"><div class="choice-label">GLOBAL SEND RATE</div><div class="choice-val">Email provider (SendGrid) limits to 100K emails/hour. Token bucket at the sender level: fill 100K tokens/hour, each email consumes 1. If empty → queue for next hour window rather than dropping.</div></div>
+      <div class="choice-row"><div class="choice-label">LAYERED DEFENCE</div><div class="choice-val">3 independent limits: (1) per-IP: 10 login attempts / 10 minutes — stops distributed credential stuffing from one location. (2) per-username: 5 attempts / 15 minutes — stops password spraying on one account from many IPs. (3) global: 10K login attempts / minute — circuit breaker for the entire auth service.</div></div>
+      <div class="choice-row"><div class="choice-label">ALGORITHM</div><div class="choice-val"><span class="badge b-g">Sliding Window Log ✓</span> Exactly the right choice here. Login endpoint handles 10K/sec globally but the per-user limit is 5/15min — very small cardinality of allowed requests per user. Memory cost is acceptable. Accuracy matters — an attacker cannot exploit boundary timing.</div></div>
+      <div class="choice-row"><div class="choice-label">PROGRESSIVE DELAYS</div><div class="choice-val">After 3 failed attempts: add 1-second delay. After 5: add 5-second delay. After 10: lock account, require email verification. This is orthogonal to rate limiting — slows automated tools even within rate limits.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Notification Service — Outbound Rate Limiting</div><span class="sd-example-tag">THIRD-PARTY API · QUOTA</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PROVIDER LIMITS</div><div class="choice-val">SendGrid allows 100K emails/hour. Twilio allows 1 SMS/sec per phone number. These are outbound limits — you rate-limit your own send rate to avoid hitting provider quotas that result in drops, not 429s you can handle.</div></div>
+      <div class="choice-row"><div class="choice-label">ALGORITHM</div><div class="choice-val"><span class="badge b-g">Leaky Bucket ✓</span> Queue all outbound notifications. Drain at exactly provider-allowed rate. Excess is buffered (queue), not dropped. For SendGrid: fill 100K tokens/hour (27 tokens/sec), drain 1 token per email sent. If queue grows: auto-scale workers within token availability.</div></div>
+      <div class="choice-row"><div class="choice-label">USER ANTI-SPAM</div><div class="choice-val">Separate per-user limits: max 2 SMS per user per 10 minutes, max 5 emails per user per hour. Prevents notification spam to individual users from rogue internal services. Independent from the global send-rate limits.</div></div>
     </div>
   </div>
 </section>
 
 <section id="decision">
-  <div class="sec-tag">04 · Decision Tree</div>
-  <h2>Which algorithm to pick</h2>
+  <div class="sec-tag">05 · Decision Framework</div>
+  <h2>Choose the right algorithm for your use case</h2>
   <div class="step-block">
     <div class="step-block-header"><span class="sb-icon">🎯</span>Rate Limiting Algorithm Selection</div>
     <div class="step-block-body">
       <div class="step-row"><div class="step-num">01</div><div class="step-content">
-        <div class="step-q">Do you need to allow bursts?</div>
+        <div class="step-q">Do you need to allow legitimate burst traffic?</div>
         <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES (burst OK) →</span><span class="opt-text"><strong>Token Bucket.</strong> Accumulates tokens when idle, releases in bursts. Standard for REST APIs. Stripe, AWS, Twilio all use token bucket.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">NO (strict smooth rate) →</span><span class="opt-text"><strong>Leaky Bucket.</strong> Enforces exactly R requests/second with no bursting. Use for protecting downstream services that can only handle a fixed rate.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (bursts OK) →</span><span class="opt-text"><strong>Token Bucket.</strong> Accumulates tokens during quiet periods. Allows burst up to bucket capacity. Standard choice for REST APIs, SDKs, and developer-facing APIs.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (strict smooth rate) →</span><span class="opt-text"><strong>Leaky Bucket.</strong> Enforces exactly R/sec regardless of arrival pattern. Use when protecting a downstream that cannot handle any spike: DB connection pool, third-party API, CPU-bound service.</span></div>
         </div>
       </div></div>
       <div class="step-row"><div class="step-num">02</div><div class="step-content">
-        <div class="step-q">How important is precision vs simplicity?</div>
+        <div class="step-q">How important is boundary-attack resistance?</div>
         <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">Precision critical →</span><span class="opt-text"><strong>Sliding Window Log.</strong> Perfectly accurate but O(req) memory per user. Only use for high-value low-rate endpoints (login, payment, account creation).</span></div>
-          <div class="step-option opt-mid"><span class="opt-arrow">Balanced →</span><span class="opt-text"><strong>Sliding Window Counter.</strong> 0.003% inaccuracy, O(1) memory. Production choice for most high-scale systems. Cloudflare's approach.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">Simplicity first →</span><span class="opt-text"><strong>Fixed Window.</strong> Single Redis INCR. Boundary attack is acceptable if limits are conservative (set limit 2x lower to account for the boundary doubling).</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">Critical (auth/payment) →</span><span class="opt-text"><strong>Sliding Window Log.</strong> Perfectly accurate. Immune to boundary timing attacks. Acceptable because rate limits are small (5 logins/15min) so memory cost is low.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">High scale, OK with ~0.003% error →</span><span class="opt-text"><strong>Sliding Window Counter.</strong> Cloudflare's production choice. O(1) memory. Handles billions of requests. Not perfectly accurate but close enough for all practical purposes.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Low stakes, simplicity first →</span><span class="opt-text"><strong>Fixed Window.</strong> Single Redis INCR. Set limit 50% conservatively to compensate for boundary doubling. Simple to implement, debug, and monitor.</span></div>
         </div>
       </div></div>
       <div class="step-row"><div class="step-num">03</div><div class="step-content">
         <div class="step-q">What is the enforcement layer?</div>
         <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">API Gateway →</span><span class="opt-text">Rate limit at the gateway (Kong, AWS API Gateway, Envoy). Centralized, language-agnostic, enforced before traffic hits your services.</span></div>
-          <div class="step-option opt-mid"><span class="opt-arrow">Application level →</span><span class="opt-text">Redis-backed middleware in your service. More granular (can access business logic for tiered limits). Used for per-feature or per-plan limits.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">Service mesh →</span><span class="opt-text">Istio/Envoy sidecar proxies enforce rate limits between services. Used for internal service-to-service rate limiting in microservice architectures.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">External API traffic →</span><span class="opt-text"><strong>API Gateway layer.</strong> Kong, AWS API Gateway, or Nginx. Centralised enforcement before any application code runs. Language and framework agnostic.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Business logic limits (plan tiers) →</span><span class="opt-text"><strong>Application middleware.</strong> Redis-backed. Access to business context (user plan, feature flags). Apply different limits per tier.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Service-to-service internal →</span><span class="opt-text"><strong>Service mesh (Istio/Envoy).</strong> Circuit breaking + local rate limiting per sidecar. Prevents a runaway microservice from overwhelming its dependencies.</span></div>
         </div>
       </div></div>
     </div>
@@ -293,23 +314,17 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 </section>
 
 <section id="followups">
-  <div class="sec-tag">05 · Follow-ups</div>
+  <div class="sec-tag">06 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle rate limiting for distributed clients — e.g., a user calling from multiple devices?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Rate limit on the authenticated user identity (user_id from JWT), not on the device or IP.</strong><br><br>The user_id is consistent across all their devices. The Redis key <code>ratelimit:user:{user_id}:{window}</code> is incremented by every request regardless of which device or IP it comes from. This means a user signing in on phone + laptop + tablet all share the same quota — preventing circumvention by using multiple devices.<br><br>IP-based limiting is additive and separate — it is used for unauthenticated endpoints (login page, signup) to prevent automated attacks before authentication.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What happens if the rate limit store (Redis) goes down?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>You have two choices and you must pick one explicitly — there is no "right answer," only a trade-off.</strong><br><br><strong>Fail open (allow all traffic)</strong>: If Redis is unavailable, do not rate limit. 100% of requests are served. Risk: abuse during the outage window. Appropriate when: availability is more important than abuse prevention (most consumer APIs).<br><br><strong>Fail closed (reject all traffic)</strong>: If Redis is unavailable, reject with 429 or 503. No abuse during outage. Risk: legitimate users are blocked. Appropriate when: abuse has high cost (payment APIs, authentication endpoints).<br><br><strong>In practice</strong>: Use local fallback counters. Each app server tracks its own count. If Redis is down, enforce limit/N per server (N = server count). Slightly inaccurate but functional. Redis sentinel/cluster with automatic failover ensures outages are rare and brief.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you implement tiered rate limits (free vs pro vs enterprise)?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Store the user's tier in their JWT or a fast lookup cache, then apply tier-specific limits.</strong><br><br>
-  Approach:<br>
-  1. JWT contains <code>"tier": "pro"</code> — decoded at the rate limit middleware with zero extra lookups.<br>
-  2. Tier → limit mapping stored in config: <code>{"free": 100, "pro": 1000, "enterprise": 100000}</code><br>
-  3. Rate limit key includes tier for isolation: <code>ratelimit:{tier}:{user_id}:{window}</code><br><br>
-  Why include tier in the key: so upgrading from free to pro immediately gives the new limit without needing to reset the counter. The free counter is simply no longer checked.<br><br>
-  For enterprise customers with custom limits: store their limit in Redis itself: <code>ratelimit:config:{user_id}</code> = their custom limit. Fallback to tier default if not set.</div></div>
-</section>
-</div>
-<div class="footer">RATE LIMITING · TOKEN BUCKET · SLIDING WINDOW · REDIS · THROTTLING · MANISH-ALMANAC</div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you implement tiered rate limits for free/pro/enterprise plans?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Embed the tier in the JWT, map to limits in config, use tier in the Redis key.</strong><br><br>JWT payload includes <code>"plan": "pro"</code> — decoded at the rate limit middleware with zero extra lookups. A config map translates plan to limit: <code>{"free": 25, "pro": 100, "enterprise": 10000}</code>. The Redis key includes the plan: <code>ratelimit:pro:user:123:minute</code>.<br><br>Why include plan in the key: if a user upgrades from free to pro mid-window, their free-plan counter simply stops being checked. The pro counter starts fresh. No need to invalidate or reset anything.<br><br>For enterprise customers with custom limits: store the custom limit in Redis itself (<code>ratelimit:config:user:123 = 50000</code>) with fallback to the plan default if not set. Check this config key on each request (cached in-process for 60 seconds to avoid per-request Redis lookups).</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What happens if your Redis rate limit store goes down?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>You must decide: fail open (allow all traffic) or fail closed (reject all traffic). There is no free lunch.</strong><br><br><strong>Fail open</strong>: if Redis is unreachable, allow all requests. Users see no degradation. Abuse is possible during the outage window. Acceptable for: consumer APIs where rate limits are about fairness, not security. Google's approach for most rate limiting.<br><br><strong>Fail closed</strong>: if Redis is unreachable, return 429 or 503. Zero abuse possible. Legitimate users are blocked. Acceptable for: payment APIs, authentication endpoints, anything where abuse has direct financial or security cost.<br><br><strong>Hybrid (recommended)</strong>: fall back to local in-process counters. Each app server tracks its own count. If Redis is down, enforce <code>limit / server_count</code> locally. This is slightly over-permissive (multiple servers don't coordinate) but functional. As soon as Redis recovers, switch back to shared counters. Redis Sentinel or Cluster ensures Redis outages are brief (&lt;30 seconds for automatic failover).</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you rate-limit on distributed clients — a user calling from multiple IPs or devices?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Rate limit on authenticated user identity, not on IP. IP-based limiting is supplementary only.</strong><br><br>The user's <code>user_id</code> extracted from their JWT is the primary rate limit key: <code>ratelimit:user:{user_id}:{window}</code>. This accumulates across all their devices, IPs, and sessions. A user signing in from phone + laptop + tablet all share the same quota. Prevents circumventing limits by rotating devices.<br><br>IP-based limiting runs in parallel as a separate independent limit — specifically for unauthenticated endpoints (login, signup, password reset) where you don't yet have a user_id. For these: <code>ratelimit:ip:{hashed_ip}:{window}</code>. Hash the IP (SHA-256 first 8 bytes) — prevents storing raw PII, harder to reverse than plain IP storage.<br><br>Never use IP as the sole mechanism for authenticated APIs — enterprise customers may have thousands of users behind a single NAT IP (corporate proxy, VPN). A per-IP limit of 1,000/min would mean 1 request per user per minute for a 1,000-person company behind one IP.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle the circuit breaker pattern as it relates to rate limiting?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Rate limiting and circuit breaking are complementary but solve different problems.</strong><br><br><strong>Rate limiting</strong>: "You are sending too many requests — slow down." Applied at the entry point to protect your service from external or internal overload. Proactive.<br><br><strong>Circuit breaking</strong>: "The downstream service is failing — stop sending requests to protect it and yourself." Applied at the exit point (your outbound calls to dependencies). Reactive to failure.<br><br>Circuit breaker states: Closed (normal, all requests pass through) → Open (downstream is failing, immediately return error without calling downstream) → Half-Open (probe with one request — if success, close; if failure, stay open).<br><br>They work together: rate limiting prevents your service from being overwhelmed. Circuit breaking prevents your service from overwhelming a failing dependency. In Envoy/Istio: configure both — rate limiting on the ingress side, circuit breaking on the egress side for each service call.</div></div>
+</section></div>
+<div class="footer">RATE LIMITING · TOKEN BUCKET · SLIDING WINDOW · REDIS · CIRCUIT BREAKER · TIERED PLANS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
-</html>
+</body></html>

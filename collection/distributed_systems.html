@@ -249,6 +249,61 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
+
+<section id="quorum">
+  <div class="sec-tag">05 · Quorum in Practice</div>
+  <h2>How quorum reads and writes work — the math every interviewer expects</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">The Formula</div><div class="concept-def"><strong>For strong consistency: W + R > N</strong><br>
+      N = replication factor (total copies), W = nodes that must acknowledge a write, R = nodes that must respond to a read.<br>
+      If W + R > N, then the write and read sets must overlap — you are guaranteed to read at least one node that has the latest write.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Example: N=3, W=2, R=2. W+R=4 > 3. Any read of 2 nodes will include at least 1 node that acknowledged the write. Strong consistency.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">Example: N=3, W=1, R=1. W+R=2 < 3. You might read from the one node that did NOT get the write. Eventual consistency.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Quorum vs QUORUM</div><div class="concept-def"><strong>Cassandra's QUORUM consistency level = (N/2)+1 nodes.</strong><br>
+      N=3: QUORUM = 2 nodes. W=QUORUM, R=QUORUM → W+R=4 > 3 → strong consistency.<br>
+      N=5: QUORUM = 3 nodes. W=QUORUM, R=QUORUM → W+R=6 > 5 → strong consistency.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ QUORUM is the "safe default" — survives N/2 node failures while maintaining consistency. Used for: user account data, session state, anything where stale reads are unacceptable.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Read Repair</div><div class="concept-def"><strong>During a QUORUM read, if replicas return different values, Cassandra repairs the stale replica.</strong><br>
+      Read returns 2 responses: node A says value=7, node B says value=5. Node A is more recent (higher timestamp). Cassandra returns 7 to the client AND asynchronously sends the correct value (7) to node B to repair it.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Self-healing. Stale replicas are corrected on read. No manual repair needed for recently-read data.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">Anti-entropy repair (nodetool repair) handles data that is never read — run weekly in production.</span></div></div>
+  </div>
+
+  <h3>Conflict Resolution — What Happens When Two Writes Race</h3>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Last Write Wins (LWW)</div><div class="concept-def"><strong>The write with the higher timestamp wins. Simple. Used by Cassandra by default.</strong><br>
+      Risk: clock skew. If node A's clock is 100ms ahead of node B's, a write to A at t=100 beats a write to B at t=150 even though B's write was actually later in wall-clock time.<br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ LWW silently discards "losing" writes with no error. Acceptable for: counters (use CRDT instead), cache values, ephemeral data. NOT acceptable for: financial records, user content.</span></div></div>
+    <div class="concept-row"><div class="concept-term">CRDT<br>(Conflict-free Replicated Data Types)</div><div class="concept-def"><strong>Data structures designed so concurrent updates always merge correctly — no conflicts possible.</strong><br>
+      <strong>G-Counter</strong>: each node maintains its own count, total is the sum. Two nodes incrementing simultaneously always converge correctly — no lost increments.<br>
+      <strong>G-Set</strong>: elements can only be added, never removed. Any two nodes merging always converge to the union.<br>
+      <strong>LWW-Register</strong>: last-write-wins with vector clocks instead of wall clocks — resolves the clock skew problem.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Used by: Redis CRDT (Enterprise), Riak, Apple Notes syncing, collaborative text editors (Figma, Notion use CRDT for real-time collaboration). No coordinator needed — every replica can accept writes and they all converge.</span></div></div>
+  </div>
+</section>
+
+<section id="sd-examples-ds">
+  <div class="sec-tag">06 · System Design Examples</div>
+  <h2>Distributed systems patterns in real production systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Payment System — Exactly-Once Money Movement</div><span class="sd-example-tag">ACID · SAGA · IDEMPOTENCY</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">THE PROBLEM</div><div class="choice-val">Debit user A ₹1000 AND credit user B ₹1000 must happen atomically across two DB shards. A network failure between the two operations would leave A debited but B not credited — money disappears.</div></div>
+      <div class="choice-row"><div class="choice-label">SAGA APPROACH</div><div class="choice-val">Step 1: Debit A (with idempotency key = txn_id). Step 2: Credit B (with same txn_id). If Step 2 fails: compensating transaction — re-credit A. Each step is idempotent — retrying with same txn_id is safe. The payment processor (Stripe, Razorpay) exposes idempotency keys on all APIs for exactly this reason.</div></div>
+      <div class="choice-row"><div class="choice-label">CONSISTENCY</div><div class="choice-val">The Saga achieves eventual consistency — there is a brief window where A is debited but B is not yet credited. For most payment systems this is acceptable (milliseconds). For truly atomic cross-bank transfers, 2PC via a distributed transaction coordinator (XA) is used, accepting its higher latency and blocking risk.</div></div>
+      <div class="choice-row"><div class="choice-label">IDEMPOTENCY KEY</div><div class="choice-val">Client generates UUID v4 for each payment attempt. Server stores (idempotency_key → result) in Redis for 24h. If same key arrives twice (network retry): return stored result without re-executing. Prevents double-charge on network timeouts — the most dangerous failure mode in payment systems.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Google Spanner — Global Transactions</div><span class="sd-example-tag">LINEARISABLE · GLOBAL</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">TRUETIME</div><div class="choice-val">GPS + atomic clocks at each data center. Each operation has a time range [earliest, latest]. Spanner commits after waiting out the uncertainty interval (~7ms). Guarantees that any read after a commit will see that commit — even from a different continent. External consistency (linearisability) at global scale.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY IT MATTERS</div><div class="choice-val">Without TrueTime, a transaction committed at 14:00:00.000 in Mumbai might be assigned timestamp 13:59:59.950 due to clock skew. A read starting at 14:00:00.001 in Tokyo might not see it. TrueTime's wait-out-uncertainty approach eliminates this class of bug entirely.</div></div>
+      <div class="choice-row"><div class="choice-label">FOR INTERVIEWS</div><div class="choice-val">You cannot replicate TrueTime without GPS hardware. For most systems: use single-region Raft for strong consistency, or accept eventual consistency with vector clocks for global distribution. Spanner is the "what if money was no object" answer.</div></div>
+    </div>
+  </div>
+</section>
+
 <section id="followups">
   <div class="sec-tag">05 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
@@ -258,6 +313,19 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="faq-a"><strong>These are often confused but refer to different properties at different levels.</strong><br><br><strong>Linearisability</strong> is about <em>single operations</em> on a single object (key). It means every read-write operation appears to happen atomically at a single point in time. It is a property of a single key's history.<br><br><strong>Serializability</strong> is about <em>transactions</em> (groups of operations, possibly on multiple keys). It means the result of concurrent transactions is equivalent to some serial (one-at-a-time) execution. It is a property of the database's transaction isolation.<br><br><strong>Strict Serializability (Linearisable Serializability)</strong> = both: transactions are serialized AND operations appear instantaneous. This is what Spanner and CockroachDB provide. The strongest guarantee, but most expensive.</div></div>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does the Saga pattern handle a payment failure mid-order?<span class="tog">+</span></div>
   <div class="faq-a"><strong>Compensating transactions undo the effects of already-completed steps.</strong><br><br>Order saga steps: Reserve Inventory → Charge Payment → Create Shipment → Send Confirmation.<br><br>Failure at step 2 (payment declined):<br>1. Shipment not yet created — skip<br>2. <strong>Compensating transaction for step 1</strong>: call Inventory Service with "release reservation for order X." Must be idempotent — if this fails and retries, it should not double-release.<br>3. Return "payment failed" to user.<br><br><strong>Key insight</strong>: compensating transactions must be idempotent and durable. Store the saga state in a database so you can resume compensation after a crash. This is what orchestration-based Sagas (e.g., AWS Step Functions, Temporal.io) manage for you automatically.</div></div>
+
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you make a distributed counter that never loses increments?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Three approaches in increasing sophistication:</strong><br><br>
+  <strong>1. Redis INCR</strong>: atomic, no data loss, sub-millisecond. Limitation: single node bottleneck at extreme throughput. Solution: Redis Cluster shards counters across nodes.<br><br>
+  <strong>2. Write-behind flush</strong>: accumulate increments in memory, flush to DB every 30 seconds. Checkpointing ensures no increments lost on crash. Accepts up to 30-second delay. Used by: YouTube view counter.<br><br>
+  <strong>3. CRDT G-Counter</strong>: each node maintains per-node count. Total = sum of all nodes. Merging always converges correctly — no coordination needed. Used by: distributed game leaderboards, eventually-consistent like counts.<br><br>
+  <strong>Which to use</strong>: Redis INCR for simplicity. Write-behind for high-volume where staleness is acceptable. CRDT for multi-region active-active with expected partitions.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">When does eventual consistency cause real user-facing problems?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Most common: "I just updated my profile but it still shows my old name."</strong><br><br>
+  This happens because the write went to the primary but the next read hits a secondary replica with replication lag (10–200ms typically).<br><br>
+  <strong>Read-your-own-writes consistency</strong>: after a user writes, route their subsequent reads to the primary for a short window (5 seconds). After the window, return to reading from replicas. Implementation: store last_write_timestamp in session. If current_time - last_write &lt; 5s, force primary reads.<br><br>
+  <strong>Monotonic reads</strong>: once a user sees version V of data, never show them version &lt;V again. Store last-seen version in session. Route reads to replicas that have caught up.<br><br>
+  <strong>Practical answer for interviews</strong>: implement read-your-own-writes for user-facing mutations. Accept eventual consistency for other users seeing the same data. This covers 90% of cases.</div></div>
 </section></div>
 <div class="footer">DISTRIBUTED SYSTEMS · CAP · RAFT · SAGA · IDEMPOTENCY · VECTOR CLOCKS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

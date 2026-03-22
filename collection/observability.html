@@ -216,6 +216,67 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
+
+<section id="debugging">
+  <div class="sec-tag">03 · Debugging a Production Incident</div>
+  <h2>The systematic approach — Director-level expected</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">The Incident Response Flow</div><div class="concept-def"><strong>A structured approach to diagnosing production issues in real time:</strong><br>
+      1. <strong>What is broken?</strong> → Check golden signals dashboard. Which service is elevated on errors or latency?<br>
+      2. <strong>When did it start?</strong> → Correlate with recent deployments (deployment markers on Grafana). Was there a deploy 5 minutes before the spike?<br>
+      3. <strong>Which requests are affected?</strong> → Sample error traces in Jaeger. Is it all users or a specific cohort (specific region, device, API version)?<br>
+      4. <strong>Why is it failing?</strong> → Drill into traces to find the slow/failing span. Check logs for that service around that time.<br>
+      5. <strong>Fix or rollback?</strong> → If recent deploy is culprit: rollback first, diagnose later. Never debug a production incident with a new deployment in flight.</div></div>
+    <div class="concept-row"><div class="concept-term">Cardinality Problem</div><div class="concept-def"><strong>High-cardinality labels in metrics explode your time-series database cost and performance.</strong><br>
+      Bad: <code>http_requests_total{user_id="12345", ...}</code> — if 1M users, this creates 1M time series. Prometheus stores each separately. Query performance degrades, storage costs explode.<br>
+      Good: <code>http_requests_total{status="200", endpoint="/api/feed"}</code> — low cardinality labels only. Use traces for per-user debugging, not metrics.<br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ The rule: metrics are for aggregates (rates, percentiles, counts by cohort). Traces are for individual requests. Never put high-cardinality identifiers (user_id, request_id) in metric labels.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Sampling Strategy</div><div class="concept-def"><strong>Storing 100% of traces at high traffic is cost-prohibitive. Smart sampling is essential.</strong><br>
+      <strong>Head-based sampling</strong>: decide at trace start whether to sample. Simple (coin flip at 1%). Misses rare errors — a 0.01% error rate with 1% sampling = you only see 1 in 10,000 errors.<br>
+      <strong>Tail-based sampling</strong>: collect all spans, decide at trace completion. Always sample: all traces with errors, all traces over p99 latency, 1% of normal traces. Captures all interesting events.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Tail-based sampling is the production standard (Honeycomb, Datadog APM, OpenTelemetry Collector). Ensures no errors are missed while controlling storage costs.</span></div></div>
+  </div>
+</section>
+
+<section id="sd-examples-obs">
+  <div class="sec-tag">04 · System Design Examples</div>
+  <h2>Observability architecture in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Top-K System — End-to-End Observability</div><span class="sd-example-tag">MULTI-LAYER MONITORING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">METRICS</div><div class="choice-val">Prometheus scrapes every 15s: Kafka consumer lag per topic/partition, Flink checkpointing duration, Redis ZSET operation latency (p50/p95/p99), ClickHouse query latency, API response time per endpoint. Grafana dashboard: one panel per layer, red/amber/green colour coding against SLO thresholds.</div></div>
+      <div class="choice-row"><div class="choice-label">LOGS</div><div class="choice-val">Structured JSON logs from all services → Filebeat → Logstash → Elasticsearch (ELK stack). Key log events: Flink checkpoint completed/failed (with duration), Redis ZINCRBY latency &gt;10ms (warning), ClickHouse query &gt;2s (slow query log). Kibana dashboard for ops team to search by trace_id, entity_id, window_time.</div></div>
+      <div class="choice-row"><div class="choice-label">TRACES</div><div class="choice-val">OpenTelemetry SDK in API service. Every <code>GET /top-k</code> request creates a trace: API handler → Redis ZREVRANGE → (cache miss) → ClickHouse query → response. Jaeger shows: Redis hit rate over time, ClickHouse query breakdown (parse/execute/return), p99 end-to-end latency by region.</div></div>
+      <div class="choice-row"><div class="choice-label">ALERTING</div><div class="choice-val">Alert 1: Kafka consumer lag &gt;100K messages for &gt;5 minutes → Flink is falling behind, data staleness risk. Alert 2: Redis error rate &gt;0.1% → cache issues, requests falling through to ClickHouse. Alert 3: SLO burn rate alert — if error budget burning 10x faster than sustainable → PagerDuty page.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Payment Service — High-Stakes Observability</div><span class="sd-example-tag">FINANCIAL · COMPLIANCE</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">TRANSACTION TRACING</div><div class="choice-val">Every payment request carries a trace_id (in header and DB). Trace spans: API validation → idempotency check → bank API call → DB write → confirmation. For any disputed transaction, ops can reconstruct exact execution path, timing, and error messages from traces.</div></div>
+      <div class="choice-row"><div class="choice-label">AUDIT LOGS</div><div class="choice-val">Immutable audit log: every state change (payment initiated, authorised, captured, refunded) written to append-only Kafka topic → S3. Logs cannot be deleted or modified. Required for PCI-DSS compliance. Separate from operational logs — different retention (7 years) and access controls.</div></div>
+      <div class="choice-row"><div class="choice-label">ERROR BUDGET</div><div class="choice-val">Payment success SLO: 99.99% (52 minutes downtime/year). Error budget dashboard updated in real time. Engineering team alerted when error budget &lt;20% remaining in current month → freeze all non-critical deployments, focus only on reliability improvements.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="alerting">
+  <div class="sec-tag">05 · Alerting Best Practices</div>
+  <h2>Building alerts that are actionable, not noisy</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Symptom vs Cause</div><div class="concept-def"><strong>Alert on symptoms (user-visible problems), not causes (infrastructure metrics).</strong><br>
+      Bad: "Alert when CPU &gt; 80%." CPU spikes happen constantly, usually resolve, rarely impact users.<br>
+      Good: "Alert when p99 latency &gt; 500ms for &gt;2 minutes." This directly measures user experience.<br>
+      The test: "If this alert fires at 3am, would I do something different immediately?" If no → it should be a ticket, not a page.</div></div>
+    <div class="concept-row"><div class="concept-term">Multi-Window Alerting</div><div class="concept-def"><strong>Use two windows to reduce false positives: a short window for detection, a longer window for confirmation.</strong><br>
+      Alert if: error rate &gt; 5% for last 2 minutes (fast detection) AND error rate &gt; 1% for last 1 hour (confirms ongoing issue, not a spike).<br>
+      Single-window alerts are noisy — a 30-second spike fires the alert. Multi-window only fires when the issue is sustained.</div></div>
+    <div class="concept-row"><div class="concept-term">On-Call Runbook</div><div class="concept-def"><strong>Every alert must link to a runbook — documented steps the on-call engineer follows.</strong><br>
+      Runbook for "p99 latency elevated": (1) Check Grafana: which endpoint is slow? (2) Open Jaeger: find slow traces for that endpoint. (3) Is it a DB query? Check slow query log. (4) Is it an external API? Check circuit breaker status. (5) If new deploy is correlated: rollback procedure link.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Reduces mean time to resolution (MTTR). New engineers can handle alerts without senior help. Runbooks should be updated after every incident — add what was missed.</span></div></div>
+  </div>
+</section>
+
 <section id="followups">
   <div class="sec-tag">03 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
@@ -234,6 +295,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   2. Alerts should page at most once per incident, not continuously<br>
   3. Alert on p99 latency, not p50 — averages hide the long tail that users experience<br>
   4. Distinguish page (wake someone up) vs ticket (fix in business hours) severity</div></div>
+
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you implement distributed tracing without instrumenting every microservice?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Use service mesh sidecar proxies (Envoy/Istio) for automatic trace propagation without touching application code.</strong><br><br>
+  <strong>Sidecar-based tracing</strong>: Istio injects Envoy sidecar proxies alongside every service. Envoy automatically: generates trace IDs for new requests, propagates <code>traceparent</code> header to outbound calls, records span timing for every hop, exports spans to Jaeger/Zipkin/Tempo.<br><br>
+  Application code does not need any instrumentation changes. You get traces for all service-to-service calls immediately.<br><br>
+  <strong>Limitation</strong>: Envoy can only trace at the network boundary. Internal operations (DB queries, function calls within a service) require application-level instrumentation.<br><br>
+  <strong>Hybrid approach</strong>: Envoy handles inter-service tracing automatically. Add OpenTelemetry SDK to only the highest-value services (payment, order creation) for internal DB query tracing. You get 80% of the value with 20% of the instrumentation effort.<br><br>
+  <strong>Trace context propagation</strong>: the key is that the <code>traceparent</code> header (W3C Trace Context standard) must be forwarded by every service. Even without full SDK instrumentation, if services forward this header, trace IDs connect across the call graph.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you define SLOs for a complex system with multiple components?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Define SLOs at the user-facing level, not at the component level. Users do not care which component failed.</strong><br><br>
+  <strong>Wrong approach</strong>: separate SLOs for Kafka (99.9%), Flink (99.5%), Redis (99.99%), ClickHouse (99.9%), API (99.95%). These cascade — if any one component hits its limit, the user-facing system fails.<br><br>
+  <strong>Correct approach</strong>: one SLO for the user-observable service: "<code>GET /top-k</code> returns a successful response in &lt;100ms for 99.9% of requests over any 30-day window."<br><br>
+  <strong>Component SLIs feed the top-level SLO</strong>: if Flink falls behind → rankings get stale → API still returns 200 but with stale data. Is this an SLO violation? Depends on your SLI definition — include freshness in the SLI if staleness is user-visible.<br><br>
+  <strong>The CUJ (Critical User Journey) approach</strong> from Google SRE: define SLOs per user journey, not per service. "User can see updated trending content within 60 seconds of an event going viral." This SLO captures the entire pipeline (Kafka lag + Flink latency + Redis update + API response) as a single observable outcome.<br><br>
+  Start with 2–3 top-level SLOs per major user journey. Add component-level SLIs only when you need finer-grained alerting to diagnose which component is contributing to SLO burn.</div></div>
 </section></div>
 <div class="footer">MONITORING · OBSERVABILITY · PROMETHEUS · JAEGER · SLO · ERROR BUDGET · GOLDEN SIGNALS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

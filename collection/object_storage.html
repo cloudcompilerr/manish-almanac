@@ -196,6 +196,52 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
+
+<section id="data-lake">
+  <div class="sec-tag">02 · Data Lake Architecture</div>
+  <h2>S3 as the foundation of every modern data platform</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">What Is a Data Lake</div><div class="concept-def"><strong>Store ALL your data in S3 in raw format first. Process later, for different purposes.</strong><br>
+      Raw events → S3 in Parquet/JSON. Same S3 data is read by: Spark (ML training), Athena (ad-hoc SQL), Redshift Spectrum (BI reports), Flink (stream processing via S3 checkpoints).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Schema-on-read: no predefined schema. Add new data sources without refactoring. Multiple compute engines on same data. Extremely cheap storage ($0.023/GB vs $0.10/GB for block storage).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ No ACID transactions on raw S3. Small file problem: millions of 1KB files are much slower to query than thousands of 100MB files. Use Parquet + Snappy compression + file compaction jobs.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Delta Lake / Iceberg</div><div class="concept-def"><strong>Table formats that add ACID transactions, schema evolution, and time-travel to S3.</strong><br>
+      Delta Lake (Databricks) / Apache Iceberg (Netflix, Apple): store metadata files alongside Parquet data in S3 that track which files constitute the current table version.<br>
+      ACID on S3: each transaction writes new Parquet files + updates metadata atomically. Readers see consistent snapshots.<br>
+      Time travel: <code>SELECT * FROM events TIMESTAMP AS OF '2026-03-01'</code> — queries the state of the table on March 1st.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Fixes the S3 "no transactions" problem. Schema evolution without rewriting all data. Streaming + batch unified (Flink writes, Spark reads). Used by: Airbnb, Netflix, Apple for petabyte-scale data lakes.</span></div></div>
+    <div class="concept-row"><div class="concept-term">S3 Event Notifications</div><div class="concept-def"><strong>S3 can trigger Lambda/SQS/SNS automatically when objects are created, deleted, or modified.</strong><br>
+      New photo uploaded to S3 → S3 event → Lambda triggered → resize image → write variants back to S3.<br>
+      Log file uploaded → S3 event → SQS message → EC2 worker processes log → writes structured data to Redshift.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Event-driven pipelines with zero polling. S3 becomes the trigger for the entire data processing pipeline. Latency: ~1 second from S3 write to Lambda invocation.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Intelligent Tiering</div><div class="concept-def"><strong>S3 Intelligent-Tiering automatically moves objects between storage classes based on access patterns.</strong><br>
+      Objects not accessed for 30 days → moved to Infrequent Access automatically. Objects not accessed for 90 days → moved to Archive Instant. No retrieval fees for objects moved by Intelligent-Tiering.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Optimal cost without manual lifecycle management. Best for: data lakes where access patterns are unpredictable. Small management fee ($0.0025 per 1,000 objects) — worth it for large data lakes.</span></div></div>
+  </div>
+</section>
+
+<section id="more-sd-obj">
+  <div class="sec-tag">03 · More System Design Examples</div>
+  <h2>Object storage decisions in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">YouTube — Video Storage & Delivery</div><span class="sd-example-tag">PETABYTES · ADAPTIVE STREAMING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">UPLOAD PATH</div><div class="choice-val">Video uploaded directly to Google Cloud Storage (GCS) via resumable upload API (chunked 5MB parts). Upload service returns upload URL → client streams directly to GCS. Server never receives video bytes — saves enormous bandwidth.</div></div>
+      <div class="choice-row"><div class="choice-label">TRANSCODING</div><div class="choice-val">GCS PUT event triggers transcoding pipeline. Original video → encode at 360p/720p/1080p/4K (H.264 + VP9). HLS/DASH segmentation: split each quality into 10-second segments. All variants stored back in GCS under structured paths: <code>gs://videos/{id}/1080p/seg_{n}.ts</code>.</div></div>
+      <div class="choice-row"><div class="choice-label">DELIVERY</div><div class="choice-val">GCS → Cloud CDN serves video segments. Highly watched videos cached at 100+ PoPs globally. Long-tail videos served from GCS origin. Adaptive bitrate: player downloads manifest, picks quality based on bandwidth, fetches segments. CDN cache hit rate for popular videos: &gt;99%.</div></div>
+      <div class="choice-row"><div class="choice-label">STORAGE COST</div><div class="choice-val">500 hours of video uploaded per minute. At 1GB/minute for 720p: 500GB/minute = 720TB/day. GCS Standard ($0.020/GB): ~$14,400/day storage cost. Lifecycle policy: videos with &lt;1000 views/month → GCS Nearline ($0.01/GB) after 30 days. Saves ~50% on long-tail storage.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Airbnb — Listing Photos & Data Lake</div><span class="sd-example-tag">MEDIA + ANALYTICS</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PHOTO UPLOAD</div><div class="choice-val">Pre-signed URL flow: <code>GET /photos/upload-url → presigned S3 URL → client PUT directly to S3 → client notifies API of completion → API queues processing job</code>. Processing: detect faces, apply image enhancement, generate 5 resolutions, extract EXIF. Processed images back to S3, metadata to PostgreSQL.</div></div>
+      <div class="choice-row"><div class="choice-label">DATA LAKE</div><div class="choice-val">All business events (bookings, searches, clicks, page views) written to S3 in Parquet via Kafka → Flink → S3 sink. S3 is the "source of truth" for analytics. Spark clusters run on the S3 data for pricing ML, fraud detection model training, and business intelligence reports.</div></div>
+      <div class="choice-row"><div class="choice-label">ICEBERG</div><div class="choice-val">Apache Iceberg used for the booking events table. Enables: schema evolution when new fields are added (new booking metadata), time-travel queries ("what was our booking rate on New Year's Eve 2024?"), and ACID updates (correct a batch of mis-categorised listings without full rewrite).</div></div>
+    </div>
+  </div>
+</section>
+
 <section id="followups">
   <div class="sec-tag">03 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
@@ -214,6 +260,21 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <strong>Delta sync</strong>: if you edit a 1GB file by changing one paragraph, only the 2–3 chunks containing that paragraph change. Only those chunks are uploaded. File metadata (which chunk IDs comprise the file) is updated. Other devices download only the new chunks.<br><br>
   <strong>Deduplication</strong>: if two users upload identical files, the chunks are deduplicated — stored once, referenced by both. Dropbox saved ~2PB of storage via deduplication.<br><br>
   <strong>Conflict handling</strong>: if two devices modify the same file while offline, both versions are kept — user sees "conflicted copy" and manually resolves. Alternatively: vector clocks to track causality and auto-merge text files (like Google Docs CRDT).</div></div>
+
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle eventual consistency in S3 for applications that require strong consistency?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Since December 2020, S3 provides strong read-after-write consistency for all operations — this is no longer a problem for new systems.</strong><br><br>
+  Historical context: before 2020, S3 had eventual consistency for LIST operations and overwrites of existing objects. This caused real bugs: upload a file, immediately list the bucket, the file might not appear. Developers had to add artificial delays or use DynamoDB to track object existence.<br><br>
+  Today: a successful PUT is immediately visible to all subsequent GET and LIST operations. No delays, no workarounds needed.<br><br>
+  <strong>Where consistency issues remain</strong>:<br>
+  1. <strong>Cross-region replication lag</strong>: if you enable S3 Cross-Region Replication (CRR), objects are eventually replicated to the destination region. Reads from the destination region might not see the latest version until replication completes (typically 15 minutes, but no SLA). For strong cross-region consistency, do not rely on S3 CRR alone — use a distributed database or accept the replication lag.<br>
+  2. <strong>Concurrent writes to the same key</strong>: if two clients simultaneously PUT the same S3 key, the "last writer wins" — but there is no atomic compare-and-swap (no "write only if not modified"). For concurrent update scenarios, use DynamoDB for metadata and version tracking alongside S3 for blob storage.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the "small files problem" in data lakes and how do you solve it?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Millions of small files in S3 make query engines (Spark, Athena, Redshift Spectrum) dramatically slower.</strong><br><br>
+  <strong>The problem</strong>: Flink flushes to S3 every 10 seconds. At 100 partitions × 6 flushes/minute × 60 minutes = 36,000 files/hour, each ~100KB. When Athena queries a day's data, it must open 864,000 files. S3 LIST + OPEN operations are expensive (~10ms each). 864,000 × 10ms = 2.4 hours of overhead before reading a single byte.<br><br>
+  <strong>Solutions</strong>:<br>
+  1. <strong>Compaction jobs</strong>: a daily Spark job reads all small files for each partition and rewrites them as a few large Parquet files (100–500MB each). Athena now opens 10 files instead of 864,000. Requires a maintenance window or can run in the background during low-traffic hours.<br>
+  2. <strong>Increase flush interval</strong>: instead of flushing every 10 seconds, flush every 10 minutes. Fewer, larger files. Trade-off: longer lag before data is queryable.<br>
+  3. <strong>Delta Lake / Iceberg</strong>: these table formats include compaction operations (<code>OPTIMIZE</code> in Delta, <code>REWRITE_DATA_FILES</code> in Iceberg) that compact small files transactionally — no downtime, readers see consistent data throughout.</div></div>
 </section></div>
 <div class="footer">OBJECT STORAGE · S3 · GCS · MULTIPART UPLOAD · PRE-SIGNED URLs · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

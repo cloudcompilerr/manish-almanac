@@ -6,6 +6,11 @@
   <link rel="stylesheet" href="css/app.css">
 <title>Notes</title>
 
+<style>
+    .coll-cat-divider{display:flex;align-items:center;gap:10px;padding:14px 16px 6px;margin-top:2px;}
+    .coll-cat-line{flex:1;height:1px;background:var(--border);}
+    .coll-cat-label{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;white-space:nowrap;font-weight:600;opacity:.75;}
+</style>
 </head>
 <body>
 
@@ -13,311 +18,24 @@
 <div id="list">
   <div class="app-header">
     <div class="app-title">Notes</div>
-    <div class="note-count">4 items</div>
+    <div class="note-count">17 items</div>
   </div>
-  <div style="padding:6px 0">
-    <button class="note-row" id="btn_coding">
-      <div class="note-icon">☕</div>
-      <div class="note-preview"><div class="note-title">Quick Ref – Java</div><div class="note-snippet">Tap to solve a coding problem…</div></div>
-      <div class="note-date">Now</div>
-    </button>
-    <button class="note-row" id="btn_sd">
-      <div class="note-icon">🏗️</div>
-      <div class="note-preview"><div class="note-title">Quick Ref – System Design</div><div class="note-snippet">Tap to design a system…</div></div>
-      <div class="note-date">Now</div>
-    </button>
-    <button class="note-row" id="btn_debate">
-      <div class="note-icon">⚔️</div>
-      <div class="note-preview"><div class="note-title">LLM Debate Arena</div><div class="note-snippet">Ask all AIs at once — debate, judge, synthesize best answer</div></div>
-      <div class="note-date">New</div>
-    </button>
-    <div class="section-divider">My Collection</div>
-    <button class="note-row" id="btn_collection">
-      <div class="note-icon">📚</div>
-      <div class="note-preview"><div class="note-title">My Collection</div><div class="note-snippet">Count-Min Sketch · Top-K · Databases · OLAP · Streaming · AI</div></div>
-      <div class="note-date">6 items</div>
-    </button>
-  </div>
-</div>
-
-<!-- TOOL -->
-<div id="tool" class="note-detail">
-  <div class="detail-header">
-    <button class="back-btn" onclick="goBack()">‹ Notes</button>
-    <div class="detail-title" id="dtitle">Quick Ref</div>
-    <button class="gear-btn" onclick="toggleSetup()">⚙️</button>
-  </div>
-
-  <div id="setup" class="setup-box" style="display:none;margin-top:12px">
-    <div class="setup-lbl">🤖 AI Provider</div>
-    <div class="setup-desc">Pick a provider, paste your key. Stored locally in this browser only.</div>
-    <select id="providerSel" onchange="onProviderChange()" style="width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:#fff;color:var(--tp);outline:none;margin-bottom:7px;-webkit-appearance:none;">
-      <option value="anthropic">Anthropic — Claude</option>
-      <option value="openai">OpenAI — GPT</option>
-      <option value="gemini">Google — Gemini</option>
-      <option value="groq">Groq — Llama / Mixtral (fast)</option>
-    </select>
-    <select id="modelSel" style="width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:#fff;color:var(--tp);outline:none;margin-bottom:7px;-webkit-appearance:none;"></select>
-    <div id="keyHint" class="setup-desc" style="margin-bottom:6px">Key from console.anthropic.com</div>
-    <input type="password" id="apikey" placeholder="sk-ant-…" autocomplete="off"/>
-    <button onclick="saveKey()">Save & Close</button>
-  </div>
-
-  <div class="mode-row">
-    <button class="mode-btn on" id="mCoding" onclick="setMode('coding')">☕ Java Coding</button>
-    <button class="mode-btn" id="mSD" onclick="setMode('sd')">🏗️ System Design</button>
-  </div>
-
-  <!-- Provider strip — select LLM for Quick Ref -->
-  <div class="prov-strip" id="provStrip"></div>
-
-  <div class="voice-wrap">
-    <div class="voice-top">
-      <span class="vlbl" id="vlbl">🎙 Speak your coding problem</span>
-      <span class="vtimer" id="vtimer"></span>
-    </div>
-    <div class="mic-wrap">
-      <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎙️</button>
-    </div>
-    <div class="waveform" id="wf">
-      <div class="wb" style="height:5px"></div><div class="wb" style="height:11px"></div>
-      <div class="wb" style="height:19px"></div><div class="wb" style="height:25px"></div>
-      <div class="wb" style="height:19px"></div><div class="wb" style="height:11px"></div>
-      <div class="wb" style="height:5px"></div>
-    </div>
-    <div class="vstatus" id="vs">Tap the mic and speak clearly</div>
-    <div class="tbox" id="tbox" contenteditable="true" spellcheck="false" data-ph="Tap mic to speak…"></div>
-    <div class="vactions">
-      <button class="btn-cl" onclick="clearAll()">Clear</button>
-      <button class="btn-go" id="goBtn" onclick="generate()" disabled>Generate ⚡</button>
-    </div>
-  </div>
-
-  <div class="chips" id="chips">
-    <div class="chip on" data-d="interview" onclick="setDepth(this)">🎯 Interview</div>
-    <div class="chip" data-d="explain" onclick="setDepth(this)">🗣️ Team</div>
-    <div class="chip" data-d="beginner" onclick="setDepth(this)">📖 Beginner</div>
-  </div>
-
-  <div class="sprog" id="sprog"><div class="sbar" id="sbar"></div></div>
-  <div class="thinking" id="thinking"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="ttext" id="ttext">Thinking…</div></div>
-  <div class="rarea" id="rarea"></div>
-</div>
-
-<!-- SPEAK MODE -->
-<div id="sovl">
-  <button class="sovl-close" onclick="closeSM()">✕</button>
-  <div class="sovl-title">📢 How to Explain This</div>
-  <div id="smc"></div>
-</div>
-<div class="toast" id="toast"></div>
-
-
-<script src="js/app.js"></script>
-<script src="js/prompts.js"></script>
-<script src="js/render.js"></script>
-<script src="js/debate.js"></script>
-<script src="js/collection.js"></script>
-<script>
-/* ═══ HOME BUTTONS + INIT ═══ */
-document.addEventListener('DOMContentLoaded',function(){
-  var bc=document.getElementById('btn_coding');
-  var bs=document.getElementById('btn_sd');
-  var bd=document.getElementById('btn_debate');
-  if(bc) bc.addEventListener('click',function(){openTool('coding');});
-  if(bs) bs.addEventListener('click',function(){openTool('sd');});
-  if(bd) bd.addEventListener('click',function(){openDebate();});
-  /* Restore saved provider/model on load */
-  try{
-    var sp=localStorage.getItem('nt_v6_provider');
-    var sm=localStorage.getItem('nt_v6_model');
-    if(sp&&PROVIDERS[sp]){provider=sp;document.getElementById('providerSel').value=sp;}
-    onProviderChange();
-    if(sm&&document.getElementById('modelSel')){document.getElementById('modelSel').value=sm;model=sm;}
-  }catch(e){try{onProviderChange();}catch(e2){}}
-  document.getElementById('tbox').addEventListener('input',chkBtn);
-  initCollection();
-});
-
-
-
-</script>
-
-
-<!-- ═══ DEBATE ARENA PANEL ═══ -->
-<div id="debate">
-  <div class="db-header">
-    <button class="back-btn" id="debateBack">‹ Notes</button>
-    <div class="detail-title">⚔️ LLM Debate Arena</div>
-    <div style="min-width:40px"></div>
-  </div>
-
-  <!-- CONFIG SCREEN -->
-  <div id="db-config" class="db-body">
-    <div class="db-section">
-      <div class="db-lbl">🎯 Expert Domain <span style="font-weight:400;color:var(--ts)">— auto-detected from your question, or pick manually</span></div>
-      <div id="domainRow" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
-      <div id="domainRoleCard" style="display:none;background:var(--as);border:1px solid rgba(200,169,110,.3);border-radius:10px;padding:11px 13px;margin-top:4px">
-        <div id="domainRoleIcon" style="font-size:22px;margin-bottom:5px"></div>
-        <div id="domainRoleName" style="font-size:12px;font-weight:700;color:var(--tp);margin-bottom:3px"></div>
-        <div id="domainRoleDesc" style="font-size:11.5px;color:var(--ts);line-height:1.55"></div>
-      </div>
-    </div>
-
-    <div class="db-section">
-            <div class="db-lbl">Select AIs <span style="font-weight:400;color:var(--ts)">— 1 model = solo expert, 2–4 = debate</span></div>
-      <div class="db-provider-grid" id="db-prov-grid">
-        <!-- filled by JS -->
-      </div>
-    </div>
-
-    <div class="db-section">
-      <div class="db-lbl">Judge / Orchestrator</div>
-      <div class="judge-row" id="judgeRow">
-        <div class="judge-chip on" data-j="best">🏆 Strongest model</div>
-        <div class="judge-chip" data-j="majority">🗳️ Majority vote</div>
-        <div class="judge-chip" data-j="meta">🧠 Meta-synthesis</div>
-      </div>
-      <div style="font-size:11px;color:var(--ts);margin-top:4px" id="judgeDesc">The most capable selected model acts as final judge and synthesizer.</div>
-    </div>
-
-    <div class="db-section">
-      <div class="db-lbl">Debate rounds</div>
-      <div class="judge-row" id="roundsRow">
-        <div class="judge-chip on" data-r="1">1 round</div>
-        <div class="judge-chip" data-r="2">2 rounds</div>
-      </div>
-    </div>
-
-    <div class="db-section">
-      <div class="db-lbl">Your question</div>
-      <div class="voice-wrap" style="margin:0 0 0 0">
-        <div class="voice-top">
-          <span class="vlbl" id="db-vlbl">🎙 Speak or type your question</span>
-          <span class="vtimer" id="db-vtimer"></span>
-        </div>
-        <div class="mic-wrap">
-          <button class="mic-btn" id="db-mic-btn" onclick="toggleDbMic()">🎙️</button>
-        </div>
-        <div class="waveform" id="db-wf">
-          <div class="wb" style="height:5px"></div><div class="wb" style="height:11px"></div>
-          <div class="wb" style="height:19px"></div><div class="wb" style="height:25px"></div>
-          <div class="wb" style="height:19px"></div><div class="wb" style="height:11px"></div>
-          <div class="wb" style="height:5px"></div>
-        </div>
-        <div class="vstatus" id="db-vs">Tap the mic and speak clearly</div>
-        <textarea class="db-question tbox" id="db-question" placeholder="Tap mic to speak, or type your question here…" rows="3" style="margin:4px 14px 8px;width:calc(100% - 28px);resize:none;font-family:-apple-system,sans-serif;"></textarea>
-        <div class="vactions" style="padding:0 14px 14px">
-          <button class="btn-cl" onclick="clearDbQuestion()">Clear</button>
-          <button class="db-run btn-go" id="db-run-btn" disabled onclick="runDebate()">⚔️ Start Debate</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- RESULTS SCREEN -->
-  <div id="db-results" class="db-body" style="display:none">
-    <div id="db-results-inner"></div>
-    <button class="db-run" style="background:var(--ts);margin-top:8px" onclick="resetDebate()">← New debate</button>
-  </div>
-</div>
-
-
-
-<!-- MY COLLECTION — list panel -->
-<div id="coll-panel">
-  <div class="coll-header">
-    <button class="coll-back" id="btn_coll_back">‹ Notes</button>
-    <div class="coll-title">My Collection</div>
-    <div class="coll-count">17 items</div>
-  </div>
-  <div style="padding:6px 0">
-    <button class="note-row" id="btn_coll_cms">
-      <div class="note-icon">🎯</div>
+    <div style="padding:6px 0">
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#1a4f8a">FOUNDATIONS</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_distributed_systems">
+      <div class="note-icon">⚙️</div>
       <div class="note-preview">
-        <div class="note-title">Count-Min Sketch</div>
-        <div class="note-snippet">Visual guide — hash tables, frequency estimation, interview Q&amp;A</div>
+        <div class="note-title">Distributed Systems Fundamentals</div>
+        <div class="note-snippet">CAP · Raft · Saga · 2PC · Redlock · Vector Clocks · Idempotency</div>
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">Algorithm</span>
-      </div>
-    </button>
-    <button class="note-row" id="btn_coll_topk">
-      <div class="note-icon">🏗️</div>
-      <div class="note-preview">
-        <div class="note-title">Top-K End-to-End Design</div>
-        <div class="note-snippet">Kafka · Flink · Redis · Cassandra · ClickHouse · S3 full blueprint</div>
-      </div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">System Design</span>
-      </div>
-    </button>
-    <button class="note-row" id="btn_coll_ai">
-      <div class="note-icon">🤖</div>
-      <div class="note-preview">
-        <div class="note-title">AI Leadership Handbook</div>
-        <div class="note-snippet">LLM internals · RAG · Agents · MLOps · Director-level interview prep</div>
-      </div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">AI / Leadership</span>
-      </div>
-    </button>
-    <button class="note-row" id="btn_coll_databases">
-      <div class="note-icon">🗄️</div>
-      <div class="note-preview">
-        <div class="note-title">PostgreSQL vs MongoDB vs DynamoDB vs Cassandra</div>
-        <div class="note-snippet">ACID · sharding · CAP theorem · when to use each with real examples</div>
-      </div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">Databases</span>
-      </div>
-    </button>
-    <button class="note-row" id="btn_coll_olap">
-      <div class="note-icon">📊</div>
-      <div class="note-preview">
-        <div class="note-title">OLAP: ClickHouse vs Druid vs BigQuery</div>
-        <div class="note-snippet">Columnar storage · real-time vs batch · cost · Top-K example</div>
-      </div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">Analytics DB</span>
-      </div>
-    </button>
-    <button class="note-row" id="btn_coll_streaming">
-      <div class="note-icon">🌊</div>
-      <div class="note-preview">
-        <div class="note-title">Stream Processing Decoded</div>
-        <div class="note-snippet">Kafka vs Flink vs Kinesis vs Spark Streaming — transport vs processing</div>
-      </div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">Streaming</span>
-      </div>
-    </button>
-    <button class="note-row" id="btn_coll_protocols">
-      <div class="note-icon">🔌</div>
-      <div class="note-preview">
-        <div class="note-title">API Protocols Decoded</div>
-        <div class="note-snippet">REST · gRPC · GraphQL · WebSocket · SSE · Long Polling — when to use each and how they combine</div>
-      </div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">Protocols</span>
-      </div>
-    </button>
-
-    <button class="note-row" id="btn_coll_caching">
-      <div class="note-icon">🔥</div>
-      <div class="note-preview">
-        <div class="note-title">Caching Deep Dive</div>
-        <div class="note-snippet">Redis · Memcached · Eviction · Invalidation · Cache Stampede</div>
-      </div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">Caching</span>
+        <span class="coll-tag">Distributed Sys</span>
       </div>
     </button>
     <button class="note-row" id="btn_coll_consistent_hashing">
       <div class="note-icon">🔵</div>
       <div class="note-preview">
-        <div class="note-title">Consistent Hashing</div>
+        <div class="note-title">Consistent Hashing & Partitioning</div>
         <div class="note-snippet">Hash Ring · Virtual Nodes · Hot Spots · Redis Cluster · Cassandra</div>
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
@@ -334,24 +52,97 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">Rate Limiting</span>
       </div>
     </button>
-    <button class="note-row" id="btn_coll_distributed_systems">
-      <div class="note-icon">⚙️</div>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#1a7a4a">DATA LAYER</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_caching">
+      <div class="note-icon">🔥</div>
       <div class="note-preview">
-        <div class="note-title">Distributed Systems Fundamentals</div>
-        <div class="note-snippet">CAP · Raft · Saga · 2PC · Redlock · Vector Clocks · Idempotency</div>
+        <div class="note-title">Caching Deep Dive</div>
+        <div class="note-snippet">Redis · Memcached · Eviction · Invalidation · Cache Stampede</div>
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">Distributed Sys</span>
+        <span class="coll-tag">Caching</span>
       </div>
     </button>
+    <button class="note-row" id="btn_coll_databases">
+      <div class="note-icon">🐘</div>
+      <div class="note-preview">
+        <div class="note-title">Databases Compared</div>
+        <div class="note-snippet">PostgreSQL · MongoDB · DynamoDB · Cassandra · ACID · Sharding</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Databases</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_olap">
+      <div class="note-icon">📈</div>
+      <div class="note-preview">
+        <div class="note-title">OLAP Engines Compared</div>
+        <div class="note-snippet">ClickHouse · Druid · BigQuery · Redshift · Columnar Storage</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Analytics DB</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_object_storage">
+      <div class="note-icon">🗄</div>
+      <div class="note-preview">
+        <div class="note-title">Object Storage: S3 & Blob</div>
+        <div class="note-snippet">S3 vs Block vs File · Multipart Upload · Pre-Signed URLs · Data Lake</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Storage</span>
+      </div>
+    </button>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#b8720a">COMPUTE & TRAFFIC</span><span class="coll-cat-line"></span></div>
     <button class="note-row" id="btn_coll_load_balancing">
       <div class="note-icon">⚖️</div>
       <div class="note-preview">
         <div class="note-title">Load Balancing & Proxies</div>
-        <div class="note-snippet">L4/L7 · Nginx · Envoy · Circuit Breaker · API Gateway · Service Mesh</div>
+        <div class="note-snippet">L4/L7 · Nginx · Envoy · Circuit Breaker · API Gateway · Blue-Green</div>
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
         <span class="coll-tag">Infra</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_cdn_edge">
+      <div class="note-icon">🌍</div>
+      <div class="note-preview">
+        <div class="note-title">CDN & Edge Computing</div>
+        <div class="note-snippet">Cloudflare · CloudFront · HLS · DASH · Edge Compute · DDoS</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">CDN</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_message_queues">
+      <div class="note-icon">📬</div>
+      <div class="note-preview">
+        <div class="note-title">Message Queues: SQS & RabbitMQ</div>
+        <div class="note-snippet">SQS · RabbitMQ · DLQ · Fan-Out · Ordering · Queue vs Stream</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Queues</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_streaming">
+      <div class="note-icon">🌊</div>
+      <div class="note-preview">
+        <div class="note-title">Stream Processing Decoded</div>
+        <div class="note-snippet">Kafka vs Flink vs Kinesis vs Spark · Transport vs Processing</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Streaming</span>
+      </div>
+    </button>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#6040a0">APIs & PROTOCOLS</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_protocols">
+      <div class="note-icon">🔌</div>
+      <div class="note-preview">
+        <div class="note-title">API Protocols Decoded</div>
+        <div class="note-snippet">REST · gRPC · GraphQL · WebSocket · SSE · Long Polling · Combos</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Protocols</span>
       </div>
     </button>
     <button class="note-row" id="btn_coll_search">
@@ -364,48 +155,233 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">Search</span>
       </div>
     </button>
-    <button class="note-row" id="btn_coll_object_storage">
-      <div class="note-icon">🗄️</div>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#c0392b">SYSTEMS IN PRACTICE</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_observability">
+      <div class="note-icon">📊</div>
       <div class="note-preview">
-        <div class="note-title">Object Storage: S3 & Blob Store</div>
-        <div class="note-snippet">S3 vs Block vs File · Multipart Upload · Pre-Signed URLs · Storage Classes</div>
+        <div class="note-title">Monitoring & Observability</div>
+        <div class="note-snippet">Metrics · Logs · Traces · SLO · Error Budget · Golden Signals</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Observability</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_topk">
+      <div class="note-icon">⚡</div>
+      <div class="note-preview">
+        <div class="note-title">Top-K End-to-End Design</div>
+        <div class="note-snippet">Kafka · Flink · Count-Min Sketch · Redis · Cassandra · ClickHouse</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">System Design</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_cms">
+      <div class="note-icon">🔢</div>
+      <div class="note-preview">
+        <div class="note-title">Count-Min Sketch</div>
+        <div class="note-snippet">Frequency Estimation · Probabilistic · Space-Efficient · Top-K</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Algorithm</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_ai">
+      <div class="note-icon">🤖</div>
+      <div class="note-preview">
+        <div class="note-title">AI Leadership Handbook</div>
+        <div class="note-snippet">LLM · RAG · Agents · MLOps · RAGAS · Director-Level Strategy</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">AI / Leadership</span>
+      </div>
+    </button>
+  </div>
+
+<!-- MY COLLECTION — list panel -->
+<div id="coll-panel">
+  <div class="coll-header">
+    <button class="coll-back" id="btn_coll_back">‹ Notes</button>
+    <div class="coll-title">My Collection</div>
+    <div class="coll-count">17 items</div>
+  </div>
+    <div style="padding:6px 0">
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#1a4f8a">FOUNDATIONS</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_distributed_systems">
+      <div class="note-icon">⚙️</div>
+      <div class="note-preview">
+        <div class="note-title">Distributed Systems Fundamentals</div>
+        <div class="note-snippet">CAP · Raft · Saga · 2PC · Redlock · Vector Clocks</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Distributed Sys</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_consistent_hashing">
+      <div class="note-icon">🔵</div>
+      <div class="note-preview">
+        <div class="note-title">Consistent Hashing & Partitioning</div>
+        <div class="note-snippet">Hash Ring · Virtual Nodes · Hot Spots · Redis Cluster</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Partitioning</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_rate_limiting">
+      <div class="note-icon">⏱️</div>
+      <div class="note-preview">
+        <div class="note-title">Rate Limiting & Throttling</div>
+        <div class="note-snippet">Token Bucket · Sliding Window · Redis INCR</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Rate Limiting</span>
+      </div>
+    </button>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#1a7a4a">DATA LAYER</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_caching">
+      <div class="note-icon">🔥</div>
+      <div class="note-preview">
+        <div class="note-title">Caching Deep Dive</div>
+        <div class="note-snippet">Redis · Memcached · Eviction · Invalidation</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Caching</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_databases">
+      <div class="note-icon">🐘</div>
+      <div class="note-preview">
+        <div class="note-title">Databases Compared</div>
+        <div class="note-snippet">PostgreSQL · MongoDB · DynamoDB · Cassandra</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Databases</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_olap">
+      <div class="note-icon">📈</div>
+      <div class="note-preview">
+        <div class="note-title">OLAP Engines Compared</div>
+        <div class="note-snippet">ClickHouse · Druid · BigQuery · Redshift</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Analytics DB</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_object_storage">
+      <div class="note-icon">🗄</div>
+      <div class="note-preview">
+        <div class="note-title">Object Storage: S3 & Blob</div>
+        <div class="note-snippet">S3 vs Block · Multipart Upload · Data Lake</div>
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
         <span class="coll-tag">Storage</span>
       </div>
     </button>
-    <button class="note-row" id="btn_coll_message_queues">
-      <div class="note-icon">📬</div>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#b8720a">COMPUTE & TRAFFIC</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_load_balancing">
+      <div class="note-icon">⚖️</div>
       <div class="note-preview">
-        <div class="note-title">Message Queues: SQS & RabbitMQ</div>
-        <div class="note-snippet">SQS · RabbitMQ · DLQ · Fan-Out · Queue vs Stream · At-Least-Once</div>
+        <div class="note-title">Load Balancing & Proxies</div>
+        <div class="note-snippet">L4/L7 · Nginx · Envoy · Circuit Breaker · Blue-Green</div>
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-        <span class="coll-tag">Queues</span>
+        <span class="coll-tag">Infra</span>
       </div>
     </button>
     <button class="note-row" id="btn_coll_cdn_edge">
       <div class="note-icon">🌍</div>
       <div class="note-preview">
         <div class="note-title">CDN & Edge Computing</div>
-        <div class="note-snippet">Cloudflare · CloudFront · HLS · DASH · Adaptive Bitrate · Edge Compute</div>
+        <div class="note-snippet">Cloudflare · CloudFront · HLS · Edge Compute</div>
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
         <span class="coll-tag">CDN</span>
       </div>
     </button>
+    <button class="note-row" id="btn_coll_message_queues">
+      <div class="note-icon">📬</div>
+      <div class="note-preview">
+        <div class="note-title">Message Queues: SQS & RabbitMQ</div>
+        <div class="note-snippet">SQS · RabbitMQ · DLQ · Fan-Out · Ordering</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Queues</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_streaming">
+      <div class="note-icon">🌊</div>
+      <div class="note-preview">
+        <div class="note-title">Stream Processing Decoded</div>
+        <div class="note-snippet">Kafka vs Flink vs Kinesis vs Spark</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Streaming</span>
+      </div>
+    </button>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#6040a0">APIs & PROTOCOLS</span><span class="coll-cat-line"></span></div>
+    <button class="note-row" id="btn_coll_protocols">
+      <div class="note-icon">🔌</div>
+      <div class="note-preview">
+        <div class="note-title">API Protocols Decoded</div>
+        <div class="note-snippet">REST · gRPC · GraphQL · WebSocket · SSE</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Protocols</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_search">
+      <div class="note-icon">🔍</div>
+      <div class="note-preview">
+        <div class="note-title">Search & Elasticsearch</div>
+        <div class="note-snippet">Inverted Index · BM25 · Typeahead · Vector Search</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Search</span>
+      </div>
+    </button>
+    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#c0392b">SYSTEMS IN PRACTICE</span><span class="coll-cat-line"></span></div>
     <button class="note-row" id="btn_coll_observability">
       <div class="note-icon">📊</div>
       <div class="note-preview">
         <div class="note-title">Monitoring & Observability</div>
-        <div class="note-snippet">Metrics · Logs · Traces · SLO · Error Budget · Golden Signals · Prometheus</div>
+        <div class="note-snippet">Metrics · Logs · Traces · SLO · Error Budget</div>
       </div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
         <span class="coll-tag">Observability</span>
       </div>
     </button>
+    <button class="note-row" id="btn_coll_topk">
+      <div class="note-icon">⚡</div>
+      <div class="note-preview">
+        <div class="note-title">Top-K End-to-End Design</div>
+        <div class="note-snippet">Kafka · Flink · Count-Min Sketch · Redis</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">System Design</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_cms">
+      <div class="note-icon">🔢</div>
+      <div class="note-preview">
+        <div class="note-title">Count-Min Sketch</div>
+        <div class="note-snippet">Frequency Estimation · Probabilistic</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">Algorithm</span>
+      </div>
+    </button>
+    <button class="note-row" id="btn_coll_ai">
+      <div class="note-icon">🤖</div>
+      <div class="note-preview">
+        <div class="note-title">AI Leadership Handbook</div>
+        <div class="note-snippet">LLM · RAG · Agents · MLOps · RAGAS</div>
+      </div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="coll-tag">AI / Leadership</span>
+      </div>
+    </button>
   </div>
-</div>
 
 <!-- MY COLLECTION — item viewer panel -->
 <div id="coll-item">

@@ -215,6 +215,65 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
+
+<section id="ordering">
+  <div class="sec-tag">03 · Message Ordering</div>
+  <h2>When order matters — and how to guarantee it</h2>
+  <div class="callout cl-amber">
+    <div class="cl-lbl">The interview gotcha</div>
+    <p>Candidates often assume message queues guarantee order. <strong>Most do not — or only guarantee order within a partition/group.</strong> Understanding the ordering semantics of each system is a senior-level expectation.</p>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">SQS Standard</div><div class="concept-def"><strong>Best-effort ordering only.</strong> Messages may arrive out of order. May be delivered more than once.<br>
+      Why: SQS Standard routes messages across many redundant queues for maximum throughput. Order is not preserved across these internal queues.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Highest throughput (unlimited). Best for: tasks where order does not matter (image resizing, email sending, background jobs).</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ If you need order, use SQS FIFO — not Standard.</span></div></div>
+    <div class="concept-row"><div class="concept-term">SQS FIFO</div><div class="concept-def"><strong>Strict first-in-first-out ordering AND exactly-once delivery within a message group.</strong><br>
+      Message Group ID: messages with the same group ID are processed in order. Different group IDs process in parallel.<br>
+      Example: all order events for order_123 share group_id="order_123" → processed in sequence. Orders 123 and 456 processed in parallel.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Exactly-once processing (deduplication by message ID). Order guaranteed within group. Used for: order state machines, financial transactions, any workflow where step sequence matters.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Max 3,000 transactions/sec per queue (vs unlimited for Standard). If one message in a group fails and blocks, all subsequent messages in that group wait.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Kafka Ordering</div><div class="concept-def"><strong>Strict ordering within a partition. No ordering guarantee across partitions.</strong><br>
+      All events for user_123 → same partition (keyed by user_id) → consumed in order by the same consumer thread. Events for user_456 → different partition → parallel, independent.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Per-entity ordering (all of one user's events are ordered) + high parallelism (different entities processed in parallel). The right model for most real-world ordering needs.</span></div></div>
+    <div class="concept-row"><div class="concept-term">RabbitMQ Ordering</div><div class="concept-def"><strong>FIFO within a single queue with a single consumer. Multiple consumers break ordering.</strong><br>
+      With 3 consumers on one queue: message A → consumer 1 (slow, takes 5s), message B → consumer 2 (fast, takes 100ms). B is processed before A — out of order.<br>
+      <span style="color:#5a5848;font-size:12.5px;">To preserve order with RabbitMQ: use a single consumer. Or use one queue per "entity" (one queue per user) — but this doesn't scale to millions of users. RabbitMQ is a poor choice when strict per-entity ordering at scale matters — use Kafka instead.</span></div></div>
+  </div>
+</section>
+
+<section id="pubsub">
+  <div class="sec-tag">04 · Pub/Sub vs Point-to-Point</div>
+  <h2>Two fundamentally different delivery models</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Point-to-Point<br>(Queue)</div><div class="concept-def"><strong>One producer sends, one consumer receives. Message is deleted after consumption.</strong><br>
+      Multiple consumers on the same queue compete for messages — each message goes to exactly one consumer. This is task distribution: "process this job" should be done by one worker, not all workers.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Use for: task queues (image processing, email sending), work distribution, exactly-once processing. SQS, RabbitMQ queues.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Publish-Subscribe<br>(Topic)</div><div class="concept-def"><strong>One producer publishes, ALL subscribers receive a copy. Message is not deleted after first consumption.</strong><br>
+      An OrderPlaced event published to SNS topic → Fulfillment Service gets a copy AND Notification Service gets a copy AND Analytics Service gets a copy. All three process independently.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Decoupled fan-out. Adding a new subscriber (e.g., new Fraud Detection service) requires zero changes to the publisher. Used for: event broadcasting, audit logging, feeding multiple downstream systems.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">SNS (pub/sub) + SQS (queue): the AWS pattern. SNS distributes to multiple SQS queues. Each queue has its own consumer group with independent retry logic and DLQ.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Kafka as Both</div><div class="concept-def"><strong>Kafka supports both models via consumer groups.</strong><br>
+      <strong>Point-to-point</strong>: one consumer group, multiple consumers. Each partition assigned to one consumer. Messages load-balanced across consumers.<br>
+      <strong>Pub/sub</strong>: multiple independent consumer groups on the same topic. Each group gets all messages. Group A (Flink) and Group B (ClickHouse) both read the same events independently, at their own pace.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ This flexibility is why Kafka replaced both SQS-style queues and SNS-style topics in many architectures. One transport layer serves all consumption patterns.</span></div></div>
+  </div>
+</section>
+
+<section id="more-sd-mq">
+  <div class="sec-tag">05 · More System Design Examples</div>
+  <h2>Message queue decisions in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Notification System — Multi-Channel Fan-Out</div><span class="sd-example-tag">FAN-OUT · SLA · ORDERING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">TRIGGER</div><div class="choice-val">NotificationRequested event published to SNS. SNS fans out to 4 SQS queues: Push Queue, Email Queue, SMS Queue, In-App Queue. Each queue has dedicated consumers with independent retry policies (push can retry every 5s, SMS retries every 30s due to cost).</div></div>
+      <div class="choice-row"><div class="choice-label">RATE LIMITING</div><div class="choice-val">Email provider (SendGrid) has send rate limits. SQS consumer reads from Email Queue at a controlled rate (Lambda with reserved concurrency = 10 → max 10 emails/second processed). Queue absorbs bursts — during flash sales, thousands of "order confirmed" emails queue up and drain at 10/sec.</div></div>
+      <div class="choice-row"><div class="choice-label">ORDERING</div><div class="choice-val">Notification ordering matters for chat (messages must arrive in order). Chat notifications use SQS FIFO with message group ID = conversation_id. All messages in one conversation processed sequentially. Different conversations process in parallel.</div></div>
+      <div class="choice-row"><div class="choice-label">DLQ MONITORING</div><div class="choice-val">Each channel's SQS queue has a DLQ. CloudWatch alarm: DLQ depth &gt; 0 → PagerDuty alert. Ops investigates every failed notification. DLQ messages inspected to find: malformed payloads, invalid phone numbers, email bounces, device tokens expired.</div></div>
+    </div>
+  </div>
+</section>
+
 <section id="followups">
   <div class="sec-tag">04 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
@@ -237,6 +296,28 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   — The operation is simple and the downstream service is reliable<br>
   — You need to return errors to the user immediately<br><br>
   <strong>Rule of thumb</strong>: can the user proceed without waiting for this operation? If yes → queue. If no → synchronous call.</div></div>
+
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">When should you use Kafka instead of SQS for a task queue?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Use Kafka when you need replay, multiple independent consumers, or extremely high throughput. Use SQS when you need simple task distribution with zero ops overhead.</strong><br><br>
+  <strong>Choose Kafka when:</strong><br>
+  — You need to replay messages (Kafka retains for 7 days; SQS deletes on consumption)<br>
+  — Multiple independent consumers need the same data (Kafka consumer groups; SQS message goes to one consumer)<br>
+  — You process more than 50K messages/second (SQS FIFO caps at 3K/sec, Standard is unlimited but unordered)<br>
+  — You want the same transport to serve both streaming analytics (Flink) and task workers (application consumers)<br><br>
+  <strong>Choose SQS when:</strong><br>
+  — Simple "do this job once" semantics — no replay needed<br>
+  — Zero ops budget — SQS is fully managed, Kafka requires cluster management<br>
+  — AWS ecosystem — SQS integrates natively with Lambda, SNS, EventBridge<br>
+  — Moderate throughput (&lt;10K messages/sec for most task queues)<br>
+  — Need guaranteed FIFO with exactly-once semantics for low-to-moderate throughput<br><br>
+  <strong>The common mistake</strong>: using Kafka for simple task queues where SQS would suffice. Kafka's operational complexity (brokers, ZooKeeper/KRaft, partition management, consumer group rebalancing) is only justified when you genuinely need its streaming capabilities.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle a poison pill message — one that crashes your consumer every time?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>A poison pill is a malformed or unprocessable message that causes the consumer to crash or fail on every retry, blocking the queue.</strong><br><br>
+  <strong>SQS approach — maxReceiveCount + DLQ</strong>:<br>
+  Set <code>maxReceiveCount = 3</code> on your queue. After 3 failed deliveries, the message is automatically moved to the DLQ. The consumer continues processing other messages. DLQ alert fires — ops team investigates the specific message. Fix: either fix the consumer code to handle this message type, or discard the message from DLQ if it is genuinely malformed data.<br><br>
+  <strong>Kafka approach — skip and log</strong>:<br>
+  Kafka does not have a native DLQ. Options: (1) catch the exception, log the problematic message + offset to an error Kafka topic (manual DLQ pattern), then commit the offset and continue. (2) Use Spring Kafka's SeekToCurrentErrorHandler which retries N times then calls a recovery callback. (3) Use a dead-letter topic: on failure, produce to <code>topic.DLT</code> and commit the original offset.<br><br>
+  <strong>Prevention</strong>: validate message schema at ingest time. Reject malformed messages at the producer with an explicit schema (Avro + Schema Registry is the Kafka standard). Malformed messages never enter the queue in the first place.</div></div>
 </section></div>
 <div class="footer">MESSAGE QUEUES · SQS · RABBITMQ · DLQ · FAN-OUT · AT-LEAST-ONCE · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

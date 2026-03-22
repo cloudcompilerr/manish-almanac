@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consistent Hashing: Partitioning at Scale</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-
 :root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
 body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
@@ -132,91 +128,103 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
 @media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}.opt-arrow{min-width:80px;}}
 
-
-
-</style>
-</head>
-<body>
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
-    <h1>Consistent Hashing<br><em>Partitioning at Scale</em></h1>
-    <p class="hero-sub">Why naive hashing breaks, how the ring works, virtual nodes, hot spots, and how Cassandra, Redis Cluster and DynamoDB actually implement it.</p>
-    <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Hash Ring</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">Virtual Nodes</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Hash Slots</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">Hot Spots</span></div>
-  </div>
-</div>
-<nav class="nav"><a href="#problem">The Problem</a><a href="#how">How It Works</a><a href="#comparison">Strategies</a><a href="#hotspot">Hot Spots</a><a href="#real">Real Systems</a><a href="#followups">Follow-ups</a></nav>
+</style></head><body>
+<div class="hero"><div class="hero-inner">
+  <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
+  <h1>Consistent Hashing<br><em>Partitioning at Scale</em></h1>
+  <p class="hero-sub">Why naive hashing breaks, the ring explained step by step, virtual nodes, hot spot mitigation, and how Cassandra, Redis Cluster and DynamoDB actually implement it.</p>
+  <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Hash Ring</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Virtual Nodes</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Hash Slots</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Hot Spots</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Rendezvous Hashing</span></div>
+</div></div>
+<nav class="nav"><a href="#problem">The Problem</a><a href="#ring">The Ring</a><a href="#partitioning">Strategies</a><a href="#hotspot">Hot Spots</a><a href="#real">Real Systems</a><a href="#rendezvous">Rendezvous</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a></nav>
 <div class="wrap">
-
 <section id="problem">
-  <div class="sec-tag">00 · The Problem</div>
-  <h2>Why naive hashing breaks when you add or remove servers</h2>
-  <p>You have 3 servers and use <code>hash(key) % 3</code> to route requests. Server 2 goes down. Now you have 2 servers. <code>hash(key) % 2</code> gives completely different results — every key maps to a different server. <strong>100% of your cached data is now on the wrong server.</strong> Your entire cache is invalidated simultaneously. Your database collapses.</p>
+  <div class="sec-tag">00 · The Problem With Naive Hashing</div>
+  <h2>Why key % N destroys your cache on every topology change</h2>
+  <p>You have 3 servers. A request for <code>user:123</code> maps to <code>hash("user:123") % 3 = 1</code> → Server 1. Your cache is warm, hit rate 98%. You add a 4th server to handle load. Now <code>hash("user:123") % 4 = 3</code> → Server 3. <strong>Every single key remaps to a different server.</strong> Your entire cache is cold simultaneously. Your database receives 100x normal traffic and falls over.</p>
   <div class="analogy">
-    <div class="analogy-label">The seating chart analogy</div>
+    <div class="analogy-label">The seating chart analogy — for a complete layman</div>
     <div class="analogy-text">
-      A restaurant has 10 tables. Each guest is assigned <code>hash(name) % 10</code>. Works perfectly. Then one table is removed — now 9 tables, and <strong>nearly every guest is now "assigned" to a different table</strong>. Total chaos.<br><br>
-      <strong>Consistent hashing</strong> is like arranging all tables in a circle and assigning each guest to the nearest table clockwise. Remove one table — only that table's guests need to move to the next table. Everyone else stays exactly where they were.
+      A wedding has 100 guests and 10 tables. Each guest is assigned <code>hash(name) % 10</code>. The seating works perfectly.<br><br>
+      One table collapses mid-event — now 9 tables. Recompute <code>hash(name) % 9</code> for every guest. Nearly <em>everyone</em> moves to a different table. Chaos.<br><br>
+      <strong>Consistent hashing</strong> arranges all tables in a circle. Remove one table — only that table's guests move to the next table clockwise. Everyone else stays exactly where they were. Only 1/N guests are disrupted.
     </div>
   </div>
-</section>
-
-<section id="how">
-  <div class="sec-tag">01 · How It Works</div>
-  <h2>The ring — step by step</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">The Hash Ring</div><div class="concept-def"><strong>Imagine a circle with positions 0 to 2³² (about 4 billion).</strong> Both servers and keys are hashed onto this circle using the same hash function.<br>
-      Servers: <code>hash("server-A") → position 12M</code>, <code>hash("server-B") → position 1.8B</code>, <code>hash("server-C") → position 3.1B</code><br>
-      Keys: <code>hash("user:123") → position 900M</code><br>
-      <span style="color:#5a5848;font-size:12.5px;">To find which server owns a key: start at the key's position and walk clockwise until you hit a server. user:123 at 900M → nearest server clockwise is server-B at 1.8B.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Adding a Server</div><div class="concept-def"><strong>New server-D hashes to position 1.2B.</strong> It sits between server-A (12M) and server-B (1.8B).<br>
-      Only keys between 12M and 1.2B (previously owned by server-B) now move to server-D.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Only ~1/N of keys need to move when adding the Nth server. All other keys stay on their current server.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Removing a Server</div><div class="concept-def"><strong>Server-B (position 1.8B) goes down.</strong> Its keys now walk clockwise to server-C (3.1B).<br>
-      Only server-B's keys need to be fetched from DB (cache miss). All other servers' keys are unaffected.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Only ~1/N of keys are disrupted on server failure, vs 100% with naive hashing.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Virtual Nodes</div><div class="concept-def"><strong>The problem with basic consistent hashing: non-uniform distribution.</strong> With only 3 real servers, one server might own 60% of the ring and another only 10%.<br>
-      <strong>Solution: virtual nodes (vnodes).</strong> Each physical server gets 100–1000 positions on the ring:<br>
-      <code>hash("server-A#1") → 12M, hash("server-A#2") → 890M, hash("server-A#3") → 2.1B ...</code><br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Load is distributed much more evenly. Larger servers can have more vnodes. Used by: Cassandra (default 256 vnodes), DynamoDB, Redis Cluster.</span></div></div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">The interview setup</div>
+    <p>Interviewers introduce consistent hashing with: "Your caching layer has 10 nodes. Traffic doubles — you need to add 5 more nodes. What happens to your cache?" The wrong answer: "Cache invalidation." The right answer: walk through consistent hashing, virtual nodes, and the fraction of keys that need to migrate.</p>
   </div>
 </section>
 
-<section id="comparison">
-  <div class="sec-tag">02 · Partition Strategies Compared</div>
-  <h2>Four ways to shard data — and when each breaks</h2>
+<section id="ring">
+  <div class="sec-tag">01 · The Ring — Step by Step</div>
+  <h2>How consistent hashing actually works</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">The Hash Space</div><div class="concept-def"><strong>Imagine a circle representing all possible hash values — 0 to 2³² (about 4.3 billion positions).</strong> Both servers and keys are placed on this circle by hashing their identifiers with the same function (MurmurHash3 in production).<br>
+      Servers: <code>hash("server-A") → 120M</code>, <code>hash("server-B") → 1.8B</code>, <code>hash("server-C") → 3.1B</code><br>
+      Key assignment rule: <strong>walk clockwise from the key's position until you hit a server.</strong> That server owns the key.<br>
+      <code>hash("user:123") → 900M</code> → walk clockwise → hit Server-B at 1.8B → Server-B owns this key.</div></div>
+    <div class="concept-row"><div class="concept-term">Adding a Server</div><div class="concept-def"><strong>New Server-D hashes to position 1.2B — between Server-A (120M) and Server-B (1.8B).</strong><br>
+      Before D: keys between 120M and 1.8B → Server-B.<br>
+      After D: keys between 120M and 1.2B → Server-D. Keys between 1.2B and 1.8B → still Server-B.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Only keys previously on Server-B (in that arc) move to Server-D. All keys on Server-A and Server-C are completely unaffected. Exactly 1/N of keys move when adding the Nth server.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Removing a Server</div><div class="concept-def"><strong>Server-B crashes. Its keys now walk clockwise to Server-C.</strong><br>
+      Before crash: keys between 1.2B and 1.8B → Server-B.<br>
+      After crash: keys between 1.2B and 1.8B → Server-C (next clockwise).<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Only 1/N of keys experience a cache miss (the ones that were on Server-B). Every other server's keys are completely unaffected. Compare to naive hashing: 100% of keys remapped.</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">The database only absorbs 1/N of normal traffic from cold cache misses — not a complete collapse.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Virtual Nodes (Vnodes)</div><div class="concept-def"><strong>Problem: with 3 physical servers, one might own 60% of the ring. Uneven load.</strong><br>
+      Solution: each physical server gets 100–300 positions on the ring by hashing variations of its ID:<br>
+      <code>hash("server-A#1"), hash("server-A#2"), ..., hash("server-A#150")</code><br>
+      Server-A now has 150 small arcs scattered across the ring instead of one large arc.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Load distributes much more evenly — law of large numbers applies. Larger servers get more vnodes. Cassandra default: 256 vnodes. Redis Cluster: 16,384 fixed slots.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ More vnodes = larger routing table (must store all vnode→server mappings). 1000 servers × 256 vnodes = 256,000 entries. Still small enough to fit in memory easily.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Replication on the Ring</div><div class="concept-def"><strong>Store each key on the next N servers clockwise — replication factor N gives N-way redundancy.</strong><br>
+      Replication factor 3: <code>hash("user:123") → 900M</code> → primary Server-B (1.8B) → replica Server-C (3.1B) → replica Server-A (120M + wraparound).<br>
+      Writes go to all 3. Reads can come from any of 3.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ If Server-B crashes, Server-C and Server-A still have the data — zero data loss for RF=3. Used by: Cassandra (RF typically 3), DynamoDB (transparently behind the scenes).</span><br>
+      <span style="color:#5a5848;font-size:12.5px;">The ring simultaneously handles partitioning (which nodes own which keys) and replication (which N nodes store each key). One data structure, two concerns.</span></div></div>
+  </div>
+</section>
+
+<section id="partitioning">
+  <div class="sec-tag">02 · Partitioning Strategies</div>
+  <h2>Four ways to shard — and when each breaks in production</h2>
   <table class="comp-table">
-    <thead><tr><th>Strategy</th><th>How It Works</th><th>Advantage</th><th>Failure Mode</th><th>Used By</th></tr></thead>
+    <thead><tr><th>Strategy</th><th>Mechanism</th><th>Strength</th><th>Failure Mode</th><th>Used By</th></tr></thead>
     <tbody>
-      <tr><td class="row-head">Naive Hash<br>key % N</td><td>Hash key, take modulo of server count</td><td>Simple, uniform distribution</td><td class="bad">100% remapping on any topology change</td><td>Single-node systems only</td></tr>
-      <tr><td class="row-head">Range Sharding</td><td>A–F on shard 1, G–M on shard 2, N–Z on shard 3</td><td>Range queries efficient, predictable</td><td class="warn">Hot spots: "S" surnames dominate one shard</td><td>HBase, CockroachDB, BigTable</td></tr>
-      <tr><td class="row-head">Consistent Hashing</td><td>Ring: key routes to nearest server clockwise</td><td>Only 1/N keys move on topology change</td><td class="warn">Non-uniform without vnodes; hotspot on popular keys</td><td>Cassandra, DynamoDB, Memcached</td></tr>
-      <tr><td class="row-head">Hash Slots<br>(Redis Cluster)</td><td>16,384 fixed slots. key → slot → server mapping</td><td>Deterministic, easy resharding, flexible assignment</td><td class="warn">Cross-slot multi-key ops need hash tags</td><td>Redis Cluster</td></tr>
+      <tr><td class="row-head">Hash mod N<br><code>key % N</code></td><td>Hash key, modulo server count</td><td>Simple, zero overhead</td><td class="bad">100% key remapping on any topology change</td><td>Single-node only</td></tr>
+      <tr><td class="row-head">Range Sharding</td><td>A–F → shard 1, G–M → shard 2</td><td>Range queries efficient; predictable data locality</td><td class="warn">Hot spots: users with names starting "S" dominate one shard; time-series data concentrates on newest shard</td><td>HBase, BigTable, CockroachDB</td></tr>
+      <tr><td class="row-head">Consistent Hash Ring</td><td>Ring: key → nearest server clockwise</td><td>Only 1/N keys disrupted on topology change; works without coordination</td><td class="warn">Non-uniform without vnodes; popular keys still hot (hash distributes keys, not traffic)</td><td>Cassandra, DynamoDB, Memcached, Akamai</td></tr>
+      <tr><td class="row-head">Hash Slots<br>(Redis Cluster)</td><td>16,384 fixed slots; key → CRC16 % 16384 → server</td><td>Deterministic; explicit slot assignment; easy resharding; <code>{hashtag}</code> for colocation</td><td class="warn">Cross-slot multi-key ops require hash tags; resharding needs careful orchestration</td><td>Redis Cluster</td></tr>
+      <tr><td class="row-head">Directory-Based</td><td>Metadata service maps each shard to a server</td><td>Maximum flexibility; any mapping possible; supports non-uniform shards</td><td class="bad">Metadata service is a single point of failure and performance bottleneck</td><td>MongoDB mongos, HDFS NameNode</td></tr>
     </tbody>
   </table>
 </section>
 
 <section id="hotspot">
-  <div class="sec-tag">03 · The Hot Spot Problem</div>
-  <h2>Consistent hashing does not solve hot keys — here is what does</h2>
+  <div class="sec-tag">03 · Hot Spots</div>
+  <h2>Consistent hashing distributes keys — not traffic. These are different problems.</h2>
   <div class="callout cl-red">
-    <div class="cl-lbl">⚠ The interview trap</div>
-    <p>Candidates often say "I'll use consistent hashing to distribute load evenly." Interviewers immediately ask: <strong>"What about a celebrity user with 50M followers? All their post writes hash to one node."</strong> Consistent hashing distributes <em>keys</em> evenly — it does not help when one key receives disproportionate traffic.</p>
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'll use consistent hashing to distribute load evenly." Interviewer: "Beyoncé posts a new album. Her account receives 10 million writes per minute — all hashing to the same server. How does consistent hashing help?" <strong>Answer: it doesn't.</strong> Consistent hashing distributes the keyspace evenly. A celebrity key is still a single key on a single node — it just happens to be consistently routed to that node.</p>
   </div>
   <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">Key Salting</div><div class="concept-def"><strong>Append a random suffix to distribute one hot key across multiple nodes.</strong><br>
-      Instead of writing to <code>celebrity:123</code>, write to <code>celebrity:123#0</code> through <code>celebrity:123#7</code> (8 shards).<br>
-      Reads: scatter-gather across all 8 shards, sum/merge results.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Distributes write load 8x. Used for: hot counters (view counts), celebrity post writes.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Read complexity — must query all shards and aggregate. Adds latency for reads.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Write Fan-Out</div><div class="concept-def"><strong>Pre-compute and write results to each consumer's own shard.</strong><br>
-      Celebrity posts to 50M followers: instead of one write + 50M reads, write the post to each follower's feed shard at write time.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Reads are trivially cheap — each user's feed is pre-computed on their own node. Twitter uses fan-out on write for most users.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Expensive for celebrities (50M writes per post). Hybrid: fan-out for regular users, lazy load for celebrities (fan-out on read).</span></div></div>
-    <div class="concept-row"><div class="concept-term">Local Caching</div><div class="concept-def"><strong>Cache hot keys in-process on every app server.</strong><br>
-      Celebrity user profile read millions of times/minute → cache in Caffeine/Guava on each app server. Zero network hops for reads.<br>
-      <span style="color:#1a7a4a;font-size:12.5px;">✓ Eliminates hot spot entirely for read-only data. Used for: configuration, feature flags, reference data that rarely changes.</span><br>
-      <span style="color:#b83030;font-size:12.5px;">⚠ Inconsistency across servers — each has its own copy. Use short TTL + push invalidation.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Key Salting</div><div class="concept-def"><strong>Distribute one logical key across multiple physical keys with a random or deterministic suffix.</strong><br>
+      Instead of writing to <code>celebrity:456:post_count</code>, write to one of <code>celebrity:456:post_count#0</code> through <code>celebrity:456:post_count#15</code> (16 shards, chosen randomly).<br>
+      Reads: scatter-gather all 16 shards, sum the counts.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ 16x write throughput for that key. Distributes across 16 different servers. Used for: view counters, like counts, follower counts on celebrities.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Reads require 16 parallel requests + aggregation — adds latency. Tradeoff: write scale vs read complexity.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Fan-Out on Write</div><div class="concept-def"><strong>Push content to every follower's personal shard at write time — so reads are O(1) per user.</strong><br>
+      Celebrity posts: instead of one write + 50M lazy reads, pre-write the post to each follower's feed. Each follower's feed is stored on their own shard — reads are local.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Feed reads are sub-millisecond. Twitter uses fan-out on write for most users.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Celebrity with 50M followers = 50M writes per post. Hybrid approach: fan-out for regular users, fan-out on read (lazy) for celebrities. Twitter's actual system uses this hybrid.</span></div></div>
+    <div class="concept-row"><div class="concept-term">In-Process Local Cache</div><div class="concept-def"><strong>Cache hot keys on every app server in-memory — zero network hop for reads.</strong><br>
+      Celebrity profile read 10M times/minute: Caffeine (Java) or dict (Python) on each of 1,000 app servers. Each serves from local RAM. Total: 1M reads/sec per app server absorbed locally.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Eliminates hot spot on the distributed cache entirely for pure reads. Used for: config data, feature flags, celebrity profiles, reference data.</span><br>
+      <span style="color:#b83030;font-size:12.5px;">⚠ Each server has its own copy → inconsistency across servers. Short TTL (10–60s) + push invalidation on write. Acceptable for eventually-consistent data only.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Adaptive Routing</div><div class="concept-def"><strong>Detect hot keys in real time and replicate them to additional nodes dynamically.</strong><br>
+      DynamoDB's adaptive capacity: automatically provides additional read/write capacity to hot partitions by splitting them. The partition that is hot gets a larger slice of the underlying capacity automatically, with no manual intervention.<br>
+      <span style="color:#1a7a4a;font-size:12.5px;">✓ Transparent to the application. No manual key salting needed. Used by: DynamoDB (built-in), Google Spanner (automatic split on hot ranges).</span></div></div>
   </div>
 </section>
 
@@ -224,35 +232,101 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <div class="sec-tag">04 · Real Implementations</div>
   <h2>How Cassandra, Redis Cluster, and DynamoDB actually do it</h2>
   <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Cassandra — Token Ring with Vnodes</div><span class="sd-example-tag">CONSISTENT HASHING</span></div>
+    <div class="sd-example-head"><div class="sd-example-title">Cassandra — Murmur3 Token Ring</div><span class="sd-example-tag">CONSISTENT HASHING · RF=3</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">MECHANISM</div><div class="choice-val">Cassandra uses Murmur3 hash to place both nodes and keys on a token ring (range: -2⁶³ to 2⁶³). Each node is assigned 256 virtual tokens by default, giving it 256 positions on the ring. Data is replicated to the next N nodes clockwise (N = replication factor).</div></div>
-      <div class="choice-row"><div class="choice-label">ADDING A NODE</div><div class="choice-val">New node joins the ring with 256 vnodes. Cassandra automatically streams data from existing nodes to the new node for only the token ranges it now owns. Other nodes are unaffected. No downtime, no manual resharding.</div></div>
-      <div class="choice-row"><div class="choice-label">COORDINATOR</div><div class="choice-val">Any node can be the coordinator for any request. The coordinator hashes the key, identifies which nodes own it (via the ring), and routes the request — then returns the result to the client. Clients can connect to any node.</div></div>
+      <div class="choice-row"><div class="choice-label">TOKEN RING</div><div class="choice-val">Murmur3 hash maps partition keys to tokens in range -2⁶³ to +2⁶³. Each node gets 256 vnodes by default, each with a random token. The ring has 256 × N tokens for an N-node cluster.</div></div>
+      <div class="choice-row"><div class="choice-label">REPLICATION</div><div class="choice-val">RF=3: partition key hashes to a token → first node clockwise is primary → next 2 clockwise nodes are replicas. Data lives on exactly 3 nodes. NetworkTopologyStrategy ensures replicas span different racks/DCs.</div></div>
+      <div class="choice-row"><div class="choice-label">COORDINATOR</div><div class="choice-val">Any node can be coordinator. Client connects to any node → coordinator hashes the key → identifies the 3 replica nodes → routes request → returns result. No central routing service needed. Gossip protocol keeps topology consistent across all nodes.</div></div>
+      <div class="choice-row"><div class="choice-label">ADDING A NODE</div><div class="choice-val">New node announces itself via gossip. Cassandra assigns 256 new tokens scattered across the ring. Each existing node streams a portion of its data to the new node for exactly the token ranges the new node now owns. No downtime. No manual resharding.</div></div>
     </div>
   </div>
   <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Redis Cluster — Hash Slot Assignment</div><span class="sd-example-tag">HASH SLOTS</span></div>
+    <div class="sd-example-head"><div class="sd-example-title">Redis Cluster — 16,384 Hash Slots</div><span class="sd-example-tag">HASH SLOTS · CLUSTER BUS</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">16,384 SLOTS</div><div class="choice-val">Redis Cluster uses 16,384 fixed hash slots (not a ring). Key → CRC16(key) % 16384 → slot number. Each master node owns a range of slots (e.g., node A: 0–5460, node B: 5461–10922, node C: 10923–16383). Adding a node = reassigning some slots to it.</div></div>
-      <div class="choice-row"><div class="choice-label">HASH TAGS</div><div class="choice-val">Multi-key operations (MGET, transactions) require all keys to be on the same slot. Use hash tags: <code>{user:123}.profile</code> and <code>{user:123}.settings</code> — the <code>{...}</code> part determines the slot. Both keys land on the same node, enabling multi-key ops.</div></div>
-      <div class="choice-row"><div class="choice-label">MOVED REDIRECT</div><div class="choice-val">Client sends GET to wrong node → node responds with <code>MOVED 7892 node-B:6380</code> → client redirects to correct node. Smart clients cache the slot→node mapping and go direct after first lookup.</div></div>
+      <div class="choice-row"><div class="choice-label">SLOT ASSIGNMENT</div><div class="choice-val">Every key → <code>CRC16(key) % 16384</code> → slot number 0–16383. Slots are assigned to master nodes: node-A owns 0–5460, node-B owns 5461–10922, node-C owns 10923–16383. Each node stores a 2KB bitmap of its slots, propagated via gossip.</div></div>
+      <div class="choice-row"><div class="choice-label">MOVED REDIRECT</div><div class="choice-val">Client sends GET to wrong node → node responds <code>MOVED 7892 192.168.1.2:6380</code> → client redirects to correct node. Smart clients (jedis, redis-py) cache the slot→node map and go direct after first lookup. One extra hop max.</div></div>
+      <div class="choice-row"><div class="choice-label">HASH TAGS</div><div class="choice-val">Multi-key operations require co-location: <code>{user:123}.profile</code> and <code>{user:123}.sessions</code> — only the content inside <code>{}</code> determines the slot. Both land on same node, enabling MGET, MULTI/EXEC across these keys.</div></div>
+      <div class="choice-row"><div class="choice-label">RESHARDING</div><div class="choice-val"><code>redis-cli --cluster reshard</code> migrates slots between nodes using <code>MIGRATE</code> command. Each key is migrated atomically. During migration, ASKING redirects handle requests for keys mid-migration. Online resharding with zero downtime.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">DynamoDB — Adaptive Capacity + Auto-Sharding</div><span class="sd-example-tag">MANAGED · TRANSPARENT</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PARTITION KEY DESIGN</div><div class="choice-val">DynamoDB uses your partition key as the hash input. Good partition keys have high cardinality and uniform access: <code>user_id</code> (millions of users, random access). Bad: <code>status</code> (3 values, "active" gets 99% of traffic → hot partition).</div></div>
+      <div class="choice-row"><div class="choice-label">WRITE SHARDING PATTERN</div><div class="choice-val">For hot keys: add a random suffix 1–N to partition key at write time. At read time, scatter-gather N partitions. Example: <code>game:chess#{random(1,10)}</code> distributes writes across 10 partitions. DynamoDB documentation calls this "write sharding."</div></div>
+      <div class="choice-row"><div class="choice-label">ADAPTIVE CAPACITY</div><div class="choice-val">DynamoDB automatically detects hot partitions and splits them, providing additional throughput capacity. This is transparent — no application changes. Works for read-heavy hot spots; for write-heavy you still need write sharding.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="rendezvous">
+  <div class="sec-tag">05 · Rendezvous Hashing</div>
+  <h2>The alternative to consistent hashing — and when it wins</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">HRW Algorithm</div><div class="concept-def"><strong>Highest Random Weight (HRW): to assign key K, compute hash(K, server_i) for every server. Pick the server with the highest score.</strong><br>
+      For key "user:123" with 3 servers:<br>
+      hash("user:123", "server-A") = 0.72 ← winner<br>
+      hash("user:123", "server-B") = 0.45<br>
+      hash("user:123", "server-C") = 0.61<br>
+      → Server-A owns "user:123". If Server-A is removed, each key independently recomputes and picks the next-highest server.</div></div>
+    <div class="concept-row"><div class="concept-term">vs Consistent Hashing</div><div class="concept-def"><strong>Rendezvous achieves the same minimal disruption property (1/N keys move on server removal) without a ring data structure.</strong><br>
+      Advantages: No ring, no vnodes, perfect load distribution by default, any client can compute independently without shared state.<br>
+      Disadvantage: O(N) computation per key (hash against every server). With 1,000 servers and 1M requests/sec, this becomes expensive.<br>
+      Consistent hashing with a sorted ring: O(log N) lookup.<br>
+      <span style="color:#5a5848;font-size:12.5px;">Used by: Akamai CDN (original design), some load balancers. Not common in databases where consistent hashing dominates.</span></div></div>
+  </div>
+</section>
+
+<section id="decision">
+  <div class="sec-tag">06 · Interview Decision Framework</div>
+  <h2>How to structure your answer in a sharding conversation</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Sharding Strategy — The 5 Questions to Answer</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">What is your access pattern — random key lookups or range scans?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Random lookups →</span><span class="opt-text"><strong>Hash-based partitioning (consistent hashing or hash slots).</strong> Distributes load evenly. O(1) point lookups. Used for: cache, user profiles, session data, key-value stores.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Range scans →</span><span class="opt-text"><strong>Range-based partitioning.</strong> Time-series data, leaderboards, ordered IDs. All records in a range are co-located on one shard → efficient range reads. Used by: HBase, BigTable, InfluxDB, CockroachDB.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Is your data distribution uniform or skewed?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Uniform (user_id, session_id) →</span><span class="opt-text"><strong>Simple consistent hashing works well.</strong> Random distribution means no shard will be disproportionately hot.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Skewed (celebrity users, trending events) →</span><span class="opt-text"><strong>Consistent hashing + hot spot mitigation.</strong> Key salting, fan-out on write, or in-process caching for the hot keys. Consistent hashing alone is not sufficient.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Do you need cross-shard transactions or multi-key operations?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Yes — need ACID across shards →</span><span class="opt-text"><strong>Use co-location strategy.</strong> Hash tags (Redis) or entity grouping (DynamoDB: user + all their posts in same partition). Design schema so related data lands on the same shard, eliminating cross-shard ops.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">No — operations are single-key →</span><span class="opt-text"><strong>Pure consistent hashing.</strong> Each key routes independently. Most cache workloads and many NoSQL workloads fall here.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">04</div><div class="step-content">
+        <div class="step-q">Do you own the infrastructure or use a managed service?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Managed (DynamoDB, Cosmos) →</span><span class="opt-text"><strong>Focus on partition key design.</strong> The sharding mechanism is transparent. Your job: choose a partition key with high cardinality and uniform access. Let the service handle sharding.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Self-managed (Cassandra, Redis Cluster) →</span><span class="opt-text"><strong>Choose vnode count, replication factor, and topology strategy upfront.</strong> Changing these later requires costly resharding. Plan for 5x current data size minimum.</span></div>
+        </div>
+      </div></div>
     </div>
   </div>
 </section>
 
 <section id="followups">
-  <div class="sec-tag">05 · Follow-ups</div>
+  <div class="sec-tag">07 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">Why 16,384 slots in Redis Cluster — why not more or fewer?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>16,384 was chosen as a practical balance between cluster message size and flexibility.</strong><br><br>Each Redis node sends heartbeat messages to all other nodes containing a bitmap of which slots it owns. 16,384 slots = 16,384 bits = 2KB bitmap. This fits comfortably in a small network packet. Redis's creator Antirez noted that with 1,000 nodes (an extremely large cluster), 16 slots per node is still enough granularity. More slots would increase heartbeat message size unnecessarily.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is rendezvous hashing and when is it better than consistent hashing?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Rendezvous hashing (HRW — Highest Random Weight) is an alternative that achieves the same minimal disruption property without requiring a ring data structure.</strong><br><br>Algorithm: to assign key K to a server, compute <code>hash(K, server_i)</code> for every server, pick the server with the highest hash value. On server removal, only that server's keys are reassigned — they each independently recompute and pick the next-highest server.<br><br><strong>Advantages over consistent hashing</strong>: No ring data structure needed. No virtual nodes complexity. Perfect load distribution by default. Any client can independently compute the assignment without shared state.<br><br><strong>Disadvantage</strong>: O(N) computation to assign one key (must compute hash for every server). With 1,000 servers and millions of keys per second, this becomes expensive. Consistent hashing with a sorted ring is O(log N).<br><br>Used by: CDNs (Akamai's original), some load balancers. Less common in distributed databases where ring-based approaches dominate.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does consistent hashing handle data replication across nodes?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>In systems using consistent hashing with replication (like Cassandra), a key is stored on not just the nearest node but the next N nodes clockwise.</strong><br><br>Example with replication factor 3: key hashes to position 900M. Server-B is at 1.8B (primary). Server-C at 3.1B (first replica). Server-A at 12M + 4B wraparound (second replica). All three nodes store a copy.<br><br>Writes go to all 3 (with configurable consistency: ONE/QUORUM/ALL). Reads can come from any of the 3. This means the ring simultaneously handles both partitioning (which set of nodes owns this key) and replication (which specific N nodes in that set).<br><br>Node failure: the ring automatically re-routes to the surviving replicas. Once a new node is added, it receives a copy of the data it should own via a streaming repair process (Cassandra's repair mechanism).</div></div>
-</section>
-</div>
-<div class="footer">CONSISTENT HASHING · PARTITIONING · VNODES · REDIS CLUSTER · CASSANDRA · MANISH-ALMANAC</div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">Why does Redis Cluster use 16,384 slots specifically — why not 65,536 or 1,024?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>16,384 was chosen as a balance between cluster heartbeat message size and practical flexibility.</strong><br><br>Every Redis node sends heartbeat messages to all other nodes containing a bitmap of which slots it owns. 16,384 slots = 16,384 bits = exactly 2KB per bitmap. This fits comfortably in a single network packet and keeps gossip overhead trivial even in large clusters.<br><br>Why not more? 65,536 slots would make the bitmap 8KB — 4x larger gossip overhead for no practical benefit. Redis's creator Antirez noted that even with 1,000 nodes, 16 slots per node gives ample granularity for resharding. In practice most clusters have 10–30 nodes, giving 500–1,600 slots per node — plenty of flexibility.<br><br>Why not fewer? With 1,024 slots and 100 nodes, you only have 10 slots per node. Resharding granularity becomes coarse — you'd need to move large chunks of data at once.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does consistent hashing handle data replication across failure domains (racks, AZs)?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Topology-aware replication strategies ensure replicas land on different failure domains, not just different nodes.</strong><br><br>Cassandra's NetworkTopologyStrategy: for each replica beyond the first, skip over nodes in the same rack when walking clockwise. This guarantees that for RF=3 with 3 racks, each rack holds exactly one replica.<br><br>Example: key hashes to node-A1 (rack 1 → primary). Walk clockwise for first replica: node-B1 (rack 1, same rack) → skip → node-A2 (rack 2) → first replica. Walk for second replica: node-A2 was just assigned, continue → node-B2 (rack 2, same rack as A2) → skip → node-A3 (rack 3) → second replica.<br><br>Result: replicas span 3 different racks. If rack 1 loses power, 2 of 3 replicas are still available. Reads continue at quorum.<br><br>AWS DynamoDB does this transparently across AZs — every partition always has 3 replicas across 3 different AZs. You don't configure it; it's the default.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What happens during a network partition — can consistent hashing nodes disagree about who owns what?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Yes, and this is where the CAP theorem intersects with consistent hashing.</strong><br><br>If a network partition separates a 6-node Cassandra cluster into two groups of 3, both groups continue operating — AP choice. Each group believes the other's nodes are down and tries to serve all keys. When the partition heals, Cassandra uses read repair and anti-entropy to reconcile divergent writes using "last write wins" (LWW) based on timestamps, or vector clocks for conflict detection.<br><br>Redis Cluster makes a different choice: during a partition, the minority partition (fewer than N/2+1 nodes) stops accepting writes — CP choice. The majority partition continues serving. When the partition heals, the minority replicas catch up from the majority. This prevents split-brain writes but means the minority partition is unavailable during the network outage.<br><br>This is a fundamental design decision you must make when designing sharded systems: do you want availability or consistency during partitions?</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How would you design a globally distributed sharding scheme across 3 data centres?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Geo-distributed sharding combines consistent hashing with geo-routing and topology-aware replication.</strong><br><br>Approach 1 — Single global ring with DC-aware placement: one ring, vnodes spread across all 3 DCs. NetworkTopologyStrategy ensures each DC holds its share of replicas. Cassandra supports this natively. Write to LOCAL_QUORUM (majority within one DC), replicate asynchronously to other DCs.<br><br>Approach 2 — Regional sharding + global routing: each DC is an independent cluster owning its regional data. A global routing layer (DNS geo-routing + application-level user-to-DC affinity) routes each user to their home DC. Cross-DC reads are forwarded to the owning DC. Used by: Shopify (data residency), WhatsApp (region-based data sovereignty).<br><br>Approach 3 — Active-active multi-master: data is replicated to all DCs, any DC can serve any user. CRDTs or LWW handle conflicts. Used by: DynamoDB Global Tables, Cassandra multi-DC active-active. Highest availability, most complex conflict handling.</div></div>
+</section></div>
+<div class="footer">CONSISTENT HASHING · PARTITIONING · VNODES · REDIS CLUSTER · CASSANDRA · HOT SPOTS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
-</html>
+</body></html>
