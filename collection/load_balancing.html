@@ -207,6 +207,16 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     </div>
   </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Load Balancer Sizing</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Servers needed</td><td>50K peak QPS ÷ 2,500 req/s per server (32-core @ 70% CPU)</td><td><strong>~29 servers → round to 32</strong></td><td style="color:#1a7a4a;font-size:12px">Add 20% headroom; scale horizontally not vertically for stateless app servers</td></tr><tr><td class="row-head">LB throughput</td><td>AWS ALB: 1M req/s per ALB, scales automatically</td><td><strong>Effectively unlimited</strong></td><td style="color:#1a7a4a;font-size:12px">L7 LB is never the bottleneck — your app servers and DB will fail first</td></tr><tr><td class="row-head">Health check interval</td><td>Every 5s × 3 failures = 15s to detect down</td><td><strong>15–30s detection</strong></td><td style="color:#1a7a4a;font-size:12px">Set alarms on 5xx rate not just health checks — faster signal</td></tr><tr><td class="row-head">Connection draining</td><td>30s drain × rolling 10% of fleet</td><td><strong>3 min full deploy</strong></td><td style="color:#1a7a4a;font-size:12px">Blue-green is faster (instant switch) but needs 2× capacity</td></tr></tbody></table></div></div>
+
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Load Balancer Sizing</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Servers needed</td><td>50K peak QPS ÷ 2,500 req/s per server (32-core @ 70% CPU)</td><td><strong>~29 servers → round to 32</strong></td><td style="color:#1a7a4a;font-size:12px">Add 20% headroom; scale horizontally not vertically for stateless app servers</td></tr><tr><td class="row-head">LB throughput</td><td>AWS ALB: 1M req/s per ALB, scales automatically</td><td><strong>Effectively unlimited</strong></td><td style="color:#1a7a4a;font-size:12px">L7 LB is never the bottleneck — your app servers and DB will fail first</td></tr><tr><td class="row-head">Health check interval</td><td>Every 5s × 3 failures = 15s to detect down</td><td><strong>15–30s detection</strong></td><td style="color:#1a7a4a;font-size:12px">Set alarms on 5xx rate not just health checks — faster signal</td></tr><tr><td class="row-head">Connection draining</td><td>30s drain × rolling 10% of fleet</td><td><strong>3 min full deploy</strong></td><td style="color:#1a7a4a;font-size:12px">Blue-green is faster (instant switch) but needs 2× capacity</td></tr></tbody></table></div></div>
+
 
 <section id="algorithms">
   <div class="sec-tag">02 · Algorithms</div>

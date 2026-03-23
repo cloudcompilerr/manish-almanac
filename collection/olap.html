@@ -200,6 +200,11 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="what-is-olap">
   <div class="sec-tag">01 · What Is OLAP and Why Does It Exist</div>
   <h2>OLAP vs OLTP — the fundamental split</h2>
+<div class="analogy">
+  <div class="analogy-label">The librarian vs. the index card analogy</div>
+  <div class="analogy-text">A row-oriented database (OLTP) is like a librarian who retrieves one book at a time — perfect for reading the full contents of a specific book.<br><br>A columnar database (OLAP) is like having a separate index for every attribute: one index for all book publication years, one for all authors, one for all genres. To answer "how many science books were published in the 1980s?" — you only touch the genre index and the year index. You never open a single book.<br><br>This is why ClickHouse can scan 1 billion rows/second — it only reads the two columns you asked about, skipping the other 50 columns entirely. Row storage would read all 50 columns for every row.</div>
+</div>
+
   <p>Most databases are built for <strong>OLTP</strong> (Online Transaction Processing) — fast individual row reads and writes that power the live product. A user signs up, an order is placed, a message is sent — these are OLTP queries. They affect a few rows at a time and need to be fast (sub-millisecond).</p>
   <p><strong>OLAP</strong> (Online Analytical Processing) is the opposite. Queries read millions or billions of rows, scan entire columns, compute aggregations: "total revenue per country last quarter," "top 1000 videos in the last hour," "average session duration by device type over 30 days." These queries are slow on OLTP databases but fast on OLAP engines — because they're built completely differently.</p>
   <div class="callout cl-amber">
@@ -213,6 +218,11 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
     <p><em>"Our OLTP database (Postgres/DynamoDB/Cassandra) handles the live product. But analytical queries — GROUP BY, window functions, aggregations across billions of events — would kill OLTP p99 latency if run directly. We push data to an OLAP engine via CDC or a stream, and run analytics there. The two systems have completely different read/write contracts."</em></p>
   </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">OLAP Query Performance Benchmarks</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">ClickHouse scan speed</td><td>1B rows × 2 relevant columns (8 bytes each)</td><td><strong>16GB scanned in ~30s</strong></td><td style="color:#1a7a4a;font-size:12px">SSD: 500MB/s. ClickHouse uses SIMD vectorised reads. Real: ~1B rows/sec for simple aggregations</td></tr><tr><td class="row-head">BigQuery cost control</td><td>1TB scanned × $5/TB query price</td><td><strong>$5 per unoptimised query</strong></td><td style="color:#1a7a4a;font-size:12px">Partition pruning: query only last 7 days → 50GB scanned → $0.25. Always partition by date + cluster by dimension</td></tr><tr><td class="row-head">Druid rollup savings</td><td>100M raw events/day × rollup to 1M agg rows</td><td><strong>100× storage reduction</strong></td><td style="color:#1a7a4a;font-size:12px">Trade: cannot query individual raw events after rollup. Use Kafka for raw event archive alongside Druid</td></tr><tr><td class="row-head">ClickHouse ingest</td><td>Kafka → ClickHouse MaterializedView → 500K rows/sec</td><td><strong>~200MB/sec ingest</strong></td><td style="color:#1a7a4a;font-size:12px">ClickHouse compresses 5-10× → 20-40MB/sec on disk. A single server handles most analytics workloads</td></tr></tbody></table></div></div>
+
 
 <section id="columnar">
   <div class="sec-tag">02 · Columnar Storage — The Core Insight</div>

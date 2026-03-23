@@ -859,6 +859,11 @@
   <blockquote>"Count-Min Sketch is a fixed-size grid of counters. You hash each event across multiple rows, increment that cell in each row, and query by taking the minimum. It trades perfect accuracy for dramatically lower memory — and it only ever overcounts, never undercounts."</blockquote>
 </div>
 
+<section id="cms-estimation"><div class="sec-tag">📐 · Sizing</div><h2>Memory & Error Trade-offs</h2><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Count-Min Sketch vs Exact Counting</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">1B distinct hashtags, exact</td><td>HashMap: 1B keys × 50 bytes avg</td><td><strong>50GB RAM</strong></td><td style="color:#1a7a4a;font-size:12px">One machine's RAM. Not feasible for a streaming pipeline that must stay in-memory</td></tr><tr><td class="row-head">1B distinct hashtags, CMS (1% error)</td><td>d=5 rows × w=272 cols × 4 bytes</td><td><strong>5.4KB</strong></td><td style="color:#1a7a4a;font-size:12px">5.4KB vs 50GB. CMS is 9 million times more memory efficient</td></tr><tr><td class="row-head">Twitter trending (real)</td><td>~500M unique hashtags active × sliding window</td><td><strong>CMS: 5.4KB per window</strong></td><td style="color:#1a7a4a;font-size:12px">Keep 12 × 5-minute windows for 1-hour sliding = 65KB total. Merge via element-wise sum (O(w×d))</td></tr><tr><td class="row-head">Error guarantee</td><td>ε=1%, N=1B total events</td><td><strong>Max overcount = 10M</strong></td><td style="color:#1a7a4a;font-size:12px">An item seen 100M times will be reported as 100M–110M. Never undercounted. Safe for Top-K ranking</td></tr></tbody></table></div></section>
+
 <script>
   // ---- CMS Implementation ----
   const ROWS = 3;

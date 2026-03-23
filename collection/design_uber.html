@@ -643,6 +643,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="db-card dy"><div class="db-card-name">Trip Data</div><div class="db-row"><div class="db-k">Location history</div><div class="db-v">1 TB/day</div></div><div class="db-row"><div class="db-k">Store</div><div class="db-v">Cassandra</div></div><div class="db-row"><div class="db-k">Retention</div><div class="db-v a">7 years (legal)</div></div></div>
   </div>
 </section>
+<div class="analogy">
+  <div class="analogy-label">The radio dispatch analogy</div>
+  <div class="analogy-text">Old-school taxi dispatch: you call the dispatcher, they radio every taxi in the area, first driver to respond gets the fare. Uber does the same thing digitally but with GPS precision. Your phone = the call. The GPS index (Redis GEO) = the dispatcher's map. GEORADIUS = "which taxis are within 3km?" The NX Redis lock = "claim this fare before anyone else does." The surge multiplier = the dispatcher charging more when it's raining and every taxi is busy.</div>
+</div>
+
 
 <section id="architecture">
   <div class="sec-tag">01 · Architecture</div>

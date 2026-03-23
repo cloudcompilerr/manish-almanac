@@ -177,6 +177,16 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 <section id="what">
   <div class="sec-tag">00 · What Is Object Storage</div>
   <h2>S3 vs Block Storage vs File Storage</h2>
+<div class="analogy">
+  <div class="analogy-label">The infinite warehouse analogy</div>
+  <div class="analogy-text">S3 is like an infinite warehouse where every box has a unique address label (the key). You can store any size box. Finding a specific box is O(1) — you just read the label. Unlike a filing cabinet (block storage), you can't open a box and change page 5 — you must take out the whole box, modify it, and put back a new box.<br><br>The warehouse clerk (CDN) keeps copies of popular boxes near each customer's city. When someone requests a box, the clerk checks their local copy first — only fetching from the warehouse on a miss.</div>
+</div>
+
+<div class="analogy">
+  <div class="analogy-label">The infinite warehouse analogy</div>
+  <div class="analogy-text">S3 is like an infinite warehouse where every box has a unique address label (the key). You can store any size box. Finding a specific box is O(1) — you just read the label. Unlike a filing cabinet (block storage), you can't open a box and change page 5 — you must take out the whole box, modify it, and put back a new box.<br><br>The warehouse clerk (CDN) keeps copies of popular boxes near each customer's city. When someone requests a box, the clerk checks their local copy first — only fetching from the warehouse on a miss.</div>
+</div>
+
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Object Storage (S3)</div><div class="concept-def"><strong>Stores data as flat objects — each object is a file with a key (path), value (bytes), and metadata.</strong> No directory hierarchy (though keys can have slashes to simulate it).<br>
       Access: HTTP GET/PUT. Each object immutable after write. Unlimited scale. Cheap ($0.023/GB/month).
@@ -218,6 +228,16 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
         <span class="concept-note muted">Use Lifecycle Policies to automatically transition objects: new uploads → Standard → after 30 days → IA → after 1 year → Glacier. Common for log files and video archives.</span></div></div>
   </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Object Storage Sizing</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Instagram photos/year</td><td>1B uploads/day × 200KB average</td><td><strong>~70TB/year</strong></td><td style="color:#1a7a4a;font-size:12px">S3 Standard: $0.023/GB = ~$1,600/month. Use Intelligent Tiering after 30 days → saves 40%</td></tr><tr><td class="row-head">YouTube videos/year</td><td>500 hrs/min × 5 quality variants × 1GB/hr</td><td><strong>~1.3 PB/year</strong></td><td style="color:#1a7a4a;font-size:12px">S3 costs ~$30K/month at full price; real cost covered by CDN cache hits (95% miss protection)</td></tr><tr><td class="row-head">Multipart threshold</td><td>Files > 100MB → mandatory multipart</td><td><strong>At 10 parallel parts × 100MB</strong></td><td style="color:#1a7a4a;font-size:12px">10 × 100Mbps network = 1Gbps effective upload. 10GB file uploads in ~90 seconds not 15 minutes</td></tr><tr><td class="row-head">Request rate</td><td>S3 prefix partition: 3,500 PUT/5,500 GET per second</td><td><strong>Per prefix</strong></td><td style="color:#1a7a4a;font-size:12px">Shard across 10 prefixes (hash first char) → 35K PUT/55K GET/sec. No hot prefix issues</td></tr></tbody></table></div></div>
+
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Object Storage Sizing</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Instagram photos/year</td><td>1B uploads/day × 200KB average</td><td><strong>~70TB/year</strong></td><td style="color:#1a7a4a;font-size:12px">S3 Standard: $0.023/GB = ~$1,600/month. Use Intelligent Tiering after 30 days → saves 40%</td></tr><tr><td class="row-head">YouTube videos/year</td><td>500 hrs/min × 5 quality variants × 1GB/hr</td><td><strong>~1.3 PB/year</strong></td><td style="color:#1a7a4a;font-size:12px">S3 costs ~$30K/month at full price; real cost covered by CDN cache hits (95% miss protection)</td></tr><tr><td class="row-head">Multipart threshold</td><td>Files > 100MB → mandatory multipart</td><td><strong>At 10 parallel parts × 100MB</strong></td><td style="color:#1a7a4a;font-size:12px">10 × 100Mbps network = 1Gbps effective upload. 10GB file uploads in ~90 seconds not 15 minutes</td></tr><tr><td class="row-head">Request rate</td><td>S3 prefix partition: 3,500 PUT/5,500 GET per second</td><td><strong>Per prefix</strong></td><td style="color:#1a7a4a;font-size:12px">Shard across 10 prefixes (hash first char) → 35K PUT/55K GET/sec. No hot prefix issues</td></tr></tbody></table></div></div>
+
 
 <section id="examples">
   <div class="sec-tag">02 · System Design Examples</div>
@@ -394,6 +414,70 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 
 </div>
+
+<section id="obj-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in Object Storage — and How to Handle It</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Orphaned Multipart Uploads — Silent Cost Bomb</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Failed uploads leave partial data in S3. At $0.023/GB, 10,000 failed 1GB uploads = 10TB = $230/month in zombie storage. Invisible in normal S3 size metrics.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Set S3 lifecycle rule: AbortIncompleteMultipartUpload after 24h. Run monthly audit: aws s3api list-multipart-uploads. This is a real production cost issue — always configure it.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Hot Prefix Throttling — 503 SlowDown Errors</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Pre-2018 S3: all keys starting with the same prefix hit the same partition. At >3,500 PUT/s: 503 SlowDown errors. Common cause: date-prefixed keys (2026/03/22/...) — all day's traffic hits one partition.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Post-2018: S3 auto-partitions based on access patterns — no manual sharding needed. But if you see SlowDown: add random prefix (hash of object ID as first 4 chars). Monitor S3 request metrics in CloudWatch.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Public Bucket Exposure — Data Breach</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">S3 bucket set to public by mistake. At AWS re:Invent 2017: 30% of S3 buckets were publicly readable. Capital One breach: SSRF + IAM role → attacker accessed S3 directly.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always: Block Public Access at account level (AWS default since 2023). Enable S3 Access Analyzer. Never put secrets or PII in bucket names (they appear in CloudTrail logs). Use bucket policies not ACLs.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
+
+<section id="obj-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in Object Storage — and How to Handle It</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Orphaned Multipart Uploads — Silent Cost Bomb</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Failed uploads leave partial data in S3. At $0.023/GB, 10,000 failed 1GB uploads = 10TB = $230/month in zombie storage. Invisible in normal S3 size metrics.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Set S3 lifecycle rule: AbortIncompleteMultipartUpload after 24h. Run monthly audit: aws s3api list-multipart-uploads. This is a real production cost issue — always configure it.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Hot Prefix Throttling — 503 SlowDown Errors</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Pre-2018 S3: all keys starting with the same prefix hit the same partition. At >3,500 PUT/s: 503 SlowDown errors. Common cause: date-prefixed keys (2026/03/22/...) — all day's traffic hits one partition.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Post-2018: S3 auto-partitions based on access patterns — no manual sharding needed. But if you see SlowDown: add random prefix (hash of object ID as first 4 chars). Monitor S3 request metrics in CloudWatch.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Public Bucket Exposure — Data Breach</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">S3 bucket set to public by mistake. At AWS re:Invent 2017: 30% of S3 buckets were publicly readable. Capital One breach: SSRF + IAM role → attacker accessed S3 directly.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always: Block Public Access at account level (AWS default since 2023). Enable S3 Access Analyzer. Never put secrets or PII in bucket names (they appear in CloudTrail logs). Use bucket policies not ACLs.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
 <div class="footer">OBJECT STORAGE · S3 · GCS · MULTIPART UPLOAD · PRE-SIGNED URLs · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

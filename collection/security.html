@@ -205,6 +205,16 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <div class="k-card"><div class="k-card-head"><span class="k-num">05</span><span class="k-title">JWT vs Session: When to Use Each</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>The rule: JWT for stateless microservices + mobile APIs. Sessions for web apps on the same domain.</strong> Use <strong>JWT</strong> when: you have multiple backend services that all need to identify the user, your clients are mobile apps or SPAs, you need to pass identity to third-party services. Use <strong>Sessions</strong> when: you need instant revocation (bank logout should immediately invalidate), all your services share a Redis instance, your app is a traditional server-rendered website.</div><div class="k-muted"><span class="k-icon">&rarr;</span><span>Hybrid: use JWTs for inter-service auth (microservice A calling microservice B) + sessions for user-facing web sessions.</span></div></div></div></div>
 </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Security Performance Numbers to Know</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">JWT verification</td><td>RS256: verify signature using cached public key</td><td><strong>< 1ms per request</strong></td><td style="color:#1a7a4a;font-size:12px">Never call auth service on every request — cache the public key. JWT is stateless for a reason</td></tr><tr><td class="row-head">bcrypt hashing</td><td>Cost factor 12: ~250ms per hash on modern CPU</td><td><strong>4 hashes/sec/core</strong></td><td style="color:#1a7a4a;font-size:12px">bcrypt is intentionally slow for password storage. 4 hash/sec means brute force at 4 attempts/sec — very safe</td></tr><tr><td class="row-head">TLS handshake</td><td>TLS 1.3: 1 round trip = ~15ms added latency</td><td><strong>15ms on first connection</strong></td><td style="color:#1a7a4a;font-size:12px">Session resumption (TLS 0-RTT): < 1ms. Always enable session tickets. TLS cost is one-time per connection</td></tr><tr><td class="row-head">Rate limit check</td><td>Redis INCR + EXPIRE: single round trip</td><td><strong>< 1ms overhead</strong></td><td style="color:#1a7a4a;font-size:12px">Rate limiting adds < 1ms to every request. No excuse not to implement it on every public endpoint</td></tr></tbody></table></div></div>
+
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Security Performance Numbers to Know</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">JWT verification</td><td>RS256: verify signature using cached public key</td><td><strong>< 1ms per request</strong></td><td style="color:#1a7a4a;font-size:12px">Never call auth service on every request — cache the public key. JWT is stateless for a reason</td></tr><tr><td class="row-head">bcrypt hashing</td><td>Cost factor 12: ~250ms per hash on modern CPU</td><td><strong>4 hashes/sec/core</strong></td><td style="color:#1a7a4a;font-size:12px">bcrypt is intentionally slow for password storage. 4 hash/sec means brute force at 4 attempts/sec — very safe</td></tr><tr><td class="row-head">TLS handshake</td><td>TLS 1.3: 1 round trip = ~15ms added latency</td><td><strong>15ms on first connection</strong></td><td style="color:#1a7a4a;font-size:12px">Session resumption (TLS 0-RTT): < 1ms. Always enable session tickets. TLS cost is one-time per connection</td></tr><tr><td class="row-head">Rate limit check</td><td>Redis INCR + EXPIRE: single round trip</td><td><strong>< 1ms overhead</strong></td><td style="color:#1a7a4a;font-size:12px">Rate limiting adds < 1ms to every request. No excuse not to implement it on every public endpoint</td></tr></tbody></table></div></div>
+
 
 <section id="tls">
   <div class="sec-tag">01 · TLS / HTTPS</div>
@@ -361,6 +371,70 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <h4>Auth Token Types Compared</h4><table class="flow-table"><thead><tr><th>Token type</th><th>Storage</th><th>Expiry</th><th>Revocable</th><th>Use case</th></tr></thead><tbody><tr><td>JWT (access token)</td><td>Memory (SPA) / HttpOnly cookie</td><td>15 minutes</td><td>No (without blocklist)</td><td>API access — short-lived by design</td></tr><tr><td>Refresh token</td><td>HttpOnly Secure cookie</td><td>30 days</td><td>Yes (delete from DB)</td><td>Get new access token without re-login</td></tr><tr><td>Session cookie</td><td>Server-side Redis</td><td>24h or browser session</td><td>Yes (delete Redis key)</td><td>Traditional web apps — instant revocation</td></tr><tr><td>API key</td><td>Server DB (hashed)</td><td>No expiry (manual rotation)</td><td>Yes (delete from DB)</td><td>Server-to-server, developer integrations</td></tr><tr><td>mTLS certificate</td><td>Client certificate store</td><td>1 year (auto-rotate with SPIFFE)</td><td>Yes (CRL / OCSP)</td><td>Service-to-service in Kubernetes</td></tr></tbody></table>
 </section>
 </div>
+
+
+<section id="security-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in Security — Real Incidents</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">JWT Algorithm Confusion — "None" Attack</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">JWT header specifies alg: none or alg: HS256 when server uses RS256. Attacker crafts a JWT with alg:none and no signature — some libraries accept it. Or: attacker signs with HS256 using the RS256 public key (which is public!).</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always explicitly whitelist allowed algorithms on the server. Never accept alg:none. Use a library with this protection built-in (jose, python-jwt). Reject tokens with unexpected algorithm headers.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">SSRF via Metadata Service — Capital One Style</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Server fetches a URL from user input. Attacker provides http://169.254.169.254/latest/meta-data/iam/security-credentials/. AWS EC2 metadata service returns IAM role credentials. Attacker now has full AWS access.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Block outbound requests to 169.254.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 from any code that fetches external URLs. Use IMDSv2 (requires session token). Capital One 2019 breach: $80M fine from exactly this.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Leaked Secret in Git — Permanent Exposure</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Developer commits AWS_SECRET_KEY=xxxx to a public GitHub repo. Even if deleted in 5 minutes: GitHub's search indexes it. Automated bots scrape GitHub continuously and will find it. Credentials are permanently compromised.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Rotate immediately — treat any committed secret as compromised regardless of how quickly you deleted it. Use git-secrets or truffleHog in CI to scan every commit. Use AWS Secrets Manager — never env vars in code.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
+
+<section id="security-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in Security — Real Incidents</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">JWT Algorithm Confusion — "None" Attack</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">JWT header specifies alg: none or alg: HS256 when server uses RS256. Attacker crafts a JWT with alg:none and no signature — some libraries accept it. Or: attacker signs with HS256 using the RS256 public key (which is public!).</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always explicitly whitelist allowed algorithms on the server. Never accept alg:none. Use a library with this protection built-in (jose, python-jwt). Reject tokens with unexpected algorithm headers.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">SSRF via Metadata Service — Capital One Style</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Server fetches a URL from user input. Attacker provides http://169.254.169.254/latest/meta-data/iam/security-credentials/. AWS EC2 metadata service returns IAM role credentials. Attacker now has full AWS access.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Block outbound requests to 169.254.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 from any code that fetches external URLs. Use IMDSv2 (requires session token). Capital One 2019 breach: $80M fine from exactly this.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Leaked Secret in Git — Permanent Exposure</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Developer commits AWS_SECRET_KEY=xxxx to a public GitHub repo. Even if deleted in 5 minutes: GitHub's search indexes it. Automated bots scrape GitHub continuously and will find it. Credentials are permanently compromised.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Rotate immediately — treat any committed secret as compromised regardless of how quickly you deleted it. Use git-secrets or truffleHog in CI to scan every commit. Use AWS Secrets Manager — never env vars in code.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
 
 <div class="footer">SECURITY · JWT · OAUTH · TLS · RBAC · XSS · CSRF · SSRF · ZERO TRUST · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

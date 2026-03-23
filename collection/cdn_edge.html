@@ -217,6 +217,16 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
         <span class="concept-note good">✓ Cloudflare's network capacity: 100+ Tbps. The largest DDoS attacks ever recorded were absorbed by Cloudflare without origin impact. Used by: every large web property (including FAANG).</span></div></div>
   </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">CDN Impact on a 10M DAU App</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Without CDN</td><td>10M users × 5 page loads × 500KB assets</td><td><strong>25TB/day outbound from origin</strong></td><td style="color:#1a7a4a;font-size:12px">$2,250/day in AWS egress costs. Origin servers need 300MB/s sustained bandwidth</td></tr><tr><td class="row-head">With CDN (90% hit rate)</td><td>Only 10% of requests reach origin</td><td><strong>2.5TB/day from origin</strong></td><td style="color:#1a7a4a;font-size:12px">$225/day egress from origin + ~$180/day CDN. Total: 80% cost reduction AND lower latency</td></tr><tr><td class="row-head">Cache hit rate target</td><td>Static assets: > 99%. API: > 60%</td><td><strong>Depends on TTL strategy</strong></td><td style="color:#1a7a4a;font-size:12px">Hashed filenames → 100% hit rate for JS/CSS. Short-TTL HTML → 0% CDN, always origin</td></tr><tr><td class="row-head">Invalidation speed</td><td>CloudFront: ~60s. Cloudflare: ~150ms. Fastly: ~150ms</td><td><strong>Choose CDN by invalidation SLA</strong></td><td style="color:#1a7a4a;font-size:12px">If you need instant invalidation (breaking news, price changes): Fastly or Cloudflare Workers</td></tr></tbody></table></div></div>
+
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">CDN Impact on a 10M DAU App</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Without CDN</td><td>10M users × 5 page loads × 500KB assets</td><td><strong>25TB/day outbound from origin</strong></td><td style="color:#1a7a4a;font-size:12px">$2,250/day in AWS egress costs. Origin servers need 300MB/s sustained bandwidth</td></tr><tr><td class="row-head">With CDN (90% hit rate)</td><td>Only 10% of requests reach origin</td><td><strong>2.5TB/day from origin</strong></td><td style="color:#1a7a4a;font-size:12px">$225/day egress from origin + ~$180/day CDN. Total: 80% cost reduction AND lower latency</td></tr><tr><td class="row-head">Cache hit rate target</td><td>Static assets: > 99%. API: > 60%</td><td><strong>Depends on TTL strategy</strong></td><td style="color:#1a7a4a;font-size:12px">Hashed filenames → 100% hit rate for JS/CSS. Short-TTL HTML → 0% CDN, always origin</td></tr><tr><td class="row-head">Invalidation speed</td><td>CloudFront: ~60s. Cloudflare: ~150ms. Fastly: ~150ms</td><td><strong>Choose CDN by invalidation SLA</strong></td><td style="color:#1a7a4a;font-size:12px">If you need instant invalidation (breaking news, price changes): Fastly or Cloudflare Workers</td></tr></tbody></table></div></div>
+
 
 <section id="video">
   <div class="sec-tag">02 · Video Streaming via CDN</div>
@@ -408,6 +418,70 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 
 </div>
+
+<section id="cdn-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in CDN — and How to Handle It</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Cache Poisoning — Wrong Content Served Globally</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">CDN caches a 500 error page or a response with Vary headers misconfigured. All users at a PoP see the error. Worse: CDN caches a user-specific response (session data) and serves it to everyone.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Never cache: responses with Set-Cookie, Authorization headers, or 4xx/5xx status. Set Cache-Control: no-store, private on all authenticated endpoints. Test with curl -H "Cache-Control: no-cache" before going live.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Origin Overload After CDN Purge</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">You purge the entire CDN (e.g., after a deploy). 200 PoPs simultaneously send requests to origin. All PoPs miss → thundering herd → origin collapses under 200× normal load.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Never purge everything at once. Use versioned URLs (app.v2.js) — no purge needed, old URL stays cached. If you must purge: stagger by PoP region, add request coalescing at origin. Pre-warm cache before cutover.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">PoP Failure — Anycast Rerouting</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">A CDN PoP goes down (hardware failure, DDoS). Traffic reroutes to next nearest PoP via Anycast BGP. Latency increases 50–200ms for affected region. If next PoP is also congested: cascade.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Multi-CDN strategy: use 2 CDN providers with GeoDNS health checks. Route 90% Cloudflare, 10% CloudFront normally. On Cloudflare incident: health check fails → DNS switches 100% to CloudFront in < 60s.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
+
+<section id="cdn-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in CDN — and How to Handle It</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Cache Poisoning — Wrong Content Served Globally</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">CDN caches a 500 error page or a response with Vary headers misconfigured. All users at a PoP see the error. Worse: CDN caches a user-specific response (session data) and serves it to everyone.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Never cache: responses with Set-Cookie, Authorization headers, or 4xx/5xx status. Set Cache-Control: no-store, private on all authenticated endpoints. Test with curl -H "Cache-Control: no-cache" before going live.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Origin Overload After CDN Purge</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">You purge the entire CDN (e.g., after a deploy). 200 PoPs simultaneously send requests to origin. All PoPs miss → thundering herd → origin collapses under 200× normal load.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Never purge everything at once. Use versioned URLs (app.v2.js) — no purge needed, old URL stays cached. If you must purge: stagger by PoP region, add request coalescing at origin. Pre-warm cache before cutover.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">PoP Failure — Anycast Rerouting</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">A CDN PoP goes down (hardware failure, DDoS). Traffic reroutes to next nearest PoP via Anycast BGP. Latency increases 50–200ms for affected region. If next PoP is also congested: cascade.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Multi-CDN strategy: use 2 CDN providers with GeoDNS health checks. Route 90% Cloudflare, 10% CloudFront normally. On Cloudflare incident: health check fails → DNS switches 100% to CloudFront in < 60s.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
 <div class="footer">CDN · EDGE · CLOUDFLARE · CLOUDFRONT · HLS · ADAPTIVE BITRATE · DDOS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

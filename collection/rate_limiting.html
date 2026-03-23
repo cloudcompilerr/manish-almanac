@@ -237,6 +237,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     </div>
   </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Rate Limiting at Scale</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Redis check overhead</td><td>1 Lua script = 1 round trip × 0.5ms network</td><td><strong>< 1ms per request</strong></td><td style="color:#1a7a4a;font-size:12px">Rate limiting adds < 0.5% to a 200ms request. Zero excuse not to implement it</td></tr><tr><td class="row-head">Key space size</td><td>10M users × 10 endpoints × 1 window = 100M keys</td><td><strong>~10GB Redis RAM</strong></td><td style="color:#1a7a4a;font-size:12px">At 100 bytes per key-value: 10GB. Affordable on a $200/month Redis instance. Set TTL = window duration</td></tr><tr><td class="row-head">Burst handling</td><td>Token bucket: 100 req/min limit, bucket size 20</td><td><strong>Allows 20-req burst then 1.67/sec</strong></td><td style="color:#1a7a4a;font-size:12px">Without burst: user action that triggers 5 API calls fails. Token bucket handles real UI patterns</td></tr><tr><td class="row-head">DDoS threshold</td><td>Login endpoint: 5 failures/account/15min</td><td><strong>Max 720 guesses/day per account</strong></td><td style="color:#1a7a4a;font-size:12px">At 8-char alphanumeric password: 10^14 combinations ÷ 720/day = 380 billion years to brute-force</td></tr></tbody></table></div></div>
+
 
 <section id="distributed">
   <div class="sec-tag">02 · Distributed Rate Limiting</div>

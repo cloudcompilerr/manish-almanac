@@ -203,6 +203,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <span class="concept-note warn">⚠ Requires instrumentation in every service. Storage costs proportional to request volume × service count. Use sampling (store 1% of traces, all error traces).</span></div></div>
   </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Observability at Scale</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Prometheus metrics</td><td>1000 services × 200 metrics × 60s scrape × 2 bytes/sample</td><td><strong>~24GB/day in TSDB</strong></td><td style="color:#1a7a4a;font-size:12px">Thanos or VictoriaMetrics for long-term storage on S3. Keep 15s resolution for 24h, 5min for 30 days</td></tr><tr><td class="row-head">Log volume</td><td>1000 services × 1000 req/sec × 200 bytes/log line</td><td><strong>~200GB/day</strong></td><td style="color:#1a7a4a;font-size:12px">Loki: 10× cheaper than Elasticsearch for log storage. S3 + Athena for compliance archive (7 years)</td></tr><tr><td class="row-head">Trace sampling</td><td>100K req/sec × 1% trace sample × 50 spans × 1KB/span</td><td><strong>~5GB/day traced</strong></td><td style="color:#1a7a4a;font-size:12px">Tail-based: keep 100% of error traces, 1% of success. 5GB/day is manageable in Jaeger on SSD</td></tr><tr><td class="row-head">Alert latency SLA</td><td>Prometheus evaluation every 15s, AlertManager routes in 5s</td><td><strong>~20s end-to-end</strong></td><td style="color:#1a7a4a;font-size:12px">From SLO breach to PagerDuty page: 20 seconds. Acceptable for p99 degradation. Pre-alert: use burn rate</td></tr></tbody></table></div></div>
+
 
 <section id="slo">
   <div class="sec-tag">01 · SLI, SLO, SLA</div>

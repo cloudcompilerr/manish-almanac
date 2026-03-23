@@ -242,6 +242,16 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Redis ZSET Internals</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Redis Sorted Sets use a skip list + hash table hybrid.</strong> Hash table: O(1) score lookup by member ("what is user:123's score?"). Skip list: O(log N) rank queries ("what rank is user:123?") and range queries ("return members with score 100–200"). ZADD: O(log N). ZRANK: O(log N). ZRANGEBYSCORE: O(log N + result size). ZSCORE: O(1).</div><div class="k-muted"><span class="k-icon">&rarr;</span><span>The skip list is why ZREVRANGE (return top-K by score) is efficient. A simple sorted array would be O(1) read but O(N) insert. The skip list gives O(log N) for both — the right trade-off for a leaderboard that's constantly updated and queried.</span></div></div></div></div>
 </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Memory Cost of Each Data Structure</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Bloom filter</td><td>1B URLs × 9.6 bits (1% FP rate)</td><td><strong>1.2GB</strong></td><td style="color:#1a7a4a;font-size:12px">vs 32GB for a HashSet. Use when membership check is frequent and false positives are acceptable</td></tr><tr><td class="row-head">Trie (autocomplete)</td><td>1M words × avg 5 chars × 50 bytes/node</td><td><strong>250MB</strong></td><td style="color:#1a7a4a;font-size:12px">Compact trie (Patricia): 60MB. Elasticsearch Completion Suggester: stores in RAM, fits 10M entries in ~2GB</td></tr><tr><td class="row-head">Count-Min Sketch</td><td>d=5 rows × w=272 cols × 4 bytes/counter</td><td><strong>5.4KB</strong></td><td style="color:#1a7a4a;font-size:12px">Counts frequency for ANY vocabulary size. 1M or 1B distinct items — same 5.4KB</td></tr><tr><td class="row-head">Skip list (Redis ZSET)</td><td>1M members × ~100 bytes per node (value + pointers)</td><td><strong>~100MB</strong></td><td style="color:#1a7a4a;font-size:12px">Redis ZSET with 1M members: monitor memory. At 100M members: consider sharding across multiple Redis instances</td></tr><tr><td class="row-head">Geohash/S2 index</td><td>1M drivers × 50 bytes (geohash string + metadata)</td><td><strong>50MB</strong></td><td style="color:#1a7a4a;font-size:12px">Fits in RAM on a single Redis instance. Uber handles 1M concurrent drivers with city-sharded Redis GEO keys</td></tr></tbody></table></div></div>
+
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Memory Cost of Each Data Structure</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Bloom filter</td><td>1B URLs × 9.6 bits (1% FP rate)</td><td><strong>1.2GB</strong></td><td style="color:#1a7a4a;font-size:12px">vs 32GB for a HashSet. Use when membership check is frequent and false positives are acceptable</td></tr><tr><td class="row-head">Trie (autocomplete)</td><td>1M words × avg 5 chars × 50 bytes/node</td><td><strong>250MB</strong></td><td style="color:#1a7a4a;font-size:12px">Compact trie (Patricia): 60MB. Elasticsearch Completion Suggester: stores in RAM, fits 10M entries in ~2GB</td></tr><tr><td class="row-head">Count-Min Sketch</td><td>d=5 rows × w=272 cols × 4 bytes/counter</td><td><strong>5.4KB</strong></td><td style="color:#1a7a4a;font-size:12px">Counts frequency for ANY vocabulary size. 1M or 1B distinct items — same 5.4KB</td></tr><tr><td class="row-head">Skip list (Redis ZSET)</td><td>1M members × ~100 bytes per node (value + pointers)</td><td><strong>~100MB</strong></td><td style="color:#1a7a4a;font-size:12px">Redis ZSET with 1M members: monitor memory. At 100M members: consider sharding across multiple Redis instances</td></tr><tr><td class="row-head">Geohash/S2 index</td><td>1M drivers × 50 bytes (geohash string + metadata)</td><td><strong>50MB</strong></td><td style="color:#1a7a4a;font-size:12px">Fits in RAM on a single Redis instance. Uber handles 1M concurrent drivers with city-sharded Redis GEO keys</td></tr></tbody></table></div></div>
+
 
 <section id="sd-ds">
   <div class="sec-tag">05 · System Design Examples</div>
@@ -315,6 +325,70 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <h4>Data Structures in Production Systems</h4><table class="flow-table"><thead><tr><th>Data structure</th><th>System</th><th>How used</th></tr></thead><tbody><tr><td>Bloom filter</td><td>Cassandra / HBase</td><td>Before reading SSTable from disk: "Is this key in this SSTable?" Skip disk read on "definitely not"</td></tr><tr><td>Bloom filter</td><td>Chrome Safe Browsing</td><td>Local 2M-URL set. Check without network round trip. 95% of queries answered locally</td></tr><tr><td>Trie (Patricia)</td><td>Internet routers</td><td>IP route lookup: longest prefix match in O(32) time for IPv4, O(128) for IPv6</td></tr><tr><td>Merkle tree</td><td>Cassandra nodetool repair</td><td>Compare two replicas: O(log N) hash exchanges to find divergent token ranges. Repair only divergent data</td></tr><tr><td>Merkle tree</td><td>Git</td><td>Content-addressed storage. git diff = Merkle tree comparison. Identical files share hash nodes across commits</td></tr><tr><td>Skip list</td><td>Redis ZSET</td><td>Sorted set with O(log N) ZADD/ZRANK/ZRANGEBYSCORE. Lock-free access for concurrent clients</td></tr><tr><td>Quadtree / Geohash</td><td>Uber driver proximity</td><td>GEOADD drivers:city lat lng driver_id → GEORADIUS 5km → 10 nearest in <1ms</td></tr><tr><td>Count-Min Sketch</td><td>Twitter trending</td><td>INCR hashtag count per time window. Fixed 4MB memory regardless of hashtag vocabulary size</td></tr></tbody></table>
 </section>
 </div>
+
+
+<section id="ds-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>When Data Structures Fail in Production</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Bloom Filter False Positive Avalanche</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Bloom filter reaches capacity (too many items inserted). False positive rate climbs from 1% to 30%+. In Cassandra: 30% of reads incorrectly skip the right SSTable → data appears missing → application errors.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Monitor bloom filter fill rate. Cassandra: BF FP rate exposed via nodetool cfstats. Rebuild filter (nodetool upgradesstables) when FP rate > 5%. Size filter at 2× expected item count for headroom.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Skip List Memory Explosion — Redis OOM</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Redis ZSET with 100M members (leaderboard without TTL) consumes 10GB+ RAM. Redis tries to allocate more than available memory → OOM → Redis crashes → all cached data lost → DB gets thundering herd.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always set maxmemory + maxmemory-policy in Redis config. Use ZREMRANGEBYRANK to cap leaderboard size (ZADD + ZREMRANGEBYRANK 0 -(K+1) keeps only top K). Monitor Redis memory via INFO memory on every deploy.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Geohash Boundary Problem — Missing Nearby Points</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Driver is at the edge of a geohash cell. GEORADIUS query searches only within the radius — but a driver just across the cell boundary (50 metres away) has a completely different geohash prefix and is missed.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always search adjacent geohash cells (8 neighbours + center = 9 cells) for proximity queries. Redis GEORADIUS handles this correctly internally. If building custom: query all 9 adjacent cells and merge, deduplicate by driver_id.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
+
+<section id="ds-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>When Data Structures Fail in Production</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Bloom Filter False Positive Avalanche</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Bloom filter reaches capacity (too many items inserted). False positive rate climbs from 1% to 30%+. In Cassandra: 30% of reads incorrectly skip the right SSTable → data appears missing → application errors.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Monitor bloom filter fill rate. Cassandra: BF FP rate exposed via nodetool cfstats. Rebuild filter (nodetool upgradesstables) when FP rate > 5%. Size filter at 2× expected item count for headroom.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Skip List Memory Explosion — Redis OOM</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Redis ZSET with 100M members (leaderboard without TTL) consumes 10GB+ RAM. Redis tries to allocate more than available memory → OOM → Redis crashes → all cached data lost → DB gets thundering herd.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always set maxmemory + maxmemory-policy in Redis config. Use ZREMRANGEBYRANK to cap leaderboard size (ZADD + ZREMRANGEBYRANK 0 -(K+1) keeps only top K). Monitor Redis memory via INFO memory on every deploy.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Geohash Boundary Problem — Missing Nearby Points</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Driver is at the edge of a geohash cell. GEORADIUS query searches only within the radius — but a driver just across the cell boundary (50 metres away) has a completely different geohash prefix and is missed.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always search adjacent geohash cells (8 neighbours + center = 9 cells) for proximity queries. Redis GEORADIUS handles this correctly internally. If building custom: query all 9 adjacent cells and merge, deduplicate by driver_id.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
 
 <div class="footer">DATA STRUCTURES · BLOOM FILTER · TRIE · MERKLE TREE · QUADTREE · SKIP LIST · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

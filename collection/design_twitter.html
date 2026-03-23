@@ -644,6 +644,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="db-card dy"><div class="db-card-name">Storage</div><div class="db-row"><div class="db-k">Text/year</div><div class="db-v">~55 GB</div></div><div class="db-row"><div class="db-k">Media/year</div><div class="db-v a">~43 TB</div></div><div class="db-row"><div class="db-k">Implication</div><div class="db-v">S3 for media, DB for text</div></div></div>
   </div>
 </section>
+<div class="analogy">
+  <div class="analogy-label">The newspaper with 300M readers analogy</div>
+  <div class="analogy-text">Imagine a newspaper that 300 million people read every morning, but each person gets a personalised edition showing only stories from people they follow. When you post a tweet, it's like writing an article — copies are instantly distributed to every subscriber's "inbox" (Redis feed list). Celebrities are like wire services (AP, Reuters) — their stories are too widely distributed to pre-deliver, so instead every paper fetches them fresh at print time. The printing press (PostgreSQL) keeps the master copy; the newsstands (Redis cache) keep popular copies nearby for instant pickup.</div>
+</div>
+
 
 <section id="architecture">
   <div class="sec-tag">01 · Core Architecture</div>

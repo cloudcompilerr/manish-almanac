@@ -643,6 +643,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="db-card dy"><div class="db-card-name">Storage</div><div class="db-row"><div class="db-k">Raw/year</div><div class="db-v">260 PB</div></div><div class="db-row"><div class="db-k">With variants</div><div class="db-v a">520 PB</div></div><div class="db-row"><div class="db-k">Cost strategy</div><div class="db-v">Tiered: hot GCS → cold Coldline</div></div></div>
   </div>
 </section>
+<div class="analogy">
+  <div class="analogy-label">The TV broadcast analogy</div>
+  <div class="analogy-text">Old TV: one signal broadcast from one tower, everyone watches the same thing at the same time. YouTube: millions of people each watching a different video, pausing, rewinding, choosing quality — and 500 hours of new content added every minute. The magic: every video is sliced into 2-second chunks (HLS segments). When you "stream," your device is actually downloading a sequence of tiny files, each cached at a nearby server (CDN PoP). Seeking to 45:30 = requesting chunk #1350. The CDN probably already has it — so it's instant. The transcoding farm converts each upload into 5 quality levels in parallel, so 360p is ready in 5 minutes while 4K takes 90.</div>
+</div>
+
 
 <section id="architecture">
   <div class="sec-tag">01 · Architecture</div>

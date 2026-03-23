@@ -643,6 +643,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="db-card dy"><div class="db-card-name">Storage</div><div class="db-row"><div class="db-k">Strategy</div><div class="db-v">Delete on delivery</div></div><div class="db-row"><div class="db-k">Offline hold</div><div class="db-v">30 days</div></div><div class="db-row"><div class="db-k">Media</div><div class="db-v a">S3, 90-day TTL</div></div></div>
   </div>
 </section>
+<div class="analogy">
+  <div class="analogy-label">The postal service with vanishing letters analogy</div>
+  <div class="analogy-text">WhatsApp is like a postal service that (a) delivers letters in under a second, (b) burns them after delivery so no one can read them later, and (c) seals them in an envelope that only the recipient can open — not even the post office. Your phone is the mailbox (WebSocket connection). The post office sorting centre (Redis) knows which delivery van (Erlang server) your contact's mailbox is currently on. If your contact is offline, letters go into temporary storage (Cassandra) for up to 30 days — then shredded if uncollected.</div>
+</div>
+
 
 <section id="architecture">
   <div class="sec-tag">01 · Architecture</div>

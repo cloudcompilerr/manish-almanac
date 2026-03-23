@@ -189,6 +189,16 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="rest-design">
   <div class="sec-tag">00 · REST API Design</div>
   <h2>What makes an API genuinely good — the principles interviewers test</h2>
+<div class="analogy">
+  <div class="analogy-label">The restaurant menu analogy</div>
+  <div class="analogy-text">A REST API is like a restaurant menu. The URL is the dish name (noun, not verb — "pasta" not "get-pasta"). HTTP methods are what you do: GET = I want this, POST = make me something new, PUT = replace my order, DELETE = cancel it.<br><br>Pagination is the waiter bringing food in courses, not everything at once. Idempotency is: ordering the same dish twice should either give you two dishes (POST) or just confirm the first order (PUT/DELETE). Versioning is like a restaurant releasing a new menu — old dishes still available for regulars who prefer them.</div>
+</div>
+
+<div class="analogy">
+  <div class="analogy-label">The restaurant menu analogy</div>
+  <div class="analogy-text">A REST API is like a restaurant menu. The URL is the dish name (noun, not verb — "pasta" not "get-pasta"). HTTP methods are what you do: GET = I want this, POST = make me something new, PUT = replace my order, DELETE = cancel it.<br><br>Pagination is the waiter bringing food in courses, not everything at once. Idempotency is: ordering the same dish twice should either give you two dishes (POST) or just confirm the first order (PUT/DELETE). Versioning is like a restaurant releasing a new menu — old dishes still available for regulars who prefer them.</div>
+</div>
+
   <div class="k-cards">
 <div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">Resource Naming</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>URLs are nouns, HTTP methods are verbs. Never put verbs in URLs.</strong> Bad: <code>POST /getUser</code>, <code>POST /deleteOrder</code>, <code>GET /createProduct</code> Good: <code>GET /users/{id}</code>, <code>DELETE /orders/{id}</code>, <code>POST /products</code> Collections vs singletons: <code>/users</code> (collection), <code>/users/123</code> (singleton), <code>/users/123/orders</code> (nested resource).</div><div class="k-muted"><span class="k-icon">&rarr;</span><span>Rule: if you have a verb in your URL path, you're doing it wrong. The HTTP method IS the verb. Exception: actions that don't map to CRUD: <code>POST /orders/123/cancel</code> — "cancel" is an action, this is acceptable.</span></div></div></div></div>
 <div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">HTTP Status Codes That Matter</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Use the right status code — clients depend on them for error handling.</strong> <code>200 OK</code> — success with body. <code>201 Created</code> — resource created (include Location header). <code>204 No Content</code> — success, no body (DELETE, UPDATE with no return). <code>400 Bad Request</code> — client sent invalid data (validation error). <code>401 Unauthorized</code> — not authenticated. <code>403 Forbidden</code> — authenticated but not authorised. <code>404 Not Found</code> — resource doesn't exist. <code>409 Conflict</code> — state conflict (duplicate create, version mismatch). <code>422 Unprocessable Entity</code> — syntactically valid but semantically wrong. <code>429 Too Many Requests</code> — rate limited. <code>500 Internal Server Error</code> — server bug. <code>503 Service Unavailable</code> — overloaded/down. <code>504 Gateway Timeout</code> — upstream timeout.</div><div class="k-warn"><span class="k-icon">&#9888;</span><span>⚠ Never return 200 with an error in the body (<code>{"status": "error", "code": 404}</code>). This breaks every HTTP client library and monitoring tool that interprets status codes.</span></div></div></div></div>
@@ -198,6 +208,16 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <div class="k-card"><div class="k-card-head"><span class="k-num">06</span><span class="k-title">Error Response Standard</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Consistent error format makes client code predictable. Use RFC 7807 "Problem Details":</strong> <code>{"type": "https://api.example.com/errors/validation-failed",</code> <code> "title": "Validation Failed",</code> <code> "status": 422,</code> <code> "detail": "The 'email' field must be a valid email address.",</code> <code> "instance": "/users/register",</code> <code> "errors": [{"field": "email", "message": "Invalid format"}]}</code></div><div class="k-good"><span class="k-icon">&#10003;</span><span>✓ Machine-readable type URI (clients can branch on error type). Human-readable detail. Field-level errors for form validation. Consistent structure across all endpoints.</span></div></div></div></div>
 </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">API Performance Numbers</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">REST JSON throughput</td><td>Node.js single process, 50KB responses</td><td><strong>~10K req/sec per core</strong></td><td style="color:#1a7a4a;font-size:12px">8-core server = 80K req/sec. Enough for most apps. Add workers before adding servers</td></tr><tr><td class="row-head">gRPC vs REST</td><td>Protobuf 5-10× smaller than JSON</td><td><strong>100 byte proto vs 600 byte JSON</strong></td><td style="color:#1a7a4a;font-size:12px">At 100K req/sec: gRPC saves 50MB/sec bandwidth. Meaningful at scale, not at startup</td></tr><tr><td class="row-head">Idempotency key TTL</td><td>Stripe: 24h window for retries</td><td><strong>24h Redis TTL</strong></td><td style="color:#1a7a4a;font-size:12px">Redis stores 10M keys × 100 bytes = 1GB — trivial. Always set TTL or keys accumulate forever</td></tr><tr><td class="row-head">API gateway rate limit</td><td>Token bucket, 1000 req/min per user</td><td><strong>~16 req/sec</strong></td><td style="color:#1a7a4a;font-size:12px">Alert at 80% utilisation. Pro tier: 10K req/min. Enterprise: custom. Expose via X-RateLimit-Remaining header</td></tr></tbody></table></div></div>
+
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">API Performance Numbers</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">REST JSON throughput</td><td>Node.js single process, 50KB responses</td><td><strong>~10K req/sec per core</strong></td><td style="color:#1a7a4a;font-size:12px">8-core server = 80K req/sec. Enough for most apps. Add workers before adding servers</td></tr><tr><td class="row-head">gRPC vs REST</td><td>Protobuf 5-10× smaller than JSON</td><td><strong>100 byte proto vs 600 byte JSON</strong></td><td style="color:#1a7a4a;font-size:12px">At 100K req/sec: gRPC saves 50MB/sec bandwidth. Meaningful at scale, not at startup</td></tr><tr><td class="row-head">Idempotency key TTL</td><td>Stripe: 24h window for retries</td><td><strong>24h Redis TTL</strong></td><td style="color:#1a7a4a;font-size:12px">Redis stores 10M keys × 100 bytes = 1GB — trivial. Always set TTL or keys accumulate forever</td></tr><tr><td class="row-head">API gateway rate limit</td><td>Token bucket, 1000 req/min per user</td><td><strong>~16 req/sec</strong></td><td style="color:#1a7a4a;font-size:12px">Alert at 80% utilisation. Pro tier: 10K req/min. Enterprise: custom. Expose via X-RateLimit-Remaining header</td></tr></tbody></table></div></div>
+
 
 <section id="graphql-grpc-design">
   <div class="sec-tag">01 · GraphQL & gRPC Design</div>
@@ -279,6 +299,70 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <h4>HTTP Status Code Quick Reference</h4><table class="flow-table"><thead><tr><th>Code</th><th>Meaning</th><th>Use when</th></tr></thead><tbody><tr><td>200 OK</td><td>Success with body</td><td>GET, PUT returning the updated resource</td></tr><tr><td>201 Created</td><td>Resource created</td><td>POST creating a new resource. Include Location header.</td></tr><tr><td>204 No Content</td><td>Success, no body</td><td>DELETE, PUT with no return value</td></tr><tr><td>400 Bad Request</td><td>Client sent invalid data</td><td>Validation failed. Include field-level error details.</td></tr><tr><td>401 Unauthorized</td><td>Not authenticated</td><td>Missing or invalid auth token. Include WWW-Authenticate header.</td></tr><tr><td>403 Forbidden</td><td>Authenticated but not authorized</td><td>User lacks permission for this resource.</td></tr><tr><td>404 Not Found</td><td>Resource does not exist</td><td>ID not found. Do NOT return 404 for "no results" — return 200 with empty list.</td></tr><tr><td>409 Conflict</td><td>State conflict</td><td>Duplicate create. Version mismatch for optimistic locking.</td></tr><tr><td>429 Too Many Requests</td><td>Rate limited</td><td>Include Retry-After header. Return X-RateLimit-* headers.</td></tr><tr><td>500 Internal Server Error</td><td>Server bug</td><td>Never return implementation details. Log internally, return generic message.</td></tr></tbody></table>
 </section>
 </div>
+
+
+<section id="api-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>Common API Design Failures in Production</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">N+1 Query — Silent Performance Killer</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">API fetches 20 posts, then queries the DB separately for each post's author. 20 posts = 21 DB queries. At 1,000 req/sec: 21,000 DB queries/sec instead of 1,000. DB collapses. Response time balloons from 10ms to 300ms.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Use eager loading (SQL JOIN or ORM includes). GraphQL: DataLoader batches all user fetches into one query per request. Profile with DB query logging enabled in development — catch N+1 before it hits production.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Missing Idempotency — Double Charge</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Payment API times out after 28 seconds. Client retries. Server processed the first request (28 seconds is slow but valid). Now customer is charged twice. Happens at every payment company that doesn't enforce idempotency.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Idempotency-Key header is mandatory on all POST /payments endpoints. Server stores (key → result) in Redis for 24h. On duplicate: return cached response without reprocessing. Stripe built their entire reliability on this pattern.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Versioning Neglect — Breaking Clients</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">API removes a field that a mobile app depends on. Mobile app crashes for all users on old version (30% of users). Rolling back the API is complex; forced app update takes days.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Never remove fields — only add new optional ones (additive changes). Deprecate via Deprecation header (RFC 8594): Deprecation: Sat, 01 Jan 2026. Monitor field usage via API analytics before removing. Support N-1 version minimum (current + previous major).</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
+
+<section id="api-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>Common API Design Failures in Production</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">N+1 Query — Silent Performance Killer</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">API fetches 20 posts, then queries the DB separately for each post's author. 20 posts = 21 DB queries. At 1,000 req/sec: 21,000 DB queries/sec instead of 1,000. DB collapses. Response time balloons from 10ms to 300ms.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Use eager loading (SQL JOIN or ORM includes). GraphQL: DataLoader batches all user fetches into one query per request. Profile with DB query logging enabled in development — catch N+1 before it hits production.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Missing Idempotency — Double Charge</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Payment API times out after 28 seconds. Client retries. Server processed the first request (28 seconds is slow but valid). Now customer is charged twice. Happens at every payment company that doesn't enforce idempotency.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Idempotency-Key header is mandatory on all POST /payments endpoints. Server stores (key → result) in Redis for 24h. On duplicate: return cached response without reprocessing. Stripe built their entire reliability on this pattern.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Versioning Neglect — Breaking Clients</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">API removes a field that a mobile app depends on. Mobile app crashes for all users on old version (30% of users). Rolling back the API is complex; forced app update takes days.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Never remove fields — only add new optional ones (additive changes). Deprecate via Deprecation header (RFC 8594): Deprecation: Sat, 01 Jan 2026. Monitor field usage via API analytics before removing. Support N-1 version minimum (current + previous major).</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
 
 <div class="footer">API DESIGN · REST · PAGINATION · VERSIONING · IDEMPOTENCY · GRAPHQL · GRPC · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

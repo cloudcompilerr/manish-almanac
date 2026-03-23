@@ -213,6 +213,16 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     </div>
   </div>
 </section>
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Search System Sizing (Twitter Scale)</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Index size</td><td>500M tweets × 300 bytes indexed content</td><td><strong>150GB</strong></td><td style="color:#1a7a4a;font-size:12px">10 Elasticsearch shards × 15GB each = manageable per node</td></tr><tr><td class="row-head">Write throughput</td><td>6,000 tweets/sec → ES after CDC lag</td><td><strong>~6K docs/sec</strong></td><td style="color:#1a7a4a;font-size:12px">ES handles 10K docs/sec per node — single node sufficient for writes</td></tr><tr><td class="row-head">Query latency</td><td>BM25 on 500M docs, 3 shards queried</td><td><strong>~50ms p99</strong></td><td style="color:#1a7a4a;font-size:12px">Add ML re-ranking (100ms) for total ~150ms — within 200ms SLA</td></tr><tr><td class="row-head">Embedding storage</td><td>500M tweets × 1536 floats × 4 bytes</td><td><strong>~3TB for vector index</strong></td><td style="color:#1a7a4a;font-size:12px">Use ANN index (HNSW) — 16 bytes per vector with quantisation → 8GB</td></tr></tbody></table></div></div>
+
+<div style="margin:16px 0"><div style="margin:20px 0">
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Search System Sizing (Twitter Scale)</h4>
+<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+<tbody><tr><td class="row-head">Index size</td><td>500M tweets × 300 bytes indexed content</td><td><strong>150GB</strong></td><td style="color:#1a7a4a;font-size:12px">10 Elasticsearch shards × 15GB each = manageable per node</td></tr><tr><td class="row-head">Write throughput</td><td>6,000 tweets/sec → ES after CDC lag</td><td><strong>~6K docs/sec</strong></td><td style="color:#1a7a4a;font-size:12px">ES handles 10K docs/sec per node — single node sufficient for writes</td></tr><tr><td class="row-head">Query latency</td><td>BM25 on 500M docs, 3 shards queried</td><td><strong>~50ms p99</strong></td><td style="color:#1a7a4a;font-size:12px">Add ML re-ranking (100ms) for total ~150ms — within 200ms SLA</td></tr><tr><td class="row-head">Embedding storage</td><td>500M tweets × 1536 floats × 4 bytes</td><td><strong>~3TB for vector index</strong></td><td style="color:#1a7a4a;font-size:12px">Use ANN index (HNSW) — 16 bytes per vector with quantisation → 8GB</td></tr></tbody></table></div></div>
+
 
 <section id="elasticsearch">
   <div class="sec-tag">02 · Elasticsearch Architecture</div>
@@ -382,6 +392,72 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </div>
 </section>
+
+<section id="search-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in Search — and How to Handle It</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Index Lag — New Content Not Searchable</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">CDC pipeline falls behind: tweet posted but not searchable for 30+ seconds. Causes: Kafka consumer lag, ES backpressure, disk I/O saturation during bulk indexing.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Set alert: consumer lag > 10K messages. Mitigation: dedicated ES indexing nodes separate from query nodes. Increase refresh_interval from 1s to 5s during ingestion bursts.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Mapping Explosion — Cardinality Bomb</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Dynamic mapping adds a new field for every unique key in JSON documents. 10K unique keys × 5 shards = 50K field mappings → Elasticsearch heap exhausted → OOM crash.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always use explicit mapping (no dynamic=true in production). Use keyword type for all ID fields. Alert when field count > 1,000 per index.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Hot Shard — Uneven Query Distribution</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">All queries for trending topics hash to the same shard. One shard at 100% CPU, others idle. p99 latency spikes while p50 is fine.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Use custom routing with multiple routing keys. Add _routing randomisation for read-heavy indices. Monitor per-shard query rates in ES cluster stats.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
+
+
+<section id="search-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in Search — and How to Handle It</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Index Lag — New Content Not Searchable</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">CDC pipeline falls behind: tweet posted but not searchable for 30+ seconds. Causes: Kafka consumer lag, ES backpressure, disk I/O saturation during bulk indexing.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Set alert: consumer lag > 10K messages. Mitigation: dedicated ES indexing nodes separate from query nodes. Increase refresh_interval from 1s to 5s during ingestion bursts.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Mapping Explosion — Cardinality Bomb</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Dynamic mapping adds a new field for every unique key in JSON documents. 10K unique keys × 5 shards = 50K field mappings → Elasticsearch heap exhausted → OOM crash.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always use explicit mapping (no dynamic=true in production). Use keyword type for all ID fields. Alert when field count > 1,000 per index.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Hot Shard — Uneven Query Distribution</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">All queries for trending topics hash to the same shard. One shard at 100% CPU, others idle. p99 latency spikes while p50 is fine.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Use custom routing with multiple routing keys. Add _routing randomisation for read-heavy indices. Monitor per-shard query rates in ES cluster stats.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
+
 
 
 
