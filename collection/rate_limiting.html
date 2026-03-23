@@ -165,7 +165,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Rate Limiting & Throttling<br><em>Every algorithm from token bucket to sliding window counter, distributed implementation with Redis, multi-layer enforcement, and production system design examples.</em></h1>
@@ -414,6 +414,29 @@ end</pre>
 </section>
 
 </div>
+
+<section id="req-nfr-rate_limiting">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Per-user API rate limiting (token bucket, sliding window)</td></tr><tr><td><strong>FR2</strong></td><td>Multi-dimensional limits: per-user AND per-IP AND per-endpoint</td></tr><tr><td><strong>FR3</strong></td><td>Tiered limits: free vs pro vs enterprise with different quotas</td></tr><tr><td><strong>FR4</strong></td><td>Rate limit headers in response (X-RateLimit-Remaining, Retry-After)</td></tr><tr><td><strong>FR5</strong></td><td>Atomic enforcement across 100+ distributed app servers via Redis</td></tr><tr><td><strong>FR6</strong></td><td>Graceful degradation when Redis is unavailable (fail open vs closed)</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Rate limit check overhead: < 1ms (single Redis round-trip)</td></tr><tr><td><strong>NFR2</strong></td><td>Accuracy: exact enforcement for critical endpoints (auth, payment)</td></tr><tr><td><strong>NFR3</strong></td><td>Throughput: Redis handles 1M+ INCR/sec on a single instance</td></tr><tr><td><strong>NFR4</strong></td><td>Distributed consistency: atomic Lua scripts prevent race conditions</td></tr><tr><td><strong>NFR5</strong></td><td>Retry-After: tell clients exactly when they can retry</td></tr><tr><td><strong>NFR6</strong></td><td>Observability: metric on rate limit hits, identify abusive clients</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-rate_limiting">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Algorithm</td><td>Token bucket</td><td><span class="dot g"></span>Allows short bursts (up to bucket capacity). Smooths average rate. Closest to user expectations</td><td><span class="dot a"></span>State per user (tokens + last_refill timestamp). More complex than fixed window</td><td>Sliding window log for exact per-minute limiting. Fixed window for simplest implementation</td></tr><tr><td class="row-head">Storage</td><td>Redis with Lua script</td><td><span class="dot g"></span>Atomic enforcement across all app servers. Lua = GET+INCR+EXPIRE as single transaction</td><td><span class="dot a"></span>Redis is now in the critical path. Adds 0.5–1ms to every API request</td><td>Local in-process rate limiter as fallback when Redis unavailable. Slightly inaccurate but functional</td></tr><tr><td class="row-head">Fail mode</td><td>Fail open (allow when Redis down)</td><td><span class="dot g"></span>Service stays available. Rate limiting is a best-effort feature</td><td><span class="dot a"></span>DDoS during Redis outage is unprotected. Attacker could time attacks to coincide with Redis failures</td><td>Fail closed for authentication endpoints (brute force protection). Fail open for general API limits</td></tr><tr><td class="row-head">Granularity</td><td>Per user_id + per endpoint</td><td><span class="dot g"></span>Fine-grained. Different limits per resource. Prevents one endpoint from starving others</td><td><span class="dot a"></span>N×M rate limit keys (users × endpoints). More Redis memory. More complex quota management</td><td>Single global per-user limit: simpler. Acceptable when endpoint cost is uniform</td></tr><tr><td class="row-head">Headers</td><td>X-RateLimit-Remaining + Retry-After</td><td><span class="dot g"></span>Clients can implement exponential backoff correctly. Reduces hammering on 429</td><td><span class="dot a"></span>Reveals rate limiting implementation details to clients (acceptable trade-off)</td><td>Omit headers for security-sensitive endpoints to avoid timing-based attacks</td></tr></tbody></table>
+</section>
+
+<section id="schema-rate_limiting">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>Redis Key Patterns for Rate Limiting</h4><table class="flow-table"><thead><tr><th>Key pattern</th><th>Type</th><th>Value</th><th>TTL</th></tr></thead><tbody><tr><td>rate:{user_id}:{endpoint}</td><td>String</td><td>Request count</td><td>Window duration (60s, 3600s)</td></tr><tr><td>rate:token:{user_id}</td><td>Hash</td><td>tokens (current), last_refill (unix timestamp)</td><td>None (never expires — state persists)</td></tr><tr><td>rate:ip:{hashed_ip}</td><td>String</td><td>Request count</td><td>60 seconds</td></tr><tr><td>block:{user_id}</td><td>String</td><td>1 (exists = blocked)</td><td>Lockout duration (300s, 3600s)</td></tr><tr><td>quota:month:{user_id}:{year_month}</td><td>String</td><td>API calls used this month</td><td>End of month (set at first write)</td></tr></tbody></table>
+</section>
+
 <div class="footer">RATE LIMITING · TOKEN BUCKET · SLIDING WINDOW · REDIS · CIRCUIT BREAKER · TIERED PLANS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

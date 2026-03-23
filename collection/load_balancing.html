@@ -166,7 +166,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-</style>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style>
 </head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -450,6 +450,29 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 </div>
+
+<section id="req-nfr-load_balancing">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Distribute requests across healthy backend instances</td></tr><tr><td><strong>FR2</strong></td><td>Health checks: remove unhealthy backends in < 30s</td></tr><tr><td><strong>FR3</strong></td><td>L4 load balancing (TCP): connection-level routing</td></tr><tr><td><strong>FR4</strong></td><td>L7 load balancing (HTTP): content-aware routing</td></tr><tr><td><strong>FR5</strong></td><td>Global load balancing: GeoDNS / Anycast for multi-region</td></tr><tr><td><strong>FR6</strong></td><td>Zero-downtime deploys: canary, blue-green, rolling via LB</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Throughput: 1M+ requests/sec (hardware LB), 100K+ (software)</td></tr><tr><td><strong>NFR2</strong></td><td>Added latency: < 1ms for software LB (Nginx, Envoy)</td></tr><tr><td><strong>NFR3</strong></td><td>Health check interval: every 5–10s. Unhealthy after 3 failures</td></tr><tr><td><strong>NFR4</strong></td><td>Connection draining: 30s graceful shutdown before removing backend</td></tr><tr><td><strong>NFR5</strong></td><td>SSL termination: handle TLS at LB, HTTP to backends (simpler certs)</td></tr><tr><td><strong>NFR6</strong></td><td>Failover: < 30s on primary failure (Anycast < 1s)</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-load_balancing">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">L4 vs L7</td><td>L7 (application layer) for most</td><td><span class="dot g"></span>Content-based routing (path, header, cookie). SSL termination. Request rewriting. Auth at edge</td><td><span class="dot a"></span>More CPU than L4 (must parse HTTP). Cannot route non-HTTP traffic</td><td>L4 for raw TCP (databases, SMTP). L7 for all HTTP workloads. Both together in a stack (L4 → L7 → backend)</td></tr><tr><td class="row-head">Algorithm</td><td>Least-connections</td><td><span class="dot g"></span>Routes to server with fewest active connections. Handles variable request durations (unlike Round Robin)</td><td><span class="dot a"></span>Requires connection state — stateful (but manageable). Round Robin is simpler if request duration is uniform</td><td>Round Robin for uniform-cost requests. IP Hash for session stickiness. Weighted for heterogeneous backends</td></tr><tr><td class="row-head">Session stickiness</td><td>Stateless backends (preferred)</td><td><span class="dot g"></span>Any backend handles any request. Scale freely. No session affinity needed. Simple LB config</td><td><span class="dot a"></span>Requires externalising session state (Redis). Application code must not use local state</td><td>Cookie-based stickiness as last resort. Adds complexity and creates hot backends if session distribution is uneven</td></tr><tr><td class="row-head">Global routing</td><td>GeoDNS (Route 53 latency-based)</td><td><span class="dot g"></span>User routed to nearest datacenter automatically. Works with any LB. DNS-level — no additional software</td><td><span class="dot a"></span>DNS TTL means failover takes 60s–5min. Not suitable for sub-second failover needs</td><td>Anycast (Cloudflare, AWS Global Accelerator) for sub-second failover. BGP-level routing — faster than DNS</td></tr><tr><td class="row-head">Canary deployment</td><td>1% → 10% → 100% traffic split</td><td><span class="dot g"></span>Test new version on real traffic. Automatic rollback if error rate spikes. No downtime</td><td><span class="dot a"></span>Requires LB that supports weighted routing (Nginx, Envoy, AWS ALB all do). Monitoring must catch errors quickly</td><td>Blue-green for instant cutover. Canary for risk mitigation. Rolling for resource efficiency</td></tr></tbody></table>
+</section>
+
+<section id="schema-load_balancing">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>Load Balancer Selection</h4><table class="flow-table"><thead><tr><th>Requirement</th><th>Best Choice</th><th>Notes</th></tr></thead><tbody><tr><td>HTTP/HTTPS, web applications</td><td>Nginx / AWS ALB</td><td>L7. Path routing. SSL termination. Rate limiting. WebSocket support</td></tr><tr><td>TCP, any protocol</td><td>HAProxy / AWS NLB</td><td>L4. Ultra-low overhead. Millions of connections. Static IP</td></tr><tr><td>Service mesh (k8s internal)</td><td>Envoy / Istio</td><td>mTLS, circuit breaking, distributed tracing. Sidecar injection. No app code changes</td></tr><tr><td>Global, multi-region</td><td>AWS Global Accelerator / Cloudflare</td><td>Anycast. Sub-second failover. DDoS absorption. Edge TLS termination</td></tr><tr><td>gRPC services</td><td>Envoy</td><td>HTTP/2 native. gRPC load balancing requires L7 (header-aware). Envoy handles proto routing</td></tr><tr><td>Database connections</td><td>PgBouncer / ProxySQL</td><td>Connection pooling. Reduces DB connection overhead from 1K app servers × 10 connections each</td></tr></tbody></table>
+</section>
+
 <div class="footer">LOAD BALANCING · L4 · L7 · NGINX · ENVOY · CIRCUIT BREAKER · API GATEWAY · SERVICE MESH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

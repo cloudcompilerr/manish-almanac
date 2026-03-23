@@ -652,5 +652,28 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </section>
 
 </div>
+
+<section id="req-nfr-databases">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>ACID transactions for financial and relational data</td></tr><tr><td><strong>FR2</strong></td><td>Flexible schema / document model for unstructured data</td></tr><tr><td><strong>FR3</strong></td><td>High-throughput writes for time-series / append workloads</td></tr><tr><td><strong>FR4</strong></td><td>Wide-column model for known access patterns at scale</td></tr><tr><td><strong>FR5</strong></td><td>Read replicas + sharding for horizontal scale</td></tr><tr><td><strong>FR6</strong></td><td>Schema migration with zero downtime on live tables</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>OLTP query latency: p99 < 10ms</td></tr><tr><td><strong>NFR2</strong></td><td>Write throughput: 10K–1M ops/sec depending on DB</td></tr><tr><td><strong>NFR3</strong></td><td>Consistency: ACID (PG) vs eventual (Cassandra, DynamoDB)</td></tr><tr><td><strong>NFR4</strong></td><td>Durability: WAL-based crash recovery for all</td></tr><tr><td><strong>NFR5</strong></td><td>Scale: vertical-first (PG) vs horizontal-native (Cassandra)</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: replica failover < 60s (PG), always-on (Cassandra)</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-databases">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">PostgreSQL vs Cassandra</td><td>PostgreSQL for relational/ACID</td><td><span class="dot g"></span>JOINs, transactions, MVCC, rich query planner. Familiar ops. Rich ecosystem</td><td><span class="dot a"></span>Single primary = write bottleneck. Sharding adds ops complexity. No native horizontal write scale</td><td>Cassandra when writes > 50K/sec sustained AND access patterns are key-value (no JOINs needed)</td></tr><tr><td class="row-head">DynamoDB vs Cassandra</td><td>DynamoDB for AWS-native</td><td><span class="dot g"></span>Fully managed. Auto-scaling. No ops. 1ms latency at any scale. Multi-region active-active built-in</td><td><span class="dot a"></span>Vendor lock-in. Expensive at high throughput. GSIs are expensive. Limited query flexibility</td><td>Cassandra when multi-cloud or on-prem required, or when DynamoDB costs are prohibitive</td></tr><tr><td class="row-head">Sharding key choice</td><td>User_id or entity_id</td><td><span class="dot g"></span>Even distribution for most workloads. Natural isolation between tenants</td><td><span class="dot a"></span>Hot users (celebrities) create hot shards. Cross-shard queries require scatter-gather</td><td>Hash sharding (DynamoDB model) when uniform distribution is required. Range sharding for time-series</td></tr><tr><td class="row-head">Schema migration</td><td>Expand-Contract pattern</td><td><span class="dot g"></span>Zero downtime. Incremental. Rollback is always possible (just stop writing new column)</td><td><span class="dot a"></span>Requires maintaining two code paths during transition. Backfill job runs for hours</td><td>Blue-green deployment for small tables (< 10M rows) where ALTER TABLE completes in seconds</td></tr><tr><td class="row-head">Read replicas</td><td>3 replicas, sync streaming replication</td><td><span class="dot g"></span>Read scale: distribute 80% of reads across replicas. HA: failover < 60s. Replica in second AZ for DR</td><td><span class="dot a"></span>Replica lag (typically 10–100ms). Read-your-own-writes problem: post then immediately read may see old data</td><td>Synchronous replication (lose write if replica fails) for zero-loss requirements (financial)</td></tr></tbody></table>
+</section>
+
+<section id="schema-databases">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>When to Choose Which Database</h4><table class="flow-table"><thead><tr><th>Requirement</th><th>Best Choice</th><th>Why</th></tr></thead><tbody><tr><td>User profiles, posts, relational data</td><td>PostgreSQL</td><td>ACID, JOINs, JSONB, rich indexes. Scales to 10TB with sharding</td></tr><tr><td>Social graph (follower/following)</td><td>PostgreSQL + Redis cache</td><td>Simple lookups. PG for truth. Redis SET for O(1) membership check</td></tr><tr><td>Time-series events (logs, metrics, IoT)</td><td>Cassandra / TimescaleDB</td><td>Append-only writes. Time-ordered reads by partition key. Compaction strategies for time data</td></tr><tr><td>Key-value at internet scale</td><td>DynamoDB / Cassandra</td><td>1ms latency, unlimited throughput. No JOINs needed. Access pattern known upfront</td></tr><tr><td>Search / full-text</td><td>Elasticsearch</td><td>Inverted index. BM25 scoring. Aggregations. Not a primary DB — sync from PG via CDC</td></tr><tr><td>Session / cache</td><td>Redis</td><td>Sub-ms. Eviction policies. Rich data structures. Pub/Sub.</td></tr></tbody></table>
+</section>
+
 </body>
 </html>

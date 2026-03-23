@@ -577,6 +577,30 @@
 .concept-def>strong:first-child{display:block;margin-bottom:8px;font-size:14px;}
 .concept-def p{margin:0 0 8px 0;}
 .concept-def p:last-child{margin-bottom:0;}
+
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong,.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}
+.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}
+.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}
+.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}
 </style>
 </head>
 <body>
@@ -1032,6 +1056,77 @@
 </div>
 
 </div>
+
+
+<section id="req-nfr-cms">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Approximate frequency counting for N distinct items in O(w×d) memory</td></tr><tr><td><strong>FR2</strong></td><td>O(1) update: INCR count for an item (hash + increment)</td></tr><tr><td><strong>FR3</strong></td><td>O(1) query: GET approximate count for any item</td></tr><tr><td><strong>FR4</strong></td><td>Never undercount: errors are always overcounts, bounded by ε</td></tr><tr><td><strong>FR5</strong></td><td>Mergeable: combine sketches from different machines (distributed counting)</td></tr><tr><td><strong>FR6</strong></td><td>Complement min-heap: together produce Top-K in bounded memory</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Memory: w×d integers. Typical: 4 hash functions × 2048 cols = 32KB</td></tr><tr><td><strong>NFR2</strong></td><td>False positive: overcount ≤ ε×N with probability 1−δ</td></tr><tr><td><strong>NFR3</strong></td><td>Parameters: w = e/ε (width), d = ln(1/δ) (depth) — tunable</td></tr><tr><td><strong>NFR4</strong></td><td>For 1% error (ε=0.01): w = e/0.01 ≈ 272 columns</td></tr><tr><td><strong>NFR5</strong></td><td>For 99% confidence (δ=0.01): d = ln(100) ≈ 5 rows</td></tr><tr><td><strong>NFR6</strong></td><td>Total: 5 × 272 = 1360 counters = 5.4KB for 1% error, 99% confidence</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-cms">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">CMS vs exact HashMap</td><td>CMS when distinct items are too large for exact counting</td><td><span class="dot g"></span>Fixed memory: 5.4KB for any vocabulary size (1M or 1B distinct items). O(1) operations. Mergeable across nodes</td><td><span class="dot a"></span>Overcount error: cannot get exact count. Cannot enumerate all items (no keys stored). Cannot delete items</td><td>HashMap when distinct items < 10M and exact counts required. CMS for streaming with unbounded distinct items</td></tr><tr><td class="row-head">Width (w) tuning</td><td>Wider = lower error rate</td><td><span class="dot g"></span>w = 272 → 1% error. w = 2720 → 0.1% error. Linear tradeoff</td><td><span class="dot a"></span>Linear memory cost. Wider sketch = more cache misses = slower in practice</td><td>w = e/ε where ε is target error fraction. Start with 1% error (w=272) — accurate enough for Top-K trending</td></tr><tr><td class="row-head">Depth (d) tuning</td><td>Deeper = higher confidence</td><td><span class="dot g"></span>d = 5 → 99% confidence. d = 7 → 99.9% confidence. Each row is independent hash function</td><td><span class="dot a"></span>Logarithmic confidence gain: doubling d gives √ confidence increase. Diminishing returns beyond d=7</td><td>d = ceil(ln(1/δ)). d=5 gives 99% confidence that error < ε×N. Sufficient for most production use cases</td></tr><tr><td class="row-head">CMS vs HyperLogLog</td><td>CMS for frequency, HLL for cardinality</td><td><span class="dot g"></span>CMS: "how many times did item X appear?" HLL: "how many distinct items appeared?" Different questions entirely</td><td><span class="dot a"></span>Cannot use CMS to count distinct items. Cannot use HLL to find frequency of specific items</td><td>Use both together: HLL for "how many unique viewers?" CMS for "which videos were viewed most often?"</td></tr><tr><td class="row-head">Top-K approach</td><td>CMS + Min-heap of size K</td><td><span class="dot g"></span>CMS provides O(1) count estimate for any item. Min-heap tracks only K candidates — O(K) memory</td><td><span class="dot a"></span>Heap maintenance: O(log K) on each event. Must decide: when to evict from heap? Use CMS count threshold</td><td>Exact Top-K (MapReduce full count) for batch. CMS+heap for real-time streaming with bounded memory</td></tr></tbody></table>
+</section>
+
+<section id="schema-cms">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>CMS Sizing Calculator</h4><table class="flow-table"><thead><tr><th>Error (ε)</th><th>Width (w)</th><th>Depth (d)</th><th>Memory</th><th>Confidence</th></tr></thead><tbody><tr><td>10% (coarse)</td><td>28 cols</td><td>5 rows</td><td>560 counters = 2.2KB</td><td>99%</td></tr><tr><td>1% (standard)</td><td>272 cols</td><td>5 rows</td><td>1,360 counters = 5.4KB</td><td>99%</td></tr><tr><td>0.1% (precise)</td><td>2,718 cols</td><td>5 rows</td><td>13,590 counters = 54KB</td><td>99%</td></tr><tr><td>1% (high conf)</td><td>272 cols</td><td>7 rows</td><td>1,904 counters = 7.6KB</td><td>99.9%</td></tr><tr><td>1% (very high)</td><td>272 cols</td><td>10 rows</td><td>2,720 counters = 10.8KB</td><td>99.99%</td></tr></tbody></table>
+</section>
+
+
+<section id="cms-concepts-deep">
+  <div class="sec-tag">🃏 · Core Concepts</div>
+  <h2>Every Mechanism — K-Card Deep Dive</h2>
+  <div class="k-cards">
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">01</span><span class="k-title">The d × w Counter Grid</span><span class="k-tag">Data Structure</span></div>
+      <div class="k-card-body"><div class="k-point">
+        <div class="k-point-label">What it is</div>
+        <div class="k-point-text"><strong>d hash functions × w columns = d × w integer counters. Every item maps to exactly d cells (one per row).</strong><br>Update: hash the item with each of d hash functions → get d column indices → increment those d cells. Query: hash again → read the d cells → return the MINIMUM. The minimum is always ≥ the true count (overcount only, never undercount).</div>
+        <div class="k-good"><span class="k-icon">✓</span><span>Minimum of d independent estimates: each hash collision inflates one estimate. Taking the minimum means you need ALL d estimates to be simultaneously inflated — probability drops exponentially with d.</span></div>
+      </div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Why Minimum, Not Average?</span><span class="k-tag">Algorithm</span></div>
+      <div class="k-card-body"><div class="k-point">
+        <div class="k-point-label">The intuition</div>
+        <div class="k-point-text"><strong>Collisions inflate counts. The minimum is the least-inflated estimate.</strong><br>If item A hashes to the same column as 100 other items in row 1, row 1's counter is inflated by those 100 items. But the probability that A ALSO collides with 100 items in rows 2, 3, 4, and 5 simultaneously is tiny. The minimum across d rows is very likely to be the least-collided estimate.</div>
+        <div class="k-warn"><span class="k-icon">⚠</span><span>Average would be wrong: averaging inflated and un-inflated estimates gives a biased high estimate. Minimum gives a bound: true_count ≤ CMS_estimate ≤ true_count + ε×N.</span></div>
+      </div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Parameter Tuning</span><span class="k-tag">Configuration</span></div>
+      <div class="k-card-body"><div class="k-point">
+        <div class="k-point-label">How to size it</div>
+        <div class="k-point-text"><strong>Two parameters: w (width = columns) and d (depth = rows = hash functions).</strong><br>w = ⌈e/ε⌉ where ε is the maximum error as a fraction of total events N. For 1% error: w = e/0.01 ≈ 272.<br>d = ⌈ln(1/δ)⌉ where δ is the failure probability. For 99% confidence: d = ln(100) ≈ 5.<br>Memory: 5 × 272 = 1,360 counters. At 4 bytes each = 5.4KB for ANY vocabulary size.</div>
+        <div class="k-good"><span class="k-icon">✓</span><span>Halving the error rate (0.5% instead of 1%) doubles w (544 columns) — memory doubles. Adding one more hash function (d+1) increases confidence by e× — logarithmic improvement.</span></div>
+      </div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">04</span><span class="k-title">CMS + Min-Heap = Top-K</span><span class="k-tag">Top-K Integration</span></div>
+      <div class="k-card-body"><div class="k-point">
+        <div class="k-point-label">Why you need both</div>
+        <div class="k-point-text"><strong>CMS answers "how often?" — min-heap answers "which K items are most frequent?"</strong><br>CMS alone: can tell you the count of any specific item but cannot enumerate which items are in the top K (it doesn't store item identities).<br>Min-heap alone: would need to track exact counts for every distinct item — O(N) memory for N distinct items.<br>Together: each event → CMS.update(item) → CMS.query(item) → if count > heap.min → heap.push(item, count). Heap bounded at size K. Total memory: O(w×d + K), independent of distinct item count.</div>
+        <div class="k-good"><span class="k-icon">✓</span><span>At 1B distinct hashtags: exact HashMap = 8GB+ of memory. CMS + K=1000 heap = 5.4KB + 8KB = 14KB total. The data structure is what makes real-time Top-K feasible.</span></div>
+      </div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">05</span><span class="k-title">Distributed CMS (Merging)</span><span class="k-tag">Scale</span></div>
+      <div class="k-card-body"><div class="k-point">
+        <div class="k-point-label">Merging across nodes</div>
+        <div class="k-point-text"><strong>CMS sketches built on different nodes with the same parameters and hash functions can be merged by element-wise addition.</strong><br>Node A processes partition 1: sketch_A. Node B processes partition 2: sketch_B. Global sketch = sketch_A + sketch_B (add corresponding cells). Same error guarantee as if all events were processed on one node.<br>Used in: Flink's distributed Top-K job (each task maintains a local CMS + heap, merge step every window), Redis Cluster (each shard maintains local CMS, coordinator merges periodically).</div>
+        <div class="k-good"><span class="k-icon">✓</span><span>Mergeability is the property that makes CMS work in MapReduce, Flink, and distributed stream processing — unlike exact counting which requires coordination on every event.</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
 
 </body>
 </html>

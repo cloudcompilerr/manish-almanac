@@ -165,7 +165,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Consistent Hashing<br><em>Partitioning at Scale</em></h1>
@@ -416,6 +416,29 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 </div>
+
+<section id="req-nfr-consistent_hashing">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Distribute keys evenly across N nodes</td></tr><tr><td><strong>FR2</strong></td><td>On node add/remove: move minimum keys (1/N fraction)</td></tr><tr><td><strong>FR3</strong></td><td>Handle node failures without full rehash</td></tr><tr><td><strong>FR4</strong></td><td>Support replication: each key on R replicas</td></tr><tr><td><strong>FR5</strong></td><td>Hotspot prevention via virtual nodes</td></tr><tr><td><strong>FR6</strong></td><td>Shard awareness: route requests to correct shard without central coordinator</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Lookup: O(log N) with binary search on sorted ring</td></tr><tr><td><strong>NFR2</strong></td><td>Key movement on node add: 1/N of all keys (theoretical minimum)</td></tr><tr><td><strong>NFR3</strong></td><td>Virtual nodes: 150–256 per physical node for uniform distribution</td></tr><tr><td><strong>NFR4</strong></td><td>Rebalancing time: proportional to data moved, not total data size</td></tr><tr><td><strong>NFR5</strong></td><td>Consistency of ring state: gossip protocol (Cassandra) or etcd (Redis Cluster)</td></tr><tr><td><strong>NFR6</strong></td><td>Hash function: MD5, MurmurHash3, or SHA-1 for uniform distribution</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-consistent_hashing">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Virtual nodes count</td><td>256 vnodes/node (Cassandra default)</td><td><span class="dot g"></span>Near-perfect uniform distribution (±2% variance). New node steals from ALL existing nodes (parallel migration)</td><td><span class="dot a"></span>More metadata to store and gossip. Rebalancing moves data from many source nodes simultaneously</td><td>1 vnode/node: simple but 30% variance in data distribution. Use 256+ for production uniformity</td></tr><tr><td class="row-head">Hash ring vs range sharding</td><td>Consistent hash ring</td><td><span class="dot g"></span>No central routing table. Any node can route. Automatic rebalancing on topology change</td><td><span class="dot a"></span>Difficult range queries (keys near each other in keyspace are on different nodes)</td><td>Range sharding (HBase, Spanner) when range queries are primary access pattern</td></tr><tr><td class="row-head">Replication factor</td><td>R=3 (industry standard)</td><td><span class="dot g"></span>Tolerate 2 simultaneous node failures. Quorum reads/writes (R=2 of 3) always find fresh data</td><td><span class="dot a"></span>3× storage cost. Replication lag adds write latency (must wait for 2 of 3 replicas to ack)</td><td>R=2 for cost-sensitive non-critical data. R=5 for financial data requiring 3-node failure tolerance</td></tr><tr><td class="row-head">Ring consistency</td><td>Gossip protocol</td><td><span class="dot g"></span>Decentralised. No single point of failure. Scales to 1000s of nodes. Self-healing</td><td><span class="dot a"></span>Eventually consistent view of ring — node might not know about new member for 5–10 seconds</td><td>etcd/ZooKeeper for strong consistency of ring membership (Redis Cluster model — fewer nodes, stronger consistency)</td></tr><tr><td class="row-head">Hot partition mitigation</td><td>Key salting (append random suffix)</td><td><span class="dot g"></span>Spreads load for hot keys across N virtual shards. Works within existing ring</td><td><span class="dot a"></span>Reads must query N shards and merge (scatter-gather). N× read amplification</td><td>Dedicated cache (Redis) for hot keys bypasses ring entirely — most effective mitigation</td></tr></tbody></table>
+</section>
+
+<section id="schema-consistent_hashing">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>Consistent Hashing in Production Systems</h4><table class="flow-table"><thead><tr><th>System</th><th>Algorithm</th><th>Virtual Nodes</th><th>Notes</th></tr></thead><tbody><tr><td>Cassandra</td><td>Murmur3 token ring</td><td>256 vnodes/node</td><td>Gossip for ring membership. Replication factor per keyspace</td></tr><tr><td>Redis Cluster</td><td>CRC16 mod 16384</td><td>16,384 hash slots</td><td>Fixed slots assigned to nodes. Cluster bus (port+10000) for gossip</td></tr><tr><td>DynamoDB</td><td>Internal consistent hashing</td><td>Auto-managed</td><td>Adaptive capacity handles hot partitions automatically</td></tr><tr><td>Memcached (clients)</td><td>Ketama algorithm (MD5)</td><td>150 vnodes/node</td><td>Client-side ring — each client computes the correct node independently</td></tr><tr><td>Nginx upstream</td><td>Least-connections + hash</td><td>N/A</td><td>Not consistent hashing but stateful load balancing for cache affinity</td></tr></tbody></table>
+</section>
+
 <div class="footer">CONSISTENT HASHING · PARTITIONING · VNODES · REDIS CLUSTER · CASSANDRA · HOT SPOTS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

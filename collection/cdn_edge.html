@@ -165,7 +165,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>CDN & Edge<br><em>Cloudflare, CloudFront, Fastly</em></h1>
@@ -384,6 +384,29 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 </div>
+
+<section id="req-nfr-cdn_edge">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Cache static assets at edge (CSS, JS, images, video segments)</td></tr><tr><td><strong>FR2</strong></td><td>Cache API responses with Cache-Control headers</td></tr><tr><td><strong>FR3</strong></td><td>SSL termination at edge (TLS offload from origin)</td></tr><tr><td><strong>FR4</strong></td><td>DDoS mitigation: absorb attack traffic at 200+ PoPs</td></tr><tr><td><strong>FR5</strong></td><td>Edge compute: run logic at PoP (auth, A/B testing, personalisation)</td></tr><tr><td><strong>FR6</strong></td><td>Cache invalidation: purge stale content in < 60s globally</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Cache hit ratio: > 90% for static assets</td></tr><tr><td><strong>NFR2</strong></td><td>Edge latency: < 10ms to nearest PoP for most users</td></tr><tr><td><strong>NFR3</strong></td><td>Origin offload: 95% of requests served from CDN cache</td></tr><tr><td><strong>NFR4</strong></td><td>Throughput: Cloudflare handles 100M req/sec globally</td></tr><tr><td><strong>NFR5</strong></td><td>Invalidation: < 150ms (Fastly instant purge), < 60s (CloudFront)</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: 99.99% — distributed, no single PoP is critical</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-cdn_edge">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Cache strategy</td><td>Immutable URLs + long TTL</td><td><span class="dot g"></span>app.{hash}.js → Cache-Control: max-age=31536000, immutable. Zero invalidation needed. Perfect cache efficiency</td><td><span class="dot a"></span>Requires asset pipeline to generate content-hash filenames (Webpack, Vite do this natively). URL changes on every deploy</td><td>Short TTL + purge API for mutable resources. Immutable URLs for all static assets — never use both for the same file</td></tr><tr><td class="row-head">Pull vs Push CDN</td><td>Pull (on-demand caching)</td><td><span class="dot g"></span>Zero management — CDN caches on first request. Works for any content. No pre-upload step</td><td><span class="dot a"></span>First request per PoP = cache miss → origin round trip. Cold CDN = slower until content is cached globally</td><td>Push (pre-populate) for known high-demand content (app deploys, video releases, known events). Pull for long-tail</td></tr><tr><td class="row-head">CloudFront vs Cloudflare</td><td>Cloudflare for edge compute</td><td><span class="dot g"></span>Workers at edge: auth checks, A/B routing, bot detection — without hitting origin. 200+ PoPs</td><td><span class="dot a"></span>Vendor lock-in on edge logic. Workers have CPU time limits (50ms default). Less AWS integration</td><td>CloudFront for AWS-native (S3, ALB integration, native). Cloudflare for edge compute, DDoS, DNS as CDN</td></tr><tr><td class="row-head">Video streaming</td><td>HLS with CDN segments</td><td><span class="dot g"></span>Each 2-second .ts segment is independently cacheable. Cache hit = instant seek. Origin protected</td><td><span class="dot a"></span>High cache key cardinality (N segments × M quality levels × K videos). Edge storage costs</td><td>Pre-warm popular video segments to all PoPs before scheduled release (known events)</td></tr><tr><td class="row-head">Authentication behind CDN</td><td>CDN → origin with auth token</td><td><span class="dot g"></span>CDN handles SSL termination, DDoS. Auth at origin with forwarded token. Simple. Works with any auth system</td><td><span class="dot a"></span>CDN sees all requests — cannot cache authenticated-user-specific content without cache key splitting</td><td>Edge auth (Cloudflare Workers / Lambda@Edge) for per-user caching. Forward only cache keys, not full cookies</td></tr></tbody></table>
+</section>
+
+<section id="schema-cdn_edge">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>Cache-Control Header Strategy</h4><table class="flow-table"><thead><tr><th>Content type</th><th>Cache-Control</th><th>CDN behavior</th></tr></thead><tbody><tr><td>Hashed JS/CSS (app.a1b2c3.js)</td><td>max-age=31536000, immutable</td><td>Cached for 1 year. Never invalidated. URL changes on deploy.</td></tr><tr><td>HTML entry point (index.html)</td><td>max-age=60, must-revalidate</td><td>Cached for 60s. Short TTL ensures users get latest app version.</td></tr><tr><td>API responses (product list)</td><td>max-age=300, s-maxage=3600</td><td>Browser: 5min. CDN: 1hr. Serve stale to users, CDN refreshes in background.</td></tr><tr><td>User-specific API (/me, /cart)</td><td>no-store, private</td><td>Never cached by CDN. Each request hits origin. Vary: Cookie prevents shared cache.</td></tr><tr><td>Video segments (.ts files)</td><td>max-age=86400, immutable</td><td>Cached for 24h. Content-addressed — same content = same URL forever.</td></tr></tbody></table>
+</section>
+
 <div class="footer">CDN · EDGE · CLOUDFLARE · CLOUDFRONT · HLS · ADAPTIVE BITRATE · DDOS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

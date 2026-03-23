@@ -179,7 +179,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-</style>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style>
 </head>
 <body>
 <div class="hero">
@@ -561,6 +561,29 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 </div>
+
+<section id="req-nfr-caching">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Cache-aside: check cache before DB on every read</td></tr><tr><td><strong>FR2</strong></td><td>Write-through / write-behind / refresh-ahead patterns</td></tr><tr><td><strong>FR3</strong></td><td>TTL-based and event-driven cache invalidation</td></tr><tr><td><strong>FR4</strong></td><td>Redis data structures: String, Hash, ZSET, List, HLL</td></tr><tr><td><strong>FR5</strong></td><td>Cache stampede and thundering herd prevention</td></tr><tr><td><strong>FR6</strong></td><td>Two-tier: local in-process + distributed Redis</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Cache hit rate > 95% for hot data</td></tr><tr><td><strong>NFR2</strong></td><td>Redis GET latency: p99 < 1ms</td></tr><tr><td><strong>NFR3</strong></td><td>Cache warm-up time on cold start: < 5 min</td></tr><tr><td><strong>NFR4</strong></td><td>Cache size: bounded by available RAM (eviction policy)</td></tr><tr><td><strong>NFR5</strong></td><td>Consistency: eventual (stale window ≤ TTL)</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: Redis Sentinel failover < 30s</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-caching">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Invalidation strategy</td><td>TTL-based</td><td><span class="dot g"></span>No application coupling. Self-healing on expiry. Zero code for invalidation</td><td><span class="dot a"></span>Stale window up to TTL. Cannot push fresh data immediately on update</td><td>Event-driven invalidation if staleness causes business errors (inventory, pricing)</td></tr><tr><td class="row-head">Write strategy</td><td>Cache-aside (lazy)</td><td><span class="dot g"></span>Only caches actually-requested data. Cache survives restarts. Simple to reason about</td><td><span class="dot a"></span>Cache miss penalty: 3 ops (check cache, read DB, write cache). Race condition window on miss</td><td>Write-through if reads must always be fresh. Write-behind for high-write-frequency counters</td></tr><tr><td class="row-head">Cache stampede</td><td>Mutex lock (Redis SET NX)</td><td><span class="dot g"></span>Simple, one line of code. Correct under all failure modes</td><td><span class="dot a"></span>One request waits on lock; others spin-wait. Adds 1 Redis round-trip on every cold miss</td><td>Probabilistic early expiry for high-traffic keys to eliminate lock entirely</td></tr><tr><td class="row-head">Topology</td><td>Redis Cluster</td><td><span class="dot g"></span>Horizontal scale: data sharded across N primaries. Write throughput scales linearly</td><td><span class="dot a"></span>Cross-slot operations (MGET across different keys) require client-side scatter-gather. Operational complexity</td><td>Redis Sentinel for datasets < 100GB that fit on one primary. Simpler ops, same HA</td></tr><tr><td class="row-head">Persistence</td><td>AOF every second</td><td><span class="dot g"></span>At most 1 second of data loss on crash. Sequential writes (fast). Cache auto-warms from disk</td><td><span class="dot a"></span>10–20% write throughput overhead. AOF file grows — must be rewritten periodically</td><td>No persistence for pure cache use cases (DB is source of truth). Faster, simpler</td></tr></tbody></table>
+</section>
+
+<section id="schema-caching">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>Redis Key Patterns</h4><table class="flow-table"><thead><tr><th>Pattern</th><th>Type</th><th>TTL</th><th>Use case</th></tr></thead><tbody><tr><td>tweet:{id}</td><td>Hash</td><td>1h</td><td>Tweet content — enriched on cache-aside miss</td></tr><tr><td>feed:user:{id}</td><td>List</td><td>24h</td><td>Pre-computed feed: 800 tweet_ids, newest first</td></tr><tr><td>user:{id}</td><td>Hash</td><td>30m</td><td>Profile data: name, avatar, follower_count</td></tr><tr><td>session:{token}</td><td>String</td><td>24h</td><td>Session token → user_id mapping</td></tr><tr><td>rate:ip:{ip}</td><td>String</td><td>60s</td><td>INCR counter for rate limiting (sliding window)</td></tr><tr><td>lock:{key}</td><td>String</td><td>30s</td><td>Distributed mutex via SET NX EX for stampede prevention</td></tr></tbody></table>
+</section>
+
 <div class="footer">CACHING · REDIS · MEMCACHED · EVICTION · INVALIDATION · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

@@ -209,7 +209,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-</style>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style>
 </head>
 <body>
 
@@ -1151,6 +1151,29 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 </div>
+
+<section id="req-nfr-protocols">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>REST: stateless request/response for CRUD operations</td></tr><tr><td><strong>FR2</strong></td><td>gRPC: efficient binary RPC for service-to-service</td></tr><tr><td><strong>FR3</strong></td><td>WebSocket: full-duplex real-time communication</td></tr><tr><td><strong>FR4</strong></td><td>SSE: server-push for one-directional streams (notifications)</td></tr><tr><td><strong>FR5</strong></td><td>GraphQL: client-specified fields, single round trip for complex UIs</td></tr><tr><td><strong>FR6</strong></td><td>Long polling: real-time when WebSocket unavailable (firewalls)</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>REST: 10K–100K req/sec per server (HTTP/2 multiplexing)</td></tr><tr><td><strong>NFR2</strong></td><td>gRPC: 10× less bandwidth vs JSON REST (Protobuf encoding)</td></tr><tr><td><strong>NFR3</strong></td><td>WebSocket: 10K–1M concurrent connections per server</td></tr><tr><td><strong>NFR4</strong></td><td>SSE: simpler than WebSocket, unidirectional only</td></tr><tr><td><strong>NFR5</strong></td><td>GraphQL: flexible but adds resolver complexity and N+1 risk</td></tr><tr><td><strong>NFR6</strong></td><td>Latency: WebSocket 50ms, REST 50ms, gRPC 20ms (binary)</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-protocols">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">REST vs gRPC (internal)</td><td>gRPC for internal services</td><td><span class="dot g"></span>Protobuf: 5–10× smaller payload. Strongly typed contracts (.proto). HTTP/2 multiplexing. Generated client stubs</td><td><span class="dot a"></span>gRPC not browser-native (needs gRPC-Web proxy). Proto schema changes require coordination. Less human-readable</td><td>REST for external APIs (developer ergonomics, curl-ability). gRPC for internal microservice calls</td></tr><tr><td class="row-head">WebSocket vs SSE</td><td>WebSocket for bidirectional</td><td><span class="dot g"></span>Full-duplex: client AND server can push any time. Lower overhead per message after handshake. Native in all browsers</td><td><span class="dot a"></span>More complex to load-balance (sticky sessions or external session store). Not HTTP-compatible (upgrade required)</td><td>SSE when only server→client push needed (notifications, live scores). Works through most firewalls/proxies</td></tr><tr><td class="row-head">GraphQL vs REST</td><td>REST for simple CRUD</td><td><span class="dot g"></span>Simple mental model. HTTP caching works natively. Easy rate limiting. No N+1 risk if designed correctly</td><td><span class="dot a"></span>Multiple round trips for complex UIs (fetch user, then fetch their posts, then fetch likes...)</td><td>GraphQL when frontend needs flexible data fetching and you have many client types (mobile, web, TV)</td></tr><tr><td class="row-head">Long polling vs WebSocket</td><td>WebSocket</td><td><span class="dot g"></span>True real-time (< 100ms). No polling overhead. Scales to 1M connections on dedicated servers</td><td><span class="dot a"></span>Requires WebSocket support (usually fine). Stateful — harder to load balance without affinity</td><td>Long polling only as fallback for WebSocket-blocked environments (strict corporate firewalls)</td></tr><tr><td class="row-head">HTTP/1.1 vs HTTP/2</td><td>HTTP/2 always</td><td><span class="dot g"></span>Multiplexing: multiple requests over one TCP connection. Header compression (HPACK). Server push</td><td><span class="dot a"></span>Older systems may not support HTTP/2. TLS required (practical constraint, not spec). Debugging harder</td><td>HTTP/3 (QUIC) for mobile: better performance on lossy connections. Adoption growing but not universal yet</td></tr></tbody></table>
+</section>
+
+<section id="schema-protocols">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>Protocol Selection Guide</h4><table class="flow-table"><thead><tr><th>Use case</th><th>Protocol</th><th>Why</th></tr></thead><tbody><tr><td>Mobile app API</td><td>REST/HTTP2</td><td>Universal support. Cacheable. Simple debugging. CDN-friendly</td></tr><tr><td>Service-to-service RPC</td><td>gRPC</td><td>Binary efficiency. Typed contracts. Streaming support. Generated clients</td></tr><tr><td>Live chat / game state</td><td>WebSocket</td><td>Full-duplex. Low overhead. Sub-100ms latency</td></tr><tr><td>Stock ticker / notifications</td><td>SSE</td><td>Server-push only. Simple. Works through proxies. Auto-reconnect built-in</td></tr><tr><td>Mobile app with complex data needs</td><td>GraphQL</td><td>Fetch exactly what the screen needs. Single round trip. Strong typing</td></tr><tr><td>Batch data transfer</td><td>REST with streaming</td><td>Range requests. Resumable. CDN-cacheable chunks</td></tr></tbody></table>
+</section>
+
 <div class="footer">PROTOCOLS · REST · GRPC · GRAPHQL · WEBSOCKET · SSE · LONG POLLING · MANISH-ALMANAC</div>
 
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

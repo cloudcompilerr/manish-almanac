@@ -165,7 +165,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Distributed Systems<br><em>Fundamentals</em></h1>
@@ -443,6 +443,29 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 </div>
+
+<section id="req-nfr-distributed_systems">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Consensus: multiple nodes agree on a single value despite failures</td></tr><tr><td><strong>FR2</strong></td><td>Linearisable reads: any read sees the latest committed write</td></tr><tr><td><strong>FR3</strong></td><td>Distributed transactions: multi-node atomic commit (Saga / 2PC)</td></tr><tr><td><strong>FR4</strong></td><td>Leader election: single leader per partition without split-brain</td></tr><tr><td><strong>FR5</strong></td><td>Anti-entropy: detect and repair diverged replicas (Merkle trees)</td></tr><tr><td><strong>FR6</strong></td><td>Gossip: propagate cluster state without central coordinator</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>CAP: choose Consistency or Availability during partition</td></tr><tr><td><strong>NFR2</strong></td><td>Raft consensus: leader election in 150–300ms after failure</td></tr><tr><td><strong>NFR3</strong></td><td>Cassandra repair: anti-entropy via nodetool repair (weekly)</td></tr><tr><td><strong>NFR4</strong></td><td>Gossip convergence: O(log N) rounds for N-node cluster</td></tr><tr><td><strong>NFR5</strong></td><td>CRDT merge: commutative, associative, idempotent — always correct</td></tr><tr><td><strong>NFR6</strong></td><td>Clock sync: NTP ±100ms. TrueTime (Spanner) ±7ms. HLC for causality</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-distributed_systems">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Consistency model</td><td>Eventual consistency (Cassandra)</td><td><span class="dot g"></span>Always available. Writes always accepted. Low latency. Horizontal scale without coordination</td><td><span class="dot a"></span>Reads may return stale data. Conflict resolution required (LWW, CRDT). Cannot enforce uniqueness</td><td>Linearisable (Spanner/CockroachDB) when strong consistency required AND you can pay the latency cost</td></tr><tr><td class="row-head">Consensus algorithm</td><td>Raft (etcd, CockroachDB)</td><td><span class="dot g"></span>Understandable. Correct. Battle-tested. Leader election + log replication unified</td><td><span class="dot a"></span>Leader is single write bottleneck. Network partition to leader = stall until election</td><td>Multi-Paxos for highest throughput (Google Chubby). Raft for teams that need to understand and debug the code</td></tr><tr><td class="row-head">Distributed transactions</td><td>Saga (choreography/orchestration)</td><td><span class="dot g"></span>No distributed locks. Compensating transactions handle failure. Services remain independent</td><td><span class="dot a"></span>Eventually consistent — intermediate states visible. Compensating transactions can fail too</td><td>2PC for strict ACID requirement within a single database. Saga for cross-service transactions</td></tr><tr><td class="row-head">Conflict resolution</td><td>LWW (Last-Write-Wins)</td><td><span class="dot g"></span>Simple. Always resolves. No human intervention needed</td><td><span class="dot a"></span>Later timestamp wins — may discard legitimate earlier writes. Clock skew can cause incorrect resolution</td><td>CRDTs for data types where merge is mathematically defined (counters, sets). Explicit merge for documents</td></tr><tr><td class="row-head">Time</td><td>HLC (Hybrid Logical Clocks)</td><td><span class="dot g"></span>Captures causality (happened-before) without NTP. No global clock needed. Monotonically increasing</td><td><span class="dot a"></span>HLC values only meaningful within a single system. Cannot compare HLC across independent systems</td><td>TrueTime (Spanner) for global external consistency — requires Google's GPS/atomic clock infrastructure</td></tr></tbody></table>
+</section>
+
+<section id="schema-distributed_systems">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>Distributed Systems Primitives by Database</h4><table class="flow-table"><thead><tr><th>Primitive</th><th>Cassandra</th><th>etcd/Raft</th><th>Spanner</th></tr></thead><tbody><tr><td>Consensus</td><td>Gossip + Paxos (LWT)</td><td>Raft — full consensus log</td><td>Paxos + TrueTime</td></tr><tr><td>Consistency</td><td>Tunable (ONE/QUORUM/ALL)</td><td>Linearisable</td><td>External consistency (global)</td></tr><tr><td>Transactions</td><td>LWT (light) / Saga (app)</td><td>ACID on KV (single key)</td><td>Full distributed ACID</td></tr><tr><td>Conflict resolution</td><td>LWW (timestamp)</td><td>Leader serialises all writes</td><td>TrueTime commit wait</td></tr><tr><td>Failure detection</td><td>Gossip (phi accrual)</td><td>Raft heartbeat timeout</td><td>Chubby locks + lease</td></tr><tr><td>Scale</td><td>Unlimited (horizontal)</td><td>etcd: < 100 nodes</td><td>Global (Google infra only)</td></tr></tbody></table>
+</section>
+
 <div class="footer">DISTRIBUTED SYSTEMS · CAP · RAFT · SAGA · IDEMPOTENCY · VECTOR CLOCKS · CRDTs · FENCING · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

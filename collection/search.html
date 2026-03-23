@@ -165,7 +165,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Search<br><em>Elasticsearch & Inverted Index</em></h1>
@@ -419,6 +419,29 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 </div>
+
+<section id="req-nfr-search">
+  <div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Full-text search with relevance ranking (BM25 + ML signals)</td></tr><tr><td><strong>FR2</strong></td><td>Faceted search: filter by category, price range, date</td></tr><tr><td><strong>FR3</strong></td><td>Autocomplete: type-ahead suggestions in < 100ms</td></tr><tr><td><strong>FR4</strong></td><td>Fuzzy matching: tolerate typos ("gogle" → "google results")</td></tr><tr><td><strong>FR5</strong></td><td>Vector/semantic search: find conceptually similar results</td></tr><tr><td><strong>FR6</strong></td><td>Near-real-time indexing: new content searchable in < 2s</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Search latency: p99 < 200ms for full-text queries</td></tr><tr><td><strong>NFR2</strong></td><td>Index size: supports billions of documents</td></tr><tr><td><strong>NFR3</strong></td><td>Write throughput: 10K documents/sec (Elasticsearch NRT)</td></tr><tr><td><strong>NFR4</strong></td><td>Availability: 99.9% (Elasticsearch cluster: 3+ nodes)</td></tr><tr><td><strong>NFR5</strong></td><td>Freshness: Elasticsearch refresh_interval = 1s (NRT)</td></tr><tr><td><strong>NFR6</strong></td><td>Recall: > 95% for navigational queries; precision > 90%</td></tr></tbody></table></div>
+</div>
+</section>
+
+<section id="tradeoff-search">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <p>Every senior interview ends here. Know your choices and their costs.</p>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Sync strategy</td><td>CDC via Debezium + Kafka</td><td><span class="dot g"></span>Postgres WAL → Kafka → ES consumer. Decoupled. Exactly-once. Handles backpressure</td><td><span class="dot a"></span>~1s lag from DB write to searchable. Operational complexity (Debezium, Kafka, ES consumer)</td><td>Dual write (app writes to DB and ES simultaneously) for simpler setup. Risk: partial failure leaves them out of sync</td></tr><tr><td class="row-head">Sharding</td><td>Time-based index rotation</td><td><span class="dot g"></span>Old indices archived/deleted cheaply. Hot index on fast SSDs. No cross-index aggregation for recent queries</td><td><span class="dot a"></span>Cross-time-range queries must search multiple indices (scatter-gather). Alias management complexity</td><td>Document-count-based sharding for uniform distribution. Time-based for logs/events with TTL</td></tr><tr><td class="row-head">Relevance</td><td>BM25 + ML re-rank</td><td><span class="dot g"></span>BM25 recall. ML captures user intent, click-through, recency. Two-stage = fast retrieval + smart ranking</td><td><span class="dot a"></span>Training data required for ML model. Model freshness (must retrain daily). Cold-start problem for new queries</td><td>Pure BM25 for simple search. Add ML re-ranking when user satisfaction metrics plateau</td></tr><tr><td class="row-head">Vector search</td><td>Approximate NN (HNSW)</td><td><span class="dot g"></span>Semantic similarity captures intent, not just keywords. 100ms latency at billion scale</td><td><span class="dot a"></span>Requires generating embeddings for all documents (batch job). Model updates require re-embedding corpus</td><td>Hybrid BM25 + vector search (scored ensemble) for best precision AND recall. Single-mode search is weaker</td></tr><tr><td class="row-head">Autocomplete</td><td>Elasticsearch Completion Suggester</td><td><span class="dot g"></span>In-memory FST index. Sub-10ms. Native Elasticsearch, no extra infra</td><td><span class="dot a"></span>Memory-intensive (entire suggester in RAM). Limited ranking signals. Cannot personalise easily</td><td>Redis ZSET trick for simple autocomplete. Trie service for complex prefix + frequency + personalisation</td></tr></tbody></table>
+</section>
+
+<section id="schema-search">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <h4>Elasticsearch Index Mapping (tweets example)</h4><table class="flow-table"><thead><tr><th>Field</th><th>Type</th><th>Analyzer</th><th>Notes</th></tr></thead><tbody><tr><td>tweet_id</td><td>keyword</td><td>none</td><td>Exact match for dedup and retrieval</td></tr><tr><td>content</td><td>text</td><td>english (stemming)</td><td>BM25 full-text search. Stemming: "running"→"run"</td></tr><tr><td>user_handle</td><td>keyword + text</td><td>whitespace</td><td>Exact @handle match AND partial search</td></tr><tr><td>created_at</td><td>date</td><td>none</td><td>Range filter for recency. Time-based routing</td></tr><tr><td>like_count</td><td>integer</td><td>none</td><td>Used as ranking signal (popularity boost)</td></tr><tr><td>hashtags</td><td>keyword[]</td><td>none</td><td>Faceted filtering: GET /search?hashtag=AI</td></tr><tr><td>content_vector</td><td>dense_vector(1536)</td><td>none</td><td>Semantic search via HNSW index (k-NN)</td></tr></tbody></table>
+</section>
+
 <div class="footer">SEARCH · ELASTICSEARCH · INVERTED INDEX · BM25 · TYPEAHEAD · VECTOR SEARCH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>
