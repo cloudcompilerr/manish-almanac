@@ -172,24 +172,13 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">How search works from first principles — inverted index, BM25 relevance, Elasticsearch architecture, typeahead design, and vector search.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Elasticsearch</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Inverted Index</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">BM25</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Typeahead</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Vector Search</span></div>
 </div></div>
-<nav class="nav"><a href="#intuition">Why Search</a><a href="#inverted">Inverted Index</a><a href="#elasticsearch">ES Architecture</a><a href="#typeahead">Typeahead</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#vector-search">Vector Search</a></nav>
+<nav class="nav"><a href="#inverted">The Inverted Index — Why Databases</a><a href="#elasticsearch">How ES scales to billions of docume</a><a href="#typeahead">Design: search-as-you-type at FAANG</a><a href="#ranking">How search results are ordered — be</a><a href="#examples">Search Architecture in Real Systems</a><a href="#followups">Every hard follow-up, answered</a><a href="#vector-search">Beyond keyword matching — the AI la</a><a href="#req-nfr-search">Requirements & Non-Functional Const</a><a href="#tradeoff-search">Trade-off Matrix — What You Gave Up</a><a href="#schema-search">Quick Reference</a></nav>
 <div class="wrap">
-<section id="intuition">
-  <div class="sec-tag">00 · Core Intuition</div>
-  <h2>Why a database cannot do what a search engine does</h2>
-  <p>A SQL database index finds exact values fast: <code>WHERE user_id = 123</code>. But <code>WHERE body LIKE '%distributed systems%'</code> requires a full table scan — every row, every time. At 1 billion documents, that takes minutes. A search engine can answer this in milliseconds because it inverts the problem entirely.</p>
-  <div class="analogy">
-    <div class="analogy-label">The book index analogy</div>
-    <div class="analogy-text">
-      A database is a book read cover-to-cover to find a word. Slow.<br><br>
-      A search engine is a book with an index at the back: "distributed systems → pages 12, 47, 203, 891." You go directly to those pages. That back-of-book index is an <strong>inverted index</strong> — and it is the entire secret of how search works.
-    </div>
-  </div>
-</section>
+
 
 <section id="inverted">
   <div class="sec-tag">01 · Inverted Index</div>
-  <h2>The data structure that powers every search engine</h2>
+  <h2>The Inverted Index — Why Databases Can't Do This</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">How It Works</div><div class="concept-def"><strong>An inverted index maps each unique term to the list of documents containing it.</strong><br>
       Documents: Doc1="Redis is fast", Doc2="Redis scales well", Doc3="Kafka is fast"<br>
@@ -211,6 +200,17 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
         <span class="concept-note muted">The same pipeline must run at query time. "Running Redis" → ["run", "redis"] → matches documents containing "run" or "redis" in any form.</span></div></div>
     <div class="concept-row"><div class="concept-term">TF-IDF / BM25</div><div class="concept-def"><strong>Relevance scoring: not all matches are equal.</strong></p><p><strong>TF (Term Frequency)</strong>: how often does the term appear in this document? More occurrences = more relevant.</p><p><strong>IDF (Inverse Document Frequency)</strong>: how rare is the term across all documents? "the" appears everywhere — low IDF, low importance. "Kafka" appears rarely — high IDF, high importance.</p><p><strong>BM25</strong>: modern improvement over TF-IDF used by Elasticsearch. Prevents very long documents from dominating just because they mention a term more times.
         <span class="concept-note muted">Elasticsearch uses BM25 by default. You can boost specific fields (title matches worth 3x body matches).</span></div></div>
+  </div>
+
+<div class="sec-tag">00 · Core Intuition</div>
+  <h2>Why a database cannot do what a search engine does</h2>
+  <p>A SQL database index finds exact values fast: <code>WHERE user_id = 123</code>. But <code>WHERE body LIKE '%distributed systems%'</code> requires a full table scan — every row, every time. At 1 billion documents, that takes minutes. A search engine can answer this in milliseconds because it inverts the problem entirely.</p>
+  <div class="analogy">
+    <div class="analogy-label">The book index analogy</div>
+    <div class="analogy-text">
+      A database is a book read cover-to-cover to find a word. Slow.<br><br>
+      A search engine is a book with an index at the back: "distributed systems → pages 12, 47, 203, 891." You go directly to those pages. That back-of-book index is an <strong>inverted index</strong> — and it is the entire secret of how search works.
+    </div>
   </div>
 </section>
 
@@ -257,7 +257,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 <section id="examples">
   <div class="sec-tag">04 · System Design Examples</div>
-  <h2>Search in real systems</h2>
+  <h2>Search Architecture in Real Systems</h2>
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">Twitter Search</div><span class="sd-example-tag">500M TWEETS/DAY</span></div>
     <div class="sd-example-body">
@@ -265,6 +265,25 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <div class="choice-row"><div class="choice-label">SEARCH</div><div class="choice-val"><span class="badge b-g">Elasticsearch ✓</span> Full-text BM25 scoring + recency boost + engagement boost. Query rewriting: "from:elonmusk" → field-specific filter. Hashtag search: exact term match on the hashtag field (no tokenization).</div></div>
       <div class="choice-row"><div class="choice-label">TRENDING</div><div class="choice-val">Trending hashtags NOT from ES — from a streaming Count-Min Sketch pipeline (Kafka + Flink + Redis ZSET). ES is too slow for trending (requires aggregation queries). The two systems complement each other.</div></div>
       <div class="choice-row"><div class="choice-label">WHY NOT SQL</div><div class="choice-val"><code>LIKE '%distributed%'</code> on 500M tweets = full table scan = minutes. Elasticsearch full-text search on same data = milliseconds. Not even close.</div></div>
+    </div>
+  </div>
+
+<div class="sec-tag">05 · More System Design Examples</div>
+  <h2>Search architecture in Uber, LinkedIn, and GitHub</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Uber — Driver and Restaurant Search</div><span class="sd-example-tag">GEO-SPATIAL · REAL-TIME</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">GEO INDEX</div><div class="choice-val">Uber stores driver locations in a geospatial index. S2 cells (Google's geo library) divide the world into hierarchical cells. Finding drivers within 2km of a rider = find all occupied S2 cells at the appropriate level within radius. Elasticsearch's geo_point field type with <code>geo_distance</code> query handles this natively.</div></div>
+      <div class="choice-row"><div class="choice-label">REAL-TIME UPDATE</div><div class="choice-val">Driver positions update every 4 seconds via WebSocket. Writes go to a Redis Geo hash (GEOADD) for the hot, live view. Elasticsearch index updated async for the search layer. Two stores: Redis for real-time dispatch, Elasticsearch for search/analytics.</div></div>
+      <div class="choice-row"><div class="choice-label">RESTAURANT SEARCH</div><div class="choice-val">Uber Eats: full-text BM25 on restaurant name + cuisine tags + menu items. Geo filter applied first (only restaurants within delivery range). Ranked by: rating, estimated delivery time, sponsored placement (business rules layer), and personalisation (user's order history).</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">LinkedIn — People and Job Search</div><span class="sd-example-tag">PERSONALISED · SOCIAL GRAPH</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PEOPLE SEARCH</div><div class="choice-val">LinkedIn's Galene search engine (Elasticsearch-based): indexes 900M+ member profiles. Query "data scientist in Bangalore" → BM25 retrieval → ML re-ranking using network distance (1st/2nd degree connections ranked higher), engagement prediction, and profile completeness score.</div></div>
+      <div class="choice-row"><div class="choice-label">JOB SEARCH</div><div class="choice-val">Semantic matching: your profile embedding (skills, title, experience) is compared to job embedding using cosine similarity (vector search). Keyword match + semantic similarity combined (hybrid search). Jobs at companies where you have connections get a boost.</div></div>
+      <div class="choice-row"><div class="choice-label">TYPEAHEAD</div><div class="choice-val">Job title suggestions: Redis ZSET with ~50K common job titles, scored by global frequency. Prefix query on typed characters returns top 5 suggestions in &lt;5ms. Personalised layer re-ranks suggestions based on user's profile and connections.</div></div>
     </div>
   </div>
 </section>
@@ -288,26 +307,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </section>
 
-<section id="more-sd-search">
-  <div class="sec-tag">05 · More System Design Examples</div>
-  <h2>Search architecture in Uber, LinkedIn, and GitHub</h2>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Uber — Driver and Restaurant Search</div><span class="sd-example-tag">GEO-SPATIAL · REAL-TIME</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">GEO INDEX</div><div class="choice-val">Uber stores driver locations in a geospatial index. S2 cells (Google's geo library) divide the world into hierarchical cells. Finding drivers within 2km of a rider = find all occupied S2 cells at the appropriate level within radius. Elasticsearch's geo_point field type with <code>geo_distance</code> query handles this natively.</div></div>
-      <div class="choice-row"><div class="choice-label">REAL-TIME UPDATE</div><div class="choice-val">Driver positions update every 4 seconds via WebSocket. Writes go to a Redis Geo hash (GEOADD) for the hot, live view. Elasticsearch index updated async for the search layer. Two stores: Redis for real-time dispatch, Elasticsearch for search/analytics.</div></div>
-      <div class="choice-row"><div class="choice-label">RESTAURANT SEARCH</div><div class="choice-val">Uber Eats: full-text BM25 on restaurant name + cuisine tags + menu items. Geo filter applied first (only restaurants within delivery range). Ranked by: rating, estimated delivery time, sponsored placement (business rules layer), and personalisation (user's order history).</div></div>
-    </div>
-  </div>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">LinkedIn — People and Job Search</div><span class="sd-example-tag">PERSONALISED · SOCIAL GRAPH</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">PEOPLE SEARCH</div><div class="choice-val">LinkedIn's Galene search engine (Elasticsearch-based): indexes 900M+ member profiles. Query "data scientist in Bangalore" → BM25 retrieval → ML re-ranking using network distance (1st/2nd degree connections ranked higher), engagement prediction, and profile completeness score.</div></div>
-      <div class="choice-row"><div class="choice-label">JOB SEARCH</div><div class="choice-val">Semantic matching: your profile embedding (skills, title, experience) is compared to job embedding using cosine similarity (vector search). Keyword match + semantic similarity combined (hybrid search). Jobs at companies where you have connections get a boost.</div></div>
-      <div class="choice-row"><div class="choice-label">TYPEAHEAD</div><div class="choice-val">Job title suggestions: Redis ZSET with ~50K common job titles, scored by global frequency. Prefix query on typed characters returns top 5 suggestions in &lt;5ms. Personalised layer re-ranks suggestions based on user's profile and connections.</div></div>
-    </div>
-  </div>
-</section>
+
 
 <section id="followups">
   <div class="sec-tag">05 · Follow-ups</div>
@@ -328,45 +328,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <strong>Standard NRT path</strong>: write to ES → in-memory buffer → refresh every 1s → new segment → searchable. For most use cases (news articles, tweets), 1-second lag is imperceptible.<br><br>
   <strong>For sub-second freshness</strong> (stock prices, live sports scores): do not use ES for the hot data. Use Redis Sorted Sets or a dedicated real-time index (Druid) for the last few minutes. ES handles historical data. The search UI blends real-time results (from Redis) with historical results (from ES).<br><br>
   <strong>Index update strategy</strong>: full reindex (expensive, for schema changes), partial update via Update API (efficient for changing specific fields), delete + reindex (for major changes to a document). Avoid full reindexes for high-traffic indexes during peak hours — they consume significant I/O.</div></div>
-</section></div>
-
-<section id="decision-search">
-  <div class="sec-tag">06 · Decision Framework</div>
-  <h2>Search architecture decisions</h2>
-  <div class="step-block">
-    <div class="step-block-header"><span class="sb-icon">🎯</span>Search System Design — Ask in Order</div>
-    <div class="step-block-body">
-      <div class="step-row"><div class="step-num">01</div><div class="step-content">
-        <div class="step-q">Is this full-text search (keyword matching across documents)?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Elasticsearch / OpenSearch.</strong> Inverted index + BM25 scoring. Handles: full-text on articles/tweets/product descriptions, fuzzy matching, multi-field boosts. Scale: billions of documents. Never use SQL LIKE for this.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">NO (exact match / geo / structured) →</span><span class="opt-text">Go to Step 2. SQL or Redis may suffice.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">02</div><div class="step-content">
-        <div class="step-q">Is the primary dimension geospatial (find things near me)?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES (geo) →</span><span class="opt-text"><strong>Elasticsearch geo_distance queries or PostGIS.</strong> ES: geo_point field + distance query — returns results within N km. PostGIS: spatial indexes for complex polygon queries. Redis GEO commands for simple "nearby" lookups (Uber driver locations).</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Go to Step 3.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">03</div><div class="step-content">
-        <div class="step-q">Is it semantic search (meaning-based, not keyword)?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Vector search.</strong> Embed documents + queries with an embedding model (OpenAI, Cohere). Store vectors in Pinecone / Weaviate / pgvector. KNN search finds semantically similar content. Use hybrid search (BM25 + vector) for best precision + recall.</span></div>
-          <div class="step-option opt-mid"><span class="opt-arrow">Both keyword + semantic →</span><span class="opt-text"><strong>Hybrid search.</strong> Elasticsearch 8+ supports kNN + BM25 in one query with Reciprocal Rank Fusion. Best of both worlds. Production choice for modern AI-powered search (LinkedIn, Spotify).</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">04</div><div class="step-content">
-        <div class="step-q">Typeahead / autocomplete needed?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">Small vocabulary (&lt;1M terms) →</span><span class="opt-text"><strong>Redis ZSET prefix trick.</strong> Store all prefixes with popularity score. ZRANGEBYLEX for instant prefix lookup. &lt;1ms. Easy to update in real time with ZINCRBY.</span></div>
-          <div class="step-option opt-mid"><span class="opt-arrow">Large vocabulary →</span><span class="opt-text"><strong>ES Completion Suggester.</strong> In-memory FST (finite state transducer). Handles millions of suggestions. Returns top-N by weight instantly. Best for: product search, job title autocomplete.</span></div>
-        </div>
-      </div></div>
-    </div>
-  </div>
 </section>
+
+
+
 
 <section id="vector-search">
   <div class="sec-tag">09 · Vector Search & ML Ranking</div>
@@ -418,7 +383,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
+
 
 <section id="req-nfr-search">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -441,7 +406,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Elasticsearch Index Mapping (tweets example)</h4><table class="flow-table"><thead><tr><th>Field</th><th>Type</th><th>Analyzer</th><th>Notes</th></tr></thead><tbody><tr><td>tweet_id</td><td>keyword</td><td>none</td><td>Exact match for dedup and retrieval</td></tr><tr><td>content</td><td>text</td><td>english (stemming)</td><td>BM25 full-text search. Stemming: "running"→"run"</td></tr><tr><td>user_handle</td><td>keyword + text</td><td>whitespace</td><td>Exact @handle match AND partial search</td></tr><tr><td>created_at</td><td>date</td><td>none</td><td>Range filter for recency. Time-based routing</td></tr><tr><td>like_count</td><td>integer</td><td>none</td><td>Used as ranking signal (popularity boost)</td></tr><tr><td>hashtags</td><td>keyword[]</td><td>none</td><td>Faceted filtering: GET /search?hashtag=AI</td></tr><tr><td>content_vector</td><td>dense_vector(1536)</td><td>none</td><td>Semantic search via HNSW index (k-NN)</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">SEARCH · ELASTICSEARCH · INVERTED INDEX · BM25 · TYPEAHEAD · VECTOR SEARCH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

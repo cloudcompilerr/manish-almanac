@@ -194,12 +194,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
     </div>
   </div>
 </div>
-<nav class="nav">
-  <a href="#what-is-olap">What Is OLAP</a><a href="#columnar">Columnar Storage</a>
-  <a href="#engines">The Engines</a><a href="#internals">How They Work</a>
-  <a href="#dimensions">Every Dimension</a><a href="#when-to-use">When to Use</a>
-  <a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a>
-<a href="#olap-advanced">Advanced OLAP</a></nav>
+<nav class="nav"><a href="#what-is-olap">OLAP vs OLTP — the fundamental spli</a><a href="#columnar">Why columnar storage makes analytic</a><a href="#engines">Core identity of each</a><a href="#internals">Internals that interviewers probe</a><a href="#dimensions">The full comparison matrix</a><a href="#when-to-use">Real system design examples</a><a href="#followups">Every Hard Follow-up, Answered</a><a href="#concepts-olap">OLAP Internals Every Interviewer Te</a><a href="#req-nfr-olap">Requirements & Non-Functional Const</a><a href="#tradeoff-olap">Trade-off Matrix — OLAP Engine Sele</a><a href="#schema-olap">OLAP Engine Quick Reference</a></nav>
 <div class="wrap">
 
 <section id="what-is-olap">
@@ -373,21 +368,11 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   </ul>
 </section>
 
-<section id="decision">
-  <div class="sec-tag">07 · Decision Tree</div>
-  <h2>Pick your OLAP engine in 60 seconds</h2>
-  <div class="dtree">
-    <div class="dtree-node"><div class="dtree-q">Do you need high-frequency streaming ingest (&gt;100K rows/sec) AND fast aggregation queries? (ad clicks, event tracking, Top-K)</div><div class="dtree-a ch">→ ClickHouse</div></div>
-    <div class="dtree-node"><div class="dtree-q">Do you need sub-second interactive dashboard queries with many filters changing in real time? (ops dashboards, ad analytics)</div><div class="dtree-a dr">→ Apache Druid</div></div>
-    <div class="dtree-node"><div class="dtree-q">Do you want zero infrastructure ops, ad-hoc exploration, ML integration, and you're on GCP?</div><div class="dtree-a bq">→ BigQuery</div></div>
-    <div class="dtree-node"><div class="dtree-q">Are you AWS-native with existing S3/Glue/Kinesis setup, and need a managed columnar warehouse?</div><div class="dtree-a rs">→ Redshift</div></div>
-    <div class="dtree-node"><div class="dtree-q">Already on AWS, want serverless with simpler pricing than on-demand BigQuery?</div><div class="dtree-a rs">→ Redshift Serverless</div></div>
-  </div>
-</section>
+
 
 <section id="followups">
   <div class="sec-tag">08 · Every Hard Follow-up</div>
-  <h2>Questions interviewers always ask</h2>
+  <h2>Every Hard Follow-up, Answered</h2>
 
   <div class="faq"><div class="faq-q" onclick="toggle(this)">Why not use PostgreSQL for analytics? It has window functions and GROUP BY.<span class="faq-tog">+</span></div><div class="faq-a">
     <p>PostgreSQL can handle analytics on small datasets. The problem emerges at scale:</p>
@@ -451,55 +436,52 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
     <p style="margin-top:8px;"><strong>Real-world trend:</strong> Many teams that previously used Druid are migrating to ClickHouse + pre-aggregated materialised views — they get 95% of Druid's query speed with ClickHouse's simpler ops and better SQL support.</p>
   </div></div>
 
+
+<div class="sec-tag">09 · Follow-ups</div>
+  <h2>Every hard follow-up, answered</h2>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">When should you use ClickHouse instead of Redshift or BigQuery?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>ClickHouse wins on raw query speed and cost at high query volume. Cloud DWs win on zero ops and ecosystem integration.</strong><br><br>
+  <strong>Choose ClickHouse when:</strong> (1) Query latency matters at millisecond level (dashboards updating every few seconds). (2) You run high query volume — BigQuery/Redshift charge per byte scanned, which gets expensive. (3) You want to self-host and have ops capacity. (4) You need real-time ingestion with seconds-fresh query results. Uber, Cloudflare, ByteDance all use ClickHouse for exactly these reasons.<br><br>
+  <strong>Stay with BigQuery/Redshift when:</strong> (1) You prioritise zero infrastructure management. (2) Your queries are infrequent and ad-hoc — BigQuery's serverless model is perfect. (3) You need tight integration with the cloud provider's ecosystem (Redshift + S3 + Glue + QuickSight). (4) Your team lacks the expertise to tune ClickHouse (MergeTree configuration, shard keys, tiered storage).</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle schema changes in a live OLAP system?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Schema evolution in OLAP is harder than OLTP because of partitioned, compressed, column-oriented storage.</strong><br><br>
+  <strong>Adding a new column</strong>: safe in ClickHouse (ALTER TABLE ADD COLUMN — metadata change only, new column is NULL/default for existing rows). Safe in BigQuery (ADD COLUMN via schema update). Safe in Redshift (ALTER TABLE ADD COLUMN — fast metadata operation).<br><br>
+  <strong>Changing column type or removing a column</strong>: dangerous. Options: (1) Add new column with new type, backfill from old column, update application to use new column, eventually drop old column. (2) Create a new table with correct schema, backfill from old, swap via view or DNS change. Never modify column types in place on petabyte tables — it requires a full rewrite.<br><br>
+  <strong>Changing partition key</strong>: requires full reingestion. There is no shortcut. Plan partition keys carefully before launch — they are permanent.<br><br>
+  <strong>Druid</strong>: schema changes require re-ingesting affected time intervals from the source (Kafka or S3). Druid's immutable segment model means in-place schema migration is not possible.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you design a real-time dashboard showing metrics with sub-second freshness?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Three-layer architecture: streaming ingestion → real-time OLAP → query cache.</strong><br><br>
+  Layer 1 — Ingestion: events from your application → Kafka topic → Flink aggregation (1-minute tumbling windows) → ClickHouse or Druid sink. Flink reduces event volume by 100x before hitting OLAP (10K events/sec → 100 pre-aggregated rows/sec per dimension).<br><br>
+  Layer 2 — OLAP: ClickHouse table partitioned by hour, clustered by (date, metric_name, dimensions). Pre-computed rollups for common queries. Queries return in &lt;50ms even at billions of rows because they hit pre-aggregated data.<br><br>
+  Layer 3 — Query cache: dashboard queries for the same time range and dimensions are cached in Redis for 10 seconds. 100 concurrent users viewing the same dashboard = 1 ClickHouse query per 10 seconds (not 100). Cache-aside with short TTL matches the sub-second freshness requirement.<br><br>
+  <strong>The trap to avoid</strong>: querying raw events in ClickHouse from a dashboard with 100 concurrent users. Even fast OLAP becomes slow under that load. Pre-aggregate + cache is always the answer for dashboard use cases.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between a data warehouse and a data lake?<span class="tog">+</span></div>
+  <div class="faq-a"><strong>Schema-on-write (warehouse) vs schema-on-read (lake) — and the modern "lakehouse" that combines both.</strong><br><br>
+  <strong>Data Warehouse</strong> (Redshift, BigQuery, Snowflake): structured, schema defined before loading, data cleaned and transformed at ingest (ETL). Fast queries because structure is known. Cannot store unstructured data (images, raw logs, JSON blobs).<br><br>
+  <strong>Data Lake</strong> (S3 + Parquet): store raw data in any format first, define schema when reading (schema-on-read). Flexible, cheap, can store anything. Slow queries without proper partitioning and file format discipline.<br><br>
+  <strong>Data Lakehouse</strong> (Databricks Delta Lake, Apache Iceberg on S3): combine both. S3/GCS storage cost + columnar Parquet performance + ACID transactions from Delta/Iceberg metadata layer. Query directly from S3 with warehouse-like performance. This is the modern standard — most new data platform designs use the lakehouse pattern.<br><br>
+  <strong>Interview answer</strong>: "I'd start with a data lake on S3 using Parquet + Delta Lake for ACID. Query with Athena for ad-hoc, Spark for batch processing, and ClickHouse for dashboard queries. This gives warehouse performance at lake economics."</div></div>
 </section>
 
 <div class="oneliner">
   <div class="lbl">The one rule to remember</div>
   <blockquote>"ClickHouse: extreme ingest + fast aggregation, self-hosted. Druid: sub-second interactive dashboards, pre-aggregates at ingest. BigQuery: serverless analytics, pay per TB, zero ops. Redshift: AWS-native data warehouse. All four are columnar — the difference is when they aggregate, how they manage ops, and what they cost."</blockquote>
 </div>
-</div>
-<footer>OLAP · CLICKHOUSE · DRUID · BIGQUERY · REDSHIFT · MANISH-ALMANAC</footer>
-<script>function toggle(el){var item=el.parentElement;var isOpen=item.classList.contains('open');document.querySelectorAll('.faq.open').forEach(function(f){f.classList.remove('open');});if(!isOpen)item.classList.add('open');}</script>
 
-<section id="olap-advanced">
-  <div class="sec-tag">10 · Advanced OLAP Topics</div>
-  <h2>ClickHouse MergeTree internals and the data lakehouse</h2>
-  <div class="k-cards">
-<div class="k-card">
-  <div class="k-card-head">
-    <span class="k-num">01</span>
-    <span class="k-title">ClickHouse MergeTree Internals</span>
-    
-  </div>
-  <div class="k-card-body">
-    <div class="k-point">
-      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>ClickHouse's secret: sorted, compressed columnar storage with sparse indexing.</strong>
-      <p>/p><p>Insert: data written to parts (immutable, sorted by ORDER BY key). Background merge: small parts merged into larger parts. Reads: scan only parts that overlap with the query's WHERE clause (partition pruning + primary key range scan).</p><p>Sparse index: ClickHouse doesn't index every row. It keeps one index entry per "granule" (8192 rows by default). To find rows where user_id = 12345: scan the sparse index to find which granule ranges might contain it → decompress those granules → scan within. Index is small enough to fit in RAM; scanned granules are sequential reads.</p>
-      </div>
-      <div class="k-good"><span class="k-icon">✓</span><span>✓ Result: ClickHouse can scan 1 billion rows/second/server. For a query like "count events by country for the last 7 days": partition pruning eliminates all but the last 7 days' partitions → sparse index finds the relevant granules → columnar scan of just the country and timestamp columns. Often 100-1000× faster than row-oriented OLAP.</span></div>
-    </div>
-  </div>
-</div>
-<div class="k-card">
-  <div class="k-card-head">
-    <span class="k-num">02</span>
-    <span class="k-title">Apache Iceberg & the Data Lakehouse</span>
-    
-  </div>
-  <div class="k-card-body">
-    <div class="k-point">
-      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Iceberg brings ACID transactions and schema evolution to data lakes stored in S3.</strong>
-      <p>/p><p>Problem with plain S3 as a data lake: no transactions (concurrent writes → corrupted partitions), no schema evolution (adding a column requires full rewrite), no time travel (can't query "how did the data look last Tuesday?").</p><p>Iceberg solves this: maintains a metadata layer (JSON manifests) that tracks all files, their statistics, and versions. ACID writes: create new files, update the manifest atomically. Time travel: each manifest version is immutable — query the manifest from any point in time. Schema evolution: add/remove/rename columns by updating metadata only (no data rewrite).</p>
-      </div>
-      <div class="k-good"><span class="k-icon">✓</span><span>✓ Iceberg is the new standard for lakehouse architecture. Supported by: Snowflake, BigQuery (in preview), Athena, Spark, Flink, Trino. Paired with object storage (S3/GCS), it provides data warehouse semantics without the cost of a managed data warehouse.</span></div>
-    </div>
-  </div>
-</div>
-</div>
-</section>
+
+<footer>OLAP · CLICKHOUSE · DRUID · BIGQUERY · REDSHIFT · MANISH-ALMANAC</footer>
+
+
+
+
+
+
+
+
+
 <section id="concepts-olap">
   <div class="sec-tag">08 · Core Concepts</div>
-  <h2>OLAP internals every interviewer tests</h2>
+  <h2>OLAP Internals Every Interviewer Tests</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Columnar Storage</div><div class="concept-def"><strong>OLAP stores data column-by-column, not row-by-row. This is the single most important architectural difference from OLTP.</strong><br>
       Row store: <code>[id=1, name=Alice, age=30, country=IN] | [id=2, ...]</code> — all columns for one row are adjacent.<br>
@@ -578,36 +560,44 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       On-demand pricing: up to 2,000 slots per project. Pay per TB scanned. Flat-rate: buy reserved slots (500 minimum) for predictable cost at high query volume. At Shopify/Airbnb scale, flat-rate is dramatically cheaper.
         <span class="concept-note muted">Slot contention: if your project runs many concurrent queries, they compete for slots. One very large query can starve smaller dashboard queries. Use workload management (reservations + assignments) to allocate slots per team or use case.</span></div></div>
   </div>
-</section>
 
-<section id="faq-olap">
-  <div class="sec-tag">09 · Follow-ups</div>
-  <h2>Every hard follow-up, answered</h2>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">When should you use ClickHouse instead of Redshift or BigQuery?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>ClickHouse wins on raw query speed and cost at high query volume. Cloud DWs win on zero ops and ecosystem integration.</strong><br><br>
-  <strong>Choose ClickHouse when:</strong> (1) Query latency matters at millisecond level (dashboards updating every few seconds). (2) You run high query volume — BigQuery/Redshift charge per byte scanned, which gets expensive. (3) You want to self-host and have ops capacity. (4) You need real-time ingestion with seconds-fresh query results. Uber, Cloudflare, ByteDance all use ClickHouse for exactly these reasons.<br><br>
-  <strong>Stay with BigQuery/Redshift when:</strong> (1) You prioritise zero infrastructure management. (2) Your queries are infrequent and ad-hoc — BigQuery's serverless model is perfect. (3) You need tight integration with the cloud provider's ecosystem (Redshift + S3 + Glue + QuickSight). (4) Your team lacks the expertise to tune ClickHouse (MergeTree configuration, shard keys, tiered storage).</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle schema changes in a live OLAP system?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Schema evolution in OLAP is harder than OLTP because of partitioned, compressed, column-oriented storage.</strong><br><br>
-  <strong>Adding a new column</strong>: safe in ClickHouse (ALTER TABLE ADD COLUMN — metadata change only, new column is NULL/default for existing rows). Safe in BigQuery (ADD COLUMN via schema update). Safe in Redshift (ALTER TABLE ADD COLUMN — fast metadata operation).<br><br>
-  <strong>Changing column type or removing a column</strong>: dangerous. Options: (1) Add new column with new type, backfill from old column, update application to use new column, eventually drop old column. (2) Create a new table with correct schema, backfill from old, swap via view or DNS change. Never modify column types in place on petabyte tables — it requires a full rewrite.<br><br>
-  <strong>Changing partition key</strong>: requires full reingestion. There is no shortcut. Plan partition keys carefully before launch — they are permanent.<br><br>
-  <strong>Druid</strong>: schema changes require re-ingesting affected time intervals from the source (Kafka or S3). Druid's immutable segment model means in-place schema migration is not possible.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you design a real-time dashboard showing metrics with sub-second freshness?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Three-layer architecture: streaming ingestion → real-time OLAP → query cache.</strong><br><br>
-  Layer 1 — Ingestion: events from your application → Kafka topic → Flink aggregation (1-minute tumbling windows) → ClickHouse or Druid sink. Flink reduces event volume by 100x before hitting OLAP (10K events/sec → 100 pre-aggregated rows/sec per dimension).<br><br>
-  Layer 2 — OLAP: ClickHouse table partitioned by hour, clustered by (date, metric_name, dimensions). Pre-computed rollups for common queries. Queries return in &lt;50ms even at billions of rows because they hit pre-aggregated data.<br><br>
-  Layer 3 — Query cache: dashboard queries for the same time range and dimensions are cached in Redis for 10 seconds. 100 concurrent users viewing the same dashboard = 1 ClickHouse query per 10 seconds (not 100). Cache-aside with short TTL matches the sub-second freshness requirement.<br><br>
-  <strong>The trap to avoid</strong>: querying raw events in ClickHouse from a dashboard with 100 concurrent users. Even fast OLAP becomes slow under that load. Pre-aggregate + cache is always the answer for dashboard use cases.</div></div>
-  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between a data warehouse and a data lake?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Schema-on-write (warehouse) vs schema-on-read (lake) — and the modern "lakehouse" that combines both.</strong><br><br>
-  <strong>Data Warehouse</strong> (Redshift, BigQuery, Snowflake): structured, schema defined before loading, data cleaned and transformed at ingest (ETL). Fast queries because structure is known. Cannot store unstructured data (images, raw logs, JSON blobs).<br><br>
-  <strong>Data Lake</strong> (S3 + Parquet): store raw data in any format first, define schema when reading (schema-on-read). Flexible, cheap, can store anything. Slow queries without proper partitioning and file format discipline.<br><br>
-  <strong>Data Lakehouse</strong> (Databricks Delta Lake, Apache Iceberg on S3): combine both. S3/GCS storage cost + columnar Parquet performance + ACID transactions from Delta/Iceberg metadata layer. Query directly from S3 with warehouse-like performance. This is the modern standard — most new data platform designs use the lakehouse pattern.<br><br>
-  <strong>Interview answer</strong>: "I'd start with a data lake on S3 using Parquet + Delta Lake for ACID. Query with Athena for ad-hoc, Spark for batch processing, and ClickHouse for dashboard queries. This gives warehouse performance at lake economics."</div></div>
-</section>
-
+<div class="sec-tag">10 · Advanced OLAP Topics</div>
+  <h2>ClickHouse MergeTree internals and the data lakehouse</h2>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">01</span>
+    <span class="k-title">ClickHouse MergeTree Internals</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>ClickHouse's secret: sorted, compressed columnar storage with sparse indexing.</strong>
+      <p>/p><p>Insert: data written to parts (immutable, sorted by ORDER BY key). Background merge: small parts merged into larger parts. Reads: scan only parts that overlap with the query's WHERE clause (partition pruning + primary key range scan).</p><p>Sparse index: ClickHouse doesn't index every row. It keeps one index entry per "granule" (8192 rows by default). To find rows where user_id = 12345: scan the sparse index to find which granule ranges might contain it → decompress those granules → scan within. Index is small enough to fit in RAM; scanned granules are sequential reads.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ Result: ClickHouse can scan 1 billion rows/second/server. For a query like "count events by country for the last 7 days": partition pruning eliminates all but the last 7 days' partitions → sparse index finds the relevant granules → columnar scan of just the country and timestamp columns. Often 100-1000× faster than row-oriented OLAP.</span></div>
+    </div>
+  </div>
 </div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">02</span>
+    <span class="k-title">Apache Iceberg & the Data Lakehouse</span>
+    
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Iceberg brings ACID transactions and schema evolution to data lakes stored in S3.</strong>
+      <p>/p><p>Problem with plain S3 as a data lake: no transactions (concurrent writes → corrupted partitions), no schema evolution (adding a column requires full rewrite), no time travel (can't query "how did the data look last Tuesday?").</p><p>Iceberg solves this: maintains a metadata layer (JSON manifests) that tracks all files, their statistics, and versions. ACID writes: create new files, update the manifest atomically. Time travel: each manifest version is immutable — query the manifest from any point in time. Schema evolution: add/remove/rename columns by updating metadata only (no data rewrite).</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ Iceberg is the new standard for lakehouse architecture. Supported by: Snowflake, BigQuery (in preview), Athena, Spark, Flink, Trino. Paired with object storage (S3/GCS), it provides data warehouse semantics without the cost of a managed data warehouse.</span></div>
+    </div>
+  </div>
+</div>
+</div>
+</section>
+
+
 
 <section id="req-nfr-olap">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -617,16 +607,32 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Query latency: p99 < 1s for pre-aggregated, < 10s for ad-hoc (billions of rows)</td></tr><tr><td><strong>NFR2</strong></td><td>Ingest throughput: 500K rows/sec (ClickHouse), 1M rows/sec (Druid rollup)</td></tr><tr><td><strong>NFR3</strong></td><td>Data freshness: real-time path < 30s lag, batch path < 1h</td></tr><tr><td><strong>NFR4</strong></td><td>Storage efficiency: columnar compression 5–10× vs row storage</td></tr><tr><td><strong>NFR5</strong></td><td>Concurrency: 100+ simultaneous dashboard queries without degradation</td></tr><tr><td><strong>NFR6</strong></td><td>Cost: BigQuery $5/TB scanned — partition pruning essential</td></tr></tbody></table></div>
 </div>
 </section>
+
 <section id="tradeoff-olap">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — OLAP Engine Selection</h2>
   <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">ClickHouse vs BigQuery</td><td>ClickHouse self-managed</td><td><span class="dot g"></span>500K rows/sec ingest native. Sub-second queries on 100B rows. Fixed cost. On-prem/cloud agnostic</td><td><span class="dot a"></span>Operational overhead: sharding, replication, upgrades. No serverless autoscaling. Team must know ClickHouse</td><td>BigQuery for fully managed, pay-per-query, no ops. ClickHouse when cost at scale or ingest throughput matters</td></tr><tr><td class="row-head">Druid vs ClickHouse</td><td>Druid for sub-second real-time</td><td><span class="dot g"></span>Pre-aggregation (rollup) at ingest: count events into time buckets. Sub-100ms dashboard queries. Segment immutability</td><td><span class="dot a"></span>Cannot re-query raw data after rollup (data discarded). Schema fixed at ingest time. Complex cluster (Coordinator, Broker, Historical, MiddleManager)</td><td>ClickHouse when you need raw event queries AND aggregations. Druid when dashboard speed matters more than flexibility</td></tr><tr><td class="row-head">Pre-aggregation vs raw</td><td>Pre-aggregation for dashboards</td><td><span class="dot g"></span>10–100× query speedup. Fixed memory for materialized views. Predictable query time</td><td><span class="dot a"></span>Cube explosion: pre-aggregating all dimension combinations is exponential. Late schema changes are expensive</td><td>Pre-aggregate the top-20 dashboard queries. Keep raw data for ad-hoc analysis (Athena on S3)</td></tr><tr><td class="row-head">Columnar storage</td><td>Always for OLAP</td><td><span class="dot g"></span>5–10× compression (repeated values in a column compress well). Vectorised execution (SIMD). Read only relevant columns</td><td><span class="dot a"></span>Random writes are slow (must rewrite entire column chunk). Point lookups are slower than row-oriented DBs</td><td>Use row-oriented (PostgreSQL) for OLTP. Columnar (ClickHouse, BigQuery) exclusively for OLAP</td></tr><tr><td class="row-head">Lambda vs Kappa architecture</td><td>Kappa (stream-only)</td><td><span class="dot g"></span>Single codebase: Flink handles both real-time and historical via replayable Kafka. Simpler ops</td><td><span class="dot a"></span>Kafka must retain events long enough for batch recomputation (7–30 days). Streaming at batch scale requires powerful Flink cluster</td><td>Lambda (batch + stream separate) for teams where batch is simpler. Kappa for teams with Kafka expertise</td></tr></tbody></table>
 </section>
+
 <section id="schema-olap">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>OLAP Engine Quick Reference</h2>
   <h4>When to Choose Which OLAP Engine</h4><table class="flow-table"><thead><tr><th>Requirement</th><th>Best Choice</th><th>Why</th></tr></thead><tbody><tr><td>Real-time dashboard (< 1s)</td><td>Druid + pre-aggregation</td><td>Rollup at ingest. Segment-level cache. Sub-second for time-based queries</td></tr><tr><td>Ad-hoc analytics on raw events</td><td>ClickHouse</td><td>Full column scan at 1B rows/sec. No pre-aggregation needed. Flexible schema</td></tr><tr><td>Fully managed, pay-per-query</td><td>BigQuery</td><td>Serverless. Auto-scale. $5/TB scanned. Partition pruning reduces cost 10-100×</td></tr><tr><td>AWS-native data warehouse</td><td>Redshift</td><td>Columnar + row store hybrid. Spectrum for S3 queries. RA3 = decoupled compute/storage</td></tr><tr><td>Time-series metrics</td><td>Druid / TimescaleDB</td><td>Native time partitioning. Rollup for metric retention. Continuous queries</td></tr><tr><td>Data lake SQL (no loading)</td><td>Athena / BigQuery external</td><td>Query parquet/ORC in S3 directly. No ETL. Pay per query. Partition pruning essential</td></tr></tbody></table>
 </section>
+
+</div>
+<script>function toggle(el){var item=el.parentElement;var isOpen=item.classList.contains('open');document.querySelectorAll('.faq.open').forEach(function(f){f.classList.remove('open');});if(!isOpen)item.classList.add('open');}</script>
+
+
+
+
+
+
+</div>
+
+
+
+
 
 </body>
 </html>

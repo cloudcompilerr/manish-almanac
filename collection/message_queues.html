@@ -172,7 +172,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">Queue vs stream, dead letter queues, fan-out, backpressure, exactly-once patterns — when to use each and how to make the right choice in system design interviews.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">SQS</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">RabbitMQ</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Fan-Out</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">DLQ</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">At-Least-Once</span></div>
 </div></div>
-<nav class="nav"><a href="#queues-vs-streams">Queue vs Stream</a><a href="#patterns">Patterns</a><a href="#sqs">SQS vs RabbitMQ</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#mq-advanced">Advanced Patterns</a></nav>
+<nav class="nav"><a href="#queues-vs-streams">Message Queue vs Event Stream — the</a><a href="#patterns">Dead letter queues, fan-out, priori</a><a href="#ordering">When order matters — and how to gua</a><a href="#pubsub">Two fundamentally different deliver</a><a href="#examples">Message Queues in Real Systems</a><a href="#followups">Every hard follow-up, answered</a><a href="#mq-advanced">Poison pills, exactly-once, and out</a><a href="#req-nfr-message_queues">Requirements & Non-Functional Const</a><a href="#tradeoff-message_queues">Trade-off Matrix — What You Gave Up</a><a href="#schema-message_queues">Quick Reference</a></nav>
 <div class="wrap">
 <section id="queues-vs-streams">
   <div class="sec-tag">00 · The Critical Distinction</div>
@@ -241,13 +241,25 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 <section id="examples">
   <div class="sec-tag">03 · System Design Examples</div>
-  <h2>Message queues in real systems</h2>
+  <h2>Message Queues in Real Systems</h2>
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">E-Commerce Order Processing</div><span class="sd-example-tag">ASYNC · FAULT-TOLERANT</span></div>
     <div class="sd-example-body">
       <div class="choice-row"><div class="choice-label">ORDER PLACED</div><div class="choice-val">User places order → API writes order to DB → publishes OrderPlaced event to SNS → SNS fans out to: (1) Fulfillment SQS Queue, (2) Notification SQS Queue, (3) Analytics SQS Queue. User gets immediate HTTP 200 — async processing happens independently.</div></div>
       <div class="choice-row"><div class="choice-label">FULFILLMENT</div><div class="choice-val">Worker picks OrderPlaced from Fulfillment Queue → reserves inventory → creates shipment → publishes OrderFulfilled. Visibility timeout = 5 minutes (enough for fulfillment). DLQ captures failed orders after 3 retries — ops team investigates.</div></div>
       <div class="choice-row"><div class="choice-label">VS KAFKA</div><div class="choice-val">Why not Kafka here? Each order should be processed exactly once by fulfillment (point-to-point), not broadcast. SQS's delete-on-consume guarantees one fulfillment per order. Kafka would require consumer group management to achieve the same — more complex for this use case.</div></div>
+    </div>
+  </div>
+
+<div class="sec-tag">05 · More System Design Examples</div>
+  <h2>Message queue decisions in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Notification System — Multi-Channel Fan-Out</div><span class="sd-example-tag">FAN-OUT · SLA · ORDERING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">TRIGGER</div><div class="choice-val">NotificationRequested event published to SNS. SNS fans out to 4 SQS queues: Push Queue, Email Queue, SMS Queue, In-App Queue. Each queue has dedicated consumers with independent retry policies (push can retry every 5s, SMS retries every 30s due to cost).</div></div>
+      <div class="choice-row"><div class="choice-label">RATE LIMITING</div><div class="choice-val">Email provider (SendGrid) has send rate limits. SQS consumer reads from Email Queue at a controlled rate (Lambda with reserved concurrency = 10 → max 10 emails/second processed). Queue absorbs bursts — during flash sales, thousands of "order confirmed" emails queue up and drain at 10/sec.</div></div>
+      <div class="choice-row"><div class="choice-label">ORDERING</div><div class="choice-val">Notification ordering matters for chat (messages must arrive in order). Chat notifications use SQS FIFO with message group ID = conversation_id. All messages in one conversation processed sequentially. Different conversations process in parallel.</div></div>
+      <div class="choice-row"><div class="choice-label">DLQ MONITORING</div><div class="choice-val">Each channel's SQS queue has a DLQ. CloudWatch alarm: DLQ depth &gt; 0 → PagerDuty alert. Ops investigates every failed notification. DLQ messages inspected to find: malformed payloads, invalid phone numbers, email bounces, device tokens expired.</div></div>
     </div>
   </div>
 </section>
@@ -295,19 +307,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </section>
 
-<section id="more-sd-mq">
-  <div class="sec-tag">05 · More System Design Examples</div>
-  <h2>Message queue decisions in real systems</h2>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Notification System — Multi-Channel Fan-Out</div><span class="sd-example-tag">FAN-OUT · SLA · ORDERING</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">TRIGGER</div><div class="choice-val">NotificationRequested event published to SNS. SNS fans out to 4 SQS queues: Push Queue, Email Queue, SMS Queue, In-App Queue. Each queue has dedicated consumers with independent retry policies (push can retry every 5s, SMS retries every 30s due to cost).</div></div>
-      <div class="choice-row"><div class="choice-label">RATE LIMITING</div><div class="choice-val">Email provider (SendGrid) has send rate limits. SQS consumer reads from Email Queue at a controlled rate (Lambda with reserved concurrency = 10 → max 10 emails/second processed). Queue absorbs bursts — during flash sales, thousands of "order confirmed" emails queue up and drain at 10/sec.</div></div>
-      <div class="choice-row"><div class="choice-label">ORDERING</div><div class="choice-val">Notification ordering matters for chat (messages must arrive in order). Chat notifications use SQS FIFO with message group ID = conversation_id. All messages in one conversation processed sequentially. Different conversations process in parallel.</div></div>
-      <div class="choice-row"><div class="choice-label">DLQ MONITORING</div><div class="choice-val">Each channel's SQS queue has a DLQ. CloudWatch alarm: DLQ depth &gt; 0 → PagerDuty alert. Ops investigates every failed notification. DLQ messages inspected to find: malformed payloads, invalid phone numbers, email bounces, device tokens expired.</div></div>
-    </div>
-  </div>
-</section>
+
 
 <section id="followups">
   <div class="sec-tag">04 · Follow-ups</div>
@@ -353,7 +353,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <strong>Kafka approach — skip and log</strong>:<br>
   Kafka does not have a native DLQ. Options: (1) catch the exception, log the problematic message + offset to an error Kafka topic (manual DLQ pattern), then commit the offset and continue. (2) Use Spring Kafka's SeekToCurrentErrorHandler which retries N times then calls a recovery callback. (3) Use a dead-letter topic: on failure, produce to <code>topic.DLT</code> and commit the original offset.<br><br>
   <strong>Prevention</strong>: validate message schema at ingest time. Reject malformed messages at the producer with an explicit schema (Avro + Schema Registry is the Kafka standard). Malformed messages never enter the queue in the first place.</div></div>
-</section></div>
+</section>
 
 <section id="decision-mq">
   <div class="sec-tag">06 · Decision Framework</div>
@@ -394,6 +394,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </section>
 
+
 <section id="mq-advanced">
   <div class="sec-tag">09 · Advanced Patterns</div>
   <h2>Poison pills, exactly-once, and outbox pattern</h2>
@@ -431,7 +432,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
+
 
 <section id="req-nfr-message_queues">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -454,7 +455,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Message Queue Selection</h4><table class="flow-table"><thead><tr><th>Use case</th><th>Best choice</th><th>Notes</th></tr></thead><tbody><tr><td>Email/notification sending</td><td>SQS standard</td><td>At-least-once. DLQ for failed sends. Simple. No replay needed. SES integration</td></tr><tr><td>Order processing pipeline</td><td>SQS FIFO</td><td>Strict ordering per order_id. Exactly-once. 3000 msg/sec ceiling is fine for orders</td></tr><tr><td>Event streaming / audit log</td><td>Kafka</td><td>Replay. Multiple consumer groups. 7-day retention. Exactly-once with EOS</td></tr><tr><td>Real-time analytics pipeline</td><td>Kafka → Flink</td><td>Kafka ingestion + Flink stateful processing. Windowed aggregations. Exactly-once to Cassandra</td></tr><tr><td>Fan-out notifications</td><td>SNS → SQS (per subscriber)</td><td>SNS pushes to N SQS queues. Each service has its own queue. Independent scaling and failure isolation</td></tr><tr><td>Job queue / background tasks</td><td>SQS + Lambda</td><td>Lambda polls SQS. Auto-scales to queue depth. Pay per message. Zero idle cost</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">MESSAGE QUEUES · SQS · RABBITMQ · DLQ · FAN-OUT · AT-LEAST-ONCE · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

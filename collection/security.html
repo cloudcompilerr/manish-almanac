@@ -184,7 +184,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">JWT, OAuth 2.0, TLS, RBAC, SSRF, XSS, CSRF — every security concept needed for FAANG system design interviews, explained from first principles.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">JWT</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">OAuth 2.0</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">TLS/mTLS</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">RBAC/ABAC</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Zero Trust</span></div>
 </div></div>
-<nav class="nav"><a href="#authn-authz">Auth Basics</a><a href="#tls">TLS/HTTPS</a><a href="#vulnerabilities">Vulnerabilities</a><a href="#authz-patterns">Authorisation</a><a href="#sd-security">System Design</a><a href="#decision-security">Decision Tree</a><a href="#followups-security">Follow-ups</a></nav>
+<nav class="nav"><a href="#authn-authz">Authentication vs Authorisation — t</a><a href="#tls">How HTTPS actually works — the TLS</a><a href="#vulnerabilities">The attacks every FAANG interviewer</a><a href="#authz-patterns">RBAC, ABAC, and how real systems en</a><a href="#sd-security">Security architecture in real syste</a><a href="#decision-security">Authentication strategy selection</a><a href="#followups-security">Every hard follow-up, answered</a><a href="#req-nfr-security">Requirements & Non-Functional Const</a><a href="#tradeoff-security">Trade-off Matrix — What You Gave Up</a><a href="#schema-security">Quick Reference</a></nav>
 <div class="wrap">
 <section id="authn-authz">
   <div class="sec-tag">00 · The Foundation</div>
@@ -335,7 +335,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>Per-account rate limiting</strong>: 5 failed attempts per account per 15 minutes regardless of IP. After 5 failures: temporary lockout + email notification to account owner. This prevents distributed brute-force against one account from different IPs. Risk: denial of service (attacker locks out legitimate users). Mitigation: exponential backoff lockout (30s, 1min, 5min, 30min) rather than permanent lockout.<br><br>
   <strong>Credential stuffing detection</strong>: if the same password is tried across many accounts (from a leaked credential list), detect the pattern: high failed login rate across many accounts + same password hash. Block the specific password + require CAPTCHA for affected accounts. Tools: Have I Been Pwned API to check if credentials are in known breach data.<br><br>
   <strong>Production pattern</strong>: Redis counters with sliding window. Key: <code>login:fail:ip:{hash(ip)}</code> and <code>login:fail:account:{user_id}</code>. Both must pass. Prometheus metrics on login failure rates. Alert when failure rate spikes — indicates an attack in progress.</div></div>
-</section></div>
+</section>
 
 <section id="req-nfr-security">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -346,6 +346,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </div>
 </section>
 
+
 <section id="tradeoff-security">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
@@ -353,11 +354,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Session vs JWT</td><td>JWT for stateless microservices</td><td><span class="dot g"></span>No session store lookup per request. Any service verifies independently. Carries claims (user_id, roles, org_id)</td><td><span class="dot a"></span>Cannot revoke before expiry without a blocklist (Redis). Stolen JWT valid until exp. Larger payload than session cookie</td><td>Sessions for banking/healthcare where instant revocation is required. JWT for API services where short expiry acceptable</td></tr><tr><td class="row-head">OAuth 2.0 flows</td><td>Authorization Code + PKCE</td><td><span class="dot g"></span>Most secure. PKCE prevents auth code interception. Standard. Works for web and mobile</td><td><span class="dot a"></span>More complex than implicit flow (deprecated). Requires backend to exchange code for token</td><td>Client Credentials for service-to-service. Device Code for TV/CLI. Never use Implicit — deprecated and insecure</td></tr><tr><td class="row-head">RBAC vs ABAC</td><td>RBAC for most applications</td><td><span class="dot g"></span>Simple: user has role, role has permissions. Easy to audit. Fast permission checks (cached role lookup)</td><td><span class="dot a"></span>Role explosion at scale (100+ fine-grained roles). Cannot express context-sensitive rules (time, location, device)</td><td>ABAC (AWS IAM policies) for complex multi-attribute conditions. RBAC + ABAC hybrid for most enterprise systems</td></tr><tr><td class="row-head">API authentication</td><td>JWT Bearer token (short-lived)</td><td><span class="dot g"></span>Stateless. Carries identity. Works across services. Standard (RFC 7519). Libraries in all languages</td><td><span class="dot a"></span>Cannot revoke. Larger than session cookie. Must handle token refresh logic on client</td><td>API Keys for server-to-server (long-lived, revocable). JWT for user-facing APIs. mTLS for internal service mesh</td></tr><tr><td class="row-head">Secret storage</td><td>AWS Secrets Manager</td><td><span class="dot g"></span>Automatic rotation. Audit trail. IAM-controlled access. Integrated with RDS password rotation. No hardcoded secrets</td><td><span class="dot a"></span>API call per secret fetch (cache with short TTL). Cost per secret per month. AWS-native lock-in</td><td>HashiCorp Vault for multi-cloud/on-prem. Kubernetes Secrets (with Sealed Secrets or External Secrets Operator) for k8s</td></tr></tbody></table>
 </section>
 
+
 <section id="schema-security">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Auth Token Types Compared</h4><table class="flow-table"><thead><tr><th>Token type</th><th>Storage</th><th>Expiry</th><th>Revocable</th><th>Use case</th></tr></thead><tbody><tr><td>JWT (access token)</td><td>Memory (SPA) / HttpOnly cookie</td><td>15 minutes</td><td>No (without blocklist)</td><td>API access — short-lived by design</td></tr><tr><td>Refresh token</td><td>HttpOnly Secure cookie</td><td>30 days</td><td>Yes (delete from DB)</td><td>Get new access token without re-login</td></tr><tr><td>Session cookie</td><td>Server-side Redis</td><td>24h or browser session</td><td>Yes (delete Redis key)</td><td>Traditional web apps — instant revocation</td></tr><tr><td>API key</td><td>Server DB (hashed)</td><td>No expiry (manual rotation)</td><td>Yes (delete from DB)</td><td>Server-to-server, developer integrations</td></tr><tr><td>mTLS certificate</td><td>Client certificate store</td><td>1 year (auto-rotate with SPIFFE)</td><td>Yes (CRL / OCSP)</td><td>Service-to-service in Kubernetes</td></tr></tbody></table>
 </section>
+</div>
 
 <div class="footer">SECURITY · JWT · OAUTH · TLS · RBAC · XSS · CSRF · SSRF · ZERO TRUST · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

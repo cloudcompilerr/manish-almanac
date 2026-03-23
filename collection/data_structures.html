@@ -184,7 +184,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">Bloom filters, Tries, Merkle trees, Quadtrees, Skip lists — the data structures that power production systems at FAANG scale.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Bloom Filter</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Trie</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Merkle Tree</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Quadtree</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Skip List</span></div>
 </div></div>
-<nav class="nav"><a href="#bloom">Bloom Filter</a><a href="#trie">Trie</a><a href="#merkle">Merkle Tree</a><a href="#quadtree">Quadtree/Geo</a><a href="#skiplist">Skip List</a><a href="#sd-ds">Examples</a><a href="#followups-ds">Follow-ups</a></nav>
+<nav class="nav"><a href="#bloom">Probabilistic membership testing —</a><a href="#trie">Prefix tree — the data structure be</a><a href="#merkle">Cryptographic data integrity — the</a><a href="#quadtree">Finding things near a location — Ub</a><a href="#skiplist">Redis ZSET's secret — why it beats</a><a href="#sd-ds">Data structures in production</a><a href="#followups-ds">Every hard follow-up, answered</a><a href="#req-nfr-data_structures">Requirements & Non-Functional Const</a><a href="#tradeoff-data_structures">Trade-off Matrix — What You Gave Up</a><a href="#schema-data_structures">Quick Reference</a></nav>
 <div class="wrap">
 <section id="bloom">
   <div class="sec-tag">00 · Bloom Filter</div>
@@ -289,7 +289,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   Every blob (file), tree (directory), commit in git has a hash based on its content. A commit's hash depends on: the tree hash (all files), the parent commit hash, author, timestamp, message. Changing any file changes the tree hash → changes the commit hash → changes all descendant commit hashes. This is why commit SHAs provide tamper detection.<br><br>
   <strong>Deduplication</strong>: if two commits contain the same file, they share the same blob hash — stored once. This is how git repos stay small even with thousands of commits.<br><br>
   <strong>System design application</strong>: the same principles apply to distributed storage systems. Docker image layers use content-addressable storage (each layer is a hash of its content). Sharing layers across images = storage deduplication. IPFS (InterPlanetary File System) uses Merkle DAGs for distributed content-addressable storage. The pattern: hash the content → use the hash as the address → automatic deduplication + integrity verification.</div></div>
-</section></div>
+</section>
 
 <section id="req-nfr-data_structures">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -300,6 +300,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </div>
 </section>
 
+
 <section id="tradeoff-data_structures">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
@@ -307,11 +308,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Bloom filter vs HashSet</td><td>Bloom filter for membership check before expensive operation</td><td><span class="dot g"></span>1B URLs: 1.2GB (9.6 bits each) vs 32GB (HashSet with SHA-256). 26× more compact. O(k) hash functions per op</td><td><span class="dot a"></span>False positives: 1% of "not in set" queries incorrectly return "probably yes". Cannot delete items (use Cuckoo filter)</td><td>HashSet when false positives are unacceptable (security, billing). Bloom filter for "should I bother checking?" optimization</td></tr><tr><td class="row-head">Trie vs HashMap prefix search</td><td>Trie for prefix operations</td><td><span class="dot g"></span>O(L) prefix search. All words with prefix reachable from a node. Natural autocomplete. Memory-efficient for shared prefixes</td><td><span class="dot a"></span>More memory than HashMap for non-prefix workloads. Node overhead for sparse vocabularies</td><td>HashMap for exact-match only. Trie when prefix queries, autocomplete, or IP routing CIDR matching are required</td></tr><tr><td class="row-head">Geohash vs S2 cells</td><td>Geohash for simplicity</td><td><span class="dot g"></span>String prefix = geographic proximity. Redis GEORADIUS uses Geohash internally. Human-readable. Wide library support</td><td><span class="dot a"></span>Geohash cells are rectangles (distortion near poles). Boundary problem: nearby points can have very different geohashes</td><td>S2 cells (Google) for sphere-accurate proximity, large radius queries, aviation/navigation. Geohash for city-scale ride-sharing</td></tr><tr><td class="row-head">Skip list vs balanced BST</td><td>Skip list (Redis ZSET choice)</td><td><span class="dot g"></span>Lock-free concurrent access (CAS on pointers). Simpler to implement correctly. Cache-friendlier than tree nodes scattered in memory</td><td><span class="dot a"></span>Probabilistic (not deterministic like BST). Slightly more memory than BST</td><td>Balanced BST for strict O(log N) worst-case guarantee. Skip list for concurrent workloads where lock-free matters</td></tr><tr><td class="row-head">Count-Min Sketch vs exact counting</td><td>CMS for frequency in bounded memory</td><td><span class="dot g"></span>O(w×d) memory regardless of distinct items. O(1) query. Never undercounts — bounded overcount</td><td><span class="dot a"></span>Error rate: ε = e/w. Must accept overcount. Cannot enumerate top-K without companion min-heap</td><td>Exact HashMap when counts are small (< 10M distinct items). CMS for billions of distinct items in streaming</td></tr></tbody></table>
 </section>
 
+
 <section id="schema-data_structures">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Data Structures in Production Systems</h4><table class="flow-table"><thead><tr><th>Data structure</th><th>System</th><th>How used</th></tr></thead><tbody><tr><td>Bloom filter</td><td>Cassandra / HBase</td><td>Before reading SSTable from disk: "Is this key in this SSTable?" Skip disk read on "definitely not"</td></tr><tr><td>Bloom filter</td><td>Chrome Safe Browsing</td><td>Local 2M-URL set. Check without network round trip. 95% of queries answered locally</td></tr><tr><td>Trie (Patricia)</td><td>Internet routers</td><td>IP route lookup: longest prefix match in O(32) time for IPv4, O(128) for IPv6</td></tr><tr><td>Merkle tree</td><td>Cassandra nodetool repair</td><td>Compare two replicas: O(log N) hash exchanges to find divergent token ranges. Repair only divergent data</td></tr><tr><td>Merkle tree</td><td>Git</td><td>Content-addressed storage. git diff = Merkle tree comparison. Identical files share hash nodes across commits</td></tr><tr><td>Skip list</td><td>Redis ZSET</td><td>Sorted set with O(log N) ZADD/ZRANK/ZRANGEBYSCORE. Lock-free access for concurrent clients</td></tr><tr><td>Quadtree / Geohash</td><td>Uber driver proximity</td><td>GEOADD drivers:city lat lng driver_id → GEORADIUS 5km → 10 nearest in <1ms</td></tr><tr><td>Count-Min Sketch</td><td>Twitter trending</td><td>INCR hashtag count per time window. Fixed 4MB memory regardless of hashtag vocabulary size</td></tr></tbody></table>
 </section>
+</div>
 
 <div class="footer">DATA STRUCTURES · BLOOM FILTER · TRIE · MERKLE TREE · QUADTREE · SKIP LIST · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

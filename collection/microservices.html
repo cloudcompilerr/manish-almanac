@@ -184,7 +184,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">Service discovery, Saga orchestration vs choreography, Strangler Fig, Sidecar, Outbox pattern — every pattern needed to design and operate microservices at scale.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Saga</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Service Mesh</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Strangler Fig</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Outbox</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">BFF</span></div>
 </div></div>
-<nav class="nav"><a href="#why-micro">Why Microservices</a><a href="#sd-micro">Examples</a><a href="#followups-micro">Follow-ups</a></nav>
+<nav class="nav"><a href="#why-micro">What microservices actually solve —</a><a href="#sd-micro">Microservices patterns in real syst</a><a href="#followups-micro">Every hard follow-up, answered</a><a href="#req-nfr-microservices">Requirements & Non-Functional Const</a><a href="#tradeoff-microservices">Trade-off Matrix — What You Gave Up</a><a href="#schema-microservices">Quick Reference</a></nav>
 <div class="wrap">
 <section id="why-micro">
   <div class="sec-tag">00 · Why Microservices</div>
@@ -253,7 +253,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>API Gateway</strong>: sits at the edge. Handles: external authentication, rate limiting per external client, request routing to the right microservice, response transformation for external clients, API versioning. Knows about business-level concepts (user tiers, API keys).<br><br>
   <strong>Service Mesh (Istio/Envoy)</strong>: sits between every pair of services. Handles: mTLS (service-to-service encryption and authentication), circuit breaking (stop calling a failing service), distributed tracing (record timing for every hop), load balancing within the cluster, retries with exponential backoff. No business logic — purely infrastructure.<br><br>
   <strong>Why both</strong>: the API gateway handles external concerns (business-level policies), the service mesh handles internal concerns (infrastructure-level reliability). They operate at different layers and don't overlap. In practice: Kong/AWS API GW at the edge + Istio inside the cluster. Each handles what it's designed for.</div></div>
-</section></div>
+</section>
 
 <section id="req-nfr-microservices">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -264,6 +264,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </div>
 </section>
 
+
 <section id="tradeoff-microservices">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
@@ -271,11 +272,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Monolith vs microservices</td><td>Monolith until 30+ engineers</td><td><span class="dot g"></span>Simple deployment. No network overhead. Easy debugging. ACID transactions native. Low operational burden</td><td><span class="dot a"></span>Single process = single deployment. One bad deploy takes down everything. No independent scaling</td><td>Split on organisational boundaries, not technical ones. Microservices = team autonomy at the cost of distributed systems complexity</td></tr><tr><td class="row-head">Saga orchestration vs choreography</td><td>Orchestration (Temporal.io)</td><td><span class="dot g"></span>Single saga class shows full business flow. Easy to debug ("where did my order fail?"). Explicit compensation steps</td><td><span class="dot a"></span>Central orchestrator = bottleneck and coupling point. Temporal requires additional infrastructure</td><td>Choreography for simple 2-service flows. Orchestration for complex multi-step flows where visibility and compensation matter</td></tr><tr><td class="row-head">Service mesh</td><td>Istio (Envoy sidecar)</td><td><span class="dot g"></span>mTLS between all pods without code changes. Distributed tracing injected automatically. Circuit breaking. Traffic shaping</td><td><span class="dot a"></span>Sidecar adds 10–50MB memory per pod. Envoy proxy adds < 1ms latency. Steep learning curve (CRDs, Istio config)</td><td>Service mesh only with 10+ services. Below that: library-based resilience (Resilience4j) is simpler</td></tr><tr><td class="row-head">Outbox vs dual-write</td><td>Outbox pattern (Debezium CDC)</td><td><span class="dot g"></span>Atomic: DB write + event always consistent. Debezium reads WAL — zero app code change. Exactly-once publish</td><td><span class="dot a"></span>Debezium operational overhead. WAL retention must cover reprocessing window. Kafka required</td><td>Dual-write with idempotency key if Debezium too complex. Outbox when the consistency guarantee is non-negotiable</td></tr><tr><td class="row-head">API Gateway</td><td>Kong / AWS API Gateway</td><td><span class="dot g"></span>Authentication once at gateway (not per service). Rate limiting centralised. Request routing. API versioning</td><td><span class="dot a"></span>Single point of failure (mitigated by clustering). Additional network hop. Config can become complex</td><td>BFF (Backend for Frontend) pattern for multiple client types (mobile BFF, web BFF) — each optimises for its client</td></tr></tbody></table>
 </section>
 
+
 <section id="schema-microservices">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Microservices Patterns Reference</h4><table class="flow-table"><thead><tr><th>Pattern</th><th>Problem solved</th><th>Implementation</th></tr></thead><tbody><tr><td>Strangler Fig</td><td>Migrate monolith safely</td><td>Proxy in front of monolith. Route one endpoint at a time to new service. Monolith shrinks over 12-18 months</td></tr><tr><td>Outbox</td><td>Atomic DB write + event publish</td><td>Write to outbox table in same transaction. Debezium reads CDC stream. Publishes to Kafka. At-least-once delivery</td></tr><tr><td>Saga (Temporal)</td><td>Distributed transaction without 2PC</td><td>Saga class defines steps + compensations. Temporal persists state. Resume after crash. Compensation on failure</td></tr><tr><td>Sidecar</td><td>Cross-cutting concerns without code changes</td><td>Envoy/Linkerd injected next to every pod. Handles mTLS, tracing, circuit breaking, retry — transparent to app</td></tr><tr><td>BFF</td><td>Different clients need different API shapes</td><td>Separate API gateway per client type (mobile, web). Each aggregates and transforms backend service responses</td></tr><tr><td>Circuit Breaker</td><td>Fail fast when dependency is down</td><td>CLOSED→OPEN on 50% error rate. All requests rejected instantly (fallback returned). HALF-OPEN probe every 30s</td></tr></tbody></table>
 </section>
+</div>
 
 <div class="footer">MICROSERVICES · SAGA · SERVICE MESH · STRANGLER FIG · OUTBOX · BFF · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

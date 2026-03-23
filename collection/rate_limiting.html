@@ -172,7 +172,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">Every algorithm from token bucket to sliding window counter, distributed implementation with Redis, multi-layer enforcement, and production system design examples.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Token Bucket</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Sliding Window</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Redis INCR/Lua</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Leaky Bucket</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Circuit Breaker</span></div>
 </div></div>
-<nav class="nav"><a href="#why">Why Rate Limit</a><a href="#algorithms">Algorithms</a><a href="#distributed">Distributed</a><a href="#layers">Layers</a><a href="#examples">System Design</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a><a href="#rl-redis-impl">Redis Impl</a></nav>
+<nav class="nav"><a href="#why">What collapses without it — the thr</a><a href="#algorithms">Token bucket, leaky bucket, fixed w</a><a href="#distributed">Distributed Enforcement — Across Se</a><a href="#examples">Rate limiting in production systems</a><a href="#decision">Choose the right algorithm for your</a><a href="#followups">Every hard follow-up, answered</a><a href="#rl-redis-impl">How to implement rate limiting corr</a><a href="#req-nfr-rate_limiting">Requirements & Non-Functional Const</a><a href="#tradeoff-rate_limiting">Trade-off Matrix — What You Gave Up</a></nav>
 <div class="wrap">
 <section id="why">
   <div class="sec-tag">00 · Why Rate Limiting</div>
@@ -240,7 +240,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 <section id="distributed">
   <div class="sec-tag">02 · Distributed Rate Limiting</div>
-  <h2>How to enforce limits correctly across 100 app servers</h2>
+  <h2>Distributed Enforcement — Across Servers & Layers</h2>
   <div class="callout cl-blue">
     <div class="cl-lbl">The core problem</div>
     <p>Each app server sees only 1/100th of total traffic. If you rate-limit locally at 100 req/min per server with 100 servers, your effective global limit is 10,000 req/min — 100x too permissive. You need a shared counter that all servers update atomically.</p>
@@ -270,10 +270,8 @@ end</pre>
         <span class="concept-note good">✓ Reduces Redis round trips 100x at cost of slight inaccuracy. Burst of 200ms can exceed limit by up to <code>limit × (100ms / window)</code>. Acceptable for most APIs.</span>
       <span class="concept-note warn">⚠ Not suitable for strict financial or security rate limiting where brief overages could be exploited.</span></div></div>
   </div>
-</section>
 
-<section id="layers">
-  <div class="sec-tag">03 · Rate Limiting Layers</div>
+<div class="sec-tag">03 · Rate Limiting Layers</div>
   <h2>Where to enforce — gateway vs application vs service mesh</h2>
   <table class="comp-table">
     <thead><tr><th>Layer</th><th>Where</th><th>Enforces On</th><th>Best For</th><th>Examples</th></tr></thead>
@@ -286,6 +284,8 @@ end</pre>
     </tbody>
   </table>
 </section>
+
+
 
 <section id="examples">
   <div class="sec-tag">04 · System Design Examples</div>
@@ -361,7 +361,7 @@ end</pre>
   <div class="faq-a"><strong>Rate limit on authenticated user identity, not on IP. IP-based limiting is supplementary only.</strong><br><br>The user's <code>user_id</code> extracted from their JWT is the primary rate limit key: <code>ratelimit:user:{user_id}:{window}</code>. This accumulates across all their devices, IPs, and sessions. A user signing in from phone + laptop + tablet all share the same quota. Prevents circumventing limits by rotating devices.<br><br>IP-based limiting runs in parallel as a separate independent limit — specifically for unauthenticated endpoints (login, signup, password reset) where you don't yet have a user_id. For these: <code>ratelimit:ip:{hashed_ip}:{window}</code>. Hash the IP (SHA-256 first 8 bytes) — prevents storing raw PII, harder to reverse than plain IP storage.<br><br>Never use IP as the sole mechanism for authenticated APIs — enterprise customers may have thousands of users behind a single NAT IP (corporate proxy, VPN). A per-IP limit of 1,000/min would mean 1 request per user per minute for a 1,000-person company behind one IP.</div></div>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle the circuit breaker pattern as it relates to rate limiting?<span class="tog">+</span></div>
   <div class="faq-a"><strong>Rate limiting and circuit breaking are complementary but solve different problems.</strong><br><br><strong>Rate limiting</strong>: "You are sending too many requests — slow down." Applied at the entry point to protect your service from external or internal overload. Proactive.<br><br><strong>Circuit breaking</strong>: "The downstream service is failing — stop sending requests to protect it and yourself." Applied at the exit point (your outbound calls to dependencies). Reactive to failure.<br><br>Circuit breaker states: Closed (normal, all requests pass through) → Open (downstream is failing, immediately return error without calling downstream) → Half-Open (probe with one request — if success, close; if failure, stay open).<br><br>They work together: rate limiting prevents your service from being overwhelmed. Circuit breaking prevents your service from overwhelming a failing dependency. In Envoy/Istio: configure both — rate limiting on the ingress side, circuit breaking on the egress side for each service call.</div></div>
-</section></div>
+</section>
 
 <section id="rl-redis-impl">
   <div class="sec-tag">07 · Redis Implementation — Atomicity & Lua Scripts</div>
@@ -413,7 +413,7 @@ end</pre>
 </div>
 </section>
 
-</div>
+
 
 <section id="req-nfr-rate_limiting">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -436,7 +436,9 @@ end</pre>
   <h2>Quick Reference</h2>
   <h4>Redis Key Patterns for Rate Limiting</h4><table class="flow-table"><thead><tr><th>Key pattern</th><th>Type</th><th>Value</th><th>TTL</th></tr></thead><tbody><tr><td>rate:{user_id}:{endpoint}</td><td>String</td><td>Request count</td><td>Window duration (60s, 3600s)</td></tr><tr><td>rate:token:{user_id}</td><td>Hash</td><td>tokens (current), last_refill (unix timestamp)</td><td>None (never expires — state persists)</td></tr><tr><td>rate:ip:{hashed_ip}</td><td>String</td><td>Request count</td><td>60 seconds</td></tr><tr><td>block:{user_id}</td><td>String</td><td>1 (exists = blocked)</td><td>Lockout duration (300s, 3600s)</td></tr><tr><td>quota:month:{user_id}:{year_month}</td><td>String</td><td>API calls used this month</td><td>End of month (set at first write)</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">RATE LIMITING · TOKEN BUCKET · SLIDING WINDOW · REDIS · CIRCUIT BREAKER · TIERED PLANS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

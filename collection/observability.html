@@ -172,7 +172,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">Metrics, logs, traces — SLI/SLO/SLA, error budgets, four golden signals, Prometheus/Grafana, distributed tracing and alerting best practices.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Prometheus</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Jaeger / OTEL</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">SLO / SLA</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Golden Signals</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Error Budget</span></div>
 </div></div>
-<nav class="nav"><a href="#three-pillars">Three Pillars</a><a href="#slo">SLI/SLO/SLA</a><a href="#tools">Tools & Signals</a><a href="#followups">Follow-ups</a><a href="#otel">OpenTelemetry</a></nav>
+<nav class="nav"><a href="#three-pillars">Metrics, Logs, and Traces — why you</a><a href="#slo">How to define and measure reliabili</a><a href="#tools">Prometheus, Grafana, Jaeger, and th</a><a href="#debugging">The systematic approach — Director-</a><a href="#sd-examples-obs">Observability architecture in real</a><a href="#alerting">Building alerts that are actionable</a><a href="#followups">Every hard follow-up, answered</a><a href="#otel">The emerging standard and the econo</a><a href="#req-nfr-observability">Requirements & Non-Functional Const</a><a href="#tradeoff-observability">Trade-off Matrix — What You Gave Up</a><a href="#schema-observability">Quick Reference</a></nav>
 <div class="wrap">
 <section id="three-pillars">
   <div class="sec-tag">00 · The Three Pillars</div>
@@ -345,38 +345,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <strong>Component SLIs feed the top-level SLO</strong>: if Flink falls behind → rankings get stale → API still returns 200 but with stale data. Is this an SLO violation? Depends on your SLI definition — include freshness in the SLI if staleness is user-visible.<br><br>
   <strong>The CUJ (Critical User Journey) approach</strong> from Google SRE: define SLOs per user journey, not per service. "User can see updated trending content within 60 seconds of an event going viral." This SLO captures the entire pipeline (Kafka lag + Flink latency + Redis update + API response) as a single observable outcome.<br><br>
   Start with 2–3 top-level SLOs per major user journey. Add component-level SLIs only when you need finer-grained alerting to diagnose which component is contributing to SLO burn.</div></div>
-</section></div>
-
-<section id="decision-obs">
-  <div class="sec-tag">06 · Decision Framework</div>
-  <h2>Building your observability stack</h2>
-  <div class="step-block">
-    <div class="step-block-header"><span class="sb-icon">🎯</span>Observability Stack Selection</div>
-    <div class="step-block-body">
-      <div class="step-row"><div class="step-num">01</div><div class="step-content">
-        <div class="step-q">Cloud provider or self-managed?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">Managed (cloud) →</span><span class="opt-text"><strong>Datadog / New Relic / Dynatrace.</strong> One agent, everything included: metrics, logs, traces, APM, dashboards, alerting. Expensive at scale ($$$) but zero ops. Best for: startups to mid-size engineering teams without a dedicated platform team.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">Self-managed (OSS) →</span><span class="opt-text"><strong>Prometheus + Grafana + Jaeger + Loki.</strong> Free, highly customisable, industry standard. Requires a platform team to operate. Best for: large engineering orgs, cost-sensitive at scale, need full data ownership.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">02</div><div class="step-content">
-        <div class="step-q">How do you alert — page or ticket?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">Page (wake someone up) →</span><span class="opt-text"><strong>SLO burn rate alert.</strong> Only page when error budget is burning at an unsustainable rate. Alert on: p99 latency &gt; SLO threshold for &gt;2 minutes, error rate &gt; 1% sustained, SLO burn rate 10x normal. Every page must be actionable with a runbook.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">Ticket (fix in business hours) →</span><span class="opt-text"><strong>Threshold alerts on symptoms.</strong> CPU consistently &gt;80%, disk &gt;70%, error rate trending up but below SLO. These are leading indicators — important to track but not urgent enough to wake someone up.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">03</div><div class="step-content">
-        <div class="step-q">Microservices or monolith?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">Microservices (&gt;5 services) →</span><span class="opt-text"><strong>Distributed tracing is non-negotiable.</strong> Without traces, debugging a latency spike across 10 services is impossible. Instrument with OpenTelemetry SDK or use Envoy sidecar for automatic trace propagation. Jaeger or Tempo as backend. Sample 100% errors, 1% normal traffic.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">Monolith / few services →</span><span class="opt-text"><strong>Structured logs + metrics are sufficient.</strong> A single service's logs tell the full story. Elasticsearch + Kibana for log search. Prometheus + Grafana for metrics. Add traces later when you split into microservices.</span></div>
-        </div>
-      </div></div>
-    </div>
-  </div>
 </section>
+
+
+
 
 <section id="otel">
   <div class="sec-tag">08 · OpenTelemetry & Cost Control</div>
@@ -428,7 +400,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
+
 
 <section id="req-nfr-observability">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -451,7 +423,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Four Golden Signals</h4><table class="flow-table"><thead><tr><th>Signal</th><th>Metric</th><th>Alert Threshold</th><th>Dashboard</th></tr></thead><tbody><tr><td>Latency</td><td>http_request_duration_seconds (p99)</td><td>p99 > 500ms for 5min</td><td>Time-series by endpoint, percentile comparison</td></tr><tr><td>Traffic</td><td>http_requests_total (rate)</td><td>Drop > 20% from baseline</td><td>QPS per endpoint, region, status code</td></tr><tr><td>Errors</td><td>http_requests_total{status=~"5.."}</td><td>Error rate > 1% for 5min</td><td>Error rate % by endpoint, error message top-N</td></tr><tr><td>Saturation</td><td>cpu_usage_percent, memory_used_percent</td><td>CPU > 80% for 10min</td><td>Resource utilisation by pod, node, cluster</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">MONITORING · OBSERVABILITY · PROMETHEUS · JAEGER · SLO · ERROR BUDGET · GOLDEN SIGNALS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

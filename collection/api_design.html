@@ -184,7 +184,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">REST principles, pagination patterns, versioning, idempotency, GraphQL schema design, error standards — building APIs that last.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">REST</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Pagination</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Idempotency</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Versioning</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">GraphQL</span></div>
 </div></div>
-<nav class="nav"><a href="#rest-design">REST Design</a><a href="#graphql-grpc-design">GraphQL/gRPC</a><a href="#sd-api">Examples</a><a href="#followups-api">Follow-ups</a></nav>
+<nav class="nav"><a href="#rest-design">What makes an API genuinely good —</a><a href="#graphql-grpc-design">When REST is the wrong tool</a><a href="#sd-api">API design decisions in real system</a><a href="#followups-api">Every hard follow-up, answered</a><a href="#req-nfr-api_design">Requirements & Non-Functional Const</a><a href="#tradeoff-api_design">Trade-off Matrix — What You Gave Up</a><a href="#schema-api_design">Quick Reference</a></nav>
 <div class="wrap">
 <section id="rest-design">
   <div class="sec-tag">00 · REST API Design</div>
@@ -253,7 +253,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   Next page: <code>GET /feed?cursor=2026-03-21T14:23:01Z_post_789&limit=20</code> → <code>WHERE (created_at, id) &lt; (cursor_time, cursor_id) ORDER BY created_at DESC</code>.<br>
   New items arriving: they have timestamps AFTER the initial load. They don't affect pagination of older items. New items appear when the user pulls-to-refresh (separate from pagination).<br><br>
   <strong>The "new items" indicator</strong>: on pull-to-refresh, return items newer than the cursor used for the FIRST page load. Show "X new items" banner. User taps → page reloads from the top. This is exactly how Twitter, Instagram, and LinkedIn handle feed pagination.</div></div>
-</section></div>
+</section>
 
 <section id="req-nfr-api_design">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -264,6 +264,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </div>
 </section>
 
+
 <section id="tradeoff-api_design">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
@@ -271,11 +272,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">REST vs GraphQL</td><td>REST for simple, consistent APIs</td><td><span class="dot g"></span>HTTP caching native. Simple mental model. Rate limiting by endpoint. No N+1 if designed right. Any client</td><td><span class="dot a"></span>Multiple round trips for complex UI needs. Over-fetching (get whole user when need just name)</td><td>GraphQL when frontend teams need flexible data fetching and you have diverse client types (mobile/web/TV)</td></tr><tr><td class="row-head">Cursor vs offset pagination</td><td>Cursor for feeds and real-time data</td><td><span class="dot g"></span>Stable under insertions (no skipped/duplicate items). O(log N) DB query. Works for infinite scroll</td><td><span class="dot a"></span>No total count (expensive to compute). Cannot jump to page N. Cursor must be opaque to clients</td><td>Offset for admin panels with small datasets where page jumping is needed and total count is displayed</td></tr><tr><td class="row-head">URL vs header versioning</td><td>URL versioning (/v1/, /v2/)</td><td><span class="dot g"></span>Visible, bookmarkable, curl-testable. Easy to route in reverse proxy. No custom header parsing</td><td><span class="dot a"></span>Pollutes URL space. Clients must update base URL on major version. Cannot version at field level</td><td>Header versioning for internal APIs with disciplined clients. URL versioning for public developer-facing APIs</td></tr><tr><td class="row-head">Idempotency</td><td>Client-generated UUID + server cache</td><td><span class="dot g"></span>Safe to retry on network failure. Prevents double-charge, double-order. 24h TTL sufficient for retries</td><td><span class="dot a"></span>Redis storage for (idempotency_key → response). Extra Redis lookup per POST. Client must generate UUIDs</td><td>Mandatory for payment APIs. Optional (but recommended) for all state-changing operations</td></tr><tr><td class="row-head">Error format</td><td>RFC 7807 Problem Details</td><td><span class="dot g"></span>Machine-readable type URI. Human-readable detail. Field-level errors. Consistent across all endpoints</td><td><span class="dot a"></span>Verbose. Clients must handle type URI lookup. Extra documentation overhead</td><td>Simple {error: "message"} for internal APIs. RFC 7807 for external APIs where clients need to branch on error type</td></tr></tbody></table>
 </section>
 
+
 <section id="schema-api_design">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>HTTP Status Code Quick Reference</h4><table class="flow-table"><thead><tr><th>Code</th><th>Meaning</th><th>Use when</th></tr></thead><tbody><tr><td>200 OK</td><td>Success with body</td><td>GET, PUT returning the updated resource</td></tr><tr><td>201 Created</td><td>Resource created</td><td>POST creating a new resource. Include Location header.</td></tr><tr><td>204 No Content</td><td>Success, no body</td><td>DELETE, PUT with no return value</td></tr><tr><td>400 Bad Request</td><td>Client sent invalid data</td><td>Validation failed. Include field-level error details.</td></tr><tr><td>401 Unauthorized</td><td>Not authenticated</td><td>Missing or invalid auth token. Include WWW-Authenticate header.</td></tr><tr><td>403 Forbidden</td><td>Authenticated but not authorized</td><td>User lacks permission for this resource.</td></tr><tr><td>404 Not Found</td><td>Resource does not exist</td><td>ID not found. Do NOT return 404 for "no results" — return 200 with empty list.</td></tr><tr><td>409 Conflict</td><td>State conflict</td><td>Duplicate create. Version mismatch for optimistic locking.</td></tr><tr><td>429 Too Many Requests</td><td>Rate limited</td><td>Include Retry-After header. Return X-RateLimit-* headers.</td></tr><tr><td>500 Internal Server Error</td><td>Server bug</td><td>Never return implementation details. Log internally, return generic message.</td></tr></tbody></table>
 </section>
+</div>
 
 <div class="footer">API DESIGN · REST · PAGINATION · VERSIONING · IDEMPOTENCY · GRAPHQL · GRPC · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

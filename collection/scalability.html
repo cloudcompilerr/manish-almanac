@@ -184,7 +184,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">Back-of-envelope estimation, CQRS, Event Sourcing, Circuit Breaker, Bulkhead, and the complete scaling journey from 0 to 10M users.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">CQRS</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Event Sourcing</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Circuit Breaker</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Estimation</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Async Patterns</span></div>
 </div></div>
-<nav class="nav"><a href="#estimation">Estimation</a><a href="#scaling-patterns">Scaling Patterns</a><a href="#async">Async vs Sync</a><a href="#sd-scalability">0→10M Users</a><a href="#decision-scale">Decision Tree</a><a href="#followups-scale">Follow-ups</a></nav>
+<nav class="nav"><a href="#estimation">The skill that separates senior eng</a><a href="#scaling-patterns">The layered approach — how every la</a><a href="#async">When to break synchrony — the most</a><a href="#sd-scalability">Scaling decisions in real systems</a><a href="#decision-scale">The interview framework — how to st</a><a href="#followups-scale">Every hard follow-up, answered</a><a href="#req-nfr-scalability">Requirements & Non-Functional Const</a><a href="#tradeoff-scalability">Trade-off Matrix — What You Gave Up</a><a href="#schema-scalability">Quick Reference</a></nav>
 <div class="wrap">
 <section id="estimation">
   <div class="sec-tag">00 · Back-of-Envelope Estimation</div>
@@ -319,7 +319,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>Step 3 — Switch reads</strong>: Once backfill is complete and verified, change the application to read from display_name. Deploy. Monitor for errors.<br><br>
   <strong>Step 4 — Contract</strong>: Stop writing to user_name. After one deploy cycle with no rollback, drop user_name column (fast — metadata only). Migration complete, zero downtime, zero table locks.<br><br>
   Tools: gh-ost (GitHub's online schema migration for MySQL), pgroll (Postgres), Flyway/Liquibase (migration management).</div></div>
-</section></div>
+</section>
 
 <section id="req-nfr-scalability">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -330,6 +330,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </div>
 </section>
 
+
 <section id="tradeoff-scalability">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
@@ -337,11 +338,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Scale-up vs scale-out</td><td>Scale-out (horizontal) for stateless</td><td><span class="dot g"></span>Linear cost/capacity. No single point of failure. Auto-scaling native to cloud. Commodity hardware</td><td><span class="dot a"></span>Stateful services (DBs) are harder to scale horizontally. Distributed coordination overhead</td><td>Scale-up first for databases (cheaper, simpler). Scale-out for stateless app servers from day one</td></tr><tr><td class="row-head">CQRS adoption</td><td>Only when read/write patterns differ</td><td><span class="dot g"></span>Read model optimised for queries (Elasticsearch, Redis). Write model for ACID (PostgreSQL). Independent scaling</td><td><span class="dot a"></span>Two models to keep in sync (eventual consistency). Debugging harder. More operational components</td><td>Start with single model. Add CQRS when read QPS is 10× write QPS and read model needs denormalisation</td></tr><tr><td class="row-head">Async vs sync</td><td>Async for non-critical path ops</td><td><span class="dot g"></span>Lower request latency (return before background work complete). Absorb traffic spikes via queue buffer. Retry on failure</td><td><span class="dot a"></span>Eventual consistency — caller doesn't know outcome immediately. More complex error handling and status polling</td><td>Sync for anything the user immediately needs a result for. Async for email, notifications, analytics, indexing</td></tr><tr><td class="row-head">Circuit breaker</td><td>Resilience4j / Envoy sidecar</td><td><span class="dot g"></span>Fail fast: 5ms fallback vs 30s timeout. Protects downstream from thundering herd. Automatic recovery probe</td><td><span class="dot a"></span>False positives: circuit opens on transient errors, temporarily breaks healthy traffic</td><td>Set threshold: 50% error rate over 30s. Timeout: 5s. Half-open probe every 30s. Per dependency, not global</td></tr><tr><td class="row-head">Event sourcing</td><td>Only for audit-critical systems</td><td><span class="dot g"></span>Complete history by design. Time travel queries. CQRS natural fit. Derived views rebuildable from scratch</td><td><span class="dot a"></span>Query complexity (reconstruct state = replay events). Schema evolution (old events must be valid forever). Steep learning curve</td><td>Banking transactions, order history, medical records. NOT for user sessions, shopping carts, UI state</td></tr></tbody></table>
 </section>
 
+
 <section id="schema-scalability">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Back-of-Envelope: Twitter Example</h4><table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th></tr></thead><tbody><tr><td>DAU</td><td>300M active users</td><td>300M</td></tr><tr><td>Write QPS</td><td>300M × 0.02 tweets/day ÷ 86,400s</td><td>~70 writes/sec (6K peak)</td></tr><tr><td>Read QPS</td><td>300M × 5 feed loads/day ÷ 86,400s</td><td>~17K reads/sec (170K peak)</td></tr><tr><td>Read:Write ratio</td><td>170K ÷ 6K</td><td>~28:1 → cache aggressively</td></tr><tr><td>Tweet storage/year</td><td>70 writes/s × 300 bytes × 31M s × 3 replicas</td><td>~2 GB/year (trivial)</td></tr><tr><td>Media storage/year</td><td>35 uploads/s × 200KB × 31M s</td><td>~217 TB/year → S3</td></tr><tr><td>Cache requirement</td><td>Top 1% of tweets serve 99% of reads</td><td>Cache 10M tweets × 1KB = 10GB Redis</td></tr></tbody></table>
 </section>
+</div>
 
 <div class="footer">SCALABILITY · CQRS · EVENT SOURCING · CIRCUIT BREAKER · ESTIMATION · BULKHEAD · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

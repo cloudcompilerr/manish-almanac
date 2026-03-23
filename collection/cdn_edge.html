@@ -172,25 +172,13 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">PoP architecture, pull vs push, cache invalidation, HLS video streaming, edge compute, DDoS mitigation — every CDN concept for system design interviews.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Cloudflare</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">CloudFront</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">HLS/DASH</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Edge Compute</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">DDoS</span></div>
 </div></div>
-<nav class="nav"><a href="#what">What CDNs Do</a><a href="#how">How They Work</a><a href="#video">Video Streaming</a><a href="#edge-compute">Edge Compute</a><a href="#followups">Follow-ups</a><a href="#cdn-advanced">Advanced CDN</a></nav>
+<nav class="nav"><a href="#how">How CDNs Work — Architecture, Pull/</a><a href="#video">HLS, DASH, and adaptive bitrate — h</a><a href="#decision-cdn">How to talk about CDN in a system d</a><a href="#sd-examples-cdn">CDN architecture in real systems</a><a href="#followups">Every hard follow-up, answered</a><a href="#cdn-advanced">Range requests, edge functions, and</a><a href="#req-nfr-cdn_edge">Requirements & Non-Functional Const</a><a href="#tradeoff-cdn_edge">Trade-off Matrix — What You Gave Up</a><a href="#schema-cdn_edge">Quick Reference</a></nav>
 <div class="wrap">
-<section id="what">
-  <div class="sec-tag">00 · What a CDN Does</div>
-  <h2>Serving content from 200 cities instead of one data centre</h2>
-  <div class="analogy">
-    <div class="analogy-label">The warehouse vs corner shop analogy</div>
-    <div class="analogy-text">
-      Your origin server is a central warehouse in Mumbai. A user in Tokyo requests a video.<br><br>
-      <strong>Without CDN</strong>: request travels Mumbai → Tokyo (~150ms round trip). At 10MB/s, a 1GB video takes 100 seconds to deliver from origin to the user.<br><br>
-      <strong>With CDN</strong>: A CDN edge node in Tokyo has a cached copy. Same video served at ~1ms latency from the nearby PoP (Point of Presence). The origin server is never involved.<br><br>
-      The CDN's job: be a corner shop stocking the 100 most popular items, so customers do not have to travel to the warehouse for common requests.
-    </div>
-  </div>
-</section>
+
 
 <section id="how">
   <div class="sec-tag">01 · How CDNs Work</div>
-  <h2>PoP architecture, pull vs push, and cache invalidation</h2>
+  <h2>How CDNs Work — Architecture, Pull/Push & Edge Compute</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">PoP & Anycast</div><div class="concept-def"><strong>CDNs have 200+ Points of Presence (PoPs) worldwide. Anycast routing sends users to the nearest PoP automatically.</strong><br>
       Anycast: multiple PoPs announce the same IP address. BGP routing sends the user's packet to the geographically nearest PoP — no DNS lookup delay, no manual geo-routing config.
@@ -205,6 +193,28 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <span class="concept-note warn">⚠ Management overhead. You pay for storage at all PoPs even if content is never requested there. Not suitable for dynamic or user-specific content.</span></div></div>
     <div class="concept-row"><div class="concept-term">Cache Invalidation</div><div class="concept-def"><strong>When origin content changes, you need to tell CDN edge nodes to drop their cached copies.</strong></p><p><strong>TTL expiry</strong>: set a short <code>Cache-Control: max-age=300</code>. Stale for up to 5 minutes.</p><p><strong>Cache purge API</strong>: Cloudflare/CloudFront have APIs to immediately invalidate specific URLs or patterns. Used when you push a critical fix.</p><p><strong>Cache versioning</strong>: embed version in filename — <code>app.v2.3.js</code>. Old URL still cached (fine), new URL fetched fresh. Zero-downtime asset updates.
         <span class="concept-note good">✓ Best practice: use cache versioning for static assets (infinite TTL + version in URL). Use short TTL for semi-dynamic content. Use purge API for emergency fixes.</span></div></div>
+  </div>
+
+<div class="sec-tag">00 · What a CDN Does</div>
+  <h2>Serving content from 200 cities instead of one data centre</h2>
+  <div class="analogy">
+    <div class="analogy-label">The warehouse vs corner shop analogy</div>
+    <div class="analogy-text">
+      Your origin server is a central warehouse in Mumbai. A user in Tokyo requests a video.<br><br>
+      <strong>Without CDN</strong>: request travels Mumbai → Tokyo (~150ms round trip). At 10MB/s, a 1GB video takes 100 seconds to deliver from origin to the user.<br><br>
+      <strong>With CDN</strong>: A CDN edge node in Tokyo has a cached copy. Same video served at ~1ms latency from the nearby PoP (Point of Presence). The origin server is never involved.<br><br>
+      The CDN's job: be a corner shop stocking the 100 most popular items, so customers do not have to travel to the warehouse for common requests.
+    </div>
+  </div>
+<div class="sec-tag">03 · Edge Compute</div>
+  <h2>Running code at the CDN edge</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">What Is Edge Compute</div><div class="concept-def"><strong>Run serverless code at the CDN PoP, close to the user — before the request reaches your origin.</strong><br>
+      Examples: Cloudflare Workers, AWS Lambda@Edge, Fastly Compute@Edge.<br>
+      Use for: A/B testing (redirect 10% of users to new version at edge), auth token validation (validate JWT at edge, reject bad tokens before they hit origin), geo-based redirects, request transformation.</div></div>
+    <div class="concept-row"><div class="concept-term">CDN for DDoS</div><div class="concept-def"><strong>CDN absorbs DDoS attacks at the edge — attack traffic never reaches your origin.</strong><br>
+      A 1Tbps DDoS attack is distributed across 200 PoPs. Each absorbs 5Gbps — trivial for a large PoP. Your 10Gbps origin link never sees the attack.
+        <span class="concept-note good">✓ Cloudflare's network capacity: 100+ Tbps. The largest DDoS attacks ever recorded were absorbed by Cloudflare without origin impact. Used by: every large web property (including FAANG).</span></div></div>
   </div>
 </section>
 
@@ -226,18 +236,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </section>
 
-<section id="edge-compute">
-  <div class="sec-tag">03 · Edge Compute</div>
-  <h2>Running code at the CDN edge</h2>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">What Is Edge Compute</div><div class="concept-def"><strong>Run serverless code at the CDN PoP, close to the user — before the request reaches your origin.</strong><br>
-      Examples: Cloudflare Workers, AWS Lambda@Edge, Fastly Compute@Edge.<br>
-      Use for: A/B testing (redirect 10% of users to new version at edge), auth token validation (validate JWT at edge, reject bad tokens before they hit origin), geo-based redirects, request transformation.</div></div>
-    <div class="concept-row"><div class="concept-term">CDN for DDoS</div><div class="concept-def"><strong>CDN absorbs DDoS attacks at the edge — attack traffic never reaches your origin.</strong><br>
-      A 1Tbps DDoS attack is distributed across 200 PoPs. Each absorbs 5Gbps — trivial for a large PoP. Your 10Gbps origin link never sees the attack.
-        <span class="concept-note good">✓ Cloudflare's network capacity: 100+ Tbps. The largest DDoS attacks ever recorded were absorbed by Cloudflare without origin impact. Used by: every large web property (including FAANG).</span></div></div>
-  </div>
-</section>
+
 
 
 <section id="decision-cdn">
@@ -330,7 +329,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <strong>What Workers can replace</strong>: stateless edge functions (JWT validation, header manipulation, A/B testing, geo-routing, simple redirects), static API responses (config, feature flags), lightweight personalization.<br><br>
   <strong>What Workers cannot replace</strong>: anything requiring your primary database (Cloudflare KV has ~50ms global read latency but limited querying capabilities), long-running computations (&gt;30ms CPU limit per request), streaming heavy media processing.<br><br>
   <strong>The architecture</strong>: Workers as edge compute + your origin as the authority for dynamic data. Workers handle 90% of requests at the edge; only complex, personalised, or write requests reach your origin.</div></div>
-</section></div>
+</section>
 
 <section id="cdn-advanced">
   <div class="sec-tag">07 · Advanced CDN Topics</div>
@@ -383,7 +382,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
+
 
 <section id="req-nfr-cdn_edge">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -406,7 +405,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Cache-Control Header Strategy</h4><table class="flow-table"><thead><tr><th>Content type</th><th>Cache-Control</th><th>CDN behavior</th></tr></thead><tbody><tr><td>Hashed JS/CSS (app.a1b2c3.js)</td><td>max-age=31536000, immutable</td><td>Cached for 1 year. Never invalidated. URL changes on deploy.</td></tr><tr><td>HTML entry point (index.html)</td><td>max-age=60, must-revalidate</td><td>Cached for 60s. Short TTL ensures users get latest app version.</td></tr><tr><td>API responses (product list)</td><td>max-age=300, s-maxage=3600</td><td>Browser: 5min. CDN: 1hr. Serve stale to users, CDN refreshes in background.</td></tr><tr><td>User-specific API (/me, /cart)</td><td>no-store, private</td><td>Never cached by CDN. Each request hits origin. Vary: Cookie prevents shared cache.</td></tr><tr><td>Video segments (.ts files)</td><td>max-age=86400, immutable</td><td>Cached for 24h. Content-addressed — same content = same URL forever.</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">CDN · EDGE · CLOUDFLARE · CLOUDFRONT · HLS · ADAPTIVE BITRATE · DDOS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

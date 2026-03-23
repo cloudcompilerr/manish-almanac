@@ -229,16 +229,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </div>
 
-<nav class="nav">
-  <a href="#mental-model">Mental Model</a>
-  <a href="#request-response">Request-Response</a>
-  <a href="#realtime">Real-Time</a>
-  <a href="#comparison">Full Comparison</a>
-  <a href="#combos">Combos</a>
-  <a href="#examples">System Design</a>
-  <a href="#decision">Decision Tree</a>
-  <a href="#followups">Follow-ups</a>
-<a href="#grpc-streaming">gRPC Streaming</a></nav>
+<nav class="nav"><a href="#mental-model">The mental model before memorising</a><a href="#request-response">REST, gRPC, and GraphQL — the three</a><a href="#realtime">WebSocket, SSE, and Long Polling —</a><a href="#comparison">Every dimension that matters in an</a><a href="#combos">Protocols that work together — not</a><a href="#examples">Which protocol wins in which system</a><a href="#decision">How to pick in an interview — in 60</a><a href="#followups">Every hard follow-up, answered</a><a href="#grpc-streaming">All four streaming types — with rea</a><a href="#req-nfr-protocols">Requirements & Non-Functional Const</a><a href="#tradeoff-protocols">Trade-off Matrix — What You Gave Up</a><a href="#schema-protocols">Quick Reference</a></nav>
 
 <div class="wrap">
 
@@ -1084,7 +1075,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </section>
 
-</div>
+
 
 <section id="grpc-streaming">
   <div class="sec-tag">08 · gRPC Streaming Modes</div>
@@ -1150,7 +1141,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
+
 
 <section id="req-nfr-protocols">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -1173,7 +1164,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Protocol Selection Guide</h4><table class="flow-table"><thead><tr><th>Use case</th><th>Protocol</th><th>Why</th></tr></thead><tbody><tr><td>Mobile app API</td><td>REST/HTTP2</td><td>Universal support. Cacheable. Simple debugging. CDN-friendly</td></tr><tr><td>Service-to-service RPC</td><td>gRPC</td><td>Binary efficiency. Typed contracts. Streaming support. Generated clients</td></tr><tr><td>Live chat / game state</td><td>WebSocket</td><td>Full-duplex. Low overhead. Sub-100ms latency</td></tr><tr><td>Stock ticker / notifications</td><td>SSE</td><td>Server-push only. Simple. Works through proxies. Auto-reconnect built-in</td></tr><tr><td>Mobile app with complex data needs</td><td>GraphQL</td><td>Fetch exactly what the screen needs. Single round trip. Strong typing</td></tr><tr><td>Batch data transfer</td><td>REST with streaming</td><td>Range requests. Resumable. CDN-cacheable chunks</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">PROTOCOLS · REST · GRPC · GRAPHQL · WEBSOCKET · SSE · LONG POLLING · MANISH-ALMANAC</div>
 
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

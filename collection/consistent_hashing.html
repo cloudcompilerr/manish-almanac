@@ -172,7 +172,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">Why naive hashing breaks, the ring explained step by step, virtual nodes, hot spot mitigation, and how Cassandra, Redis Cluster and DynamoDB actually implement it.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Hash Ring</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Virtual Nodes</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Hash Slots</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Hot Spots</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Rendezvous Hashing</span></div>
 </div></div>
-<nav class="nav"><a href="#problem">The Problem</a><a href="#ring">The Ring</a><a href="#partitioning">Strategies</a><a href="#hotspot">Hot Spots</a><a href="#real">Real Systems</a><a href="#rendezvous">Rendezvous</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a><a href="#ch-production">Production Failures</a></nav>
+<nav class="nav"><a href="#problem">Why key % N destroys your cache on</a><a href="#ring">How consistent hashing actually wor</a><a href="#partitioning">Four ways to shard — and when each</a><a href="#hotspot">Consistent hashing distributes keys</a><a href="#real">How Cassandra, Redis Cluster, and D</a><a href="#rendezvous">The alternative to consistent hashi</a><a href="#decision">Interview Approach & Scale Assumpti</a><a href="#followups">Every hard follow-up, answered</a><a href="#ch-production">What actually breaks in consistent</a><a href="#tradeoff-consistent_hashing">Trade-off Matrix — What You Gave Up</a><a href="#schema-consistent_hashing">Quick Reference</a></nav>
 <div class="wrap">
 <section id="problem">
   <div class="sec-tag">00 · The Problem With Naive Hashing</div>
@@ -316,7 +316,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 <section id="decision">
   <div class="sec-tag">06 · Interview Decision Framework</div>
-  <h2>How to structure your answer in a sharding conversation</h2>
+  <h2>Interview Approach & Scale Assumptions</h2>
   <div class="step-block">
     <div class="step-block-header"><span class="sb-icon">🎯</span>Sharding Strategy — The 5 Questions to Answer</div>
     <div class="step-block-body">
@@ -350,6 +350,13 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       </div></div>
     </div>
   </div>
+
+<div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Distribute keys evenly across N nodes</td></tr><tr><td><strong>FR2</strong></td><td>On node add/remove: move minimum keys (1/N fraction)</td></tr><tr><td><strong>FR3</strong></td><td>Handle node failures without full rehash</td></tr><tr><td><strong>FR4</strong></td><td>Support replication: each key on R replicas</td></tr><tr><td><strong>FR5</strong></td><td>Hotspot prevention via virtual nodes</td></tr><tr><td><strong>FR6</strong></td><td>Shard awareness: route requests to correct shard without central coordinator</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Lookup: O(log N) with binary search on sorted ring</td></tr><tr><td><strong>NFR2</strong></td><td>Key movement on node add: 1/N of all keys (theoretical minimum)</td></tr><tr><td><strong>NFR3</strong></td><td>Virtual nodes: 150–256 per physical node for uniform distribution</td></tr><tr><td><strong>NFR4</strong></td><td>Rebalancing time: proportional to data moved, not total data size</td></tr><tr><td><strong>NFR5</strong></td><td>Consistency of ring state: gossip protocol (Cassandra) or etcd (Redis Cluster)</td></tr><tr><td><strong>NFR6</strong></td><td>Hash function: MD5, MurmurHash3, or SHA-1 for uniform distribution</td></tr></tbody></table></div>
+</div>
 </section>
 
 <section id="followups">
@@ -363,7 +370,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="faq-a"><strong>Yes, and this is where the CAP theorem intersects with consistent hashing.</strong><br><br>If a network partition separates a 6-node Cassandra cluster into two groups of 3, both groups continue operating — AP choice. Each group believes the other's nodes are down and tries to serve all keys. When the partition heals, Cassandra uses read repair and anti-entropy to reconcile divergent writes using "last write wins" (LWW) based on timestamps, or vector clocks for conflict detection.<br><br>Redis Cluster makes a different choice: during a partition, the minority partition (fewer than N/2+1 nodes) stops accepting writes — CP choice. The majority partition continues serving. When the partition heals, the minority replicas catch up from the majority. This prevents split-brain writes but means the minority partition is unavailable during the network outage.<br><br>This is a fundamental design decision you must make when designing sharded systems: do you want availability or consistency during partitions?</div></div>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How would you design a globally distributed sharding scheme across 3 data centres?<span class="tog">+</span></div>
   <div class="faq-a"><strong>Geo-distributed sharding combines consistent hashing with geo-routing and topology-aware replication.</strong><br><br>Approach 1 — Single global ring with DC-aware placement: one ring, vnodes spread across all 3 DCs. NetworkTopologyStrategy ensures each DC holds its share of replicas. Cassandra supports this natively. Write to LOCAL_QUORUM (majority within one DC), replicate asynchronously to other DCs.<br><br>Approach 2 — Regional sharding + global routing: each DC is an independent cluster owning its regional data. A global routing layer (DNS geo-routing + application-level user-to-DC affinity) routes each user to their home DC. Cross-DC reads are forwarded to the owning DC. Used by: Shopify (data residency), WhatsApp (region-based data sovereignty).<br><br>Approach 3 — Active-active multi-master: data is replicated to all DCs, any DC can serve any user. CRDTs or LWW handle conflicts. Used by: DynamoDB Global Tables, Cassandra multi-DC active-active. Highest availability, most complex conflict handling.</div></div>
-</section></div>
+</section>
 
 <section id="ch-production">
   <div class="sec-tag">08 · Production Failure Modes</div>
@@ -415,16 +422,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
 
-<section id="req-nfr-consistent_hashing">
-  <div class="sec-tag">📋 · Requirements & Scale</div>
-  <h2>Requirements & Non-Functional Constraints</h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
-<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Distribute keys evenly across N nodes</td></tr><tr><td><strong>FR2</strong></td><td>On node add/remove: move minimum keys (1/N fraction)</td></tr><tr><td><strong>FR3</strong></td><td>Handle node failures without full rehash</td></tr><tr><td><strong>FR4</strong></td><td>Support replication: each key on R replicas</td></tr><tr><td><strong>FR5</strong></td><td>Hotspot prevention via virtual nodes</td></tr><tr><td><strong>FR6</strong></td><td>Shard awareness: route requests to correct shard without central coordinator</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Lookup: O(log N) with binary search on sorted ring</td></tr><tr><td><strong>NFR2</strong></td><td>Key movement on node add: 1/N of all keys (theoretical minimum)</td></tr><tr><td><strong>NFR3</strong></td><td>Virtual nodes: 150–256 per physical node for uniform distribution</td></tr><tr><td><strong>NFR4</strong></td><td>Rebalancing time: proportional to data moved, not total data size</td></tr><tr><td><strong>NFR5</strong></td><td>Consistency of ring state: gossip protocol (Cassandra) or etcd (Redis Cluster)</td></tr><tr><td><strong>NFR6</strong></td><td>Hash function: MD5, MurmurHash3, or SHA-1 for uniform distribution</td></tr></tbody></table></div>
-</div>
-</section>
+
+
 
 <section id="tradeoff-consistent_hashing">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
@@ -438,7 +438,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Consistent Hashing in Production Systems</h4><table class="flow-table"><thead><tr><th>System</th><th>Algorithm</th><th>Virtual Nodes</th><th>Notes</th></tr></thead><tbody><tr><td>Cassandra</td><td>Murmur3 token ring</td><td>256 vnodes/node</td><td>Gossip for ring membership. Replication factor per keyspace</td></tr><tr><td>Redis Cluster</td><td>CRC16 mod 16384</td><td>16,384 hash slots</td><td>Fixed slots assigned to nodes. Cluster bus (port+10000) for gossip</td></tr><tr><td>DynamoDB</td><td>Internal consistent hashing</td><td>Auto-managed</td><td>Adaptive capacity handles hot partitions automatically</td></tr><tr><td>Memcached (clients)</td><td>Ketama algorithm (MD5)</td><td>150 vnodes/node</td><td>Client-side ring — each client computes the correct node independently</td></tr><tr><td>Nginx upstream</td><td>Least-connections + hash</td><td>N/A</td><td>Not consistent hashing but stateful load balancing for cache affinity</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">CONSISTENT HASHING · PARTITIONING · VNODES · REDIS CLUSTER · CASSANDRA · HOT SPOTS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

@@ -174,25 +174,13 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">L4 vs L7, load balancing algorithms, circuit breakers, API Gateway vs service mesh, and zero-downtime deployments — every concept needed for system design interviews.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">L4 / L7</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Nginx</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Envoy</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">Circuit Breaker</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:rgba(96,64,160,.08)">Service Mesh</span></div>
 </div></div>
-<nav class="nav"><a href="#why">Why LB</a><a href="#l4vsl7">L4 vs L7</a><a href="#algorithms">Algorithms</a><a href="#patterns">Advanced Patterns</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#lb-global">Global LB</a></nav>
+<nav class="nav"><a href="#l4vsl7">L4 vs L7 Load Balancing — The Criti</a><a href="#algorithms">How the LB decides which server get</a><a href="#patterns">Circuit breaker, health checks, and</a><a href="#deploy-strategies">Blue-green, canary, and rolling — h</a><a href="#nginx-envoy">Choosing the right proxy for each l</a><a href="#examples">Load Balancing in Real Systems</a><a href="#followups">Every hard follow-up, answered</a><a href="#lb-global">Beyond the datacenter — routing tra</a><a href="#req-nfr-load_balancing">Requirements & Non-Functional Const</a><a href="#tradeoff-load_balancing">Trade-off Matrix — What You Gave Up</a><a href="#schema-load_balancing">Quick Reference</a></nav>
 <div class="wrap">
-<section id="why">
-  <div class="sec-tag">00 · Why Load Balancing</div>
-  <h2>The first component in every system diagram</h2>
-  <p>A single server handling all traffic is a single point of failure and a performance ceiling. Load balancers distribute traffic across a fleet of servers, enabling horizontal scaling and eliminating single points of failure. In every FAANG system design diagram, the first arrow after "Client" points to a load balancer.</p>
-  <div class="analogy">
-    <div class="analogy-label">The supermarket checkout analogy</div>
-    <div class="analogy-text">
-      A supermarket has 10 checkout lanes. A greeter (load balancer) at the entrance directs each customer to the shortest queue. Without the greeter, everyone crowds into lane 1 while lanes 2–10 sit empty.<br><br>
-      <strong>L4 load balancer</strong> = greeter who only looks at which lane is least busy (doesn't care what's in your cart).<br>
-      <strong>L7 load balancer</strong> = greeter who reads your items and sends produce-only carts to lane 3 (express), bulk items to lane 7 (large cart), etc.
-    </div>
-  </div>
-</section>
+
 
 <section id="l4vsl7">
   <div class="sec-tag">01 · L4 vs L7</div>
-  <h2>The most important distinction in load balancing</h2>
+  <h2>L4 vs L7 Load Balancing — The Critical Distinction</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">L4 (Transport Layer)</div><div class="concept-def"><strong>Routes based on IP address and TCP/UDP port only. Does not inspect packet contents.</strong><br>
       Decision: "This TCP connection from 1.2.3.4 goes to server B."<br>
@@ -205,6 +193,18 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
         <span class="concept-note good">✓ URL-based routing (path-based or host-based). SSL termination (decrypts once at LB, unencrypted to backends). A/B testing and canary deploys. Rate limiting. Request/response transformation. Advanced health checks (HTTP 200 check, not just TCP connect).</span>
       <span class="concept-note warn">⚠ Higher CPU overhead (parses every HTTP request). Slightly higher latency. Cannot handle raw TCP/UDP workloads.</span>
       <span class="concept-note muted">Examples: AWS ALB, Nginx, Envoy, Traefik, HAProxy in HTTP mode.</span></div></div>
+  </div>
+
+<div class="sec-tag">00 · Why Load Balancing</div>
+  <h2>The first component in every system diagram</h2>
+  <p>A single server handling all traffic is a single point of failure and a performance ceiling. Load balancers distribute traffic across a fleet of servers, enabling horizontal scaling and eliminating single points of failure. In every FAANG system design diagram, the first arrow after "Client" points to a load balancer.</p>
+  <div class="analogy">
+    <div class="analogy-label">The supermarket checkout analogy</div>
+    <div class="analogy-text">
+      A supermarket has 10 checkout lanes. A greeter (load balancer) at the entrance directs each customer to the shortest queue. Without the greeter, everyone crowds into lane 1 while lanes 2–10 sit empty.<br><br>
+      <strong>L4 load balancer</strong> = greeter who only looks at which lane is least busy (doesn't care what's in your cart).<br>
+      <strong>L7 load balancer</strong> = greeter who reads your items and sends produce-only carts to lane 3 (express), bulk items to lane 7 (large cart), etc.
+    </div>
   </div>
 </section>
 
@@ -248,7 +248,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 <section id="examples">
   <div class="sec-tag">04 · System Design Examples</div>
-  <h2>Load balancing decisions in real systems</h2>
+  <h2>Load Balancing in Real Systems</h2>
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">Uber — Multi-Tier Load Balancing</div><span class="sd-example-tag">GLOBAL SCALE</span></div>
     <div class="sd-example-body">
@@ -256,6 +256,26 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <div class="choice-row"><div class="choice-label">EDGE (L4)</div><div class="choice-val">AWS NLB handles raw TCP traffic at the edge of each region. Terminates TCP efficiently. Routes to L7 cluster. Handles DDoS mitigation via AWS Shield.</div></div>
       <div class="choice-row"><div class="choice-label">APPLICATION (L7)</div><div class="choice-val"><span class="badge b-g">Envoy ✓</span> Path-based routing: <code>/api/rides</code> → Ride Service, <code>/api/payments</code> → Payment Service. Handles auth (JWT validation), rate limiting, circuit breaking to downstream services.</div></div>
       <div class="choice-row"><div class="choice-label">WEBSOCKET</div><div class="choice-val">Driver location WebSocket connections use consistent hash by driver_id → always reach same WebSocket server. Redis pub/sub propagates location updates to other servers if rider is on a different server.</div></div>
+    </div>
+  </div>
+
+<div class="sec-tag">06 · More System Design Examples</div>
+  <h2>Load balancing in complex real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Netflix — Multi-Tier Global LB</div><span class="sd-example-tag">GLOBAL · VIDEO STREAMING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">DNS / GLOBAL</div><div class="choice-val">AWS Route 53 latency-based routing → nearest AWS region. Anycast via CloudFront for video segments. User in Singapore → Singapore edge, never touches US origin for cached video.</div></div>
+      <div class="choice-row"><div class="choice-label">EDGE (L7)</div><div class="choice-val">AWS ALB in each region. Path-based routing: <code>/api/*</code> → microservices, <code>/video/*</code> → streaming service. SSL termination at ALB. mTLS to internal services via Envoy service mesh.</div></div>
+      <div class="choice-row"><div class="choice-label">INTERNAL</div><div class="choice-val">Envoy sidecars on every microservice (Zuul 2 at the edge, Envoy internally). Circuit breaking: if Recommendation Service fails, Envoy automatically falls back to cached recommendations. Zero code changes — configured in Istio control plane.</div></div>
+      <div class="choice-row"><div class="choice-label">CANARY</div><div class="choice-val">New recommendation algorithm deployed to 1% of users via weighted routing in Envoy. A/B test measured on play rate and watch time metrics. Full rollout only after statistically significant improvement confirmed.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Database Proxy — PgBouncer for PostgreSQL</div><span class="sd-example-tag">CONNECTION POOLING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">THE PROBLEM</div><div class="choice-val">PostgreSQL supports ~100–400 concurrent connections before performance degrades (each connection is a process). A web app with 50 servers × 20 threads each = 1,000 connections. Postgres falls over.</div></div>
+      <div class="choice-row"><div class="choice-label">PGBOUNCER</div><div class="choice-val">PgBouncer sits between app servers and PostgreSQL. App servers open connections to PgBouncer (thousands of connections OK). PgBouncer maintains a pool of 50–100 real connections to PostgreSQL. Transaction-mode pooling: a real connection is only needed during an active transaction — idle app connections share the real connection pool.</div></div>
+      <div class="choice-row"><div class="choice-label">LB FOR DB</div><div class="choice-val">HAProxy in front of PostgreSQL read replicas: <code>balance leastconn</code> routes read queries to the least-loaded replica. Primary write goes direct. This is an L4 LB — HAProxy does not inspect SQL, just routes TCP connections.</div></div>
     </div>
   </div>
 </section>
@@ -309,27 +329,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </section>
 
-<section id="more-sd-lb">
-  <div class="sec-tag">06 · More System Design Examples</div>
-  <h2>Load balancing in complex real systems</h2>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Netflix — Multi-Tier Global LB</div><span class="sd-example-tag">GLOBAL · VIDEO STREAMING</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">DNS / GLOBAL</div><div class="choice-val">AWS Route 53 latency-based routing → nearest AWS region. Anycast via CloudFront for video segments. User in Singapore → Singapore edge, never touches US origin for cached video.</div></div>
-      <div class="choice-row"><div class="choice-label">EDGE (L7)</div><div class="choice-val">AWS ALB in each region. Path-based routing: <code>/api/*</code> → microservices, <code>/video/*</code> → streaming service. SSL termination at ALB. mTLS to internal services via Envoy service mesh.</div></div>
-      <div class="choice-row"><div class="choice-label">INTERNAL</div><div class="choice-val">Envoy sidecars on every microservice (Zuul 2 at the edge, Envoy internally). Circuit breaking: if Recommendation Service fails, Envoy automatically falls back to cached recommendations. Zero code changes — configured in Istio control plane.</div></div>
-      <div class="choice-row"><div class="choice-label">CANARY</div><div class="choice-val">New recommendation algorithm deployed to 1% of users via weighted routing in Envoy. A/B test measured on play rate and watch time metrics. Full rollout only after statistically significant improvement confirmed.</div></div>
-    </div>
-  </div>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Database Proxy — PgBouncer for PostgreSQL</div><span class="sd-example-tag">CONNECTION POOLING</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">THE PROBLEM</div><div class="choice-val">PostgreSQL supports ~100–400 concurrent connections before performance degrades (each connection is a process). A web app with 50 servers × 20 threads each = 1,000 connections. Postgres falls over.</div></div>
-      <div class="choice-row"><div class="choice-label">PGBOUNCER</div><div class="choice-val">PgBouncer sits between app servers and PostgreSQL. App servers open connections to PgBouncer (thousands of connections OK). PgBouncer maintains a pool of 50–100 real connections to PostgreSQL. Transaction-mode pooling: a real connection is only needed during an active transaction — idle app connections share the real connection pool.</div></div>
-      <div class="choice-row"><div class="choice-label">LB FOR DB</div><div class="choice-val">HAProxy in front of PostgreSQL read replicas: <code>balance leastconn</code> routes read queries to the least-loaded replica. Primary write goes direct. This is an L4 LB — HAProxy does not inspect SQL, just routes TCP connections.</div></div>
-    </div>
-  </div>
-</section>
+
 
 <section id="followups">
   <div class="sec-tag">05 · Follow-ups</div>
@@ -357,45 +357,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   A <strong>load balancer</strong> distributes traffic across servers. It may be L4 (TCP-level) or L7 (HTTP-level). Its primary concern is traffic distribution and availability.<br><br>
   An <strong>API gateway</strong> is a superset: it also load balances, but adds: authentication (JWT validation), authorisation (RBAC checks), rate limiting (per-user quotas), request transformation (add/remove headers, transform body), API versioning (route /v1/ and /v2/ to different backend versions), observability (per-endpoint metrics and logging), and developer portal integration.<br><br>
   <strong>Rule of thumb for interviews</strong>: if the component needs to understand your business logic (who is this user? what plan are they on? is this request authorised?), it is an API gateway. If it just needs to distribute traffic reliably, it is a load balancer. In production, you typically have both: an L4 NLB at the outer edge (raw throughput), an L7 API gateway behind it (business logic), and internal load balancers between services.</div></div>
-</section></div>
-
-<section id="decision-lb">
-  <div class="sec-tag">07 · Decision Framework</div>
-  <h2>Choosing the right load balancing layer</h2>
-  <div class="step-block">
-    <div class="step-block-header"><span class="sb-icon">🎯</span>Load Balancer Selection — Ask in Order</div>
-    <div class="step-block-body">
-      <div class="step-row"><div class="step-num">01</div><div class="step-content">
-        <div class="step-q">Do you need to inspect HTTP headers, URLs, or cookies to route?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>L7 (Application Layer) LB.</strong> AWS ALB, Nginx, Envoy, HAProxy HTTP mode. Path-based routing (/api/* vs /static/*), host-based routing, header-based A/B testing, SSL termination. Required for any URL-aware routing.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">NO (pure TCP/UDP) →</span><span class="opt-text"><strong>L4 (Transport Layer) LB.</strong> AWS NLB, HAProxy TCP mode. Raw TCP routing — faster, lower overhead, works for any protocol (MySQL, SMTP, game servers). Use when you don't need HTTP awareness.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">02</div><div class="step-content">
-        <div class="step-q">Are request durations variable (some fast, some very slow)?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES (variable duration) →</span><span class="opt-text"><strong>Least Connections.</strong> Routes to server with fewest active connections. A slow server accumulates connections and receives fewer new ones automatically. Best for: WebSocket, video streaming, large uploads, ML inference endpoints.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">NO (uniform fast requests) →</span><span class="opt-text"><strong>Round Robin or Weighted Round Robin.</strong> Distributes evenly. Simple, low overhead. Best for: homogeneous stateless API servers with uniform request cost.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">03</div><div class="step-content">
-        <div class="step-q">Do clients need to always reach the same backend (stateful)?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES (stateful) →</span><span class="opt-text"><strong>Sticky sessions.</strong> Cookie-based (LB injects AWSALB cookie) or consistent hash by user ID. Required for: WebSocket connections, legacy session-based apps. Prefer moving state to Redis so any server can handle any request.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">NO (stateless) →</span><span class="opt-text"><strong>Any algorithm — no stickiness needed.</strong> Stateless is always preferred. Store session state in Redis, not in-process. Enables free horizontal scaling and zero-downtime rolling deploys.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">04</div><div class="step-content">
-        <div class="step-q">Internal microservice traffic or public edge traffic?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">Internal (service mesh) →</span><span class="opt-text"><strong>Envoy sidecar proxies + Istio.</strong> mTLS between services, circuit breaking, distributed tracing, dynamic config via xDS — all without changing application code. Overkill for small systems; essential at 50+ microservices.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">Public edge →</span><span class="opt-text"><strong>API Gateway (Kong/AWS API GW) + L7 LB.</strong> Auth, rate limiting, request transformation at the gateway. L7 LB (Nginx/ALB) distributes to backend fleet. Two layers: gateway handles business rules, LB handles distribution.</span></div>
-        </div>
-      </div></div>
-    </div>
-  </div>
 </section>
+
+
+
 
 <section id="lb-global">
   <div class="sec-tag">10 · Global Load Balancing</div>
@@ -449,7 +414,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
+
 
 <section id="req-nfr-load_balancing">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -472,7 +437,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Load Balancer Selection</h4><table class="flow-table"><thead><tr><th>Requirement</th><th>Best Choice</th><th>Notes</th></tr></thead><tbody><tr><td>HTTP/HTTPS, web applications</td><td>Nginx / AWS ALB</td><td>L7. Path routing. SSL termination. Rate limiting. WebSocket support</td></tr><tr><td>TCP, any protocol</td><td>HAProxy / AWS NLB</td><td>L4. Ultra-low overhead. Millions of connections. Static IP</td></tr><tr><td>Service mesh (k8s internal)</td><td>Envoy / Istio</td><td>mTLS, circuit breaking, distributed tracing. Sidecar injection. No app code changes</td></tr><tr><td>Global, multi-region</td><td>AWS Global Accelerator / Cloudflare</td><td>Anycast. Sub-second failover. DDoS absorption. Edge TLS termination</td></tr><tr><td>gRPC services</td><td>Envoy</td><td>HTTP/2 native. gRPC load balancing requires L7 (header-aware). Envoy handles proto routing</td></tr><tr><td>Database connections</td><td>PgBouncer / ProxySQL</td><td>Connection pooling. Reduces DB connection overhead from 1K app servers × 10 connections each</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">LOAD BALANCING · L4 · L7 · NGINX · ENVOY · CIRCUIT BREAKER · API GATEWAY · SERVICE MESH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

@@ -207,16 +207,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
     </div>
   </div>
 </div>
-<nav class="nav">
-  <a href="#roles">Transport vs Processing</a>
-  <a href="#identity">Identity</a>
-  <a href="#kafka-deep">Kafka Deep</a>
-  <a href="#processing">Processing Engines</a>
-  <a href="#comparison">Full Comparison</a>
-  <a href="#examples">System Design</a>
-  <a href="#decision">Decision Tree</a>
-  <a href="#followups">Follow-ups</a>
-</nav>
+<nav class="nav"><a href="#roles">Transport vs Processing — they're n</a><a href="#identity">The Four Technologies</a><a href="#processing">Flink vs Spark Streaming — True Str</a><a href="#comparison">How They Combine in a Real Architec</a><a href="#examples">System Design Examples</a><a href="#followups">Every Hard Follow-up, Answered</a><a href="#concepts-streaming">Kafka internals every FAANG intervi</a><a href="#req-nfr-streaming">Requirements & Non-Functional Const</a><a href="#tradeoff-streaming">Trade-off Matrix — What You Gave Up</a><a href="#kafka-deep">The settings interviewers probe — I</a></nav>
 <div class="wrap">
 
 <section id="roles">
@@ -276,66 +267,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
-<section id="kafka-deep">
-  <div class="sec-tag">02 · Transport Layer Deep Dive</div>
-  <h2>Kafka — Understanding It at Interview Depth</h2>
-  <div class="analogy">
-    <div class="analogy-label">Kafka explained for a complete layman</div>
-    <div class="analogy-text">
-      Imagine a newspaper printing plant. Every morning, thousands of reporters (producers) submit stories. The plant prints millions of copies (events) and distributes them to hundreds of newsstands (partitions). Each newsstand keeps its newspapers for 7 days (retention).<br><br>
-      Any reader (consumer) can pick up a paper from any newsstand, and two readers picking up the same paper both get the full content — the paper isn't destroyed when read. A reader can also go back and re-read papers from last Tuesday (replay).<br><br>
-      <strong>The magic:</strong> Reporters don't wait for readers. Readers don't wait for reporters. The newsstand (Kafka) acts as a durable buffer between them.
-    </div>
-  </div>
 
-  <h3>The Core Kafka Concepts Every Interviewer Expects</h3>
-  <div class="codeblock">
-<span class="c">// Kafka architecture — say these terms correctly in interviews</span>
-
-<span class="k">Topic:</span>       A named stream of events. Like a table in a database.
-              e.g. "user-clicks", "video-views", "payment-events"
-
-<span class="k">Partition:</span>   A topic is split into N partitions for parallelism.
-              Events with the same partition key always go to the same partition.
-              <span class="t">entity_id → hash(entity_id) % N → partition number</span>
-              Within a partition, order is GUARANTEED.
-              Across partitions, order is NOT guaranteed.
-
-<span class="k">Offset:</span>      A sequential ID for each event within a partition.
-              Consumers track their offset — "I've read up to #12,847"
-              This enables replay: "re-read from offset 0"
-
-<span class="k">Consumer Group:</span> A set of consumers that share the work of reading a topic.
-              Each partition is consumed by exactly ONE consumer in a group.
-              Multiple groups can read the same topic independently.
-              <span class="g">→ This is how Flink, ClickHouse, and S3 sink can all read the same Kafka topic</span>
-
-<span class="k">Broker:</span>      A Kafka server node. Usually 3–5 brokers in production.
-              Each partition is replicated across brokers (replication factor = 3).
-              Leader broker accepts writes; followers replicate.
-
-<span class="k">Retention:</span>   How long Kafka keeps events before deleting.
-              Default: 7 days. Can be extended to forever (like a database).
-              <span class="g">This enables replay: Flink crashed? Resume from last committed offset.</span>
-  </div>
-
-  <h3>Kafka vs Kinesis — The Managed vs Self-Managed Decision</h3>
-  <table class="comp-table">
-    <thead><tr><th>Dimension</th><th>Apache Kafka ⬛</th><th>Amazon Kinesis 🟠</th></tr></thead>
-    <tbody>
-      <tr><td class="row-head">Throughput</td><td><span class="good">Millions/sec</span> per cluster</td><td><span class="warn">1MB/sec or 1000 records/sec</span> per shard</td></tr>
-      <tr><td class="row-head">Latency</td><td><span class="good">Sub-millisecond</span></td><td><span class="warn">70–200ms</span> typical</td></tr>
-      <tr><td class="row-head">Retention</td><td><span class="good">Configurable</span> — days to forever</td><td><span class="warn">24h default</span>, max 7 days (Kinesis Firehose: unlimited)</td></tr>
-      <tr><td class="row-head">Replay</td><td><span class="good">Any offset, any time</span></td><td><span class="warn">Within retention window</span> only</td></tr>
-      <tr><td class="row-head">Partitioning</td><td>Topics → Partitions (flexible count)</td><td>Streams → Shards (auto-scaling available)</td></tr>
-      <tr><td class="row-head">Consumer Groups</td><td><span class="good">Unlimited</span> independent consumer groups</td><td><span class="warn">Limited</span> — 5 consumers per shard by default</td></tr>
-      <tr><td class="row-head">Ops Burden</td><td><span class="bad">High</span> — manage brokers, ZK/KRaft, rebalancing</td><td><span class="good">Zero</span> — fully managed</td></tr>
-      <tr><td class="row-head">Cost Model</td><td>Fixed infra cost (predictable at scale)</td><td>Pay per shard-hour + data volume</td></tr>
-      <tr><td class="row-head">Cloud Lock-in</td><td><span class="good">None</span> — open source, any cloud</td><td><span class="bad">AWS only</span></td></tr>
-      <tr><td class="row-head">AWS Integration</td><td>Manual connectors</td><td><span class="good">Native</span> Lambda triggers, S3 Firehose, Redshift</td></tr>
-    </tbody>
-  </table>
-</section>
 
 <section id="processing">
   <div class="sec-tag">03 · Processing Layer Deep Dive</div>
@@ -484,61 +416,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
-<section id="decision">
-  <div class="sec-tag">06 · The Decision Framework</div>
-  <h2>How to Pick in an Interview</h2>
-  <div class="codeblock">
-<span class="c">// Streaming technology decision tree</span>
 
-<span class="k">Step 1:</span> What is your latency requirement?
-  <span class="g">Sub-second (fraud detection, real-time alerts)</span>
-    → Kafka + Flink (true streaming)
-  <span class="n">A few seconds is fine (dashboards, aggregations)</span>
-    → Kafka + Flink or Kafka + Spark Streaming
-  <span class="r">Minutes ok (ETL, data warehouse)</span>
-    → Kafka/Kinesis + Spark Structured Streaming
-
-<span class="k">Step 2:</span> Do you need stateful computation?
-  <span class="g">YES (running aggregations, windowed counts, ML scoring)</span>
-    → Flink (best state management: RocksDB + checkpoints)
-  <span class="n">NO (simple filter, transform, route)</span>
-    → Kafka Streams or Kinesis Data Analytics
-
-<span class="k">Step 3:</span> Transport: managed or self-hosted?
-  <span class="g">AWS-first, zero ops</span>         → Kinesis Data Streams
-  <span class="n">Cost-sensitive, high throughput</span> → Apache Kafka
-  <span class="r">Pulsar features needed</span>         → Apache Pulsar
-
-<span class="k">Step 4:</span> Processing: team expertise?
-  <span class="g">Already use Spark for batch ETL</span> → Spark Structured Streaming
-  <span class="n">Need low-latency, complex state</span>  → Apache Flink
-  <span class="r">Simple per-service streaming</span>    → Kafka Streams (library, no cluster)
-
-<span class="k">Always combine transport + processing:</span>
-  Kafka + Flink     = FAANG standard for complex real-time pipelines
-  Kinesis + Lambda  = AWS serverless, simple event-driven
-  Kafka + Spark     = Unified batch + streaming on Databricks/Spark shops
-  </div>
-
-  <div class="use-grid">
-    <div class="use-card">
-      <div class="use-card-head" style="color:#444">⬛ Use Kafka when…</div>
-      <ul><li>High throughput (&gt;100K/sec per topic)</li><li>Long retention / replay needed</li><li>Multiple independent consumers</li><li>Not locked into AWS</li></ul>
-    </div>
-    <div class="use-card">
-      <div class="use-card-head" style="color:#c04400">🔶 Use Flink when…</div>
-      <ul><li>Sub-second latency needed</li><li>Complex stateful operations</li><li>Windowed aggregations</li><li>Exactly-once critical (fraud, billing)</li></ul>
-    </div>
-    <div class="use-card">
-      <div class="use-card-head" style="color:#cc7000">🟠 Use Kinesis when…</div>
-      <ul><li>AWS-native, zero ops priority</li><li>Moderate throughput</li><li>Lambda integration needed</li><li>Firehose delivery to S3/Redshift</li></ul>
-    </div>
-    <div class="use-card">
-      <div class="use-card-head" style="color:#b04000">✦ Use Spark Streaming when…</div>
-      <ul><li>Already have Spark infrastructure</li><li>ETL/data warehouse loading</li><li>Unified batch + streaming code</li><li>Seconds latency is acceptable</li></ul>
-    </div>
-  </div>
-</section>
 
 <section id="followups">
   <div class="sec-tag">07 · Interview Follow-up Playbook</div>
@@ -570,7 +448,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   </div>
 </section>
 
-</div>
+
 
 <section id="concepts-streaming">
   <div class="sec-tag">07 · Core Concepts Deep Dive</div>
@@ -619,6 +497,7 @@ v>
   </div>
 </section>
 
+
 <section id="req-nfr-streaming">
   <div class="sec-tag">📋 · Requirements & Scale</div>
   <h2>Requirements & Non-Functional Constraints</h2>
@@ -628,18 +507,21 @@ v>
 </div>
 </section>
 
+
 <section id="tradeoff-streaming">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
   <p>Every senior interview ends here. Know your choices and their costs.</p>
   <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Kafka vs Kinesis</td><td>Kafka (self-managed or MSK)</td><td><span class="dot g"></span>Open source. Unlimited partitions. Log compaction. Consumer groups. Replay from any offset</td><td><span class="dot a"></span>Operational overhead (ZooKeeper/KRaft, broker management). Partition count fixed at topic creation</td><td>Kinesis for pure AWS shops wanting fully managed. 1MB/s per shard vs Kafka's 1MB/s per partition (similar)</td></tr><tr><td class="row-head">Flink vs Spark Streaming</td><td>Flink</td><td><span class="dot g"></span>True streaming (event-time processing). Native exactly-once. Low latency (ms). Richer windowing</td><td><span class="dot a"></span>Steeper learning curve than Spark. Smaller ecosystem. State management complexity</td><td>Spark Streaming for teams already using Spark. Micro-batch model (latency ~1s) acceptable for analytics</td></tr><tr><td class="row-head">Delivery semantics</td><td>Exactly-once (Kafka EOS)</td><td><span class="dot g"></span>No duplicates in sink. Safe for financial events, inventory updates</td><td><span class="dot a"></span>~10% throughput reduction. Transactional overhead (one coordinator round-trip per batch)</td><td>At-least-once for logs, metrics, analytics where duplicate handling in the sink is simpler</td></tr><tr><td class="row-head">State backend (Flink)</td><td>RocksDB</td><td><span class="dot g"></span>State larger than RAM. Incremental checkpoints. Production proven at petabyte scale</td><td><span class="dot a"></span>Slower state access vs in-memory (disk I/O). More complex recovery</td><td>Heap state backend for small state (< 1GB) where latency matters more than state size</td></tr><tr><td class="row-head">Partition count</td><td>1 partition per consumer (peak)</td><td><span class="dot g"></span>Maximum parallelism. Easy to scale by adding consumers. Natural load balancing</td><td><span class="dot a"></span>Cannot reduce partitions without recreating topic. Over-partitioning wastes broker resources</td><td>Start with 3× expected peak consumers. Partition by entity key (user_id, item_id) for ordering guarantees</td></tr></tbody></table>
-</section>
 
-<section id="schema-streaming">
-  <div class="sec-tag">🗃️ · Reference</div>
+<div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Kafka Topic Design</h4><table class="flow-table"><thead><tr><th>Topic</th><th>Partitions</th><th>Key</th><th>Retention</th><th>Consumer</th></tr></thead><tbody><tr><td>user.events</td><td>100</td><td>user_id (ordering per user)</td><td>7 days</td><td>Flink (stateful aggregation)</td></tr><tr><td>order.created</td><td>50</td><td>order_id (unique)</td><td>30 days</td><td>Fulfillment service, email service</td></tr><tr><td>item.views</td><td>200</td><td>item_id (count per item)</td><td>24h</td><td>Top-K Flink job</td></tr><tr><td>payments.completed</td><td>20</td><td>payment_id</td><td>1 year</td><td>Accounting, fraud ML, audit</td></tr><tr><td>db.changes (CDC)</td><td>varies</td><td>table.pk</td><td>7 days (compacted)</td><td>Search indexer, cache warmer</td></tr></tbody></table>
 </section>
+
+
+
+</div>
 
 <div class="footer">STREAMING · KAFKA · FLINK · KINESIS · SPARK · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

@@ -184,7 +184,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">The 45-minute framework, estimation cheatsheet, common mistakes, what interviewers actually score on — your preparation blueprint.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Requirements</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Estimation</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Trade-offs</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Deep Dive</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Common Mistakes</span></div>
 </div></div>
-<nav class="nav"><a href="#framework">The Framework</a><a href="#questions">Questions to Ask</a><a href="#common-mistakes">Common Mistakes</a><a href="#estimation-sheet">Estimation Sheet</a><a href="#followups-framework">Follow-ups</a></nav>
+<nav class="nav"><a href="#framework">The 45-minute system design intervi</a><a href="#questions">The clarifying questions that make</a><a href="#common-mistakes">What kills good candidates — and ho</a><a href="#estimation-sheet">The numbers to compute in every int</a><a href="#followups-framework">Every hard meta-question, answered</a><a href="#req-nfr-interview_framework">Requirements & Non-Functional Const</a><a href="#tradeoff-interview_framework">Trade-off Matrix — What You Gave Up</a><a href="#schema-interview_framework">Quick Reference</a></nav>
 <div class="wrap">
 <section id="framework">
   <div class="sec-tag">00 · The Framework</div>
@@ -272,7 +272,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>Core design (2 min)</strong>: POST /shorten → generate a 7-character Base62 ID (62^7 = 3.5T unique IDs) → store (short_id → long_url) in PostgreSQL → return short URL. GET /{short_id} → Redis lookup → cache miss: PostgreSQL lookup, populate Redis with TTL 24h → cache hit: return 301 redirect. Why 301 (permanent) vs 302 (temporary)? 301: browsers cache the redirect client-side, reduces server load. 302: every redirect hits your server, allows analytics tracking. Use 302 if you need click analytics.<br><br>
   <strong>ID generation (1 min)</strong>: auto-increment integer is simple but predictable. Random 7-char Base62 is unpredictable. Collision probability: 3.5T IDs, 100M used = 0.003% collision rate. Check for collision on insert (retry on conflict). At scale: pre-generate ID ranges per server to avoid DB lookup on every generate.<br><br>
   <strong>Trade-offs</strong>: this design has a single PostgreSQL primary — bottleneck at extreme write scale. Mitigation: shard by short_id prefix if needed. Redis is a single point of failure — Redis Sentinel for HA. Custom domain support: just add domain column and index on (domain, path).</div></div>
-</section></div>
+</section>
 
 <section id="req-nfr-interview_framework">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -283,6 +283,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </div>
 </section>
 
+
 <section id="tradeoff-interview_framework">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
@@ -290,11 +291,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Monolith vs microservices (interview)</td><td>Start with monolith, evolve</td><td><span class="dot g"></span>Shows you don't over-engineer. "At 10K users, a monolith is correct. At 10M, here's where I'd split..."</td><td><span class="dot a"></span>Interviewers sometimes expect microservices immediately — read the room. For FAANG: they expect you to justify the choice</td><td>If asked to design at Google scale: start with scale analysis first, then justify distributed architecture</td></tr><tr><td class="row-head">SQL vs NoSQL (interview)</td><td>PostgreSQL default, justify any NoSQL</td><td><span class="dot g"></span>Shows you understand trade-offs. "I'd use PostgreSQL here because we need ACID and the write QPS is manageable"</td><td><span class="dot a"></span>Choosing NoSQL without justification signals pattern-matching not thinking</td><td>Rule: use the simplest DB that satisfies the requirements. Justify every departure from PostgreSQL</td></tr><tr><td class="row-head">Strong vs eventual consistency</td><td>State the trade-off explicitly</td><td><span class="dot g"></span>Demonstrates distributed systems maturity. "Feed can be eventually consistent — 2s lag is acceptable. Payment must be linearisable"</td><td><span class="dot a"></span>Choosing wrong consistency model without discussion is a major negative signal</td><td>Always ask: "What happens if the user reads their own write before propagation?" Then answer it</td></tr><tr><td class="row-head">Estimation precision</td><td>Order of magnitude, not exact</td><td><span class="dot g"></span>Shows comfort with uncertainty. "~10K writes/sec" not "10,483 writes/sec." Rounding is appropriate and expected</td><td><span class="dot a"></span>Being imprecise about implication: "I calculated 10K/sec — that means we're in the Redis territory, not single-DB"</td><td>Estimation matters when the answer changes the design. Always derive: write QPS → storage → bandwidth → component choice</td></tr><tr><td class="row-head">Technology choices</td><td>Name specific tools with justification</td><td><span class="dot g"></span>"Kafka because we need replay and multiple consumer groups" vs "a message queue"</td><td><span class="dot a"></span>Avoid technology name-dropping without depth. "I'll use Kubernetes" — interviewer: "why?" — "it's standard" = bad</td><td>For each technology: what problem does it solve here, what is the alternative, why did you choose this one</td></tr></tbody></table>
 </section>
 
+
 <section id="schema-interview_framework">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>45-Minute Interview Clock</h4><table class="flow-table"><thead><tr><th>Phase</th><th>Duration</th><th>What to deliver</th></tr></thead><tbody><tr><td>Requirements clarification</td><td>0–5 min</td><td>Functional (what it does) + NFR (scale, latency, consistency). Explicitly state what's out of scope.</td></tr><tr><td>Back-of-envelope estimation</td><td>5–10 min</td><td>QPS, storage/year, bandwidth. Derive implications: "at 50K reads/sec, we need a cache layer"</td></tr><tr><td>High-level design</td><td>10–25 min</td><td>Boxes and arrows covering all core flows. Narrate while drawing. Every component needs a sentence of justification.</td></tr><tr><td>Deep dive</td><td>25–40 min</td><td>Interviewer picks hardest component. Go deep: data model, algorithms, failure modes, exact mechanisms.</td></tr><tr><td>Trade-offs and Q&A</td><td>40–45 min</td><td>Proactively mention 2–3 weaknesses. Pushback questions. What would you change with more time?</td></tr></tbody></table>
 </section>
+</div>
 
 <div class="footer">INTERVIEW FRAMEWORK · ESTIMATION · REQUIREMENTS · TRADE-OFFS · SYSTEM DESIGN PROCESS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>

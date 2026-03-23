@@ -190,29 +190,14 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">Redis</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Memcached</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">Cache-Aside</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Write-Through</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:rgba(96,64,160,.08)">Eviction</span><span class="db-pill" style="border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08)">CDN</span></div>
   </div>
 </div>
-<nav class="nav"><a href="#why">Why Cache</a><a href="#hierarchy">Hierarchy</a><a href="#strategies">Write Strategies</a><a href="#eviction">Eviction</a><a href="#redis">Redis Deep Dive</a><a href="#examples">System Design</a><a href="#decision">Decision Tree</a><a href="#followups">Follow-ups</a><a href="#stampede">Advanced Patterns</a></nav>
+<nav class="nav"><a href="#hierarchy">Why Caching Exists & Where It Lives</a><a href="#strategies">The four write patterns — this is w</a><a href="#eviction">What gets removed when the cache is</a><a href="#redis">Redis data structures — the right t</a><a href="#examples">Caching decisions in real systems</a><a href="#decision">Interview Framework — Scale & Strat</a><a href="#followups">Every hard follow-up, answered</a><a href="#stampede">Cache stampede, thundering herd, an</a><a href="#tradeoff-caching">Trade-off Matrix — What You Gave Up</a><a href="#schema-caching">Quick Reference</a></nav>
 <div class="wrap">
 
-<section id="why">
-  <div class="sec-tag">00 · Why Caching Exists</div>
-  <h2>The single reason every system needs a cache</h2>
-  <p>A database read on a cold system takes 1–10ms. A cache hit takes 0.1–1ms. At 100K requests/sec, that difference is the line between a system that works and one that collapses. But caching is not just about speed — it is about <strong>protecting your database from traffic it was never designed to handle</strong>.</p>
-  <div class="analogy">
-    <div class="analogy-label">The library analogy — for a complete layman</div>
-    <div class="analogy-text">
-      A library (database) has every book ever written. But fetching any book takes a librarian 10 minutes. So you keep the 100 most popular books on a desk beside you (cache). When someone asks for a book, you check your desk first. 99% of the time it's there — instant. Only 1% of requests require the 10-minute librarian trip.<br><br>
-      <strong>The cache hit rate is everything.</strong> A 99% hit rate means your database handles 1% of original traffic. A 90% hit rate means 10% — still 10x less. A 50% hit rate barely helps at all.
-    </div>
-  </div>
-  <div class="callout cl-amber">
-    <div class="cl-lbl">The interview framing</div>
-    <p>Never say "I'll add a cache" without answering: <strong>(1) What exactly gets cached?</strong> (2) What is the cache key? (3) When does it get invalidated? (4) What is the consistency trade-off? Interviewers give no credit for "add Redis" — they want the strategy.</p>
-  </div>
-</section>
+
 
 <section id="hierarchy">
   <div class="sec-tag">01 · Cache Hierarchy</div>
-  <h2>The four layers — where caching lives</h2>
+  <h2>Why Caching Exists & Where It Lives</h2>
   <div class="tier-grid">
     <div class="tier-card cdn">
       <div class="db-logo">🌍</div>
@@ -242,6 +227,21 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <div class="db-tagline">PostgreSQL/MySQL's internal page cache. Frequently accessed pages stay in RAM automatically. You don't control it directly — but proper indexing ensures hot data stays cached here.</div>
       <div class="db-born">PostgreSQL shared_buffers · InnoDB buffer pool · OS page cache</div>
     </div>
+  </div>
+
+<div class="sec-tag">00 · Why Caching Exists</div>
+  <h2>The single reason every system needs a cache</h2>
+  <p>A database read on a cold system takes 1–10ms. A cache hit takes 0.1–1ms. At 100K requests/sec, that difference is the line between a system that works and one that collapses. But caching is not just about speed — it is about <strong>protecting your database from traffic it was never designed to handle</strong>.</p>
+  <div class="analogy">
+    <div class="analogy-label">The library analogy — for a complete layman</div>
+    <div class="analogy-text">
+      A library (database) has every book ever written. But fetching any book takes a librarian 10 minutes. So you keep the 100 most popular books on a desk beside you (cache). When someone asks for a book, you check your desk first. 99% of the time it's there — instant. Only 1% of requests require the 10-minute librarian trip.<br><br>
+      <strong>The cache hit rate is everything.</strong> A 99% hit rate means your database handles 1% of original traffic. A 90% hit rate means 10% — still 10x less. A 50% hit rate barely helps at all.
+    </div>
+  </div>
+  <div class="callout cl-amber">
+    <div class="cl-lbl">The interview framing</div>
+    <p>Never say "I'll add a cache" without answering: <strong>(1) What exactly gets cached?</strong> (2) What is the cache key? (3) When does it get invalidated? (4) What is the consistency trade-off? Interviewers give no credit for "add Redis" — they want the strategy.</p>
   </div>
 </section>
 
@@ -421,7 +421,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 <section id="decision">
   <div class="sec-tag">06 · Decision Framework</div>
-  <h2>How to talk about caching in an interview</h2>
+  <h2>Interview Framework — Scale & Strategy</h2>
   <div class="step-block">
     <div class="step-block-header"><span class="sb-icon">🎯</span>Caching Strategy — Answer These in Order</div>
     <div class="step-block-body">
@@ -456,6 +456,13 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       </div></div>
     </div>
   </div>
+
+<div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Cache-aside: check cache before DB on every read</td></tr><tr><td><strong>FR2</strong></td><td>Write-through / write-behind / refresh-ahead patterns</td></tr><tr><td><strong>FR3</strong></td><td>TTL-based and event-driven cache invalidation</td></tr><tr><td><strong>FR4</strong></td><td>Redis data structures: String, Hash, ZSET, List, HLL</td></tr><tr><td><strong>FR5</strong></td><td>Cache stampede and thundering herd prevention</td></tr><tr><td><strong>FR6</strong></td><td>Two-tier: local in-process + distributed Redis</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Cache hit rate > 95% for hot data</td></tr><tr><td><strong>NFR2</strong></td><td>Redis GET latency: p99 < 1ms</td></tr><tr><td><strong>NFR3</strong></td><td>Cache warm-up time on cold start: < 5 min</td></tr><tr><td><strong>NFR4</strong></td><td>Cache size: bounded by available RAM (eviction policy)</td></tr><tr><td><strong>NFR5</strong></td><td>Consistency: eventual (stale window ≤ TTL)</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: Redis Sentinel failover < 30s</td></tr></tbody></table></div>
+</div>
 </section>
 
 <section id="followups">
@@ -471,7 +478,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="faq-a"><strong>Redis has two persistence mechanisms that can be used independently or together.</strong><br><br><strong>RDB (Redis Database Backup)</strong>: Point-in-time snapshot written to disk periodically (every N seconds if M keys changed). Fast to restore — single compact binary file. Risk: data since last snapshot is lost on crash. Used for: disaster recovery, backups, cache warm-up after restart.<br><br><strong>AOF (Append-Only File)</strong>: Every write command is appended to a log file. On restart, Redis replays the log. Three fsync options: always (safest, slowest), every second (good balance — max 1 second data loss), never (OS decides, fastest). AOF rewrite periodically compacts the log. Used for: when you cannot afford data loss.<br><br><strong>Recommendation</strong>: Use both for critical data — RDB for fast restarts + AOF for durability. For pure cache use cases where data can be reconstructed from the DB, disable persistence entirely for maximum performance.</div></div>
 </section>
 
-</div>
+
 
 <section id="stampede">
   <div class="sec-tag">08 · Advanced Patterns</div>
@@ -560,16 +567,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
 
-<section id="req-nfr-caching">
-  <div class="sec-tag">📋 · Requirements & Scale</div>
-  <h2>Requirements & Non-Functional Constraints</h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
-<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Cache-aside: check cache before DB on every read</td></tr><tr><td><strong>FR2</strong></td><td>Write-through / write-behind / refresh-ahead patterns</td></tr><tr><td><strong>FR3</strong></td><td>TTL-based and event-driven cache invalidation</td></tr><tr><td><strong>FR4</strong></td><td>Redis data structures: String, Hash, ZSET, List, HLL</td></tr><tr><td><strong>FR5</strong></td><td>Cache stampede and thundering herd prevention</td></tr><tr><td><strong>FR6</strong></td><td>Two-tier: local in-process + distributed Redis</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Cache hit rate > 95% for hot data</td></tr><tr><td><strong>NFR2</strong></td><td>Redis GET latency: p99 < 1ms</td></tr><tr><td><strong>NFR3</strong></td><td>Cache warm-up time on cold start: < 5 min</td></tr><tr><td><strong>NFR4</strong></td><td>Cache size: bounded by available RAM (eviction policy)</td></tr><tr><td><strong>NFR5</strong></td><td>Consistency: eventual (stale window ≤ TTL)</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: Redis Sentinel failover < 30s</td></tr></tbody></table></div>
-</div>
-</section>
+
+
 
 <section id="tradeoff-caching">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
@@ -583,7 +583,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Redis Key Patterns</h4><table class="flow-table"><thead><tr><th>Pattern</th><th>Type</th><th>TTL</th><th>Use case</th></tr></thead><tbody><tr><td>tweet:{id}</td><td>Hash</td><td>1h</td><td>Tweet content — enriched on cache-aside miss</td></tr><tr><td>feed:user:{id}</td><td>List</td><td>24h</td><td>Pre-computed feed: 800 tweet_ids, newest first</td></tr><tr><td>user:{id}</td><td>Hash</td><td>30m</td><td>Profile data: name, avatar, follower_count</td></tr><tr><td>session:{token}</td><td>String</td><td>24h</td><td>Session token → user_id mapping</td></tr><tr><td>rate:ip:{ip}</td><td>String</td><td>60s</td><td>INCR counter for rate limiting (sliding window)</td></tr><tr><td>lock:{key}</td><td>String</td><td>30s</td><td>Distributed mutex via SET NX EX for stampede prevention</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">CACHING · REDIS · MEMCACHED · EVICTION · INVALIDATION · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

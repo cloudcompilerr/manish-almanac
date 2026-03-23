@@ -172,7 +172,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">S3 vs block vs file storage, multipart uploads, pre-signed URLs, storage classes, and CDN integration — everything for media and data lake system designs.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">S3 / GCS</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Multipart Upload</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Pre-Signed URLs</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Storage Classes</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">CDN Origin</span></div>
 </div></div>
-<nav class="nav"><a href="#what">Storage Types</a><a href="#internals">S3 Internals</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#obj-advanced">Advanced</a></nav>
+<nav class="nav"><a href="#what">S3 vs Block Storage vs File Storage</a><a href="#internals">How S3 actually works under the hoo</a><a href="#examples">Object Storage in Real Systems</a><a href="#data-lake">S3 as the foundation of every moder</a><a href="#followups">Every hard follow-up, answered</a><a href="#obj-advanced">Erasure coding, multipart upload, a</a><a href="#req-nfr-object_storage">Requirements & Non-Functional Const</a><a href="#tradeoff-object_storage">Trade-off Matrix — What You Gave Up</a><a href="#schema-object_storage">Quick Reference</a></nav>
 <div class="wrap">
 <section id="what">
   <div class="sec-tag">00 · What Is Object Storage</div>
@@ -221,7 +221,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 <section id="examples">
   <div class="sec-tag">02 · System Design Examples</div>
-  <h2>Object storage in real systems</h2>
+  <h2>Object Storage in Real Systems</h2>
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">Instagram — Photo Upload Flow</div><span class="sd-example-tag">MEDIA UPLOAD</span></div>
     <div class="sd-example-body">
@@ -229,6 +229,26 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <div class="choice-row"><div class="choice-label">PROCESSING</div><div class="choice-val">S3 PUT triggers a Lambda (or SQS notification → EC2 worker). Worker: resize to 3 resolutions (thumbnail/feed/full), apply filters, extract EXIF metadata, write processed versions back to S3, update DB with S3 keys.</div></div>
       <div class="choice-row"><div class="choice-label">DELIVERY</div><div class="choice-val">All S3 objects served through CloudFront CDN. CDN caches at 200+ edge locations. User in Tokyo gets the image from Tokyo edge, not from S3 in us-east-1. ~10ms delivery globally vs ~200ms from origin.</div></div>
       <div class="choice-row"><div class="choice-label">LIFECYCLE</div><div class="choice-val">Stories expire after 24h: S3 Object expiry policy automatically deletes after 24h. Old posts after 1 year → transition to S3 Infrequent Access (saves ~45% storage cost). Deleted posts → immediate Object Delete + CDN invalidation.</div></div>
+    </div>
+  </div>
+
+<div class="sec-tag">03 · More System Design Examples</div>
+  <h2>Object storage decisions in real systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">YouTube — Video Storage & Delivery</div><span class="sd-example-tag">PETABYTES · ADAPTIVE STREAMING</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">UPLOAD PATH</div><div class="choice-val">Video uploaded directly to Google Cloud Storage (GCS) via resumable upload API (chunked 5MB parts). Upload service returns upload URL → client streams directly to GCS. Server never receives video bytes — saves enormous bandwidth.</div></div>
+      <div class="choice-row"><div class="choice-label">TRANSCODING</div><div class="choice-val">GCS PUT event triggers transcoding pipeline. Original video → encode at 360p/720p/1080p/4K (H.264 + VP9). HLS/DASH segmentation: split each quality into 10-second segments. All variants stored back in GCS under structured paths: <code>gs://videos/{id}/1080p/seg_{n}.ts</code>.</div></div>
+      <div class="choice-row"><div class="choice-label">DELIVERY</div><div class="choice-val">GCS → Cloud CDN serves video segments. Highly watched videos cached at 100+ PoPs globally. Long-tail videos served from GCS origin. Adaptive bitrate: player downloads manifest, picks quality based on bandwidth, fetches segments. CDN cache hit rate for popular videos: &gt;99%.</div></div>
+      <div class="choice-row"><div class="choice-label">STORAGE COST</div><div class="choice-val">500 hours of video uploaded per minute. At 1GB/minute for 720p: 500GB/minute = 720TB/day. GCS Standard ($0.020/GB): ~$14,400/day storage cost. Lifecycle policy: videos with &lt;1000 views/month → GCS Nearline ($0.01/GB) after 30 days. Saves ~50% on long-tail storage.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Airbnb — Listing Photos & Data Lake</div><span class="sd-example-tag">MEDIA + ANALYTICS</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PHOTO UPLOAD</div><div class="choice-val">Pre-signed URL flow: <code>GET /photos/upload-url → presigned S3 URL → client PUT directly to S3 → client notifies API of completion → API queues processing job</code>. Processing: detect faces, apply image enhancement, generate 5 resolutions, extract EXIF. Processed images back to S3, metadata to PostgreSQL.</div></div>
+      <div class="choice-row"><div class="choice-label">DATA LAKE</div><div class="choice-val">All business events (bookings, searches, clicks, page views) written to S3 in Parquet via Kafka → Flink → S3 sink. S3 is the "source of truth" for analytics. Spark clusters run on the S3 data for pricing ML, fraud detection model training, and business intelligence reports.</div></div>
+      <div class="choice-row"><div class="choice-label">ICEBERG</div><div class="choice-val">Apache Iceberg used for the booking events table. Enables: schema evolution when new fields are added (new booking metadata), time-travel queries ("what was our booking rate on New Year's Eve 2024?"), and ACID updates (correct a batch of mis-categorised listings without full rewrite).</div></div>
     </div>
   </div>
 </section>
@@ -257,27 +277,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </section>
 
-<section id="more-sd-obj">
-  <div class="sec-tag">03 · More System Design Examples</div>
-  <h2>Object storage decisions in real systems</h2>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">YouTube — Video Storage & Delivery</div><span class="sd-example-tag">PETABYTES · ADAPTIVE STREAMING</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">UPLOAD PATH</div><div class="choice-val">Video uploaded directly to Google Cloud Storage (GCS) via resumable upload API (chunked 5MB parts). Upload service returns upload URL → client streams directly to GCS. Server never receives video bytes — saves enormous bandwidth.</div></div>
-      <div class="choice-row"><div class="choice-label">TRANSCODING</div><div class="choice-val">GCS PUT event triggers transcoding pipeline. Original video → encode at 360p/720p/1080p/4K (H.264 + VP9). HLS/DASH segmentation: split each quality into 10-second segments. All variants stored back in GCS under structured paths: <code>gs://videos/{id}/1080p/seg_{n}.ts</code>.</div></div>
-      <div class="choice-row"><div class="choice-label">DELIVERY</div><div class="choice-val">GCS → Cloud CDN serves video segments. Highly watched videos cached at 100+ PoPs globally. Long-tail videos served from GCS origin. Adaptive bitrate: player downloads manifest, picks quality based on bandwidth, fetches segments. CDN cache hit rate for popular videos: &gt;99%.</div></div>
-      <div class="choice-row"><div class="choice-label">STORAGE COST</div><div class="choice-val">500 hours of video uploaded per minute. At 1GB/minute for 720p: 500GB/minute = 720TB/day. GCS Standard ($0.020/GB): ~$14,400/day storage cost. Lifecycle policy: videos with &lt;1000 views/month → GCS Nearline ($0.01/GB) after 30 days. Saves ~50% on long-tail storage.</div></div>
-    </div>
-  </div>
-  <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Airbnb — Listing Photos & Data Lake</div><span class="sd-example-tag">MEDIA + ANALYTICS</span></div>
-    <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">PHOTO UPLOAD</div><div class="choice-val">Pre-signed URL flow: <code>GET /photos/upload-url → presigned S3 URL → client PUT directly to S3 → client notifies API of completion → API queues processing job</code>. Processing: detect faces, apply image enhancement, generate 5 resolutions, extract EXIF. Processed images back to S3, metadata to PostgreSQL.</div></div>
-      <div class="choice-row"><div class="choice-label">DATA LAKE</div><div class="choice-val">All business events (bookings, searches, clicks, page views) written to S3 in Parquet via Kafka → Flink → S3 sink. S3 is the "source of truth" for analytics. Spark clusters run on the S3 data for pricing ML, fraud detection model training, and business intelligence reports.</div></div>
-      <div class="choice-row"><div class="choice-label">ICEBERG</div><div class="choice-val">Apache Iceberg used for the booking events table. Enables: schema evolution when new fields are added (new booking metadata), time-travel queries ("what was our booking rate on New Year's Eve 2024?"), and ACID updates (correct a batch of mis-categorised listings without full rewrite).</div></div>
-    </div>
-  </div>
-</section>
+
 
 <section id="followups">
   <div class="sec-tag">03 · Follow-ups</div>
@@ -312,51 +312,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   1. <strong>Compaction jobs</strong>: a daily Spark job reads all small files for each partition and rewrites them as a few large Parquet files (100–500MB each). Athena now opens 10 files instead of 864,000. Requires a maintenance window or can run in the background during low-traffic hours.<br>
   2. <strong>Increase flush interval</strong>: instead of flushing every 10 seconds, flush every 10 minutes. Fewer, larger files. Trade-off: longer lag before data is queryable.<br>
   3. <strong>Delta Lake / Iceberg</strong>: these table formats include compaction operations (<code>OPTIMIZE</code> in Delta, <code>REWRITE_DATA_FILES</code> in Iceberg) that compact small files transactionally — no downtime, readers see consistent data throughout.</div></div>
-</section></div>
-
-<section id="decision-obj">
-  <div class="sec-tag">05 · Decision Framework</div>
-  <h2>Storage type selection</h2>
-  <div class="step-block">
-    <div class="step-block-header"><span class="sb-icon">🎯</span>Object vs Block vs File Storage — Ask in Order</div>
-    <div class="step-block-body">
-      <div class="step-row"><div class="step-num">01</div><div class="step-content">
-        <div class="step-q">Does the software require a real filesystem (POSIX)?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES (databases, OS) →</span><span class="opt-text"><strong>Block storage (EBS, GCP PD).</strong> Attached as a disk. Sub-millisecond latency. Random read/write. Required for: PostgreSQL, MySQL, MongoDB — any database that writes WAL files and needs filesystem semantics. Cannot use S3 directly for a DB.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Go to Step 2.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">02</div><div class="step-content">
-        <div class="step-q">Do multiple servers need to read/write the same files simultaneously?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">YES (shared filesystem) →</span><span class="opt-text"><strong>File storage (EFS, NFS, Azure Files).</strong> POSIX filesystem mounted by multiple instances. Use for: shared config, legacy apps that read/write files and cannot be refactored, CMS media that multiple web servers access.</span></div>
-          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Go to Step 3.</span></div>
-        </div>
-      </div></div>
-      <div class="step-row"><div class="step-num">03</div><div class="step-content">
-        <div class="step-q">What is the access pattern — HTTP or programmatic?</div>
-        <div class="step-options">
-          <div class="step-option opt-yes"><span class="opt-arrow">HTTP / URL-based access →</span><span class="opt-text"><strong>Object storage (S3/GCS) + CDN.</strong> Objects served via HTTP URLs. CDN caches at edge globally. Perfect for: images, videos, static files, any user-facing media. Pre-signed URLs for private access without exposing credentials.</span></div>
-          <div class="step-option opt-mid"><span class="opt-arrow">Batch analytics / data lake →</span><span class="opt-text"><strong>Object storage (S3/GCS) with Parquet.</strong> Store raw data in Parquet format. Query with Athena/BigQuery/Redshift Spectrum. Lifecycle policies tier old data to Glacier automatically. Add Delta Lake/Iceberg for ACID transactions on top of S3.</span></div>
-        </div>
-      </div></div>
-    </div>
-  </div>
-
-  <h3>S3 vs GCS vs Azure Blob — Quick Comparison</h3>
-  <div class="concept-grid">
-    <div class="concept-row"><div class="concept-term">AWS S3</div><div class="concept-def"><strong>The industry standard. Every major data tool integrates with S3 natively.</strong><br>
-      Unique features: S3 Select (query data inside objects with SQL without downloading), Intelligent-Tiering (auto cost optimisation), Object Lambda (transform objects on read), EventBridge integration.
-        <span class="concept-note muted">Largest ecosystem. If you're on AWS, there's no reason to use anything else for object storage.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Google Cloud Storage</div><div class="concept-def"><strong>Best integration with BigQuery and the GCP data ecosystem.</strong><br>
-      GCS → BigQuery: external tables query GCS Parquet files directly without loading. GCS → Dataflow: native integration for streaming pipelines. Multiregional storage for global CDN-like access.
-        <span class="concept-note muted">If your analytics runs on BigQuery, GCS is the natural companion.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Cost Optimisation</div><div class="concept-def"><strong>Storage is cheap; data transfer OUT is expensive.</strong><br>
-      S3 storage: $0.023/GB/month (Standard). Data transfer OUT to internet: $0.09/GB. The CDN trick: CloudFront has a free tier for S3 origin transfers — route all user requests through CloudFront to eliminate S3 egress costs entirely.
-        <span class="concept-note good">✓ S3 → CloudFront transfer is free. CloudFront → users costs $0.085/GB. Net saving: significant at scale.</span></div></div>
-  </div>
 </section>
+
+
+
 
 <section id="obj-advanced">
   <div class="sec-tag">07 · Advanced Object Storage</div>
@@ -409,7 +368,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
+
 
 <section id="req-nfr-object_storage">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -432,7 +391,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>S3 Key Structure Best Practices</h4><table class="flow-table"><thead><tr><th>Pattern</th><th>Example</th><th>Why</th></tr></thead><tbody><tr><td>Versioned static assets</td><td>assets/app.{hash}.js</td><td>Immutable URL → TTL=1year → zero cache invalidation</td></tr><tr><td>User uploads</td><td>uploads/{user_id}/{uuid}/{filename}</td><td>user_id prefix enables IAM prefix-level access control</td></tr><tr><td>Date-partitioned data</td><td>data/2026/03/22/{batch_id}.parquet</td><td>Enables Athena/Glue partition pruning for analytics queries</td></tr><tr><td>Random prefix (legacy)</td><td>1a2b/image_name.jpg</td><td>Old S3 needed random prefix to avoid partition hotspot — no longer needed since 2018</td></tr><tr><td>Multipart staging</td><td>tmp/uploads/{upload_id}/part_{n}</td><td>Temporary prefix for in-progress uploads, lifecycle policy cleans up after 24h</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">OBJECT STORAGE · S3 · GCS · MULTIPART UPLOAD · PRE-SIGNED URLs · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>

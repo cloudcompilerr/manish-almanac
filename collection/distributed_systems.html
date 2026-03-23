@@ -172,11 +172,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <p class="hero-sub">CAP theorem, PACELC, quorum reads/writes, Raft consensus, 2PC vs Saga, distributed locking with fencing tokens, vector clocks, CRDTs — from first principles to production patterns.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">CAP / PACELC</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Raft Consensus</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Saga / 2PC</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Redlock / Fencing</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">CRDTs</span></div>
 </div></div>
-<nav class="nav"><a href="#cap">CAP Theorem</a><a href="#consensus">Raft Consensus</a><a href="#transactions">Distributed Tx</a><a href="#locks">Distributed Locks</a><a href="#clocks">Clocks & CRDTs</a><a href="#examples">System Design</a><a href="#followups">Follow-ups</a><a href="#crdt-gossip">CRDTs & Gossip</a></nav>
+<nav class="nav"><a href="#cap">The Fundamental Constraint — CAP &</a><a href="#consensus">How distributed systems agree on a</a><a href="#transactions">2PC, Saga pattern, and when to use</a><a href="#locks">Redlock, etcd, and the fencing toke</a><a href="#clocks">Why you cannot trust wall-clock tim</a><a href="#examples">Distributed systems patterns in rea</a><a href="#followups">Every hard follow-up, answered</a><a href="#crdt-gossip">CRDTs, gossip protocols, and Merkle</a><a href="#tradeoff-distributed_systems">Trade-off Matrix — What You Gave Up</a><a href="#schema-distributed_systems">Quick Reference</a></nav>
 <div class="wrap">
 <section id="cap">
   <div class="sec-tag">00 · CAP Theorem</div>
-  <h2>The fundamental constraint every distributed system lives with</h2>
+  <h2>The Fundamental Constraint — CAP & Scale Assumptions</h2>
   <p>CAP theorem states that a distributed system can guarantee at most two of: Consistency, Availability, and Partition Tolerance. Since network partitions are inevitable in any real distributed system, the practical choice is always <strong>CP vs AP</strong> — you are choosing what to sacrifice during a network partition.</p>
   <div class="analogy">
     <div class="analogy-label">CAP as a bank branch analogy</div>
@@ -207,6 +207,13 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       Example: N=3, W=1, R=1 → W+R=2 ≤ 3 → eventual consistency (reads may miss latest write).
         <span class="concept-note muted">Cassandra: <code>QUORUM</code> = ceiling(N/2)+1. <code>LOCAL_QUORUM</code> = quorum within one DC only (lower latency). <code>ALL</code> = all N replicas (linearisable but fails if any replica is down).</span></div></div>
   </div>
+
+<div class="sec-tag">📋 · Requirements & Scale</div>
+  <h2>Requirements & Non-Functional Constraints</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
+<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Consensus: multiple nodes agree on a single value despite failures</td></tr><tr><td><strong>FR2</strong></td><td>Linearisable reads: any read sees the latest committed write</td></tr><tr><td><strong>FR3</strong></td><td>Distributed transactions: multi-node atomic commit (Saga / 2PC)</td></tr><tr><td><strong>FR4</strong></td><td>Leader election: single leader per partition without split-brain</td></tr><tr><td><strong>FR5</strong></td><td>Anti-entropy: detect and repair diverged replicas (Merkle trees)</td></tr><tr><td><strong>FR6</strong></td><td>Gossip: propagate cluster state without central coordinator</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>CAP: choose Consistency or Availability during partition</td></tr><tr><td><strong>NFR2</strong></td><td>Raft consensus: leader election in 150–300ms after failure</td></tr><tr><td><strong>NFR3</strong></td><td>Cassandra repair: anti-entropy via nodetool repair (weekly)</td></tr><tr><td><strong>NFR4</strong></td><td>Gossip convergence: O(log N) rounds for N-node cluster</td></tr><tr><td><strong>NFR5</strong></td><td>CRDT merge: commutative, associative, idempotent — always correct</td></tr><tr><td><strong>NFR6</strong></td><td>Clock sync: NTP ±100ms. TrueTime (Spanner) ±7ms. HLC for causality</td></tr></tbody></table></div>
+</div>
 </section>
 
 <section id="consensus">
@@ -345,9 +352,8 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="faq-a"><strong>Compensating transactions must be idempotent and retried with exponential backoff until they succeed. They should never be allowed to permanently fail.</strong><br><br>Make compensating transactions idempotent: "cancel reservation for order X" executed twice should have the same effect as once (the second execution finds the reservation already cancelled — this is success, not an error).<br><br>Retry strategy: persistent retry queue (Kafka DLQ or dedicated retry table in DB). Each failed compensation attempt is re-enqueued with exponential backoff (1s, 2s, 4s, 8s...) and a max retry count.<br><br>What if compensation is permanently impossible? Example: payment refund fails because customer's card is closed. This is a "business exception" — not a technical failure. Route to a manual operations queue. Ops team handles it (alternative refund method, store credit, etc.). This is expected in production at large scale — Saga frameworks like Temporal provide a UI for exactly this: paused sagas requiring human intervention.<br><br>Design principle: compensation must always eventually succeed or escalate to human handling. Never silently drop a failed compensation — that leaves orphaned state in your system.</div></div>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How does Cassandra handle concurrent writes to the same key?<span class="tog">+</span></div>
   <div class="faq-a"><strong>Cassandra uses Last Write Wins (LWW) — the write with the highest timestamp wins. This is correct most of the time but has known edge cases.</strong><br><br>Two concurrent writes to the same key from different nodes: write A has timestamp 14:00:01.000, write B has timestamp 14:00:00.998 (clock skewed). Write A wins — it has the higher timestamp. Write B is silently discarded, even though B might have been the "correct" or "intended" final value from the application's perspective.<br><br>Why Cassandra accepts this tradeoff: NTP clock skew is typically &lt;1ms on modern hardware. The probability of two writes in the same millisecond to the same key is very low for most workloads. And Cassandra is optimised for write-heavy, high-scale workloads where this tradeoff (very rare silent overwrites vs guaranteed write availability) is acceptable.<br><br>When it is not acceptable: financial data, counters (use Cassandra counters with conditional updates), any data where silent overwrites are unacceptable. For these: use CAS (Compare-And-Set with Lightweight Transactions) which uses Paxos for coordination — but at 4x the latency cost.</div></div>
-</section></div>
-
-  <h3>Consistency Model Decision Tree</h3>
+</section>
+<h3>Consistency Model Decision Tree</h3>
   <div class="step-block">
     <div class="step-block-header"><span class="sb-icon">🎯</span>Which Consistency Model for Your System?</div>
     <div class="step-block-body">
@@ -374,6 +380,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       </div></div>
     </div>
   </div>
+
 
 <section id="crdt-gossip">
   <div class="sec-tag">07 · Advanced Topics</div>
@@ -442,16 +449,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-</div>
 
-<section id="req-nfr-distributed_systems">
-  <div class="sec-tag">📋 · Requirements & Scale</div>
-  <h2>Requirements & Non-Functional Constraints</h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
-<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Consensus: multiple nodes agree on a single value despite failures</td></tr><tr><td><strong>FR2</strong></td><td>Linearisable reads: any read sees the latest committed write</td></tr><tr><td><strong>FR3</strong></td><td>Distributed transactions: multi-node atomic commit (Saga / 2PC)</td></tr><tr><td><strong>FR4</strong></td><td>Leader election: single leader per partition without split-brain</td></tr><tr><td><strong>FR5</strong></td><td>Anti-entropy: detect and repair diverged replicas (Merkle trees)</td></tr><tr><td><strong>FR6</strong></td><td>Gossip: propagate cluster state without central coordinator</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>CAP: choose Consistency or Availability during partition</td></tr><tr><td><strong>NFR2</strong></td><td>Raft consensus: leader election in 150–300ms after failure</td></tr><tr><td><strong>NFR3</strong></td><td>Cassandra repair: anti-entropy via nodetool repair (weekly)</td></tr><tr><td><strong>NFR4</strong></td><td>Gossip convergence: O(log N) rounds for N-node cluster</td></tr><tr><td><strong>NFR5</strong></td><td>CRDT merge: commutative, associative, idempotent — always correct</td></tr><tr><td><strong>NFR6</strong></td><td>Clock sync: NTP ±100ms. TrueTime (Spanner) ±7ms. HLC for causality</td></tr></tbody></table></div>
-</div>
-</section>
+
+
 
 <section id="tradeoff-distributed_systems">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
@@ -465,7 +465,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Quick Reference</h2>
   <h4>Distributed Systems Primitives by Database</h4><table class="flow-table"><thead><tr><th>Primitive</th><th>Cassandra</th><th>etcd/Raft</th><th>Spanner</th></tr></thead><tbody><tr><td>Consensus</td><td>Gossip + Paxos (LWT)</td><td>Raft — full consensus log</td><td>Paxos + TrueTime</td></tr><tr><td>Consistency</td><td>Tunable (ONE/QUORUM/ALL)</td><td>Linearisable</td><td>External consistency (global)</td></tr><tr><td>Transactions</td><td>LWT (light) / Saga (app)</td><td>ACID on KV (single key)</td><td>Full distributed ACID</td></tr><tr><td>Conflict resolution</td><td>LWW (timestamp)</td><td>Leader serialises all writes</td><td>TrueTime commit wait</td></tr><tr><td>Failure detection</td><td>Gossip (phi accrual)</td><td>Raft heartbeat timeout</td><td>Chubby locks + lease</td></tr><tr><td>Scale</td><td>Unlimited (horizontal)</td><td>etcd: < 100 nodes</td><td>Global (Google infra only)</td></tr></tbody></table>
 </section>
+</div>
 
+</div>
 <div class="footer">DISTRIBUTED SYSTEMS · CAP · RAFT · SAGA · IDEMPOTENCY · VECTOR CLOCKS · CRDTs · FENCING · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
 </body>
