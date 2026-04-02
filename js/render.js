@@ -2,38 +2,76 @@
    JAVA RENDER
 ═══════════════════════════════════════════════════════ */
 function hl(code){
-  const kw=['public','private','protected','class','interface','extends','implements','new','return','if','else','for','while','do','switch','case','default','break','continue','null','true','false','void','static','final','abstract','import','package','throws','throw','try','catch','finally','int','long','double','float','boolean','char','String','List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Stack','Queue','TreeMap','TreeSet','PriorityQueue','Arrays','Collections','Math','Integer','Character','Optional','var'];
-  let h=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Single-pass tokeniser: scan raw code left-to-right, emit one span per token.
+  // Never re-process already-tagged HTML — chained regexes caused the broken output.
+  const kw=new Set(['public','private','protected','class','interface','extends',
+    'implements','new','return','if','else','for','while','do','switch','case',
+    'default','break','continue','null','true','false','void','static','final',
+    'abstract','import','package','throws','throw','try','catch','finally',
+    'int','long','double','float','boolean','char','String','List','Map','Set',
+    'ArrayList','HashMap','HashSet','LinkedList','Stack','Queue','TreeMap',
+    'TreeSet','PriorityQueue','Arrays','Collections','Math','Integer',
+    'Character','Optional','var']);
 
-  /* Step N block comments — gold, bold: these are the spoken interview sentences */
-  h=h.replace(/(\/\*\s*\u2500\u2500\s*Step\s*\d+:[^*]*\*\/)/g,
-    '<span style="display:inline-block;background:rgba(200,169,110,.15);border-left:3px solid #c8a96e;padding:1px 8px;border-radius:0 3px 3px 0;color:#e8c97e;font-weight:600">$1</span>');
+  const e=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const stepRx=/\/\*\s*\u2500\u2500\s*Step\s*\d+:/;
 
-  /* WHY: lines — amber italic: algorithmic reasoning */
-  h=h.replace(/(\/\/ WHY:[^\n]*)/g,
-    '<span style="color:#e8b84b;font-style:italic">$1</span>');
-
-  /* DATA MODEL header/footer lines — teal: structure definitions */
-  h=h.replace(/(\/\/ \u2500{3,}[^\n]*)/g,
-    '<span style="color:#4ec9b0">$1</span>');
-  h=h.replace(/(\/\/ DATA MODEL[^\n]*)/g,
-    '<span style="color:#4ec9b0;font-weight:600">$1</span>');
-
-  /* After loop state snapshot lines — light purple italic */
-  h=h.replace(/(\/\/ After [^\n]*)/g,
-    '<span style="color:#c586c0;font-style:italic">$1</span>');
-
-  /* Regular // comments (catch-all for remaining) */
-  h=h.replace(/(\/\/[^\n]*)/g,'<span style="color:#6a9955">$1</span>');
-
-  /* Block comments not already styled */
-  h=h.replace(/(\/\*[\s\S]*?\*\/)/g,'<span style="color:#6a9955">$1</span>');
-
-  h=h.replace(/(\"(?:[^\"\\]|\\.)*\")/g,'<span style="color:#ce9178">$1</span>');
-  h=h.replace(/\b(\d+)\b/g,'<span style="color:#b5cea8">$1</span>');
-  kw.forEach(k=>{h=h.replace(new RegExp('\\b('+k+')\\b','g'),'<span style="color:#569cd6">$1</span>');});
-  return h;
+  let out='',i=0,n=code.length;
+  while(i<n){
+    // Block comment: slash-star ... star-slash
+    if(code[i]==='/'&&code[i+1]==='*'){
+      let j=i+2;
+      while(j<n-1&&!(code[j]==='*'&&code[j+1]==='/')){j++;}
+      j+=2;
+      const raw=code.slice(i,j);
+      if(stepRx.test(raw)){
+        // Step N comments: gold background — the spoken interview sentence
+        out+='<span style="color:#e8c97e;font-weight:600;background:rgba(200,169,110,.12);border-left:3px solid #c8a96e;padding-left:5px">'+e(raw)+'</span>';
+      } else {
+        out+='<span style="color:#6a9955">'+e(raw)+'</span>';
+      }
+      i=j; continue;
+    }
+    // Line comment: double-slash to end of line
+    if(code[i]==='/'&&code[i+1]==='/'){
+      let j=i+2;
+      while(j<n&&code[j]!=='\n'){j++;}
+      out+='<span style="color:#6a9955;font-style:italic">'+e(code.slice(i,j))+'</span>';
+      i=j; continue;
+    }
+    // String literal
+    if(code[i]==='"'){
+      let j=i+1;
+      while(j<n){
+        if(code[j]==='"'&&code[j-1]!=='\\')break;
+        j++;
+      }
+      j++;
+      out+='<span style="color:#ce9178">'+e(code.slice(i,j))+'</span>';
+      i=j; continue;
+    }
+    // Number
+    if(code[i]>='0'&&code[i]<='9'){
+      let j=i+1;
+      while(j<n&&((code[j]>='0'&&code[j]<='9')||code[j]==='.'))j++;
+      out+='<span style="color:#b5cea8">'+e(code.slice(i,j))+'</span>';
+      i=j; continue;
+    }
+    // Word: keyword or identifier
+    if((code[i]>='a'&&code[i]<='z')||(code[i]>='A'&&code[i]<='Z')||code[i]==='_'||code[i]==='$'){
+      let j=i+1;
+      while(j<n&&((code[j]>='a'&&code[j]<='z')||(code[j]>='A'&&code[j]<='Z')||(code[j]>='0'&&code[j]<='9')||code[j]==='_'||code[j]==='$'))j++;
+      const word=code.slice(i,j);
+      out+=kw.has(word)?'<span style="color:#569cd6">'+e(word)+'</span>':e(word);
+      i=j; continue;
+    }
+    // Everything else: passthrough
+    out+=e(code[i]);
+    i++;
+  }
+  return out;
 }
+
 const rx=t=>String(t||'').replace(/`([^`]+)`/g,'<code>$1</code>');
 const eh=t=>String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
