@@ -4,9 +4,32 @@
 function hl(code){
   const kw=['public','private','protected','class','interface','extends','implements','new','return','if','else','for','while','do','switch','case','default','break','continue','null','true','false','void','static','final','abstract','import','package','throws','throw','try','catch','finally','int','long','double','float','boolean','char','String','List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Stack','Queue','TreeMap','TreeSet','PriorityQueue','Arrays','Collections','Math','Integer','Character','Optional','var'];
   let h=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  /* Step N block comments — gold, bold: these are the spoken interview sentences */
+  h=h.replace(/(\/\*\s*\u2500\u2500\s*Step\s*\d+:[^*]*\*\/)/g,
+    '<span style="display:inline-block;background:rgba(200,169,110,.15);border-left:3px solid #c8a96e;padding:1px 8px;border-radius:0 3px 3px 0;color:#e8c97e;font-weight:600">$1</span>');
+
+  /* WHY: lines — amber italic: algorithmic reasoning */
+  h=h.replace(/(\/\/ WHY:[^\n]*)/g,
+    '<span style="color:#e8b84b;font-style:italic">$1</span>');
+
+  /* DATA MODEL header/footer lines — teal: structure definitions */
+  h=h.replace(/(\/\/ \u2500{3,}[^\n]*)/g,
+    '<span style="color:#4ec9b0">$1</span>');
+  h=h.replace(/(\/\/ DATA MODEL[^\n]*)/g,
+    '<span style="color:#4ec9b0;font-weight:600">$1</span>');
+
+  /* After loop state snapshot lines — light purple italic */
+  h=h.replace(/(\/\/ After [^\n]*)/g,
+    '<span style="color:#c586c0;font-style:italic">$1</span>');
+
+  /* Regular // comments (catch-all for remaining) */
   h=h.replace(/(\/\/[^\n]*)/g,'<span style="color:#6a9955">$1</span>');
+
+  /* Block comments not already styled */
   h=h.replace(/(\/\*[\s\S]*?\*\/)/g,'<span style="color:#6a9955">$1</span>');
-  h=h.replace(/("(?:[^"\\]|\\.)*")/g,'<span style="color:#ce9178">$1</span>');
+
+  h=h.replace(/(\"(?:[^\"\\]|\\.)*\")/g,'<span style="color:#ce9178">$1</span>');
   h=h.replace(/\b(\d+)\b/g,'<span style="color:#b5cea8">$1</span>');
   kw.forEach(k=>{h=h.replace(new RegExp('\\b('+k+')\\b','g'),'<span style="color:#569cd6">$1</span>');});
   return h;
