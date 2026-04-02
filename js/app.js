@@ -230,18 +230,82 @@ function toggleMic(){listening?stopMic(true):startMic();}
 function startMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){toast('Voice not supported — type instead');return;}
+
+  /* Capture any text already typed so voice APPENDS rather than overwrites */
   accTxt=document.getElementById('tbox').textContent.trim();
-  rec=new SR();rec.continuous=true;rec.interimResults=true;rec.lang='en-US';
-  rec.onstart=()=>{listening=true;document.getElementById('micBtn').classList.add('on');document.getElementById('micBtn').textContent='⏹️';document.getElementById('wf').classList.add('on');document.getElementById('vs').textContent='Listening… speak clearly';document.getElementById('vs').classList.add('on');startTimer();};
-  rec.onresult=e=>{
-    clearTimeout(silT);silT=setTimeout(()=>stopMic(true),2800);
-    let fin=accTxt?accTxt+' ':'',int='';
-    for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;e.results[i].isFinal?(fin+=t,accTxt=fin.trim()):int=t;}
-    document.getElementById('tbox').textContent=(accTxt+(int?' '+int:'')).trim();chkBtn();
+  rec=new SR();
+  rec.continuous=true;       /* keep mic alive between phrases */
+  rec.interimResults=true;   /* show words as spoken, not just after pause */
+  rec.lang='en-US';
+  rec.maxAlternatives=1;
+
+  /* ── Inject domain-appropriate grammar hints ── */
+  /* Biases the browser recogniser toward technical vocabulary for the active mode */
+  /* SpeechGrammarList is optional — silently ignored if unsupported               */
+  try{
+    const SGL=window.SpeechGrammarList||window.webkitSpeechGrammarList;
+    if(SGL){
+      const csTerms='array string integer linkedlist binary tree graph hashmap '
+        +'twopointers slidingwindow dynamicprogramming bfs dfs backtracking '
+        +'greedy heap stack queue monotonic sorting mergesort quicksort '
+        +'binarysearch divide conquer recursion memoization trie segment '
+        +'n squared n log n linear constant space time complexity O of n';
+      const sdTerms='design twitter facebook instagram youtube uber dropbox whatsapp netflix '
+        +'api gateway load balancer cache redis kafka database postgresql cassandra '
+        +'microservices sharding replication consistency availability partition '
+        +'rate limiting cdn message queue pub sub websocket rest grpc graphql '
+        +'horizontal vertical scaling read replica nosql object storage elasticsearch '
+        +'distributed system fault tolerance idempotent throughput latency';
+      const terms=mode==='sd' ? sdTerms : csTerms;
+      const gl=new SGL();
+      gl.addFromString('#JSGF V1.0; grammar tech; public <tech> = '+terms+';',1);
+      rec.grammars=gl;
+    }
+  }catch(e){}
+
+  rec.onstart=()=>{
+    listening=true;
+    document.getElementById('micBtn').classList.add('on');
+    document.getElementById('micBtn').textContent='⏹️';
+    document.getElementById('wf').classList.add('on');
+    document.getElementById('vs').textContent='Listening… speak the full problem, then pause';
+    document.getElementById('vs').classList.add('on');
+    startTimer();
   };
-  rec.onerror=e=>{if(e.error==='not-allowed')toast('Mic blocked — allow in Safari settings');stopMic(false);};
+
+  rec.onresult=e=>{
+    /* ── Reset silence timer: 4500ms gives time for natural mid-sentence pauses ── */
+    clearTimeout(silT);
+    silT=setTimeout(()=>stopMic(true),4500);
+
+    let fin=accTxt?accTxt+' ':'',int='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      e.results[i].isFinal?(fin+=t,accTxt=fin.trim()):int=t;
+    }
+    const display=(accTxt+(int?' '+int:'')).trim();
+    document.getElementById('tbox').textContent=display;
+
+    /* ── Live word count so user knows input is being captured ── */
+    const wc=display.split(/\s+/).filter(Boolean).length;
+    document.getElementById('vs').textContent=
+      wc<5 ? 'Listening… keep going' :
+      wc<15? `Captured ${wc} words — keep going` :
+             `Captured ${wc} words — pause when done`;
+    chkBtn();
+  };
+
+  rec.onerror=e=>{
+    if(e.error==='not-allowed') toast('Mic blocked — allow microphone in browser settings');
+    else if(e.error==='no-speech') toast('No speech detected — speak closer to the mic');
+    else toast('Mic error: '+e.error);
+    stopMic(false);
+  };
+
+  /* ── Auto-restart if browser cuts mic (common on mobile after ~60s) ── */
   rec.onend=()=>{if(listening){try{rec.start();}catch(e){stopMic(false);}}};
-  try{rec.start();}catch(e){toast('Cannot start mic');}
+
+  try{rec.start();}catch(e){toast('Cannot start mic — check browser permissions');}
 }
 function stopMic(auto){
   const was=listening;listening=false;clearTimeout(silT);stopTimer();
@@ -269,6 +333,74 @@ async function generate(){
   document.getElementById('ttext').textContent=mode==='coding'?'Solving your problem…':'Architecting your system…';
   document.getElementById('sprog').classList.add('on');
   const bar=document.getElementById('sbar');bar.style.width='5%';
+
+  /* ── INSTANT PRE-ANSWER: show within 0ms of tap, before any API call ── */
+  /* Pattern-detect from problem text so user has something to say immediately */
+  if(mode==='coding'){
+    const prob_lower=prob.toLowerCase();
+    /* Map keywords → {pattern, opening_move, timing_hint} */
+    const patternHints=[
+      {keys:['two sum','pair','sum equals','target sum','complement'],
+       pattern:'Two Pointers / HashMap',
+       opening:'Sort + two pointers for O(n log n), or HashMap for O(n). I\'ll clarify if duplicates are allowed and if we need all pairs or just one.',
+       timing:'Clarify 3min → Brute O(n²) aloud → Optimal O(n) → Code 12min'},
+      {keys:['substring','window','subarray','contiguous','sliding'],
+       pattern:'Sliding Window',
+       opening:'Classic sliding window. I\'ll expand right until invalid, then shrink left. Need to clarify: fixed or variable window? Distinct chars or sum constraint?',
+       timing:'Clarify 3min → Fixed vs variable window → Code with two pointers 12min'},
+      {keys:['binary search','sorted array','search','find minimum','rotated'],
+       pattern:'Binary Search',
+       opening:'Binary search variant. I\'ll identify the invariant: what does left always satisfy? What does right always satisfy? Mid goes to the side that violates.',
+       timing:'Clarify 3min → Draw the search space → Code the termination condition 12min'},
+      {keys:['tree','root','node','leaf','height','depth','bst','binary tree'],
+       pattern:'Tree DFS / BFS',
+       opening:'Tree traversal. I\'ll pick DFS for path/depth problems, BFS for level-order. Need to confirm: is it a BST? Are values unique?',
+       timing:'Clarify 3min → Draw traversal order → Recursive + iterative 12min'},
+      {keys:['graph','island','connected','path','cycle','grid','matrix','neighbors'],
+       pattern:'Graph BFS/DFS',
+       opening:'Graph traversal on a grid or adjacency list. I\'ll use BFS for shortest path, DFS for connected components. Need to confirm if the graph is directed.',
+       timing:'Clarify 3min → Draw visited[][] → BFS/DFS with queue/stack 12min'},
+      {keys:['max','min','dynamic','optimal','ways','count','dp','memo','choices'],
+       pattern:'Dynamic Programming',
+       opening:'DP problem. I\'ll define the state: dp[i] = ?. Then find the recurrence. Start with recursion + memoization, then convert to tabulation if asked.',
+       timing:'Clarify 3min → Define state aloud → Recurrence → Code bottom-up 12min'},
+      {keys:['stack','parenthesis','bracket','valid','next greater','monotonic'],
+       pattern:'Monotonic Stack',
+       opening:'Stack-based problem. I\'ll maintain a monotonic stack to track pending decisions. Think of it as keeping only elements that might matter for future answers.',
+       timing:'Clarify 3min → Draw stack state → Code push/pop logic 12min'},
+      {keys:['heap','k largest','k smallest','kth','priority','top k','stream'],
+       pattern:'Heap / Priority Queue',
+       opening:'Heap problem. Min-heap of size K for top-K largest. I\'ll clarify: do we need exact rank or just the set? Is input a stream or static array?',
+       timing:'Clarify 3min → Heap invariant → Code with PriorityQueue 12min'},
+      {keys:['interval','meeting','overlap','merge','schedule','start','end'],
+       pattern:'Interval / Sweep Line',
+       opening:'Interval problem. Sort by start time, then sweep. I\'ll clarify: merge overlapping, or find minimum rooms needed?',
+       timing:'Clarify 3min → Sort intervals → Sweep with min-heap 12min'},
+      {keys:['linked list','reverse','cycle','middle','fast','slow','pointer'],
+       pattern:'Linked List / Two Pointers',
+       opening:'Linked list problem. Fast/slow pointers for cycle detection or finding middle. I\'ll clarify: does modifying the list matter? Can I use extra space?',
+       timing:'Clarify 3min → Draw pointer movement → Code with dummy head 12min'},
+    ];
+    const match=patternHints.find(h=>h.keys.some(k=>prob_lower.includes(k)));
+    const hint=match||{
+      pattern:'Identify the pattern first',
+      opening:'I\'ll read the constraints carefully: what\'s N? Is the array sorted? Can values be negative? These answers determine the pattern.',
+      timing:'Clarify 3min → Brute force aloud → Optimal → Code 12min'
+    };
+    const _h={p:hint.pattern, o:hint.opening, t:hint.timing};
+
+    /* Show instant pre-card — replaced when skeleton fires */
+    document.getElementById('thinking').classList.remove('on');
+    document.getElementById('rarea').classList.add('on');
+    document.getElementById('rarea').innerHTML=
+      '<div id="instant-card" style="background:linear-gradient(135deg,var(--as),var(--sf));border:1px solid rgba(200,169,110,.4);border-radius:12px;padding:16px 18px;margin-bottom:14px">'+
+      '<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--ac);text-transform:uppercase;margin-bottom:8px">⚡ Instant Read — say this now, while the full solution loads</div>'+
+      '<div style="font-size:13px;font-weight:700;color:var(--tp);margin-bottom:6px">Pattern: '+_h.p+'</div>'+
+      '<div style="font-size:13px;color:var(--tp);line-height:1.8;margin-bottom:10px">'+_h.o+'</div>'+
+      '<div style="font-size:11.5px;color:var(--ts);border-top:1px solid var(--br);padding-top:8px">⏱️ '+_h.t+'</div>'+
+      '</div>'+
+      '<div style="text-align:center;font-size:11.5px;color:var(--ts);font-style:italic">Full solution generating…</div>';
+  }
   const sys=mode==='coding'?codingPrompt():sdPrompt();
   try{
     /* ── Build provider-specific request ── */
@@ -414,12 +546,45 @@ function patch(txt,dk){
   };
 
   if(mode==='coding'){
-    ['thought_process','analogy','summary','complexity'].forEach(k=>{
-      if(!dk.has(k)){
-        const v=strComplete(k)||strPartial(k,30);
-        if(v&&v.length>15){dk.add(k);slot('sk_'+k,v.replace(/\n/g,'<br>'));}
-      }
-    });
+    /* ── Stream these fields as tokens arrive, in priority order ── */
+    /* Fields early in the JSON (pattern, summary, complexity) fire in the first 2-3 seconds */
+    /* Fields later (thought_process, analogy, optimization_path) fire at 4-8 seconds        */
+
+    /* SLOT 1 — pattern: very early in JSON, fires ~1s */
+    if(!dk.has('pattern')){
+      const v=strComplete('pattern')||strPartial('pattern',5);
+      if(v&&v.length>3){dk.add('pattern');slot('sk_pattern','🏷️ Pattern: <strong>'+v+'</strong>');}
+    }
+    /* SLOT 2 — summary: fires ~2-3s */
+    if(!dk.has('summary')){
+      const v=strComplete('summary')||strPartial('summary',20);
+      if(v&&v.length>10){dk.add('summary');slot('sk_summary',v.replace(/\n/g,'<br>'));}
+    }
+    /* SLOT 3 — complexity: fires ~3s */
+    if(!dk.has('complexity')){
+      const v=strComplete('complexity')||strPartial('complexity',10);
+      if(v&&v.length>5){dk.add('complexity');slot('sk_complexity',v.replace(/\n/g,'<br>'));}
+    }
+    /* SLOT 4 — optimization_path (brute→optimal): fires ~4-6s — KEY for talking aloud */
+    if(!dk.has('optimization_path')){
+      const v=strComplete('optimization_path')||strPartial('optimization_path',40);
+      if(v&&v.length>20){dk.add('optimization_path');slot('sk_optimization_path',v.replace(/\n/g,'<br>'));}
+    }
+    /* SLOT 5 — interviewer_timing: fires ~5-6s — user can narrate this to the interviewer */
+    if(!dk.has('interviewer_timing')){
+      const v=strComplete('interviewer_timing')||strPartial('interviewer_timing',30);
+      if(v&&v.length>10){dk.add('interviewer_timing');slot('sk_interviewer_timing',v.replace(/\n/g,'<br>').replace(/\|/g,'&nbsp;·&nbsp;'));}
+    }
+    /* SLOT 6 — thought_process: fires ~5-8s — the full first-person approach */
+    if(!dk.has('thought_process')){
+      const v=strComplete('thought_process')||strPartial('thought_process',30);
+      if(v&&v.length>15){dk.add('thought_process');slot('sk_thought_process',v.replace(/\n/g,'<br>'));}
+    }
+    /* SLOT 7 — analogy: fires ~8-10s */
+    if(!dk.has('analogy')){
+      const v=strComplete('analogy')||strPartial('analogy',20);
+      if(v&&v.length>10){dk.add('analogy');slot('sk_analogy',v.replace(/\n/g,'<br>'));}
+    }
     return;
   }
 
@@ -548,12 +713,18 @@ function patch(txt,dk){
 function showSkeleton(){
   const a=document.getElementById('rarea');
   if(mode==='coding'){
-    a.innerHTML=`<div style="padding-top:12px">
+    /* Preserve the instant-card if it exists so it stays visible during skeleton loading */
+    const _existingCard=document.getElementById('instant-card');
+    const _cardHtml=_existingCard?_existingCard.outerHTML:'';
+    a.innerHTML=_cardHtml+`<div style="padding-top:8px">
       <div class="iblock blue"><div class="blbl">🧠 Approach</div><div id="sk_thought_process"><div class="skel" style="width:100%"></div><div class="skel" style="width:84%"></div><div class="skel" style="width:66%"></div></div></div>
       <div class="iblock green"><div class="blbl">💡 Analogy</div><div id="sk_analogy"><div class="skel" style="width:100%"></div><div class="skel" style="width:72%"></div></div></div>
       <div class="sumbox" id="sk_summary"><div class="skel" style="width:100%"></div><div class="skel" style="width:55%"></div></div>
-      <div id="sk_complexity" style="font-size:12.5px;color:var(--ts);padding:2px 0 10px"><div class="skel" style="width:76%"></div><div class="skel" style="width:52%"></div></div>
-      <div style="text-align:center;font-size:11px;color:var(--ts);font-style:italic;padding:6px 0">⏳ Code & walkthrough loading…</div></div>`;
+      <div id="sk_pattern" style="font-size:12px;color:var(--ac);font-weight:600;padding:2px 0 4px"><div class="skel" style="width:40%"></div></div>
+      <div id="sk_complexity" style="font-size:12.5px;color:var(--ts);padding:2px 0 4px"><div class="skel" style="width:76%"></div><div class="skel" style="width:52%"></div></div>
+      <div class="iblock" style="background:var(--os);border-left:3px solid var(--orange)"><div class="blbl">🗺️ Brute → Optimal Path</div><div id="sk_optimization_path"><div class="skel" style="width:100%"></div><div class="skel" style="width:88%"></div><div class="skel" style="width:70%"></div></div></div>
+      <div style="background:var(--sf);border:1px solid var(--br);border-radius:8px;padding:10px 13px;margin-bottom:10px"><div class="blbl" style="margin-bottom:6px">⏱️ Interview Timing</div><div id="sk_interviewer_timing" style="font-size:12px;color:var(--ts);line-height:1.8"><div class="skel" style="width:90%"></div><div class="skel" style="width:70%"></div></div></div>
+      <div style="text-align:center;font-size:11px;color:var(--ts);font-style:italic;padding:6px 0">⏳ Full solution loading…</div></div>`;
   } else {
     a.innerHTML=`<div style="padding-top:12px">
 
@@ -594,7 +765,6 @@ function showSkeleton(){
       <div style="text-align:center;font-size:11px;color:var(--ts);font-style:italic;padding:10px 0">⏳ Full design with diagrams loading…</div></div>`;
   }
 }
-
 
 /* ═══════════════════════════════════════════════════════
    TAB HELPERS

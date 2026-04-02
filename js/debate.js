@@ -46,30 +46,79 @@ function toggleDbMic(){
   }
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){toast('Voice not supported — type instead');return;}
+
+  /* Preserve any text already typed — voice APPENDS to it */
   _dbAccTxt=document.getElementById('db-question').value.trim();
-  _dbMicRec=new SR();_dbMicRec.continuous=true;_dbMicRec.interimResults=true;_dbMicRec.lang='en-US';
+  _dbMicRec=new SR();
+  _dbMicRec.continuous=true;      /* keep mic alive between phrases */
+  _dbMicRec.interimResults=true;  /* show words as spoken, not just after pause */
+  _dbMicRec.lang='en-US';
+  _dbMicRec.maxAlternatives=1;
+
+  /* ── Inject system-design domain grammar hints ── */
+  /* Biases browser recogniser toward SD/distributed-systems vocabulary   */
+  /* SpeechGrammarList is optional — silently ignored if unsupported      */
+  try{
+    var SGL=window.SpeechGrammarList||window.webkitSpeechGrammarList;
+    if(SGL){
+      var sdTerms=
+        'design twitter facebook instagram youtube uber dropbox whatsapp netflix '+
+        'api gateway load balancer cache redis kafka database postgresql cassandra '+
+        'microservices kubernetes docker sharding replication consistency availability '+
+        'partition tolerance cap theorem eventual consistency rate limiting cdn '+
+        'message queue pub sub websocket rest grpc graphql oauth jwt authentication '+
+        'horizontal vertical scaling read replica sql nosql object storage s3 '+
+        'elasticsearch distributed system fault tolerance idempotent';
+      var gl=new SGL();
+      gl.addFromString('#JSGF V1.0; grammar sd; public <sd> = '+sdTerms+';',1);
+      _dbMicRec.grammars=gl;
+    }
+  }catch(e){}
+
   _dbMicRec.onstart=function(){
     _dbListening=true;
     var btn=document.getElementById('db-mic-btn');
     btn.classList.add('on');btn.textContent='⏹️';
     document.getElementById('db-wf').classList.add('on');
-    document.getElementById('db-vs').textContent='Listening… speak clearly';
+    document.getElementById('db-vs').textContent='Listening… speak the full question, then pause';
     document.getElementById('db-vs').classList.add('on');
     _dbStartTimer();
   };
+
   _dbMicRec.onresult=function(e){
-    clearTimeout(_dbSilT);_dbSilT=setTimeout(function(){_dbMicOff();_dbAutoSubmitDb();},2800);
+    /* 4500ms silence — gives time for natural mid-sentence pauses without cutting off */
+    clearTimeout(_dbSilT);
+    _dbSilT=setTimeout(function(){_dbMicOff();_dbAutoSubmitDb();},4500);
+
     var fin=_dbAccTxt?_dbAccTxt+' ':'',interim='';
     for(var i=e.resultIndex;i<e.results.length;i++){
       var t=e.results[i][0].transcript;
       if(e.results[i].isFinal){fin+=t;_dbAccTxt=fin.trim();}else{interim=t;}
     }
-    document.getElementById('db-question').value=(_dbAccTxt+(interim?' '+interim:'')).trim();
+    var display=(_dbAccTxt+(interim?' '+interim:'')).trim();
+    document.getElementById('db-question').value=display;
+
+    /* Live word count so user sees input is being captured */
+    var wc=display.split(/\s+/).filter(function(w){return w.length>0;}).length;
+    document.getElementById('db-vs').textContent=
+      wc<4  ? 'Listening… keep going' :
+      wc<12 ? 'Captured '+wc+' words — keep going' :
+              'Captured '+wc+' words — pause when done';
+
     autoDetectDomain();checkDbReady();
   };
-  _dbMicRec.onerror=function(e){if(e.error==='not-allowed')toast('Mic blocked — allow in browser settings');_dbMicOff();};
+
+  _dbMicRec.onerror=function(e){
+    if(e.error==='not-allowed')     toast('Mic blocked — allow microphone in browser settings');
+    else if(e.error==='no-speech')  toast('No speech detected — speak closer to the mic');
+    else                            toast('Mic error: '+e.error);
+    _dbMicOff();
+  };
+
+  /* Auto-restart if browser cuts mic (common on mobile after ~60s) */
   _dbMicRec.onend=function(){if(_dbListening){try{_dbMicRec.start();}catch(e){_dbMicOff();}}};
-  try{_dbMicRec.start();}catch(e){toast('Cannot start mic');}
+
+  try{_dbMicRec.start();}catch(e){toast('Cannot start mic — check browser permissions');}
 }
 function _dbAutoSubmitDb(){
   var txt=document.getElementById('db-question').value.trim();

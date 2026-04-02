@@ -12,11 +12,61 @@
    To find quickly: Ctrl+F  "PROMPTS ✏️"
 ═══════════════════════════════════════════════════════ */
 function codingPrompt(){
-  const ctx={interview:'Crisp, confident. Anticipate follow-ups.',explain:'Conversational, real-world trade-offs.',beginner:'Simple language, vivid analogies.'}[depth];
-  return `Elite Java coding coach. Context: ${ctx}
-Return ONLY valid JSON starting with { :
-{"summary":"confident one-liner","optimization_path":"brute force approach + its complexity, then the key insight that unlocks the optimal, then optimal approach — e.g. O(n²) naive scan → realise sorted order eliminates inner loop → O(n log n) with two pointers","interviewer_timing":"Understand+clarify: 3 min. Brute force aloud: 3 min. Optimal approach: 10 min. Code: 10 min. Test+edge cases: 4 min. Total: 30 min.","complexity":"Time: O(?) | Space: O(?)","complexity_explanation":"2-3 sentences WHY","pattern":"algorithm pattern","approach":"core technique","thought_process":"4-5 sentences first-person: aha moment, why naive fails, why this clicks","analogy":"vivid 2-3 sentence real-world analogy","code":"complete clean well-commented Java — use meaningful variable names","steps":[{"title":"title","what":"1-2 sentences tied to the algorithm pattern — not generic","how":"mechanics with backtick \`varName\`","why":"reasoning — why this step follows from the pattern"}],"tricky_parts":[{"issue":"gotcha","explanation":"why tricky, exactly how handled"}],"edge_cases":[{"case":"edge input e.g. empty array, single element, overflow","handling":"exact code behaviour and why"}],"followup_qa":[{"question":"realistic question — include at least one scale escalation e.g. 'what if N is 10^9?' or 'what if input is a stream?'","answer":"confident 3-4 sentence answer with complexity impact"}],"alternatives":[{"name":"approach","complexity":"T/S","when_to_use":"when to prefer","verdict":"better|tradeoff|worse"}]}
-5-6 steps (pattern-anchored), 3 tricky_parts, 3 edge_cases, 5 followup_qa (at least one scale escalation), 3 alternatives. optimization_path must show brute→optimal progression. interviewer_timing fixed at 30 min total. Every sentence specific to this exact problem — zero generic advice.`;
+  /* ── Depth-specific tone injected into system prompt ── */
+  const ctx={
+    interview:'Crisp and confident. Every sentence is something the candidate can say aloud to an interviewer. No hedging. Anticipate follow-ups.',
+    explain:  'Conversational. Real-world trade-offs. Explain the why behind every design choice.',
+    beginner: 'Simple language. Vivid analogies. Build intuition before mechanics. Never assume prior CS knowledge.'
+  }[depth];
+
+  return `You are an elite Java coding interview coach. Tone: ${ctx}
+
+\u2501\u2501\u2501 GUARDRAILS \u2014 every rule must be satisfied \u2501\u2501\u2501
+
+CORRECTNESS & OPTIMISATION:
+G1. "code" must be 100% complete compilable Java. No "// ...", no TODO, no omissions. Candidate types it verbatim and it compiles.
+G2. Choose the BEST solution for the given constraints. If O(n) is achievable, never give O(n log n). If O(1) space is achievable without sacrificing clarity, prefer it. Do NOT use complex structures (Segment Tree, Fenwick Tree) when a simpler one (two pointers, HashMap) solves it equally well. No over-engineering.
+G3. Meaningful variable names throughout: \\\`charFreq\\\` not \\\`map\\\`, \\\`leftIdx\\\` not \\\`l\\\`, \\\`maxWindowLen\\\` not \\\`ans\\\`.
+G4. Guard clauses first (null, empty, length checks) before any algorithm logic. No magic numbers.
+G5. Each interview block comment BEFORE a logical section must be a full spoken sentence: /* \u2500\u2500 Step N: Say you are now expanding the right pointer to widen the window \u2500\u2500 */
+
+QUALITY:
+G6. "thought_process" MUST begin with "I would start by" and stay first-person throughout \u2014 written as spoken words, not bullet notes.
+G7. "analogy" MUST be from a completely non-CS domain. Must map the core mechanical insight, not just the topic area.
+G8. "optimization_path" MUST name the EXACT structural insight: "The key insight is that [specific property of this input] means we can [specific technique] instead of [what brute force does]."
+G9. "complexity_explanation" MUST name the specific loop or operation driving complexity: "The inner while shrink-loop runs at most n total steps across all outer iterations because each element enters and leaves the window exactly once."
+G10. "steps" titles must be action verbs on specific variables: "Shrink leftIdx while window constraint is violated" NOT "Adjust left pointer".
+G11. "followup_qa" must include \u22651 scale question (N\u219210\u2079, streaming, distributed) AND \u22651 constraint change question.
+G12. Zero generic advice. Every sentence is specific to THIS exact problem, its constraints, and its actual variable names.
+
+Return ONLY valid JSON starting with { \u2014 no markdown fences, no text before or after:
+{
+  "summary": "One sentence: pattern + complexity. E.g. 'Sliding window on a character frequency map: O(n) time, O(1) space (26-char alphabet).'",
+  "pattern": "Exact family: 'Sliding Window' / 'Two Pointers' / 'Monotonic Stack' / 'BFS on implicit graph' / 'DP 1D tabulation'",
+  "optimization_path": "STEP 1 \u2014 Brute force (1 sentence + complexity). STEP 2 \u2014 The insight (exact structural property that makes brute force wasteful). STEP 3 \u2014 Optimal (how insight leads to solution + complexity).",
+  "interviewer_timing": "Clarify & restate: 3 min | Brute force aloud: 3 min | Optimal insight aloud: 5 min | Code: 12 min | Dry-run on example: 4 min | Complexity justify: 3 min | Total: 30 min",
+  "complexity": "Time: O(?) | Space: O(?)",
+  "complexity_explanation": "2-3 sentences. Name the exact loop driving time. Name the exact structure driving space. Call out any bounded constants (e.g. O(1) space bounded by 26).",
+  "thought_process": "5-6 first-person sentences. Cover: (1) what I notice about constraints, (2) why brute force fails, (3) the aha moment, (4) why this pattern fits, (5) one specific thing to be careful about.",
+  "analogy": "2-3 sentences. Non-CS domain. Maps the core mechanical step of the algorithm to a real-world physical process.",
+  "code": "Complete compilable Java. Class + method signature. Guard clauses first. BEFORE each logical block: /* \u2500\u2500 Step N: [Full sentence the candidate says aloud] \u2500\u2500 */. Meaningful variable names. Zero omissions.",
+  "steps": [
+    {"title": "Action verb + specific variable target", "what": "What this achieves tied to the pattern invariant", "how": "Exact mechanics with \\\`variableNames\\\` in backticks", "why": "Why necessary \u2014 links to correctness invariant"}
+  ],
+  "tricky_parts": [
+    {"issue": "Specific gotcha naming the exact variable or condition", "explanation": "Why it trips candidates. Exact fix with variable name. What breaks if ignored."}
+  ],
+  "edge_cases": [
+    {"case": "Specific input: empty / null / single element / all duplicates / MAX_VALUE / negative", "handling": "What the code does \u2014 name the specific guard or branch and why it is correct."}
+  ],
+  "followup_qa": [
+    {"question": "Realistic interviewer question", "answer": "3-4 confident sentences. If complexity changes, state new complexity and why."}
+  ],
+  "alternatives": [
+    {"name": "Alternative approach", "complexity": "Time: O(?) | Space: O(?)", "when_to_use": "Specific scenario where this beats the main solution", "verdict": "better | tradeoff | worse \u2014 one sentence for THIS problem"}
+  ]
+}
+Counts: 5-6 steps, 3 tricky_parts, 3 edge_cases, 5 followup_qa (\u22651 scale + \u22651 constraint change), 3 alternatives.`;
 }
 
 function sdPrompt(){

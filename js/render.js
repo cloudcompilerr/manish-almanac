@@ -16,31 +16,111 @@ const eh=t=>String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/
 
 function renderCoding(d){
   const a=document.getElementById('rarea');
-  const stH=(d.steps||[]).map((s,i)=>`<div class="card fadein"><div class="card-head"><div class="cnum">${i+1}</div><div>${s.title}</div></div><div class="card-body">${rx(s.what)}<br><br>${rx(s.how)}</div><div class="card-sub">💡 Why: ${s.why}</div></div>`).join('');
-  const trH=(d.tricky_parts||[]).map(t=>`<div class="iblock red fadein"><div class="blbl">⚠️ ${t.issue}</div>${rx(t.explanation)}</div>`).join('');
-  const qaH=(d.followup_qa||[]).map(q=>`<div class="qa-item fadein"><div class="qa-q" onclick="toggleQA(this)"><span>${q.question}</span><span class="chev">›</span></div><div class="qa-a">${rx(q.answer)}</div></div>`).join('');
+
+  /* ── Extract Step N block comments from code for the narration panel ── */
+  const narSteps=[];
+  const bcRx=/\/\*\s*──\s*Step\s*(\d+):\s*([^─]+?)\s*──\s*\*\//g;
+  let bm;
+  while((bm=bcRx.exec(d.code||''))!==null) narSteps.push({n:bm[1],text:bm[2].trim()});
+
+  /* ── Render helpers ── */
+  const stH=(d.steps||[]).map((s,i)=>
+    `<div class="card fadein"><div class="card-head"><div class="cnum">${i+1}</div><div>${s.title}</div></div>`+
+    `<div class="card-body">${rx(s.what)}<br><br>${rx(s.how)}</div>`+
+    `<div class="card-sub">💡 Why: ${s.why}</div></div>`).join('');
+
+  const trH=(d.tricky_parts||[]).map(t=>
+    `<div class="iblock red fadein"><div class="blbl">⚠️ ${t.issue}</div>${rx(t.explanation)}</div>`).join('');
+
+  const ecH=(d.edge_cases||[]).map(ec=>
+    `<div class="card fadein"><div class="card-head"><div class="cnum" style="background:var(--purple,#6040a0);color:#fff">EC</div><div>${eh(ec.case)}</div></div>`+
+    `<div class="card-body">${rx(ec.handling)}</div></div>`).join('');
+
+  const qaH=(d.followup_qa||[]).map(q=>
+    `<div class="qa-item fadein"><div class="qa-q" onclick="toggleQA(this)"><span>${q.question}</span><span class="chev">›</span></div>`+
+    `<div class="qa-a">${rx(q.answer)}</div></div>`).join('');
+
   const vl=v=>v==='better'?'✓ Better':v==='worse'?'✗ Worse':'⇄ Trade-off';
   const vc=v=>v==='better'?'bg':v==='worse'?'bo':'bb';
-  const alH=(d.alternatives||[]).map(al=>`<div class="card fadein"><div class="card-head" style="justify-content:space-between"><span>${al.name} <small style="color:var(--ts);font-weight:400">${al.complexity}</small></span><span class="badge ${vc(al.verdict)}">${vl(al.verdict)}</span></div><div class="card-body">${al.when_to_use}</div></div>`).join('');
+  const alH=(d.alternatives||[]).map(al=>
+    `<div class="card fadein"><div class="card-head" style="justify-content:space-between">`+
+    `<span>${al.name} <small style="color:var(--ts);font-weight:400">${al.complexity}</small></span>`+
+    `<span class="badge ${vc(al.verdict)}">${vl(al.verdict)}</span></div>`+
+    `<div class="card-body">${al.when_to_use}</div></div>`).join('');
+
+  /* ── "Say This Aloud" narration panel ── */
+  const narH=narSteps.length
+    ? narSteps.map(s=>
+        `<div class="card fadein" style="border-left:3px solid var(--ac)"><div class="card-head">`+
+        `<div class="cnum" style="background:var(--ac);color:#1a1814">${s.n}</div>`+
+        `<div style="font-size:13px;line-height:1.55;font-style:italic">"${s.text}"</div></div></div>`
+      ).join('')
+    : `<div style="font-size:12.5px;color:var(--ts);padding:8px 0;line-height:1.7">`+
+      `Read the <code style="font-size:11px;background:var(--as);padding:1px 5px;border-radius:3px">/* ── Step N: … ── */</code> `+
+      `block comments in the Code tab — each is a sentence to say aloud before writing that section.</div>`;
+
+  /* ── Optimisation path (brute→insight→optimal) ── */
+  const optH=d.optimization_path
+    ? `<div style="background:var(--os);border:1px solid rgba(200,169,110,.3);border-radius:10px;padding:13px 15px;margin-bottom:12px;font-size:13px;line-height:1.85">`+
+      d.optimization_path
+        .replace(/STEP (\d+) —/g,'</p><p><strong>STEP $1 —</strong>')
+        .replace(/^/,'<p>').replace(/$/,'</p>')
+        .replace(/\n/g,' ')
+      +`</div>`
+    : '';
+
+  /* ── Interview timing bar ── */
+  const timH=d.interviewer_timing
+    ? `<div style="background:var(--sf);border:1px solid var(--br);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--ts);line-height:2">`+
+      d.interviewer_timing.replace(/\|/g,'&nbsp;·&nbsp;').replace(/\n/g,'<br>')
+      +`</div>`
+    : '';
+
+  const tabs=['overview','Overview','narrate','Say This Aloud','code','Code',
+              'steps','Walkthrough','edge','Edge Cases','tricky','Gotchas','qa','Q&A','alts','Alternatives'];
   a.innerHTML=
-    ptabBar(['overview','Overview','code','Code','steps','Walkthrough','tricky','Gotchas','qa','Q&A','alts','Alternatives'])+
-    `<div class="ppanel on" >
-      <div class="iblock blue fadein"><div class="blbl">🧠 How I thought about this</div>${d.thought_process}</div>
-      <div class="iblock green fadein"><div class="blbl">💡 Real-world analogy</div>${d.analogy}</div>
-      <div class="sumbox fadein">${d.summary}</div>
-      <div class="mrow"><span class="badge ba">${d.complexity}</span><span class="badge bb">${d.pattern}</span><span class="badge bg">${d.approach}</span></div>
-      <div style="font-size:12.5px;line-height:1.7;color:var(--ts);padding:2px 0 14px">${d.complexity_explanation}</div>
+    ptabBar(tabs)+
+    /* ── OVERVIEW ── */
+    `<div class="ppanel on">
+      <div class="iblock blue fadein"><div class="blbl">🧠 How I thought about this</div>${d.thought_process||''}</div>
+      <div class="iblock green fadein"><div class="blbl">💡 Real-world analogy</div>${d.analogy||''}</div>
+      <div class="sumbox fadein">${d.summary||''}</div>
+      <div class="mrow"><span class="badge ba">${d.complexity||''}</span><span class="badge bb">${d.pattern||d.approach||''}</span></div>
+      <div style="font-size:12.5px;line-height:1.7;color:var(--ts);padding:2px 0 10px">${d.complexity_explanation||''}</div>
+      <div class="blbl" style="margin-bottom:6px">🗺️ Brute → Optimal Path</div>${optH}
+      <div class="blbl" style="margin-bottom:6px">⏱️ Interview Timing</div>${timH}
       <button class="spk-btn fadein" onclick="openSM()">📢 Open Speak Mode</button>
-    </div>
-    <div class="ppanel" id="pp_code">
-      <p style="font-size:11px;color:var(--ts);margin-bottom:9px">Lines wrap — scroll up/down only. No horizontal scroll.</p>
-      <div class="code-outer fadein"><div class="code-hdr"><span class="code-lang">JAVA</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><div class="code-body"><pre>${hl(d.code)}</pre></div></div>
-    </div>
-    <div class="ppanel" id="pp_steps"><div>${stH}</div></div>
-    <div class="ppanel" id="pp_tricky"><p style="font-size:11.5px;color:var(--ts);margin-bottom:12px;line-height:1.5">Knowing these signals thoroughness.</p>${trH}</div>
-    <div class="ppanel" ><p style="font-size:11.5px;color:var(--ts);margin-bottom:12px;line-height:1.5">Tap to reveal.</p>${qaH}</div>
-    <div class="ppanel" id="pp_alts"><p style="font-size:11.5px;color:var(--ts);margin-bottom:12px;line-height:1.5">Mentioning trade-offs signals depth.</p>${alH}</div>`;
-  a._rawCode=d.code;a.classList.add('on');
+    </div>`+
+    /* ── SAY THIS ALOUD ── */
+    `<div class="ppanel" id="pp_narrate">
+      <p style="font-size:11.5px;color:var(--ts);margin-bottom:12px;line-height:1.6">
+        Say each of these sentences aloud to your interviewer <em>before</em> writing that section of code. They come directly from the block comments in the code.
+      </p>${narH}
+    </div>`+
+    /* ── CODE ── */
+    `<div class="ppanel" id="pp_code">
+      <p style="font-size:11px;color:var(--ts);margin-bottom:9px">Each <strong>/* ── Step N: … ── */</strong> comment is what you say aloud before writing that block.</p>
+      <div class="code-outer fadein"><div class="code-hdr"><span class="code-lang">JAVA</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><div class="code-body"><pre>${hl(d.code||'')}</pre></div></div>
+    </div>`+
+    /* ── WALKTHROUGH ── */
+    `<div class="ppanel" id="pp_steps"><div>${stH}</div></div>`+
+    /* ── EDGE CASES ── */
+    `<div class="ppanel" id="pp_edge">
+      <p style="font-size:11.5px;color:var(--ts);margin-bottom:12px;line-height:1.5">Handle these before claiming you're done — interviewers always check.</p>
+      ${ecH}
+    </div>`+
+    /* ── GOTCHAS ── */
+    `<div class="ppanel" id="pp_tricky">
+      <p style="font-size:11.5px;color:var(--ts);margin-bottom:12px;line-height:1.5">Knowing these signals thoroughness. Mention them proactively.</p>${trH}
+    </div>`+
+    /* ── Q&A ── */
+    `<div class="ppanel"><p style="font-size:11.5px;color:var(--ts);margin-bottom:12px;line-height:1.5">Tap to reveal the answer.</p>${qaH}</div>`+
+    /* ── ALTERNATIVES ── */
+    `<div class="ppanel" id="pp_alts">
+      <p style="font-size:11.5px;color:var(--ts);margin-bottom:12px;line-height:1.5">Mentioning alternatives unprompted signals engineering depth.</p>${alH}
+    </div>`;
+  a._rawCode=d.code||'';
+  a.classList.add('on');
   setTimeout(()=>a.scrollIntoView({behavior:'smooth',block:'start'}),120);
 }
 
