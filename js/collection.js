@@ -35,24 +35,34 @@ const COLLECTION_DATA = {
 function openCollection(){
   document.getElementById('list').style.display='none';
   document.getElementById('coll-panel').classList.add('open');
+  window.scrollTo(0,0);
 }
 function closeCollection(){
   document.getElementById('coll-item').classList.remove('open');
-  var f=document.getElementById('ci-iframe');if(f)f.srcdoc='';
+  var f=document.getElementById('ci-iframe');if(f){f.srcdoc='';f.style.height='';}
   document.getElementById('coll-panel').classList.remove('open');
+  document.getElementById('coll-panel').style.display='';
   document.getElementById('list').style.display='block';
+  window.scrollTo(0,0);
 }
 function openCollItem(id){
   var item=COLLECTION_DATA[id];
   if(!item)return;
   document.getElementById('ci-title').textContent=item.title;
   var iframe=document.getElementById('ci-iframe');
+  document.getElementById('coll-panel').style.display='none';
   document.getElementById('coll-item').classList.add('open');
+  window.scrollTo(0,0);
+  function fitIframe(){
+    try{
+      var h=iframe.contentDocument.body.scrollHeight;
+      if(h>100) iframe.style.height=h+'px';
+    }catch(e){}
+  }
+  iframe.onload=function(){ fitIframe(); setTimeout(fitIframe,400); };
   if(item.srcdoc){
-    /* embedded — works on file://, GitHub Pages, everywhere */
     iframe.srcdoc=item.srcdoc;
   } else {
-    /* fetch-based — for cms/topk/ai_handbook standalone files */
     iframe.srcdoc='<div style="font-family:-apple-system,sans-serif;padding:40px 24px;text-align:center;color:#aaa;font-size:14px">Loading…</div>';
     fetch(item.file)
       .then(function(r){ if(!r.ok)throw new Error('HTTP '+r.status); return r.text(); })
@@ -64,10 +74,11 @@ function openCollItem(id){
 }
 function closeCollItem(){
   document.getElementById('coll-item').classList.remove('open');
-  /* Clear iframe to stop any running scripts */
+  document.getElementById('coll-panel').style.display='';
+  window.scrollTo(0,0);
   setTimeout(function(){
     var f=document.getElementById('ci-iframe');
-    if(f)f.srcdoc='';
+    if(f){f.srcdoc='';f.style.height='';}
   },50);
 }
 
