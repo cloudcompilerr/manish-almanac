@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Context Window Selection</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.pill-pg{border-color:#336791;color:#336791;background:rgba(51,103,145,.08);}
+.pill-mg{border-color:#13aa52;color:#13aa52;background:rgba(19,170,82,.08);}
+.pill-dy{border-color:#ff9900;color:#cc7a00;background:rgba(255,153,0,.08);}
+.pill-ca{border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08);}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+h4{font-size:13px;font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0;}
+.db-card{background:white;border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--pg);}
+.db-card.mg::before{background:var(--mg);}
+.db-card.dy::before{background:var(--dy);}
+.db-card.ca::before{background:var(--ca);}
+.db-card.red::before{background:var(--red);}
+.db-card.blue::before{background:var(--blue);}
+.db-logo{font-size:22px;margin-bottom:6px;}
+.db-name{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:4px;}
+.db-type{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;}
+.db-tagline{font-size:13px;color:#5a5848;line-height:1.55;}
+.db-born{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}
+.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.use-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;}
+.use-card{border:1px solid var(--border);border-radius:6px;padding:18px;background:white;}
+.use-card-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.use-card ul{padding-left:16px;font-size:13px;color:#4a4838;line-height:1.7;}
+.use-card ul li{margin-bottom:4px;}
+.shard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0;}
+.shard-card{background:var(--ink);border-radius:8px;padding:20px;color:#c8c4b8;}
+.shard-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.shard-name{font-family:var(--serif);font-size:16px;font-weight:700;color:#e8b84b;margin-bottom:8px;}
+.shard-body{font-size:12.5px;line-height:1.65;color:#a8a49c;}
+.shard-verdict{margin-top:10px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:3px;display:inline-block;}
+.sv-easy{background:rgba(26,122,74,.2);color:#5ac882;}.sv-med{background:rgba(184,114,10,.2);color:#e8943a;}.sv-hard{background:rgba(192,57,43,.2);color:#e87868;}
+.faq-item{border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:14px;font-weight:500;color:var(--ink);user-select:none;}
+.faq-q:hover{background:var(--surface);}
+.faq-q .tog{font-size:18px;color:#e8b84b;flex-shrink:0;margin-left:12px;transition:transform .2s;font-family:var(--mono);}
+.faq-a{display:none;padding:18px;background:var(--surface);font-size:13.5px;color:#3a3830;line-height:1.75;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;}.faq-item.open .tog{transform:rotate(45deg);}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;font-weight:500;}
+.b-pg{background:var(--pg-bg);border-color:var(--pg);color:var(--pg);}.b-mg{background:var(--mg-bg);border-color:var(--mg);color:var(--mg);}.b-dy{background:var(--dy-bg);border-color:var(--dy);color:#b06000;}.b-ca{background:var(--ca-bg);border-color:var(--ca);color:var(--ca);}.b-g{background:var(--green-bg);border-color:var(--green);color:var(--green);}.b-r{background:var(--red-bg);border-color:var(--red);color:var(--red);}.b-a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+
+/* Recall visual bar chart */
+.recall-visual{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin:20px 0;}
+.recall-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.recall-bar{width:100%;border-radius:3px 3px 0 0;transition:height .3s;}
+.recall-label{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.5px;}
+.recall-pct{font-family:var(--mono);font-size:9px;font-weight:600;}
+
+/* Position heat legend */
+.heat-row{display:flex;gap:4px;margin:16px 0;align-items:flex-end;height:80px;}
+.heat-block{flex:1;border-radius:3px 3px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;}
+.heat-block span{font-family:var(--mono);font-size:8px;color:white;font-weight:600;}
+.heat-labels{display:flex;gap:4px;margin-bottom:4px;}
+.heat-labels span{flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;}
+
+/* Concept grid (from caching) */
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+.concept-def p{margin:0 0 8px;font-size:13.5px;color:#2a2820;}
+.concept-def p:last-child{margin-bottom:0;}
+.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
+.concept-note.good{background:#edf7f0;color:#1a4a30;border-left:3px solid #1a7a4a;}
+.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-left:3px solid #b83030;}
+.concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
+.concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
+@media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}}
+
+/* Knowledge cards */
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text p{font-size:13.5px;color:#2a2820;margin:0 0 8px;}
+.k-point-text p:last-child{margin:0;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+
+/* Cost table highlight */
+.cost-highlight{background:#fffbf0;font-weight:600;}
+
+/* Token math card accent */
+.db-card .db-stat{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--ink);margin:8px 0 4px;}
+.db-card .db-sub{font-size:12px;color:var(--muted);}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">AI Engineering · LLM Systems · Manish-Almanac</div>
+    <h1>LLM Context<br><em>Window Selection</em></h1>
+    <p class="hero-sub">How to choose the right context strategy for your application — from model selection and token budgeting to RAG architecture, chunking algorithms, and the "lost in the middle" problem. Every tradeoff, cost calculation, and failure mode covered.</p>
+    <div class="db-pills">
+      <span class="db-pill" style="border-color:#8b5cf6;color:#7c3aed;background:rgba(124,58,237,.08)">Claude 200K</span>
+      <span class="db-pill" style="border-color:#10a37f;color:#10a37f;background:rgba(16,163,127,.08)">GPT-4o 128K</span>
+      <span class="db-pill" style="border-color:#4285f4;color:#4285f4;background:rgba(66,133,244,.08)">Gemini 1M</span>
+      <span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">RAG</span>
+      <span class="db-pill" style="border-color:#1287b1;color:#1287b1;background:rgba(18,135,177,.08)">Chunking</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ NAV -->
+<nav class="nav">
+  <a href="#what-is">What Is It</a>
+  <a href="#model-comparison">Model Comparison</a>
+  <a href="#long-vs-rag">Long-Context vs RAG</a>
+  <a href="#quality-at-length">Quality at Length</a>
+  <a href="#token-math">Token Math</a>
+  <a href="#techniques">Techniques</a>
+  <a href="#anti-patterns">Anti-Patterns</a>
+  <a href="#faq">FAQ</a>
+</nav>
+
+<div class="wrap">
+
+<!-- ═══════════════════════════════════════════════════ SECTION 1: WHAT IS IT -->
+<section id="what-is">
+  <div class="sec-tag">01 · Foundations</div>
+  <h2>What Is a Context Window?</h2>
+  <p>A <strong>context window</strong> is the total number of tokens a language model can "see" in a single forward pass — its effective attention span. Everything outside this window does not exist from the model's perspective. When you send a prompt, the model reads the entire sequence of tokens simultaneously and attends to all of it (within limits) to generate its response.</p>
+  <p>Tokens are the fundamental unit of text for LLMs. A token is roughly a word piece — common words like "the" are one token, while longer words may be two or three. The tokenizer (BPE, SentencePiece, or tiktoken) converts raw characters into token IDs before any computation happens. The model's context limit is always stated in tokens, not characters or words.</p>
+
+  <div class="analogy">
+    <div class="analogy-label">The working memory analogy</div>
+    <div class="analogy-text">
+      Think of a context window like <strong>working memory in humans</strong>. When reading a long legal contract, you can only hold so many clauses in active attention at once. As you read further, earlier details start to fade — you may still have them in long-term memory but they are not actively influencing your reasoning right now.<br><br>
+      An LLM's context window is this "active desk space." Everything on the desk is processed with full attention. Anything that does not fit on the desk must be left out — and the model cannot reason about what it cannot see. Unlike human memory, there is a hard ceiling: exceed the token limit and the model errors out or truncates your input silently.
+    </div>
+  </div>
+
+  <h3>How Transformers Implement Context Limits</h3>
+  <p>The Transformer architecture (Vaswani et al., 2017) uses <strong>self-attention</strong>: every token attends to every other token in the sequence. This produces a quadratic O(n²) relationship between sequence length and compute — doubling the context length quadruples the attention computation. Memory (VRAM) scales similarly. This is why context windows were stuck at 4K–8K tokens for years and why extending them beyond a certain point has rapidly diminishing returns on raw throughput.</p>
+  <p>Modern long-context models use several architectural tricks to tame this: <strong>Rotary Position Embeddings (RoPE)</strong> with extended base frequencies, <strong>Grouped Query Attention (GQA)</strong> to reduce KV cache memory, <strong>FlashAttention</strong> for I/O-efficient attention computation, and <strong>sparse attention patterns</strong> that skip attending to distant irrelevant tokens. These innovations pushed practical context windows from 4K to 128K, 200K, and even 1M tokens.</p>
+
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Input Tokens</div>
+      <div class="concept-def"><strong>All text sent to the model before it generates a response.</strong> Includes the system prompt, conversation history, injected documents, and the user query. Input tokens consume context window space but are cheaper than output tokens — typically 3–10x less expensive per token. Input tokens are processed in a single forward pass; the model reads everything at once before generating a single output token.</div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Output Tokens</div>
+      <div class="concept-def"><strong>Tokens the model generates, one at a time, via autoregressive decoding.</strong> Each new token attends to all previous tokens (input + output so far). Output is significantly more expensive because it requires N sequential forward passes for N output tokens — this is the latency bottleneck, not input processing. Most models are priced 3–15x higher per output token than input token.</div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">KV Cache</div>
+      <div class="concept-def"><strong>The key-value attention cache that stores computed attention states for input tokens.</strong> During autoregressive generation, the KV cache means the model does not re-process input tokens for each new output token. This is what makes long-context generation tractable — without KV caching, generating 500 tokens with a 100K input context would require 100K × 500 = 50M token-processing operations instead of 100K + 500. The KV cache lives in GPU VRAM and is why long contexts require more memory.</div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Prompt Caching</div>
+      <div class="concept-def"><strong>Provider-level caching of repeated input prefixes across API calls.</strong> Anthropic (Claude) and Google (Gemini) allow you to designate a portion of your prompt as "cached." If the same prefix is reused within a time window (5 min for Anthropic), the provider serves it from cache at 90% reduced cost and lower latency. Critical for production RAG systems with static system prompts or large repeated document contexts. Not the same as KV cache — this is a billing/infrastructure feature, not a model architecture feature.</div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Context Utilization</div>
+      <div class="concept-def"><strong>The fraction of the available context window actually filled with meaningful content.</strong> A model with a 200K token window does not mean you should always fill it — costs scale linearly with input tokens, latency increases, and quality can degrade (lost-in-the-middle effect). Optimal utilization depends on the task: code analysis benefits from more context, simple Q&amp;A rarely needs more than 8K tokens.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 2: MODEL COMPARISON -->
+<section id="model-comparison">
+  <div class="sec-tag">02 · Model Landscape</div>
+  <h2>Model Comparison: Context Specs &amp; Pricing</h2>
+  <p>Prices are per million tokens as of early 2025. Always verify at the provider's official pricing page — costs change frequently as competition intensifies. "Speed" ratings reflect observed real-world throughput at typical context lengths; very long contexts add latency for all models.</p>
+
+  <div style="overflow-x:auto;">
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Provider</th>
+        <th>Max Tokens</th>
+        <th>Input $/1M</th>
+        <th>Output $/1M</th>
+        <th>Speed</th>
+        <th>Sweet Spot</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="row-head">Claude 3.5 Sonnet</td>
+        <td>Anthropic</td>
+        <td><strong>200K</strong></td>
+        <td>$3.00</td>
+        <td>$15.00</td>
+        <td><span class="good">Fast</span></td>
+        <td>Code analysis, long documents, agentic workflows</td>
+      </tr>
+      <tr>
+        <td class="row-head">Claude 3 Opus</td>
+        <td>Anthropic</td>
+        <td><strong>200K</strong></td>
+        <td>$15.00</td>
+        <td>$75.00</td>
+        <td><span class="warn">Slow</span></td>
+        <td>Complex multi-step reasoning, nuanced judgment</td>
+      </tr>
+      <tr>
+        <td class="row-head">GPT-4o</td>
+        <td>OpenAI</td>
+        <td><strong>128K</strong></td>
+        <td>$2.50</td>
+        <td>$10.00</td>
+        <td><span class="good">Fast</span></td>
+        <td>General-purpose tasks, vision + text, function calling</td>
+      </tr>
+      <tr>
+        <td class="row-head">GPT-4o mini</td>
+        <td>OpenAI</td>
+        <td><strong>128K</strong></td>
+        <td>$0.15</td>
+        <td>$0.60</td>
+        <td><span class="good">Very Fast</span></td>
+        <td>High-volume classification, extraction, summarization</td>
+      </tr>
+      <tr>
+        <td class="row-head">Gemini 1.5 Pro</td>
+        <td>Google</td>
+        <td><strong>1M</strong></td>
+        <td>$1.25</td>
+        <td>$5.00</td>
+        <td><span class="good">Fast</span></td>
+        <td>Massive document analysis, entire codebases, video</td>
+      </tr>
+      <tr>
+        <td class="row-head">Gemini 1.5 Flash</td>
+        <td>Google</td>
+        <td><strong>1M</strong></td>
+        <td>$0.075</td>
+        <td>$0.30</td>
+        <td><span class="good">Very Fast</span></td>
+        <td>Budget long-context tasks, high-throughput pipelines</td>
+      </tr>
+      <tr>
+        <td class="row-head">Llama 3.1 405B</td>
+        <td>Meta / Groq</td>
+        <td><strong>128K</strong></td>
+        <td>Free / cheap</td>
+        <td>—</td>
+        <td><span class="good">Very Fast</span> (Groq)</td>
+        <td>Privacy-sensitive workloads, self-hosted, open weights</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout cl-blue">
+    <div class="cl-lbl">How to read this table for architecture decisions</div>
+    <p><strong>Cost vs context ceiling tradeoff:</strong> Gemini 1.5 Flash offers 1M tokens at $0.075/1M input — roughly 40x cheaper than Claude 3 Opus with 5x more context. But quality on complex reasoning tasks differs significantly. Always benchmark on your actual data before choosing solely on price.</p>
+    <p><strong>Latency at length:</strong> All models slow down at very long contexts. A 1M-token Gemini request may take 30–60 seconds for the first token. Budget this into your UX if users are waiting.</p>
+  </div>
+
+  <h3>Tokenizer Differences Matter for Budget Planning</h3>
+  <p>Different models use different tokenizers, so the same text consumes different numbers of tokens across providers. OpenAI's <code>cl100k_base</code> (tiktoken), Anthropic's custom tokenizer, and Google's SentencePiece all produce slightly different token counts for identical text — typically within 10–20% of each other, but this compounds over large documents. Always use the provider's official tokenizer to estimate costs before production deployment.</p>
+
+  <div class="db-grid">
+    <div class="db-card pg">
+      <div class="db-logo">A</div>
+      <div class="db-name">Anthropic Claude</div>
+      <div class="db-type">Prompt Caching · Constitutional AI</div>
+      <div class="db-tagline">Best-in-class instruction following and long-document comprehension. Prompt caching reduces repeated-prefix costs by 90%. Strong on code. Best choice for complex agentic workflows needing 200K context.</div>
+      <div class="db-born">claude.ai/api · claude-3-5-sonnet-20241022</div>
+    </div>
+    <div class="db-card mg">
+      <div class="db-logo">G</div>
+      <div class="db-name">Google Gemini</div>
+      <div class="db-type">1M Context · Multimodal</div>
+      <div class="db-tagline">Only production model offering 1M token context. Native multimodal (text + image + video + audio). Context caching available. Gemini 1.5 Flash is the most cost-efficient long-context option for budget-conscious pipelines.</div>
+      <div class="db-born">ai.google.dev · gemini-1.5-pro-latest</div>
+    </div>
+    <div class="db-card dy">
+      <div class="db-logo">O</div>
+      <div class="db-name">OpenAI GPT-4o</div>
+      <div class="db-type">128K · Function Calling · Vision</div>
+      <div class="db-tagline">The most widely integrated model with the largest ecosystem of tooling, fine-tuning, and Assistants API features. GPT-4o mini offers exceptional value for high-volume workloads where 128K context is sufficient.</div>
+      <div class="db-born">platform.openai.com · gpt-4o-2024-11-20</div>
+    </div>
+    <div class="db-card ca">
+      <div class="db-logo">L</div>
+      <div class="db-name">Llama 3.1 (Open)</div>
+      <div class="db-type">128K · Open Weights · Self-hosted</div>
+      <div class="db-tagline">Meta's open-weights model at 8B, 70B, and 405B scales. Run on your own infrastructure for data-privacy compliance or zero marginal cost at scale. Groq offers cloud inference at very high speeds for latency-sensitive applications.</div>
+      <div class="db-born">llama.meta.com · Groq · Ollama · vLLM</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 3: LONG CONTEXT VS RAG -->
+<section id="long-vs-rag">
+  <div class="sec-tag">03 · Architecture Decision</div>
+  <h2>Long-Context vs RAG: The Core Architectural Decision</h2>
+  <p>When your application needs to reason over large bodies of text, you face a fundamental architectural choice: <strong>shove everything into the context window</strong> (long-context approach) or <strong>retrieve only the relevant fragments</strong> (RAG — Retrieval-Augmented Generation). Neither is universally superior. The right choice depends on your corpus size, update frequency, cost sensitivity, and query patterns.</p>
+
+  <div class="use-grid">
+    <div class="use-card">
+      <div class="use-card-head" style="color:var(--blue)">
+        <span style="font-size:16px">&#9654;</span> WHEN TO USE LONG CONTEXT
+      </div>
+      <ul>
+        <li>Entire codebase or document set fits within model limits (e.g., &lt;150K tokens)</li>
+        <li>Document <strong>relationships matter</strong> — reasoning across multiple files simultaneously (e.g., understanding how module A calls module B calls module C)</li>
+        <li>No vector database infrastructure in place and you need a working prototype today</li>
+        <li><strong>One-shot analysis</strong>: ingest an entire report, contract, or codebase once, ask many questions</li>
+        <li>The query could match almost anywhere in the document and you cannot predict where</li>
+        <li>Cross-document synthesis: "What are all the places where X is contradicted?"</li>
+      </ul>
+    </div>
+    <div class="use-card">
+      <div class="use-card-head" style="color:var(--green)">
+        <span style="font-size:16px">&#9654;</span> WHEN TO USE RAG
+      </div>
+      <ul>
+        <li>Corpus exceeds model context limits (e.g., 10,000 documents, a whole company wiki)</li>
+        <li><strong>Dynamic data</strong>: knowledge base updated frequently — new docs added daily, real-time data</li>
+        <li>Cost-sensitive, high-volume workloads where sending 100K tokens per query is prohibitive</li>
+        <li>Need <strong>citations and provenance</strong>: RAG naturally returns which source chunks were used</li>
+        <li>Low-latency requirements: small context = faster first-token response</li>
+        <li>Multi-tenant: different users see different document subsets — RAG enforces access control at retrieval time</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout cl-green">
+    <div class="cl-lbl">The Hybrid Pattern — Best of Both Worlds</div>
+    <p><strong>Hybrid RAG + Long Context:</strong> Use RAG to select the top-K most semantically relevant chunks from a large corpus, then pass those chunks to a long-context model for final synthesis. RAG narrows the search space (e.g., 100K docs → top 20 chunks, ~15K tokens). The long-context model reasons holistically over those 20 chunks, preserving relationships within the retrieved set. This pattern captures RAG's scalability and long context's relational reasoning.</p>
+    <p>This is the production architecture used by most enterprise RAG systems: <code>query → embed → vector search → rerank → long-context LLM → answer</code>.</p>
+  </div>
+
+  <h3>RAG Architecture Components</h3>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Embedding<br>Model</div>
+      <div class="concept-def"><strong>Converts text chunks into dense vector representations that capture semantic meaning.</strong> The embedding model is separate from the generation LLM. Common choices: OpenAI <code>text-embedding-3-large</code> (3072 dimensions), Cohere <code>embed-v3</code>, open-source <code>BAAI/bge-large-en-v1.5</code>. Dimension size trades recall quality against storage/search cost. The embedding model's quality sets an upper bound on retrieval quality — a bad embedder cannot be fixed downstream.
+        <span class="concept-note info">Key insight: The embedding model's vocabulary and training distribution must match your domain. A general-purpose embedder works poorly on highly specialized medical or legal text — consider domain-fine-tuned models.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Vector Store</div>
+      <div class="concept-def"><strong>Database optimized for approximate nearest-neighbor (ANN) search over embedding vectors.</strong> ANN search finds the K vectors most similar to a query vector using algorithms like HNSW (Hierarchical Navigable Small World graphs) or FAISS (Facebook AI Similarity Search). Common stores: <strong>Pinecone</strong> (managed), <strong>Weaviate</strong> (hybrid search), <strong>Qdrant</strong> (Rust, fast), <strong>pgvector</strong> (Postgres extension, zero infra overhead), <strong>Chroma</strong> (local development). Search time is O(log n) to O(n^0.5) — much faster than brute-force O(n) cosine similarity over millions of vectors.
+        <span class="concept-note muted">For &lt;100K chunks, pgvector on Postgres is often sufficient and eliminates one infrastructure dependency. Only reach for dedicated vector DBs when you need millions of chunks or sub-10ms search at scale.</span>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Reranker</div>
+      <div class="concept-def"><strong>A cross-encoder model that re-scores the top-K retrieved chunks for true relevance to the query.</strong> Bi-encoder vector search is fast but imprecise — it uses independent embeddings for query and document. A cross-encoder takes (query, chunk) as a combined input and scores their relevance directly, but at higher compute cost. Typical pipeline: vector search retrieves top-50 candidates in 5ms → reranker scores all 50 against query in 50ms → take top-5 for the LLM. Common rerankers: Cohere Rerank, <code>cross-encoder/ms-marco-MiniLM-L-6-v2</code>. Reranking consistently improves RAG answer quality by 10–30% in benchmarks.
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Chunking<br>Strategy</div>
+      <div class="concept-def"><strong>How you split documents before embedding determines retrieval quality more than almost any other decision.</strong> A chunk must be: (1) small enough that the embedding captures a single coherent concept, (2) large enough to contain enough context to be useful when injected into the LLM prompt. The optimal chunk size depends on document type. Fixed-size chunking (512 tokens, 50-token overlap) is the naive baseline. Semantic chunking (split at paragraph/section boundaries) and recursive character splitting (LangChain's default) produce better results. Chunk metadata (document title, section header, page number) should always be stored and injected with retrieved chunks.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 4: QUALITY AT LENGTH -->
+<section id="quality-at-length">
+  <div class="sec-tag">04 · Quality Degradation</div>
+  <h2>Quality at Length: The "Lost in the Middle" Problem</h2>
+  <p>In 2023, Stanford researchers (Liu et al.) published a landmark finding: LLMs perform significantly worse on content placed in the <strong>middle</strong> of long contexts compared to content at the beginning or end. This was demonstrated across GPT-3.5, GPT-4, Claude, and open-source models. The effect worsens as context length increases.</p>
+  <p>The phenomenon arises from how positional encodings and attention patterns interact at training time. Models see more training data where important information appears near the start (instructions) or end (most recent message). The model's "attention budget" is unevenly distributed — early and late positions get more attention weight than the dense middle of a very long context.</p>
+
+  <div class="callout cl-amber">
+    <div class="cl-lbl">Critical Production Rule</div>
+    <p><strong>Put the most important instructions and content at the START and END of your context.</strong> Never bury critical system instructions, examples, or key facts in the middle of a long prompt. If you are injecting retrieved chunks, order them so the most relevant chunks appear first and second-most-relevant appear last. Filler/supporting context goes in the middle.</p>
+  </div>
+
+  <!-- Recall position visualization -->
+  <h3>Recall Accuracy by Position in Context</h3>
+  <p>The following illustrates approximate recall accuracy when a target fact is placed at different positions within a long context (based on Liu et al. 2023 findings). Best recall is at the very beginning (~95%) and end (~88%). Worst recall is at 40–60% through the context (~55–65%).</p>
+
+  <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:24px;margin:20px 0;">
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;">Recall Accuracy at Position — Approximate (Long Context Conditions)</div>
+    <div style="display:flex;align-items:flex-end;gap:6px;height:120px;margin-bottom:8px;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--green);font-weight:700;">95%</div>
+        <div style="width:100%;background:var(--green);border-radius:3px 3px 0 0;height:114px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:#5a8a5a;font-weight:700;">85%</div>
+        <div style="width:100%;background:#4a9a6a;border-radius:3px 3px 0 0;height:102px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--amber);font-weight:700;">72%</div>
+        <div style="width:100%;background:var(--amber);border-radius:3px 3px 0 0;height:86px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:#c05020;font-weight:700;">63%</div>
+        <div style="width:100%;background:#c05020;border-radius:3px 3px 0 0;height:76px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--red);font-weight:700;">58%</div>
+        <div style="width:100%;background:var(--red);border-radius:3px 3px 0 0;height:70px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--red);font-weight:700;">55%</div>
+        <div style="width:100%;background:var(--red);border-radius:3px 3px 0 0;height:66px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:#c05020;font-weight:700;">62%</div>
+        <div style="width:100%;background:#c05020;border-radius:3px 3px 0 0;height:74px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--amber);font-weight:700;">74%</div>
+        <div style="width:100%;background:var(--amber);border-radius:3px 3px 0 0;height:89px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:#5a8a5a;font-weight:700;">83%</div>
+        <div style="width:100%;background:#4a9a6a;border-radius:3px 3px 0 0;height:100px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--green);font-weight:700;">88%</div>
+        <div style="width:100%;background:var(--green);border-radius:3px 3px 0 0;height:106px;"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">0%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">10%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">20%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">30%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">40%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">50%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">60%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">70%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">80%</div>
+      <div style="flex:1;font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;">100%</div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;text-align:center;letter-spacing:1px;">POSITION IN CONTEXT WINDOW</div>
+  </div>
+
+  <h3>Needle-in-a-Haystack Testing</h3>
+  <p><strong>Needle-in-a-haystack (NIAH)</strong> is the standard benchmark methodology for evaluating long-context fidelity. The procedure: hide a specific, unique fact (the "needle") at a precise position within a long filler document (the "haystack"), then ask the model to retrieve that fact. Repeat across all position percentages and all context depths (4K, 16K, 64K, etc.) to produce a 2D heat map of recall accuracy.</p>
+  <p>Most frontier models show near-perfect recall (>98%) at short contexts but degrade meaningfully beyond 50K tokens, especially at positions 30–70% through the context. Gemini 1.5 Pro's original announcement showed exceptionally clean NIAH performance at 1M tokens, but real-world tasks involving <em>reasoning</em> over retrieved facts (rather than pure retrieval) show more typical degradation patterns.</p>
+
+  <div class="callout cl-blue">
+    <div class="cl-lbl">Production Mitigation Strategies</div>
+    <p><strong>1. Primacy / recency placement:</strong> Place critical instructions at position 0 (system prompt start) and key retrieved context at the very end of the user message, just before the question.</p>
+    <p><strong>2. Reduce context when possible:</strong> If you need a model to find a specific answer, RAG to narrow context beats stuffing everything in. A 5K context window has near-perfect recall; a 100K context window has the lost-in-middle problem.</p>
+    <p><strong>3. Repetition for critical facts:</strong> For truly critical instructions (safety rules, formatting requirements), repeat them both at the start of the system prompt and at the end of the user turn. Redundancy is not wasted tokens when the stakes are high.</p>
+    <p><strong>4. Structured context formatting:</strong> Use XML tags, headers, or numbered sections so the model can parse structure. <code>&lt;document id="1" relevance="high"&gt;...&lt;/document&gt;</code> helps the model allocate attention, especially in models fine-tuned on structured prompts (Claude responds well to XML, GPT-4o to Markdown headers).</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 5: TOKEN MATH -->
+<section id="token-math">
+  <div class="sec-tag">05 · Token Budgeting</div>
+  <h2>Token Math: Estimating Context Costs</h2>
+
+  <div class="analogy">
+    <div class="analogy-label">Token conversion rule of thumb</div>
+    <div class="analogy-text">
+      <strong>1 token ≈ 4 characters ≈ 0.75 words</strong> (for English prose).<br><br>
+      This approximation holds for GPT/Claude tokenizers on standard English text. Code is denser — <strong>code averages 1 token per 3 characters</strong> because identifiers and operators are tokenized differently. Non-Latin scripts (Chinese, Arabic, Korean) are significantly more token-heavy — a Chinese character may be 1–3 tokens depending on the tokenizer, so the same information content uses 2–4x more tokens than English.
+    </div>
+  </div>
+
+  <div class="db-grid">
+    <div class="db-card pg">
+      <div class="db-stat">128K</div>
+      <div class="db-name">Tokens</div>
+      <div class="db-type">GPT-4o · Llama 3.1</div>
+      <div class="db-tagline">Approximately 100,000 words or ~400 pages of dense text. Enough for a novel, a large legal contract, an entire small codebase, or 3–4 hours of transcribed speech.</div>
+      <div class="db-born">GPT-4 Turbo · GPT-4o · Llama 3.1</div>
+    </div>
+    <div class="db-card mg">
+      <div class="db-stat">200K</div>
+      <div class="db-name">Tokens</div>
+      <div class="db-type">Claude 3.5 Sonnet · Claude 3 Opus</div>
+      <div class="db-tagline">Approximately 150,000 words or ~600 pages. Enough for a complete medium-sized codebase (20–30 files), multiple large reports, or an entire technical book.</div>
+      <div class="db-born">Claude 3.5 Sonnet · Claude 3 Opus</div>
+    </div>
+    <div class="db-card dy">
+      <div class="db-stat">1M</div>
+      <div class="db-name">Tokens</div>
+      <div class="db-type">Gemini 1.5 Pro · Flash</div>
+      <div class="db-tagline">Approximately 750,000 words or ~3,000 pages. An entire large company codebase, a year of Slack messages, multiple books, or 10+ hours of audio transcription. This is effectively "unlimited" for most applications.</div>
+      <div class="db-born">Gemini 1.5 Pro · Gemini 1.5 Flash</div>
+    </div>
+  </div>
+
+  <h3>Cost Calculation at 128K Input Tokens</h3>
+  <p>This is the cost to process a single 128K-token input (approximately 400 pages of text, or one large codebase analysis). Output tokens not included.</p>
+
+  <div style="overflow-x:auto;">
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Price / 1M Input</th>
+        <th>Cost: 128K Input</th>
+        <th>Cost: 10 requests/day</th>
+        <th>Cost: 1,000 requests/day</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="row-head">Claude 3 Opus</td>
+        <td>$15.00</td>
+        <td><span class="bad">$1.92</span></td>
+        <td><span class="bad">$19.20</span></td>
+        <td><span class="bad">$1,920/day</span></td>
+      </tr>
+      <tr>
+        <td class="row-head">Claude 3.5 Sonnet</td>
+        <td>$3.00</td>
+        <td>$0.38</td>
+        <td>$3.84</td>
+        <td>$384/day</td>
+      </tr>
+      <tr>
+        <td class="row-head">GPT-4o</td>
+        <td>$2.50</td>
+        <td>$0.32</td>
+        <td>$3.20</td>
+        <td>$320/day</td>
+      </tr>
+      <tr>
+        <td class="row-head">Gemini 1.5 Pro</td>
+        <td>$1.25</td>
+        <td>$0.16</td>
+        <td>$1.60</td>
+        <td>$160/day</td>
+      </tr>
+      <tr class="cost-highlight">
+        <td class="row-head">GPT-4o mini</td>
+        <td>$0.15</td>
+        <td><span class="good">$0.019</span></td>
+        <td><span class="good">$0.19</span></td>
+        <td><span class="good">$19/day</span></td>
+      </tr>
+      <tr class="cost-highlight">
+        <td class="row-head">Gemini 1.5 Flash</td>
+        <td>$0.075</td>
+        <td><span class="good">$0.0096</span></td>
+        <td><span class="good">$0.096</span></td>
+        <td><span class="good">$9.60/day</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout cl-amber">
+    <div class="cl-lbl">The 200x cost spread</div>
+    <p>There is a <strong>200x price difference</strong> between the most expensive (Claude 3 Opus at $15/1M) and cheapest (Gemini 1.5 Flash at $0.075/1M) per input token. At 1,000 requests/day with 128K context, this is the difference between $9.60/day and $1,920/day. For production systems, <strong>tiered model routing</strong> — where simple tasks use cheap models and only genuinely complex tasks escalate to expensive ones — is not optional, it is a financial necessity.</p>
+  </div>
+
+  <h3>How Prompt Caching Transforms Cost Calculus</h3>
+  <p>When a system prompt or large document context is reused across many API calls, provider-level prompt caching can reduce costs dramatically. Anthropic's prompt caching prices cached tokens at <strong>10% of normal input cost</strong> ($0.30/1M cached vs $3.00/1M uncached for Claude 3.5 Sonnet). Google's Gemini Context Caching works similarly. The requirement: the cached prefix must be identical (bit-for-bit) across requests and be used within the cache TTL window.</p>
+
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">When it works</div>
+      <div class="concept-def"><strong>Prompt caching is most impactful when you have a large, static prefix sent with every request.</strong> Classic examples: a 50,000-token system prompt containing company policies + RAG context that rarely changes, or a large codebase context injected for a session of coding assistance. If you send 100K tokens of static context with every request and make 1,000 requests per day, caching reduces that cost by 90% — from $300/day to $30/day (Claude 3.5 Sonnet pricing).</div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">When it does not</div>
+      <div class="concept-def"><strong>Caching does not help when context changes every request.</strong> If each user has a unique document context that is never reused, there is no cache hit benefit. Similarly, if you are injecting fresh retrieved RAG chunks that differ per query, those chunks are not cacheable (though the static system prompt above them still is). The key discipline: separate your context into static layers (cacheable) and dynamic layers (not cacheable) and order them with static content first.</div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Cache TTL</div>
+      <div class="concept-def"><strong>Anthropic's prompt cache has a 5-minute TTL.</strong> If the same prefix is not reused within 5 minutes, the cache entry expires and the next request pays full price. For high-traffic applications (many requests per minute), this is fine. For low-frequency workflows, you may need to send a "keep-alive" request to prevent expiry. Gemini's context cache has a configurable TTL (minimum 1 hour, maximum 1 month) — better for batch or overnight workflows.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 6: TECHNIQUES -->
+<section id="techniques">
+  <div class="sec-tag">06 · Engineering Techniques</div>
+  <h2>Context Management Techniques</h2>
+  <p>When raw long-context or basic RAG is insufficient, these techniques allow you to scale, improve quality, or reduce cost. Each involves real engineering tradeoffs — understand when to apply each.</p>
+
+  <div class="shard-grid">
+    <div class="shard-card">
+      <div class="shard-title">Technique 01</div>
+      <div class="shard-name">Sliding Window</div>
+      <div class="shard-body">Move a fixed-size window through a long text sequentially. Overlap by N tokens (typically 10–20%) to preserve continuity at window boundaries. Each window is processed independently. Results are merged. Best for: sequential extraction tasks where each passage is largely self-contained — summarizing chapters, extracting entities from a news feed, processing transcripts. Preserves order-dependent context that RAG loses.</div>
+      <span class="shard-verdict sv-easy">Simple to implement</span>
+    </div>
+    <div class="shard-card">
+      <div class="shard-title">Technique 02</div>
+      <div class="shard-name">Chunk &amp; Rerank</div>
+      <div class="shard-body">Split the document corpus, embed all chunks into a vector space, perform semantic search to retrieve the top-K candidates, then apply a cross-encoder reranker to re-score and select the final N chunks by true relevance. The two-stage pipeline separates recall (vector search, fast) from precision (cross-encoder reranking, slower but more accurate). Industry-standard RAG production pattern. 10–30% quality improvement over retrieval alone.</div>
+      <span class="shard-verdict sv-med">Medium complexity</span>
+    </div>
+    <div class="shard-card">
+      <div class="shard-title">Technique 03</div>
+      <div class="shard-name">Hierarchical Summarization</div>
+      <div class="shard-body">Summarize each leaf section independently in parallel, then summarize the summaries recursively. Reduces token count from O(n) to O(log n). Preserves the structural outline and key decisions from a large document without fitting everything in the context window. Useful for: meeting transcripts, long reports, book-length text. Tradeoff: information loss at each summarization level — fine details may not survive to the root.</div>
+      <span class="shard-verdict sv-med">Medium complexity</span>
+    </div>
+    <div class="shard-card">
+      <div class="shard-title">Technique 04</div>
+      <div class="shard-name">Dynamic Context</div>
+      <div class="shard-body">Only include context items that scored above a similarity threshold at query time. Unlike fixed top-K retrieval, threshold-based retrieval adapts to query difficulty: easy queries may include 3 chunks, hard queries may include 20. Prevents injecting low-relevance noise when no good matches exist (which can actively mislead the model). Requires calibrating your similarity threshold on a validation set — too high and you get empty context; too low and you get irrelevant noise.</div>
+      <span class="shard-verdict sv-med">Requires calibration</span>
+    </div>
+    <div class="shard-card">
+      <div class="shard-title">Technique 05</div>
+      <div class="shard-name">Map-Reduce</div>
+      <div class="shard-body">Process each document chunk independently in parallel (map phase), generating partial answers or extractions. Then merge all partial results in a final synthesis call (reduce phase). Classic distributed systems pattern applied to LLMs. Well-suited for: "What are all the mentions of X across this corpus?" or "Summarize all of these documents." LangChain, LlamaIndex, and DSPy all have built-in map-reduce chains. Latency = depth of reduce tree, not total token count.</div>
+      <span class="shard-verdict sv-easy">Easy with frameworks</span>
+    </div>
+    <div class="shard-card">
+      <div class="shard-title">Technique 06</div>
+      <div class="shard-name">Caching Prompt Prefixes</div>
+      <div class="shard-body">Pin the system prompt and static document context in the provider's prompt cache (Claude's prompt caching API, Gemini's context caching). Repeated requests using the same prefix pay 5–10x less per cached token and get lower latency (no re-processing). Structure your prompts so cacheable content (system prompt, documents) comes first, dynamic content (user query, dynamic RAG chunks) comes last. Single highest-ROI optimization for production LLM systems with repeated context.</div>
+      <span class="shard-verdict sv-easy">High ROI · Low effort</span>
+    </div>
+  </div>
+
+  <h3>Chunking Strategies in Depth</h3>
+  <p>Chunking is the most underappreciated variable in RAG quality. Poor chunking produces embeddings that mix multiple unrelated concepts, defeating semantic search. Here are the main strategies ranked from naive to sophisticated:</p>
+
+  <div class="k-cards">
+    <div class="k-card">
+      <div class="k-card-head">
+        <span class="k-num">01</span>
+        <span class="k-title">Fixed-Size Chunking (Baseline)</span>
+        <span class="k-tag">NAIVE</span>
+      </div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">How it works</div>
+          <div class="k-point-text">
+            <p>Split text every N tokens (typically 256–1024) with an overlap of M tokens (typically 10–20% of N). Simple, fast, requires no understanding of document structure.</p>
+            <p><strong>Overlap is critical:</strong> without overlap, a sentence split across a chunk boundary has half its context in each chunk — the embedding for either half is incomplete and retrieval misses it. Overlap ensures boundary sentences appear in both adjacent chunks.</p>
+          </div>
+          <div class="k-warn"><span class="k-icon">!</span><span>Splits sentences and paragraphs arbitrarily. The embedding for a chunk may mix the end of one topic and the start of another. Degrades retrieval quality for complex documents. Only acceptable for homogeneous prose with no section structure.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head">
+        <span class="k-num">02</span>
+        <span class="k-title">Recursive Character / Structural Splitting</span>
+        <span class="k-tag">STANDARD</span>
+      </div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">How it works</div>
+          <div class="k-point-text">
+            <p>Split on a hierarchy of separators: try to split on <code>\n\n</code> (paragraph breaks) first; if chunks are too large, fall back to <code>\n</code> (line breaks), then ". " (sentence ends), then " " (words), then characters. This is LangChain's <code>RecursiveCharacterTextSplitter</code> and the de facto default for most production RAG systems.</p>
+            <p>Respects natural text boundaries while staying close to target chunk size. Dramatically better than naive fixed-size splitting for formatted documents.</p>
+          </div>
+          <div class="k-good"><span class="k-icon">✓</span><span>Best balance of quality and implementation simplicity. Use this as your default. Good for: prose documents, articles, reports, conversation transcripts.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head">
+        <span class="k-num">03</span>
+        <span class="k-title">Semantic Chunking</span>
+        <span class="k-tag">ADVANCED</span>
+      </div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">How it works</div>
+          <div class="k-point-text">
+            <p>Embed consecutive sentences using a fast embedding model. Compute cosine similarity between adjacent sentence embeddings. When similarity drops significantly (topic change), create a chunk boundary. This detects semantic topic transitions rather than syntactic boundaries.</p>
+            <p>Produces chunks that correspond to coherent topical units regardless of their character length. A short but dense paragraph about one concept is one chunk; a long rambling paragraph spanning three topics is split accordingly.</p>
+          </div>
+          <div class="k-info"><span class="k-icon">→</span><span>Produces the best retrieval quality in benchmarks for long, complex documents (technical manuals, legal contracts, academic papers). Adds ~20ms per document for embedding during ingestion. LlamaIndex's SemanticSplitterNodeParser implements this pattern.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head">
+        <span class="k-num">04</span>
+        <span class="k-title">Document-Aware / Hierarchical Chunking</span>
+        <span class="k-tag">PRODUCTION BEST PRACTICE</span>
+      </div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">How it works</div>
+          <div class="k-point-text">
+            <p>Parse document structure explicitly: extract headings, subheadings, tables, code blocks, and list items as separate chunk types. Each chunk carries metadata: document title, section path (e.g., "Chapter 3 &gt; 3.2 &gt; Introduction"), page number, and content type. At query time, include the section path in the injected chunk so the LLM understands context.</p>
+            <p>Code files are split at function/class boundaries (not line count). Markdown splits at heading levels. PDFs use layout detection to separate columns, captions, footnotes.</p>
+          </div>
+          <div class="k-good"><span class="k-icon">✓</span><span>The highest retrieval quality achievable for structured documents. The section metadata alone improves answer quality significantly because the LLM knows where in the document a chunk comes from. Required for codebases — never split source code at fixed character counts.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 7: ANTI-PATTERNS -->
+<section id="anti-patterns">
+  <div class="sec-tag">07 · What Not To Do</div>
+  <h2>Anti-Patterns: Common Mistakes That Hurt Quality &amp; Inflate Cost</h2>
+  <p>Every one of these mistakes is seen regularly in production LLM applications. Understanding why they are wrong is as important as knowing the correct approach.</p>
+
+  <div class="callout cl-red">
+    <div class="cl-lbl">Anti-pattern 01 · Context Stuffing</div>
+    <p><strong>Stuffing every available document into the context window regardless of relevance.</strong> This is the most common mistake engineers make when first working with long-context models. Reasoning: "the model has 200K tokens, so I should use all of it to give it more information." Reality: irrelevant context actively hurts quality — the model must attend to noise, which dilutes signal. It also increases cost linearly and increases latency. The model's effective reasoning capacity does not scale linearly with context length. More context = higher cost + lower accuracy when content is not curated.</p>
+    <p><strong>Fix:</strong> Always filter context for relevance before injection. Even with long-context models, aim for high signal-to-noise ratio in your context window.</p>
+  </div>
+
+  <div class="callout cl-red">
+    <div class="cl-lbl">Anti-pattern 02 · Defaulting to Max Context</div>
+    <p><strong>Always using the model's maximum context window "just in case."</strong> Engineers sometimes set their context to the model's maximum (128K, 200K) as a safe default, even when the actual content is 5K tokens. This multiplies cost by 25–40x unnecessarily and significantly increases time-to-first-token. The latency and cost of a 200K-token request is not the same as a 10K-token request — input token processing time scales with context length.</p>
+    <p><strong>Fix:</strong> Measure actual token usage in production. Profile your real p50, p90, p99 context sizes. Set a dynamic context budget based on actual content size, not the model maximum. Implement hard caps with graceful truncation rather than always padding to maximum.</p>
+  </div>
+
+  <div class="callout cl-red">
+    <div class="cl-lbl">Anti-pattern 03 · Ignoring Lost-in-the-Middle for Critical Instructions</div>
+    <p><strong>Placing critical instructions, constraints, or safety rules in the middle of a long prompt.</strong> This is especially dangerous in production systems that dynamically inject retrieved documents: the system prompt is at position 0, then 20 retrieved chunks are injected (positions 1–20K tokens in), then the critical constraint "do not reveal internal pricing" appears at token 20,001, then the user message follows. The constraint is in the middle. It will be ignored at a much higher rate than if it appeared in the system prompt or at the very end of the user message.</p>
+    <p><strong>Fix:</strong> Put safety constraints and critical formatting instructions in the system prompt (position 0). Repeat them at the end of the user turn. Never rely on instructions buried in the middle of large RAG-injected contexts.</p>
+  </div>
+
+  <div class="callout cl-red">
+    <div class="cl-lbl">Anti-pattern 04 · Naive Line-Split Chunking for RAG</div>
+    <p><strong>Splitting documents on newlines or fixed character counts without respecting semantic structure.</strong> This produces chunks where a sentence is split mid-way, or where a heading appears at the end of one chunk with its content in the next chunk, or where a code function is sliced in half. The embedding for each malformed chunk is degraded — it does not clearly represent a coherent concept. Retrieval quality collapses. The symptom is "RAG gives irrelevant answers even when the right information is in the corpus."</p>
+    <p><strong>Fix:</strong> Use recursive text splitting as a minimum (LangChain's default). For structured documents, parse structure explicitly. For code, split at function/class boundaries. Always test chunking quality by manually inspecting a sample of 20–30 random chunks from your corpus before going to production.</p>
+  </div>
+
+  <div class="callout cl-red">
+    <div class="cl-lbl">Anti-pattern 05 · No Token Counting in Production</div>
+    <p><strong>Not measuring actual token usage per request in production.</strong> Without monitoring, you cannot optimize cost, you will not notice when context grows unexpectedly (accumulating conversation history, growing system prompts), and you cannot diagnose quality issues related to context length. Many production bugs manifest as "the model started ignoring instructions" — and the root cause is that conversation history accumulated until the system prompt was being truncated off the front of the context.</p>
+    <p><strong>Fix:</strong> Log token counts for every API request: prompt tokens, completion tokens, total tokens. Set alerts when p95 context size exceeds 50% of model limit. Implement explicit context window management: truncate conversation history oldest-first, summarize old turns when approaching the limit. Never let context grow unboundedly.</p>
+  </div>
+
+  <div class="callout cl-red">
+    <div class="cl-lbl">Anti-pattern 06 · Treating RAG as a Solved Problem After Prototype</div>
+    <p><strong>Building a RAG prototype with basic vector search and declaring it production-ready.</strong> A basic prototype using OpenAI embeddings + Pinecone + top-3 retrieval will have retrieval precision of 40–60% on real queries — meaning 40–60% of the time, the retrieved chunks are not actually relevant to the question. This gets papered over in demos with cherry-picked queries. In production with real user queries, hallucinations and "I don't have information about that" responses become frequent. Reranking alone can boost precision to 70–80%; semantic chunking, query rewriting, and hybrid (keyword + semantic) search can push it to 85–90%.</p>
+    <p><strong>Fix:</strong> Benchmark retrieval quality separately from generation quality using a held-out evaluation set. Track recall@K and precision@K for your retrieval layer. Treat RAG as a system requiring ongoing evaluation and improvement, not a one-time integration.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ SECTION 8: FAQ -->
+<section id="faq">
+  <div class="sec-tag">08 · FAQ</div>
+  <h2>Frequently Asked Questions</h2>
+  <p>Answers to the questions engineers actually ask when building production LLM systems with long-context and RAG architectures.</p>
+
+  <div class="faq-item">
+    <div class="faq-q">When does context window size actually matter?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Context window size matters in three primary scenarios:</strong><br><br>
+      <strong>1. Multi-turn conversations at scale:</strong> Each message in a chat thread accumulates context. A conversation with 50 back-and-forth exchanges may total 30–50K tokens by the end. If your model has a 4K or 8K context window, the beginning of the conversation gets truncated. The model "forgets" what was said earlier, leading to contradictions and repetition. Long-context models eliminate this problem for typical conversation lengths.<br><br>
+      <strong>2. Long document analysis:</strong> Legal contracts (50–200 pages), financial reports, technical specifications, medical records, or academic papers often exceed the token budgets of short-context models. When you need to ask questions that require reasoning over the entire document — not just extracting a specific paragraph — you need the whole document in context simultaneously. RAG can retrieve relevant sections but misses cross-section reasoning.<br><br>
+      <strong>3. Multi-file code analysis:</strong> Understanding a bug that spans three files, reviewing a pull request that touches 15 files, or generating code that must be consistent with an existing codebase all benefit from having multiple complete files in context simultaneously. A 200K model can hold ~300 average-sized Python files at once. This transforms coding assistance from "here's a snippet" to "here's a change consistent with your full codebase architecture."<br><br>
+      <strong>When it does NOT matter:</strong> Simple Q&amp;A, single-turn instruction following, text classification, short-form generation. Most users interact in bursts of 1–5 messages with short prompts. Over 80% of real API calls use less than 8K tokens — the long-context capabilities are critical for the power users and enterprise use cases, not the median interaction.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Why not just use 1M token context for everything?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Three converging problems make "always use max context" impractical:</strong><br><br>
+      <strong>Cost:</strong> A 1M-token Gemini 1.5 Pro request costs $1.25 in input tokens alone. If your typical use case only needs 10K tokens of context, you are paying 100x what is necessary. At 10,000 requests/day, that is $12,500/day vs $125/day. For most applications, 90%+ of queries do not need million-token context — sending them through a 1M-token model wastes money on a problem that does not exist.<br><br>
+      <strong>Latency:</strong> Attention computation grows quadratically with context length at the architectural level. Even with FlashAttention and other optimizations, a 1M-token request takes seconds longer to start generating than a 10K-token request. Time-to-first-token (TTFT) — the latency users perceive — increases significantly with context length. For real-time chat interfaces, this is directly noticeable as sluggishness.<br><br>
+      <strong>Diminishing quality returns:</strong> The lost-in-the-middle effect means that beyond a certain context length, adding more content does not improve answer quality — it actively degrades it. If only 5% of a 1M-token context is actually relevant to the query, the model must sift through 950K tokens of noise to find 50K tokens of signal. More targeted context (via RAG or careful filtering) consistently outperforms "inject everything" in quality benchmarks for specific retrieval tasks.<br><br>
+      <strong>The practical rule:</strong> Right-size your context to the task. Use long context when you genuinely need holistic reasoning over large text. Use RAG when you can identify the relevant portions ahead of time. Use cheap small models for tasks that do not need large context. Tiered routing is the production-grade answer.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">How does RAG compare to long context in accuracy?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>They excel in different dimensions — this is not a clear-cut winner:</strong><br><br>
+      <strong>RAG wins on precision:</strong> When retrieval works correctly, the LLM only sees the most relevant 5–20 chunks rather than the full corpus. This reduces noise and typically produces more precise, grounded answers. RAG also naturally provides citations (which source chunks were used), which is essential for enterprise applications requiring auditability.<br><br>
+      <strong>Long context wins on recall and relationship reasoning:</strong> RAG can only answer questions about information it retrieves. If the answer requires synthesizing information scattered across 20 different document sections in non-obvious ways, RAG may miss connections. Long-context models can reason over the full document simultaneously, catching cross-references, implicit contradictions, and emergent patterns that are not retrievable in any single chunk.<br><br>
+      <strong>Key benchmark finding (2023–2024):</strong> For simple factual retrieval ("What is the contract's termination clause?"), RAG and long-context perform similarly when retrieval quality is high. For complex multi-hop reasoning ("Do the termination conditions in section 4 conflict with the liability caps in section 12?"), long-context models outperform RAG by 15–30% in accuracy. For very large corpora where the relevant information could be anywhere, RAG is the only practical option regardless of quality differences.<br><br>
+      <strong>Practical recommendation:</strong> Use RAG first for scalability; add long-context models for queries that fail RAG. The hybrid pattern (RAG to select chunks, then long-context model to reason over them) is increasingly the production standard at enterprise scale.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">What is prompt caching and how does it save money?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Prompt caching is a provider-level feature where repeated prompt prefixes are stored and reused across API calls, dramatically reducing cost and latency.</strong><br><br>
+      <strong>How it works (Anthropic):</strong> You mark a portion of your prompt with a cache_control breakpoint. The first request processes those tokens normally and stores the KV cache for that prefix on Anthropic's servers. Subsequent requests that use the identical prefix within 5 minutes are served from cache: you pay only 10% of normal input price ($0.30/1M instead of $3.00/1M for Claude 3.5 Sonnet) and get faster TTFT. Cache writes cost 25% more than normal input ($3.75/1M) — the write cost amortizes after just 3 cache hits.<br><br>
+      <strong>Break-even analysis:</strong> Each cache write costs 1.25x the normal input price. Each cache read costs 0.1x. The formula: <code>savings = (normal_price × N_reads) - (cache_write_cost + cache_read_cost × N_reads)</code>. Break-even is at approximately N=3 reads. Any application making the same large prompt prefix 4+ times within the TTL window benefits.<br><br>
+      <strong>Google Gemini Context Caching:</strong> Similar mechanism but with configurable TTL (1 hour to 1 month) and a separate per-hour storage cost for cached content. Better for infrequent but long sessions where the same document context is reused across a work session rather than rapid fire requests.<br><br>
+      <strong>The structural discipline it requires:</strong> To benefit from caching, you must structure prompts with cacheable content (system prompt, static documents, examples) strictly before dynamic content (user query, dynamic RAG chunks). This ordering is often already best practice — caching provides a financial incentive to enforce it rigorously.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">How do I handle context limits in production?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Production context management is a systems engineering problem, not just a prompt engineering problem. It requires explicit measurement, budgeting, and graceful degradation.</strong><br><br>
+      <strong>Step 1 — Measure actual usage:</strong> Instrument every API call to log <code>prompt_tokens</code>, <code>completion_tokens</code>, and <code>total_tokens</code> from the API response metadata. Build a dashboard showing p50/p90/p99 context sizes per endpoint and per user segment. Most teams discover that p99 context size is 3–5x the median — a few power users drive the tail.<br><br>
+      <strong>Step 2 — Budget allocation:</strong> Define a token budget for each "slot" in your context: system prompt (fixed, X tokens), conversation history (sliding window, max Y tokens), RAG chunks (dynamic, max Z tokens), user query (variable, max W tokens). Enforce these budgets in code, not as a hope. Reserve a safety margin — set your hard cap at 80% of the model limit, not 100%.<br><br>
+      <strong>Step 3 — Conversation history truncation:</strong> For conversational applications, truncate oldest messages first when approaching the limit. A more sophisticated approach: summarize the oldest N messages into a paragraph when the history exceeds a threshold, replacing N messages with one summary message. This preserves semantic continuity while reducing token count. Summarization-based compression typically retains 80% of the relevant information at 20% of the token cost.<br><br>
+      <strong>Step 4 — Semantic chunk selection for docs:</strong> Do not include all retrieved RAG chunks — sort by relevance score, include highest-scoring chunks first, and stop when the remaining token budget is exhausted. This ensures the most relevant content always fits, even as context grows.<br><br>
+      <strong>Step 5 — Graceful degradation:</strong> When context limit is hit, fail gracefully. If you cannot fit all context, tell the user which documents were excluded. Do not silently truncate in the middle of an important document — the model getting half a contract is worse than it getting a curated subset.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">What is needle-in-a-haystack testing and how do I run it?<span class="tog">+</span></div>
+    <div class="faq-a">
+      <strong>Needle-in-a-haystack (NIAH) is the standard benchmark methodology for evaluating long-context recall fidelity across position and depth dimensions.</strong><br><br>
+      <strong>The methodology:</strong> Take a "haystack" — a long, information-dense document or concatenation of documents (often Paul Graham essays, Wikipedia articles, or synthetic text). Insert a specific, unique fact (the "needle") that does not appear elsewhere in the haystack, at a precisely controlled position (e.g., at the 35% mark of a 64K-token context). Ask the model: "What is the special fact about [topic] mentioned in the documents?" Grade the response as correct (retrieved the needle) or incorrect. Repeat for all combinations of: (a) needle positions from 0% to 100% and (b) context depths from 4K to maximum context length.<br><br>
+      <strong>What the results show:</strong> A 2D grid where X-axis = position in context, Y-axis = total context length. Color each cell green (recalled correctly) or red (failed). Most frontier models show green across the board at short contexts, but red patches appear in the middle columns at longer context depths. Models with strong long-context training (Gemini 1.5 Pro, Claude 3.x) show much cleaner grids than models that merely extended their context window without re-training.<br><br>
+      <strong>Limitations of NIAH:</strong> Needle-in-a-haystack tests pure retrieval of an isolated fact. Real tasks require reasoning — not just finding a fact but synthesizing it with other facts. A model can achieve 100% NIAH recall and still fail at complex multi-hop reasoning over long contexts. NIAH is necessary but not sufficient for evaluating long-context capability. Complement it with RULER (long-context reasoning benchmark) and your own domain-specific evaluations.<br><br>
+      <strong>Running your own NIAH:</strong> Open-source implementations exist in <code>gkamradt/LLMTest_NeedleInAHaystack</code> on GitHub. Point it at any model API, set your context lengths and position grid, and it produces the heatmap automatically. A full run across 10 position points × 8 context depths × 3 trials = 240 API calls — typically $20–100 depending on the model.
+    </div>
+  </div>
+
+</section>
+
+</div><!-- end .wrap -->
+
+<div class="footer">LLM CONTEXT · WINDOW SELECTION · RAG · TOKEN MATH · CHUNKING · MANISH-ALMANAC</div>
+
+<script>
+document.querySelectorAll('.faq-q').forEach(function(q){
+  q.addEventListener('click',function(){
+    this.parentElement.classList.toggle('open');
+  });
+});
+</script>
+
+</body>
+</html>
