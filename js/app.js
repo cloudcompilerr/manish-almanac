@@ -201,8 +201,8 @@ function toggleSetup(){
 }
 
 /* ═══ NAV ═══ */
-function openTool(m){document.getElementById('list').style.display='none';document.getElementById('tool').classList.add('open');buildProvStrip();setMode(m);if(!getKey())document.getElementById('setup').style.display='block';window.scrollTo(0,0);}
-function goBack(){stopMic(false);document.getElementById('tool').classList.remove('open');document.getElementById('list').style.display='block';clearAll();last=null;window.scrollTo(0,0);}
+function openTool(m){document.getElementById('list').style.display='none';document.getElementById('tool').classList.add('open');buildProvStrip();setMode(m);if(!getKey())document.getElementById('setup').style.display='block';}
+function goBack(){stopMic(false);document.getElementById('tool').classList.remove('open');document.getElementById('list').style.display='block';clearAll();last=null;}
 
 /* ═══ MODE ═══ */
 function setMode(m){
