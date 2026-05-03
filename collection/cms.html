@@ -4,44 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Count-Min Sketch — Visual Guide</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;900&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --border: #1e1e2e;
-    --accent: #00e5ff;
-    --accent2: #ff6b6b;
-    --accent3: #a8ff78;
-    --accent4: #ffd166;
-    --text: #e8e8f0;
-    --muted: #6b6b88;
-    --row0: #00e5ff;
-    --row1: #ff6b6b;
-    --row2: #a8ff78;
-    --row3: #ffd166;
-    --row4: #c77dff;
+    --ink: #0c0d14;
+    --page: #f4f3ee;
+    --surface: #eeede6;
+    --surface2: #e6e4db;
+    --border: #d4d2c8;
+    --muted: #7a7870;
+    --accent: #1a4f8a;
+    --green: #1a7a4a;
+    --red: #c0392b;
+    --amber: #c47d11;
+    --row0: #1a4f8a;
+    --row1: #c0392b;
+    --row2: #1a7a4a;
+    --mono: 'JetBrains Mono', monospace;
+    --body: 'Outfit', sans-serif;
+    --head: 'Fraunces', serif;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
 
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    line-height: 1.6;
-    overflow-x: hidden;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.75;
   }
 
-  /* ---- HERO ---- */
+  /* HERO */
   .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 4rem 2rem;
+    background: var(--ink);
+    color: #e8e6df;
+    padding: 64px 24px 52px;
     position: relative;
     overflow: hidden;
   }
@@ -50,567 +49,584 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: 
-      radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,229,255,0.07) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 80% 50%, rgba(255,107,107,0.07) 0%, transparent 60%);
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.03) 40px);
   }
+
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
 
   .hero-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.3em;
-    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #8a8070;
     text-transform: uppercase;
-    margin-bottom: 1.5rem;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.2s;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
+
+  .hero-label::before { content: ''; width: 32px; height: 1px; background: #5a5850; }
 
   .hero h1 {
-    font-size: clamp(3rem, 8vw, 6rem);
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    margin-bottom: 1.5rem;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.4s;
+    font-family: var(--head);
+    font-size: clamp(34px, 5.5vw, 62px);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+    color: #f0ede6;
   }
 
-  .hero h1 span { color: var(--accent); }
+  .hero h1 span { color: #e8b84b; }
 
   .hero-sub {
-    font-size: clamp(1rem, 2vw, 1.2rem);
-    color: var(--muted);
-    max-width: 600px;
-    margin-bottom: 3rem;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.6s;
+    font-size: 16px;
+    line-height: 1.7;
+    color: rgba(232,230,223,.75);
+    max-width: 620px;
   }
 
-  .scroll-cue {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.8s;
-  }
-
-  /* ---- SECTIONS ---- */
+  /* SECTIONS */
   .section {
     max-width: 900px;
     margin: 0 auto;
-    padding: 5rem 2rem;
+    padding: 52px 24px;
     border-bottom: 1px solid var(--border);
   }
 
   .section-tag {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.3em;
-    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 4px;
     text-transform: uppercase;
-    margin-bottom: 1rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
+  .section-tag::before { content: ''; width: 20px; height: 1px; background: var(--border); }
+
   h2 {
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 1.5rem;
-    line-height: 1.1;
+    font-family: var(--head);
+    font-size: clamp(22px, 3.5vw, 34px);
+    font-weight: 700;
+    letter-spacing: -.3px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+
+  h4 {
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--ink);
   }
 
   p {
-    color: #b0b0c8;
-    font-size: 1.05rem;
-    margin-bottom: 1.2rem;
-    max-width: 720px;
+    color: #3a3830;
+    font-size: 14.5px;
+    margin-bottom: 12px;
+    max-width: 760px;
+    line-height: 1.75;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent);
   }
 
   .highlight {
-    background: rgba(0,229,255,0.1);
-    border-left: 3px solid var(--accent);
-    padding: 1rem 1.5rem;
+    background: #eef4ff;
+    border-left: 4px solid var(--accent);
+    padding: 14px 18px;
     border-radius: 0 8px 8px 0;
-    margin: 1.5rem 0;
-    font-size: 1rem;
-    color: var(--text);
+    margin: 16px 0;
+    font-size: 14px;
+    color: #1a2a4a;
+    line-height: 1.7;
   }
 
   .highlight strong { color: var(--accent); }
 
-  /* ---- HASH EXPLAINER ---- */
+  /* HASH DEMO */
   .hash-demo {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 2rem;
-    margin: 2rem 0;
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin: 20px 0;
   }
 
   .hash-demo h3 {
-    font-size: 1rem;
+    font-size: 11px;
     font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 1.5rem;
-    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    letter-spacing: .5px;
+    text-transform: uppercase;
   }
-
-  .hash-step {
-    display: grid;
-    grid-template-columns: auto 1fr auto 1fr auto;
-    align-items: center;
-    gap: 0.8rem;
-    margin-bottom: 1rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
-  }
-
-  .hash-step .fn-box {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    white-space: nowrap;
-  }
-
-  .hash-step .arrow { color: var(--muted); }
-  .hash-step .val { color: var(--accent4); font-weight: 700; }
-  .hash-step .result { color: var(--accent3); font-weight: 700; }
 
   .hash-math {
-    background: #0d0d14;
-    border: 1px solid var(--border);
+    background: var(--ink);
+    color: #c8c0b0;
     border-radius: 8px;
-    padding: 1.2rem 1.5rem;
-    margin: 1.5rem 0;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.82rem;
+    padding: 16px 18px;
+    margin: 16px 0;
+    font-family: var(--mono);
+    font-size: 12px;
     line-height: 2;
   }
 
-  .hash-math .comment { color: var(--muted); }
-  .hash-math .num { color: var(--accent4); }
-  .hash-math .op { color: var(--accent2); }
-  .hash-math .res { color: var(--accent3); }
+  .hash-math .comment { color: #6a6858; }
+  .hash-math .num { color: #e8b84b; }
+  .hash-math .op { color: #e87060; }
+  .hash-math .res { color: #7ac898; font-weight: 700; }
 
-  /* ---- GRID DEMO ---- */
-  .grid-wrapper {
-    overflow-x: auto;
-    margin: 2rem 0;
-  }
+  /* GRID */
+  .grid-wrapper { overflow-x: auto; margin: 20px 0; }
 
   .cms-grid {
     border-collapse: collapse;
     width: 100%;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.82rem;
+    font-family: var(--mono);
+    font-size: 12px;
   }
 
   .cms-grid th {
-    padding: 0.6rem 1rem;
+    padding: 8px 12px;
     text-align: center;
     color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    font-weight: 400;
-    letter-spacing: 0.1em;
+    border-bottom: 2px solid var(--border);
+    font-weight: 500;
+    letter-spacing: 1px;
+    font-size: 10px;
+    text-transform: uppercase;
   }
 
   .cms-grid td {
-    padding: 0.7rem 1rem;
+    padding: 10px 12px;
     text-align: center;
     border: 1px solid var(--border);
-    transition: background 0.3s, color 0.3s;
+    background: #fff;
+    transition: background .3s, color .3s;
   }
 
   .cms-grid td.row-label {
     text-align: left;
     border-left: none;
-    padding-right: 1.5rem;
-    font-size: 0.75rem;
+    padding-right: 16px;
+    font-size: 11px;
+    background: var(--surface);
+    font-weight: 600;
   }
 
-  .cell-highlight {
-    background: rgba(0,229,255,0.2) !important;
-    color: var(--accent) !important;
-    font-weight: 700;
-  }
+  .cell-highlight { background: #e8f0ff !important; color: var(--accent) !important; font-weight: 700; }
+  .cell-min { background: #edf7f0 !important; color: var(--green) !important; font-weight: 700; }
 
-  .cell-min {
-    background: rgba(168,255,120,0.2) !important;
-    color: var(--accent3) !important;
-    font-weight: 700;
-  }
-
-  /* ---- INTERACTIVE DEMO ---- */
+  /* DEMO PANEL */
   .demo-panel {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 2rem;
-    margin: 2rem 0;
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin: 20px 0;
   }
 
   .demo-controls {
     display: flex;
-    gap: 1rem;
+    gap: 12px;
     flex-wrap: wrap;
-    margin-bottom: 2rem;
+    margin-bottom: 20px;
     align-items: flex-end;
   }
 
   .demo-controls label {
-    font-size: 0.75rem;
+    font-size: 10px;
     color: var(--muted);
-    font-family: 'Space Mono', monospace;
-    letter-spacing: 0.1em;
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
     display: block;
-    margin-bottom: 0.4rem;
+    margin-bottom: 5px;
   }
 
-  .demo-controls input, .demo-controls select {
-    background: #0d0d14;
+  .demo-controls input {
+    background: #fff;
     border: 1px solid var(--border);
-    color: var(--text);
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
+    color: var(--ink);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 13px;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color .2s;
   }
 
   .demo-controls input:focus { border-color: var(--accent); }
 
   .btn {
-    padding: 0.6rem 1.4rem;
-    border-radius: 8px;
-    font-family: 'Syne', sans-serif;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: var(--body);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 13px;
     cursor: pointer;
     border: none;
-    transition: all 0.2s;
+    transition: all .2s;
   }
 
-  .btn-primary {
-    background: var(--accent);
-    color: #000;
-  }
-
-  .btn-primary:hover { background: #00c8e0; transform: translateY(-1px); }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--accent2);
-    border: 1px solid var(--accent2);
-  }
-
-  .btn-secondary:hover { background: rgba(255,107,107,0.1); }
-
-  .btn-ghost {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-
-  .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+  .btn-primary { background: var(--ink); color: #f0ede6; }
+  .btn-primary:hover { background: #2a2820; }
+  .btn-secondary { background: transparent; color: var(--red); border: 1px solid var(--red); }
+  .btn-secondary:hover { background: #fdf0ee; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--ink); }
 
   .query-result {
     display: none;
-    background: rgba(168,255,120,0.08);
-    border: 1px solid rgba(168,255,120,0.3);
-    border-radius: 10px;
-    padding: 1rem 1.5rem;
-    margin-top: 1.5rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--accent3);
+    background: #edf7f0;
+    border: 1px solid #b0d8c0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: #1a4a30;
   }
 
   .query-result.visible { display: block; }
 
   .event-log {
-    max-height: 180px;
+    max-height: 160px;
     overflow-y: auto;
-    margin-top: 1.5rem;
+    margin-top: 16px;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    background: #0d0d14;
+    border-radius: 6px;
+    background: #fff;
   }
 
   .log-item {
-    padding: 0.5rem 1rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
+    padding: 7px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
     border-bottom: 1px solid var(--border);
     color: var(--muted);
     display: flex;
-    gap: 1rem;
+    gap: 12px;
   }
 
   .log-item:last-child { border-bottom: none; }
-  .log-item .log-key { color: var(--accent4); }
+  .log-item .log-key { color: var(--amber); font-weight: 700; }
   .log-item .log-cols { color: var(--accent); }
 
-  /* ---- PROPERTIES TABLE ---- */
+  /* PROPERTIES TABLE */
   .props-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 2rem 0;
-    font-size: 0.9rem;
+    margin: 20px 0;
+    font-size: 13.5px;
   }
 
   .props-table th {
     text-align: left;
-    padding: 0.8rem 1rem;
-    border-bottom: 2px solid var(--accent);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    color: var(--accent);
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
   }
 
   .props-table td {
-    padding: 0.8rem 1rem;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border);
-    color: #b0b0c8;
+    color: #3a3830;
+    vertical-align: top;
   }
 
-  .props-table td:first-child { color: var(--text); font-weight: 600; }
-  .tag { background: rgba(0,229,255,0.1); color: var(--accent); padding: 0.1rem 0.5rem; border-radius: 4px; font-family: 'Space Mono', monospace; font-size: 0.75rem; }
+  .props-table td:first-child { color: var(--ink); font-weight: 600; }
 
-  /* ---- FAQ ---- */
+  .tag {
+    background: #eef2fb;
+    color: var(--accent);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* FAQ */
   .faq-item {
     border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 1rem;
+    border-radius: 8px;
+    margin-bottom: 10px;
     overflow: hidden;
-    transition: border-color 0.2s;
+    transition: border-color .2s;
+    background: #fff;
   }
 
   .faq-item:hover { border-color: var(--muted); }
-  .faq-item.open { border-color: var(--accent); }
+  .faq-item.open { border-color: var(--ink); }
 
   .faq-q {
-    padding: 1.2rem 1.5rem;
+    padding: 14px 18px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 14px;
+    color: var(--ink);
   }
 
   .faq-icon {
-    color: var(--accent);
-    font-family: 'Space Mono', monospace;
-    font-size: 1.2rem;
-    transition: transform 0.3s;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 18px;
+    transition: transform .3s;
     flex-shrink: 0;
   }
 
-  .faq-item.open .faq-icon { transform: rotate(45deg); }
+  .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--ink); }
 
   .faq-a {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease;
-    padding: 0 1.5rem;
-    color: #b0b0c8;
-    font-size: 0.95rem;
+    transition: max-height .4s ease;
+    padding: 0 18px;
+    color: #3a3830;
+    font-size: 14px;
+    line-height: 1.75;
+    background: var(--surface);
   }
 
-  .faq-item.open .faq-a { max-height: 400px; padding: 0 1.5rem 1.2rem; }
+  .faq-item.open .faq-a { max-height: 500px; padding: 0 18px 16px; }
 
-  .faq-a code {
-    background: rgba(0,229,255,0.08);
-    padding: 0.1rem 0.4rem;
-    border-radius: 4px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.82rem;
-    color: var(--accent);
-  }
-
-  .vs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin: 1.5rem 0;
-  }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
 
   .vs-card {
-    background: var(--surface);
+    background: #fff;
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.5rem;
+    border-radius: 8px;
+    padding: 16px;
   }
 
   .vs-card h4 {
-    font-size: 0.85rem;
+    font-family: var(--mono);
+    font-size: 11px;
     font-weight: 700;
-    margin-bottom: 1rem;
-    font-family: 'Space Mono', monospace;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   .vs-card.a h4 { color: var(--accent); }
-  .vs-card.b h4 { color: var(--accent2); }
-  .vs-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.3rem 0; border-bottom: 1px solid var(--border); color: #b0b0c8; }
+  .vs-card.b h4 { color: var(--red); }
+
+  .vs-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    color: #3a3830;
+  }
+
   .vs-row:last-child { border-bottom: none; }
 
-  /* ---- ONE LINER ---- */
+  /* ONE-LINER */
   .oneliner {
-    background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(255,107,107,0.05));
-    border: 1px solid rgba(0,229,255,0.2);
-    border-radius: 16px;
-    padding: 3rem 2rem;
+    background: var(--ink);
+    border-radius: 12px;
+    padding: 40px 32px;
     text-align: center;
-    margin: 5rem 2rem;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 52px auto;
+    max-width: 860px;
   }
 
   .oneliner .label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.3em;
-    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: #8a8070;
     text-transform: uppercase;
-    margin-bottom: 1.5rem;
+    margin-bottom: 20px;
   }
 
   .oneliner blockquote {
-    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-family: var(--head);
+    font-size: clamp(15px, 2vw, 20px);
     font-weight: 600;
-    line-height: 1.6;
-    color: var(--text);
+    line-height: 1.65;
+    color: #f0ede6;
     font-style: italic;
   }
 
-  /* ---- ANIMATIONS ---- */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  /* FLOW TABLE */
+  .flow-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0;
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+  .flow-table th {
+    background: var(--ink);
+    color: #e8b84b;
+    padding: 9px 12px;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
 
-  .cms-grid td.animating {
-    animation: pulse 0.5s ease;
+  .flow-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+    background: #fff;
   }
 
-  /* ---- ROW COLORS ---- */
+  .flow-table tbody tr:last-child td { border-bottom: none; }
+  .flow-table td:first-child { font-weight: 600; color: var(--ink); }
+
+  /* OUTER SECTIONS */
+  section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sec-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* CONCEPT COMPONENTS */
+  .concept-grid { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 20px 0; }
+  .concept-row { display: grid; grid-template-columns: 160px 1fr; border-bottom: 1px solid var(--border); }
+  .concept-row:last-child { border-bottom: none; }
+  .concept-term { background: var(--ink); color: #e8dcc8; padding: 14px 16px; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .5px; display: flex; align-items: center; line-height: 1.4; }
+  .concept-def { background: #fff; padding: 16px 18px; font-size: 13.5px; line-height: 1.85; color: #2a2820; }
+  .concept-def > strong:first-child { display: block; margin-bottom: 8px; font-size: 14px; }
+
+  .sd-example { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; }
+  .sd-example-head { background: var(--ink); padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+  .sd-example-title { color: #f0e8d8; font-weight: 700; font-size: 13px; }
+  .sd-example-tag { background: rgba(255,255,255,.12); color: #c8b896; font-size: 10px; padding: 3px 8px; border-radius: 4px; margin-left: auto; font-family: var(--mono); letter-spacing: .5px; }
+  .choice-row { display: grid; grid-template-columns: 110px 1fr; border-bottom: 1px solid var(--border); }
+  .choice-row:last-child { border-bottom: none; }
+  .choice-label { background: var(--surface); padding: 12px 14px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; border-right: 1px solid var(--border); }
+  .choice-val { padding: 12px 14px; font-size: 13px; line-height: 1.65; color: var(--ink); background: #fff; }
+
+  .badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 700; margin-right: 4px; }
+  .b-g { background: #e8f5ee; color: var(--green); }
+
+  .step-block { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 20px 0; }
+  .step-block-header { background: var(--ink); color: #e8dcc8; padding: 14px 18px; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .sb-icon { font-size: 16px; }
+  .step-row { display: grid; grid-template-columns: 44px 1fr; border-bottom: 1px solid var(--border); }
+  .step-row:last-child { border-bottom: none; }
+  .step-num { background: var(--surface); display: flex; align-items: flex-start; justify-content: center; padding: 14px 0; font-family: var(--mono); font-weight: 700; font-size: 11px; color: var(--muted); border-right: 1px solid var(--border); }
+  .step-content { padding: 14px 16px; background: #fff; }
+  .step-q { font-weight: 700; font-size: 13px; margin-bottom: 8px; color: var(--ink); }
+  .step-options { display: flex; flex-direction: column; gap: 6px; }
+  .step-option { background: var(--surface); border-radius: 6px; padding: 10px 12px; display: flex; gap: 8px; font-size: 12.5px; line-height: 1.55; }
+  .opt-arrow { font-family: var(--mono); font-size: 10px; font-weight: 700; min-width: 130px; flex-shrink: 0; padding-top: 1px; }
+  .opt-yes .opt-arrow { color: var(--green); }
+  .opt-no .opt-arrow { color: var(--amber); }
+  .opt-mid .opt-arrow { color: var(--accent); }
+
+  .concept-note { display: block; margin-top: 10px; padding: 8px 12px; border-radius: 4px; font-size: 12.5px; line-height: 1.75; border-left: 3px solid; }
+  .concept-note.good { background: #edf7f0; color: #1a4a30; border-color: var(--green); }
+  .concept-note.warn { background: #fdf0f0; color: #5a1a1a; border-color: var(--red); }
+  .concept-note.info { background: #eef2fb; color: #1a2a50; border-color: var(--accent); }
+  .concept-note.muted { background: var(--surface); color: #3a3830; border-color: var(--border); }
+
+  /* K-CARDS */
+  .k-cards { display: flex; flex-direction: column; gap: 18px; margin: 20px 0; }
+  .k-card { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.07); border: 1px solid var(--border); }
+  .k-card-head { display: flex; align-items: center; gap: 12px; padding: 13px 18px; background: var(--ink); }
+  .k-num { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--ink); background: #e8b84b; padding: 3px 8px; border-radius: 3px; flex-shrink: 0; }
+  .k-title { font-family: 'Playfair Display', Georgia, serif; font-size: 15px; font-weight: 700; color: #f0ede6; line-height: 1.3; flex: 1; }
+  .k-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: #6a6858; text-transform: uppercase; background: rgba(255,255,255,.07); border: 1px solid #2a2820; padding: 3px 8px; border-radius: 3px; flex-shrink: 0; }
+  .k-card-body { background: #fff; padding: 0; }
+  .k-point { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .k-point:last-child { border-bottom: none; }
+  .k-point-label { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  .k-point-text { font-size: 13.5px; line-height: 1.85; color: #2a2820; }
+  .k-point-text strong, .k-point-text code { font-family: var(--mono); font-size: 11px; background: var(--surface); padding: 1px 5px; border-radius: 3px; color: var(--accent); }
+  .k-good { display: flex; gap: 10px; margin-top: 10px; padding: 9px 13px; background: #edf7f0; border-left: 3px solid var(--green); border-radius: 0 5px 5px 0; font-size: 12.5px; color: #1a4a30; line-height: 1.7; }
+  .k-warn { display: flex; gap: 10px; margin-top: 10px; padding: 9px 13px; background: #fdf0f0; border-left: 3px solid var(--red); border-radius: 0 5px 5px 0; font-size: 12.5px; color: #5a1a1a; line-height: 1.7; }
+  .k-info { display: flex; gap: 10px; margin-top: 10px; padding: 9px 13px; background: #eef2fb; border-left: 3px solid var(--accent); border-radius: 0 5px 5px 0; font-size: 12.5px; color: #1a2a50; line-height: 1.7; }
+  .k-muted { display: flex; gap: 10px; margin-top: 10px; padding: 9px 13px; background: var(--surface); border-left: 3px solid var(--border); border-radius: 0 5px 5px 0; font-size: 12.5px; color: #3a3830; line-height: 1.7; }
+  .k-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+  /* MATRIX */
+  .matrix { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  .matrix th { background: var(--ink); color: #e8b84b; padding: 10px 12px; text-align: left; font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+  .matrix td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; background: #fff; }
+  .matrix .row-head { font-weight: 700; color: var(--ink); white-space: nowrap; }
+
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  .dot.g { background: var(--green); }
+  .dot.a { background: var(--red); }
+
+  /* ANIMATIONS */
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .cms-grid td.animating { animation: pulse .5s ease; }
+
+  /* ROW COLORS */
   .r0 { color: var(--row0); }
   .r1 { color: var(--row1); }
   .r2 { color: var(--row2); }
-  .r3 { color: var(--row3); }
 
-  .dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 6px;
+  /* RESPONSIVE */
+  @media(max-width: 600px) {
+    .concept-row { grid-template-columns: 1fr; }
+    .choice-row { grid-template-columns: 1fr; }
+    .opt-arrow { min-width: 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
   }
 
-  /* scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    /* Gold-standard components for CMS page */
-    .concept-grid{border:1px solid var(--border, #d4cfc7);border-radius:10px;overflow:hidden;margin:20px 0;}
-    .concept-row{display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border,#d4cfc7);}
-    .concept-row:last-child{border-bottom:none;}
-    .concept-term{background:var(--ink,#0f0e0c);color:#e8dcc8;padding:14px 16px;font-family:var(--mono,monospace);font-size:11px;font-weight:600;letter-spacing:.5px;display:flex;align-items:center;line-height:1.4;}
-    .concept-def{background:white;padding:14px 16px;font-size:13px;line-height:1.65;color:var(--ink,#0f0e0c);}
-    .sd-example{border:1px solid var(--border,#d4cfc7);border-radius:10px;overflow:hidden;margin:16px 0;}
-    .sd-example-head{background:var(--ink,#0f0e0c);padding:12px 16px;display:flex;align-items:center;gap:10px;}
-    .sd-example-title{color:#f0e8d8;font-weight:700;font-size:13px;}
-    .sd-example-tag{background:rgba(255,255,255,.12);color:#c8b896;font-size:10px;padding:3px 8px;border-radius:4px;margin-left:auto;font-family:monospace;}
-    .sd-example-body{padding:0;}
-    .choice-row{display:grid;grid-template-columns:110px 1fr;border-bottom:1px solid var(--border,#d4cfc7);padding:0;}
-    .choice-row:last-child{border-bottom:none;}
-    .choice-label{background:#f7f5f0;padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7a7568;display:flex;align-items:center;border-right:1px solid var(--border,#d4cfc7);}
-    .choice-val{padding:12px 14px;font-size:13px;line-height:1.6;color:var(--ink,#0f0e0c);}
-    .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;margin-right:4px;}
-    .b-g{background:#e8f5ee;color:#1a7a4a;}
-    .step-block{border:1px solid var(--border,#d4cfc7);border-radius:10px;overflow:hidden;margin:20px 0;}
-    .step-block-header{background:var(--ink,#0f0e0c);color:#e8dcc8;padding:14px 18px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;}
-    .sb-icon{font-size:16px;}
-    .step-block-body{background:white;}
-    .step-row{display:grid;grid-template-columns:44px 1fr;border-bottom:1px solid var(--border,#d4cfc7);}
-    .step-row:last-child{border-bottom:none;}
-    .step-num{background:#f0ede8;display:flex;align-items:flex-start;justify-content:center;padding:14px 0;font-family:monospace;font-weight:700;font-size:11px;color:#7a7568;border-right:1px solid var(--border,#d4cfc7);}
-    .step-content{padding:14px 16px;}
-    .step-q{font-weight:700;font-size:13px;margin-bottom:8px;color:var(--ink,#0f0e0c);}
-    .step-options{display:flex;flex-direction:column;gap:6px;}
-    .step-option{background:#f7f5f0;border-radius:6px;padding:10px 12px;display:flex;gap:8px;font-size:12.5px;line-height:1.55;}
-    .opt-arrow{font-family:monospace;font-size:10px;font-weight:700;min-width:130px;flex-shrink:0;padding-top:1px;}
-    .opt-yes .opt-arrow{color:#1a7a4a;}
-    .opt-no  .opt-arrow{color:#b8720a;}
-    .opt-mid .opt-arrow{color:#1a4f8a;}
-    .callout{border-radius:8px;padding:14px 16px;margin:16px 0;border-left:4px solid;}
-    .callout.cl-blue{background:#eef4ff;border-color:#1a4f8a;}
-    .callout.cl-amber{background:#fff8ee;border-color:#b8720a;}
-    .cl-lbl{font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
-    .sec-tag{font-family:monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7a7568;margin-bottom:8px;}
-    @media(max-width:560px){
-      .concept-row{grid-template-columns:1fr;}
-      .opt-arrow{min-width:80px;}
-      .choice-row{grid-template-columns:1fr;}
-    }
-
-/* ── concept-note: coloured signal blocks ─────────── */
-.concept-note{display:block;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12.5px;line-height:1.75;border-left:3px solid;}
-.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
-.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
-.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
-.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-/* ── concept-def paragraph spacing ────────────────── */
-.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.9;color:#2a2820;}
-.concept-def>strong:first-child{display:block;margin-bottom:8px;font-size:14px;}
-.concept-def p{margin:0 0 8px 0;}
-.concept-def p:last-child{margin-bottom:0;}
-
-.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
-.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
-.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
-.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;flex-shrink:0;}
-.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
-.k-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#6a6858;text-transform:uppercase;background:rgba(255,255,255,.07);border:1px solid #2a2820;padding:3px 8px;border-radius:3px;flex-shrink:0;}
-.k-card-body{background:white;padding:0;}
-.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
-.k-point:last-child{border-bottom:none;}
-.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
-.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
-.k-point-text strong,.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
-.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
-.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf0f0;border-left:3px solid #b83030;border-radius:0 5px 5px 0;font-size:12.5px;color:#5a1a1a;line-height:1.7;}
-.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
-.k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
-.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}
-.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}
-.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}
-.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
-.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}
 </style>
 </head>
 <body>
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-label">System Design Interview Prep</div>
-  <h1>Count-<span>Min</span>Sketch</h1>
-  <p class="hero-sub">The probabilistic data structure that counts millions of events using just kilobytes of memory — and how hash functions make it work.</p>
-  <div class="scroll-cue">↓ SCROLL TO LEARN</div>
+  <div class="hero-inner">
+    <div class="hero-label">Algorithm · System Design</div>
+    <h1>Count-<span>Min</span> Sketch</h1>
+    <p class="hero-sub">The probabilistic data structure that counts millions of events using just kilobytes of memory — and how hash functions make it work.</p>
+  </div>
 </div>
 
 <!-- SECTION 1: THE PROBLEM -->
@@ -618,7 +634,7 @@
   <div class="section-tag">01 — The Problem</div>
   <h2>Why not just use a counter?</h2>
   <p>Imagine you're running YouTube. Every second, millions of videos are watched. Your boss asks: <em>"What are the top trending videos right now?"</em></p>
-  <p>A naive HashMap of <code style="color:var(--accent);font-family:'Space Mono',monospace;font-size:0.85rem">video_id → count</code> works fine for 1,000 videos. But YouTube has <strong>800 million videos</strong>. Storing exact counters for all of them = gigabytes of RAM, just for counting.</p>
+  <p>A naive HashMap of <code>video_id → count</code> works fine for 1,000 videos. But YouTube has <strong>800 million videos</strong>. Storing exact counters for all of them = gigabytes of RAM, just for counting.</p>
   <div class="highlight">
     <strong>The insight:</strong> For trending, rate-limiting, and frequency analysis, you don't need the <em>exact</em> count. A "slightly-higher-than-truth" estimate is perfectly fine — as long as it's fast and tiny.
   </div>
@@ -632,7 +648,7 @@
   <p>This is the most important thing to understand. A hash function is just a deterministic math machine: <strong>same input → always same output</strong>. It converts any string into a number, then we use modulo (%) to fit it into our grid width.</p>
 
   <div class="hash-demo">
-    <h3>// Step-by-step: hashing "video_42" into a 6-column grid</h3>
+    <h3>Step-by-step: hashing "video_42" into a 6-column grid</h3>
 
     <div class="hash-math">
       <span class="comment">// Hash Function 0: a simple polynomial hash</span>
@@ -648,7 +664,7 @@
     </div>
 
     <p style="font-size:0.9rem;color:var(--muted);margin:0">
-      The <strong style="color:var(--text)">key insight</strong>: the exact number doesn't matter. What matters is that (a) it's always the same for the same input, and (b) different hash functions scatter the same input to different columns.
+      The <strong>key insight</strong>: the exact number doesn't matter. What matters is that (a) it's always the same for the same input, and (b) different hash functions scatter the same input to different columns.
     </p>
   </div>
 
@@ -688,8 +704,8 @@
     </table>
   </div>
 
-  <p>The highlighted cells are where "video_42" incremented. To query: look up those same cells → values are <strong style="color:var(--row0)">3</strong>, <strong style="color:var(--row1)">4</strong>, <strong style="color:var(--row2)">5</strong> → take <strong style="color:var(--accent3)">MIN = 3</strong>. That's our estimate.</p>
-  <p style="font-size:0.9rem;color:var(--muted)">Why is Row2's value (5) higher? Because another video happened to hash to Col 4 in Row 2 — it polluted that counter. The minimum protects us from this pollution.</p>
+  <p>The highlighted cells are where "video_42" incremented. To query: look up those same cells → values are <strong style="color:var(--row0)">3</strong>, <strong style="color:var(--row1)">4</strong>, <strong style="color:var(--row2)">5</strong> → take <strong style="color:var(--green)">MIN = 3</strong>. That's our estimate.</p>
+  <p style="font-size:0.9rem;color:var(--muted)">Why is Row 2's value (5) higher? Because another video happened to hash to Col 4 in Row 2 — it polluted that counter. The minimum protects us from this pollution.</p>
 </div>
 
 <!-- SECTION 4: INTERACTIVE DEMO -->
@@ -771,7 +787,7 @@
   </div>
 </div>
 
-<!-- SECTION 6: COUNTER QUESTIONS -->
+<!-- SECTION 6: FAQ -->
 <div class="section">
   <div class="section-tag">06 — Interview Counter Questions</div>
   <h2>Questions you'll be asked — answered</h2>
@@ -859,19 +875,22 @@
   <blockquote>"Count-Min Sketch is a fixed-size grid of counters. You hash each event across multiple rows, increment that cell in each row, and query by taking the minimum. It trades perfect accuracy for dramatically lower memory — and it only ever overcounts, never undercounts."</blockquote>
 </div>
 
-<section id="cms-estimation"><div class="sec-tag">📐 · Sizing</div><h2>Memory & Error Trade-offs</h2><div style="margin:20px 0">
-<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Count-Min Sketch vs Exact Counting</h4>
-<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">1B distinct hashtags, exact</td><td>HashMap: 1B keys × 50 bytes avg</td><td><strong>50GB RAM</strong></td><td style="color:#1a7a4a;font-size:12px">One machine's RAM. Not feasible for a streaming pipeline that must stay in-memory</td></tr><tr><td class="row-head">1B distinct hashtags, CMS (1% error)</td><td>d=5 rows × w=272 cols × 4 bytes</td><td><strong>5.4KB</strong></td><td style="color:#1a7a4a;font-size:12px">5.4KB vs 50GB. CMS is 9 million times more memory efficient</td></tr><tr><td class="row-head">Twitter trending (real)</td><td>~500M unique hashtags active × sliding window</td><td><strong>CMS: 5.4KB per window</strong></td><td style="color:#1a7a4a;font-size:12px">Keep 12 × 5-minute windows for 1-hour sliding = 65KB total. Merge via element-wise sum (O(w×d))</td></tr><tr><td class="row-head">Error guarantee</td><td>ε=1%, N=1B total events</td><td><strong>Max overcount = 10M</strong></td><td style="color:#1a7a4a;font-size:12px">An item seen 100M times will be reported as 100M–110M. Never undercounted. Safe for Top-K ranking</td></tr></tbody></table></div></section>
+<section id="cms-estimation">
+  <div class="sec-tag">📐 · Sizing</div>
+  <h2>Memory &amp; Error Trade-offs</h2>
+  <div style="margin:20px 0">
+    <h4>Count-Min Sketch vs Exact Counting</h4>
+    <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+    <tbody><tr><td>1B distinct hashtags, exact</td><td>HashMap: 1B keys × 50 bytes avg</td><td><strong>50GB RAM</strong></td><td style="color:var(--green);font-size:12px">Not feasible for a streaming pipeline that must stay in-memory</td></tr><tr><td>1B distinct hashtags, CMS (1% error)</td><td>d=5 rows × w=272 cols × 4 bytes</td><td><strong>5.4KB</strong></td><td style="color:var(--green);font-size:12px">9 million times more memory efficient</td></tr><tr><td>Twitter trending (real)</td><td>~500M unique hashtags × sliding window</td><td><strong>CMS: 5.4KB per window</strong></td><td style="color:var(--green);font-size:12px">12 × 5-min windows = 65KB total. Merge via element-wise sum</td></tr><tr><td>Error guarantee</td><td>ε=1%, N=1B total events</td><td><strong>Max overcount = 10M</strong></td><td style="color:var(--green);font-size:12px">Never undercounted. Safe for Top-K ranking</td></tr></tbody></table>
+  </div>
+</section>
 
 <script>
-  // ---- CMS Implementation ----
   const ROWS = 3;
   const COLS = 6;
   let grid = Array.from({length: ROWS}, () => new Array(COLS).fill(0));
   let logEntries = [];
 
-  // Simple but deterministic hash functions
   function hash(str, seed) {
     let h = seed * 2654435761;
     for (let i = 0; i < str.length; i++) {
@@ -911,8 +930,6 @@
       grid[r][cols[r]]++;
     }
     renderGrid(cols);
-
-    // Animate
     setTimeout(() => {
       for (let r = 0; r < ROWS; r++) {
         const cell = document.getElementById(`cell-${r}-${cols[r]}`);
@@ -922,13 +939,10 @@
         }
       }
     }, 10);
-
-    // Log
     const entry = { key, cols: cols.map((c, r) => `Row${r}→Col${c}`).join(' · ') };
     logEntries.unshift(entry);
     if (logEntries.length > 20) logEntries.pop();
     renderLog();
-
     document.getElementById('queryResult').classList.remove('visible');
   }
 
@@ -938,9 +952,7 @@
     const vals = cols.map((c, r) => grid[r][c]);
     const minVal = Math.min(...vals);
     const minRow = vals.indexOf(minVal);
-
     renderGrid(cols, cols[minRow], minRow);
-
     const res = document.getElementById('queryResult');
     res.innerHTML = `Query: "<strong>${key}</strong>" → Cells: [${vals.join(', ')}] → MIN = <strong>${minVal}</strong> (estimated count)`;
     res.classList.add('visible');
@@ -965,12 +977,10 @@
     ).join('');
   }
 
-  // Allow Enter key
   document.getElementById('keyInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') addEvent();
   });
 
-  // ---- FAQ ----
   function toggleFaq(el) {
     const item = el.parentElement;
     const isOpen = item.classList.contains('open');
@@ -978,113 +988,106 @@
     if (!isOpen) item.classList.add('open');
   }
 
-  // Init
   renderGrid();
 </script>
 
+<div style="max-width:900px;margin:0 auto;padding:40px 24px;border-bottom:1px solid var(--border)">
+  <div class="sec-tag">05 · Concepts Quick Reference</div>
+  <h2>Core mechanics in one place</h2>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Hash Width<br>(w)</div><div class="concept-def"><strong>Number of columns — controls error magnitude.</strong><br>
+      Guarantee: estimation error ≤ <code>e/w</code>. Set <code>w = ⌈e/ε⌉</code> where ε is your acceptable error rate.<br>
+      Example: ε=0.01 (1% error) → w = ⌈2.718/0.01⌉ = 272 columns. With N=1,000,000: max overcount = 10,000 (1% of N).
+      <span class="concept-note muted">Wider table = smaller error. Width scales linearly with required accuracy.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Hash Depth<br>(d)</div><div class="concept-def"><strong>Number of rows (independent hash functions) — controls error probability.</strong><br>
+      Set <code>d = ⌈ln(1/δ)⌉</code> where δ is acceptable failure probability.<br>
+      Example: δ=0.01 (99% confidence) → d = ⌈ln(100)⌉ = 5 rows. Probability ALL 5 collide simultaneously = (0.01)^5 = 0.0000000001.
+      <span class="concept-note muted">More rows = higher confidence. Depth grows logarithmically — diminishing returns beyond d=7.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Why Minimum?</div><div class="concept-def"><strong>CMS query returns the minimum across all d rows — not sum, not average, minimum.</strong><br>
+      Each row's counter is always ≥ the true count (hash collisions add counts from other keys). The minimum is the closest to the true count — but still an upper bound.
+      <span class="concept-note good">✓ Mathematically proven: min(rows) ≥ true_count always. This is why CMS only over-estimates, never under-estimates.</span></div></div>
+    <div class="concept-row"><div class="concept-term">Space Complexity</div><div class="concept-def"><strong>O(w × d) — constant space regardless of the number of distinct keys.</strong><br>
+      ε=0.01, δ=0.01: w=272, d=5. Total: 272 × 5 = 1,360 integers × 4 bytes = 5.3KB.<br>
+      Compare: 1 billion unique keys in a HashMap = ~24GB. CMS: 5.3KB — a 4.5 million× reduction.
+      <span class="concept-note good">✓ Fits in L1 CPU cache, enabling billions of updates per second.</span></div></div>
+    <div class="concept-row"><div class="concept-term">CMS vs HyperLogLog</div><div class="concept-def"><strong>CMS counts frequency of each item. HyperLogLog counts distinct items. Different problems.</strong><br>
+      CMS: "how many times did user X appear?" → frequency/count estimation.<br>
+      HyperLogLog: "how many distinct users appeared?" → cardinality estimation.
+      <span class="concept-note muted">Use CMS for Top-K (need per-item counts). Use HLL for DAU / unique visitor counts. Redis supports both natively.</span></div></div>
+  </div>
 
+  <div class="sec-tag" style="margin-top:32px">06 · System Design Examples</div>
+  <h2>CMS in production systems</h2>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Twitter — Trending Hashtags</div><span class="sd-example-tag">BILLIONS OF EVENTS</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">PROBLEM</div><div class="choice-val">500M tweets/day. Count how many times each hashtag appears in the last 1 hour. Millions of distinct hashtags. A HashMap would need gigabytes. Must update in real time.</div></div>
+      <div class="choice-row"><div class="choice-label">CMS SOLUTION</div><div class="choice-val"><span class="badge b-g">ε=0.01, δ=0.01 ✓</span> One CMS per 5-minute bucket. Each tweet: extract hashtag → hash into CMS → increment. At end of bucket: query CMS for candidate hashtags. Top-K via min-heap.</div></div>
+      <div class="choice-row"><div class="choice-label">SIZE</div><div class="choice-val">w=272, d=5 → 1,360 cells × 4 bytes = 5.3KB per CMS. 12 buckets/hour = 64KB total. Compare: tracking all distinct hashtags by count → gigabytes.</div></div>
+      <div class="choice-row"><div class="choice-label">ERROR</div><div class="choice-val">At 500M events/hour: max error = 500M × 0.01 = 5M per hashtag. A hashtag with 100M appearances is estimated as 95M–105M. For trending (relative ranking), this error is irrelevant.</div></div>
+    </div>
+  </div>
 
-<div style="padding:20px 16px;max-width:760px;margin:0 auto;">
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">Redis — Native CMS Implementation</div><span class="sd-example-tag">PRODUCTION USE</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">COMMAND</div><div class="choice-val"><code>CMS.INITBYPROB key 0.001 0.01</code> — create CMS with 0.1% error, 99% confidence.<br><code>CMS.INCRBY key hashtag 1</code> — increment count.<br><code>CMS.QUERY key hashtag1 hashtag2</code> — query multiple keys at once.</div></div>
+      <div class="choice-row"><div class="choice-label">TOPK INTEGRATION</div><div class="choice-val">Redis also has <code>TOPK.ADD</code> which combines a CMS with a min-heap to maintain the Top-K list automatically. No Flink or separate aggregation layer needed for moderate scales (&lt;100K events/sec).</div></div>
+      <div class="choice-row"><div class="choice-label">MERGE</div><div class="choice-val"><code>CMS.MERGE dest numkeys src1 src2 ...</code> — merge multiple CMS sketches. Use for shard-local CMS across Redis cluster, merge at query time for global counts. O(w × d) — constant time.</div></div>
+    </div>
+  </div>
 
-<div class="sec-tag">05 · Concepts Quick Reference</div>
-<h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:16px;">Core mechanics in one place</h2>
-<div class="concept-grid">
-  <div class="concept-row"><div class="concept-term">Hash Width<br>(w)</div><div class="concept-def"><strong>Number of columns in the CMS table — controls error magnitude.</strong><br>
-    Guarantee: estimation error ≤ <code>e/w</code> where e is the base of natural log (~2.718). Set <code>w = ⌈e/ε⌉</code> where ε is your acceptable error rate.<br>
-    Example: ε=0.01 (1% error) → w = ⌈2.718/0.01⌉ = 272 columns. With total count N=1,000,000: max overcount = 10,000 (1% of N).
-        <span class="concept-note muted">Wider table = smaller error. Each row is independent — width scales linearly with required accuracy.</span></div></div>
-  <div class="concept-row"><div class="concept-term">Hash Depth<br>(d)</div><div class="concept-def"><strong>Number of rows (independent hash functions) — controls error probability.</strong><br>
-    Guarantee: probability of exceeding the error bound ≤ <code>δ^d</code>. Set <code>d = ⌈ln(1/δ)⌉</code> where δ is acceptable failure probability.<br>
-    Example: δ=0.01 (99% confidence) → d = ⌈ln(100)⌉ = 5 rows. With 5 independent hash functions, probability that ALL 5 collide for the same key is (0.01)^5 = 0.0000000001.
-        <span class="concept-note muted">More rows = higher confidence. Depth grows logarithmically — 5 rows gives 99% confidence, 10 rows gives 99.9999%. Depth has diminishing returns.</span></div></div>
-  <div class="concept-row"><div class="concept-term">Why Minimum?</div><div class="concept-def"><strong>The CMS query returns the minimum across all d rows — not sum, not average, minimum.</strong><br>
-    Each row's counter is always ≥ the true count (due to hash collisions adding counts from other keys). The minimum across all rows is the closest to the true count — but still an upper bound.
-        <span class="concept-note good">✓ Mathematically proven: min(rows) ≥ true_count always. And min(rows) − true_count ≤ error_bound with high probability. This is why CMS only over-estimates, never under-estimates.</span></div></div>
-  <div class="concept-row"><div class="concept-term">Space Complexity</div><div class="concept-def"><strong>O(w × d) — constant space regardless of the number of distinct keys.</strong><br>
-    A CMS with ε=0.01, δ=0.01: w=272, d=5. Total cells: 272 × 5 = 1,360 integers. At 4 bytes each: 5,440 bytes = 5.3KB.<br>
-    Compare: tracking 1 billion unique keys in a HashMap = ~24GB. CMS achieves similar functionality in 5.3KB — a 4.5 million times reduction.
-        <span class="concept-note good">✓ This is why CMS is used in production for counting at scale: it fits in L1 CPU cache, enabling billions of updates per second.</span></div></div>
-  <div class="concept-row"><div class="concept-term">CMS vs HyperLogLog</div><div class="concept-def"><strong>CMS counts frequency of each item. HyperLogLog counts the number of distinct items. Different problems.</strong><br>
-    CMS answers: "how many times did user X appear?" → frequency/count estimation.<br>
-    HyperLogLog answers: "how many distinct users appeared?" → cardinality estimation.
-        <span class="concept-note muted">Both are probabilistic, both use constant space. Use CMS for Top-K (need per-item counts). Use HyperLogLog for DAU / unique visitor counts (need distinct count). Redis supports both natively.</span></div></div>
-</div>
-
-<div class="sec-tag" style="margin-top:24px;">06 · System Design Examples</div>
-<h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:16px;">CMS in production systems</h2>
-<div class="sd-example">
-  <div class="sd-example-head"><div class="sd-example-title">Twitter — Trending Hashtags</div><span class="sd-example-tag">BILLIONS OF EVENTS</span></div>
-  <div class="sd-example-body">
-    <div class="choice-row"><div class="choice-label">PROBLEM</div><div class="choice-val">500M tweets/day. Count how many times each hashtag appears in the last 1 hour. Millions of distinct hashtags. A HashMap would need gigabytes. Must update in real time as tweets arrive.</div></div>
-    <div class="choice-row"><div class="choice-label">CMS SOLUTION</div><div class="choice-val"><span class="badge b-g">ε=0.01, δ=0.01 ✓</span> One CMS per 5-minute bucket. Each tweet: extract hashtag → hash into CMS → increment counters. At end of bucket: query CMS for all candidate hashtags to get approximate counts. Top-K selection from CMS estimates using a min-heap.</div></div>
-    <div class="choice-row"><div class="choice-label">SIZE</div><div class="choice-val">w=272, d=5 → 1,360 cells × 4 bytes = 5.3KB per CMS. 12 buckets/hour = 64KB total for a full hour of sliding window. Compare: tracking all distinct hashtags by count → gigabytes. CMS fits in CPU cache.</div></div>
-    <div class="choice-row"><div class="choice-label">ERROR</div><div class="choice-val">At 500M events/hour: max error = 500M × 0.01 = 5M per hashtag. A hashtag with 100M appearances is estimated as 95M–105M. For trending (relative ranking), this error is irrelevant — #WorldCup at 100M vs #Olympics at 80M are still correctly ranked.</div></div>
+  <div class="sec-tag" style="margin-top:32px">07 · Decision Framework</div>
+  <h2>When to use CMS — and when not to</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>CMS vs Exact Counting — Ask in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">How many distinct keys do you need to count?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Few (&lt;1M distinct) →</span><span><strong>Exact counting with HashMap is fine.</strong> 1M keys × 8 bytes = 8MB — trivially fits in memory.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Many (&gt;10M distinct) →</span><span><strong>CMS is justified.</strong> 100M distinct keys × 8 bytes = 800MB. CMS achieves same Top-K result in 5KB.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Can you tolerate small over-counting (CMS never under-counts)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span><strong>Use CMS.</strong> CMS guarantees frequency(item) ≤ estimate ≤ frequency(item) + ε×N. Perfect for trending topics, popular product ranking, heavy hitter detection.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO (exact required) →</span><span><strong>Exact counting required.</strong> Use Redis INCR per key, or streaming aggregation into a database (Flink → Cassandra with exact counts).</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">Do you need to track individual item counts or just find the Top-K?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Just Top-K →</span><span><strong>CMS + min-heap (or Redis TOPK).</strong> Heap bounded at size K. Total memory: O(w×d + K), independent of distinct item count.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">All item counts →</span><span><strong>CMS alone.</strong> Query any key in O(d) time — constant regardless of vocabulary size.</span></div>
+        </div>
+      </div></div>
+    </div>
   </div>
 </div>
-
-<div class="sd-example">
-  <div class="sd-example-head"><div class="sd-example-title">Redis — Native CMS Implementation</div><span class="sd-example-tag">PRODUCTION USE</span></div>
-  <div class="sd-example-body">
-    <div class="choice-row"><div class="choice-label">COMMAND</div><div class="choice-val"><code>CMS.INITBYPROB key 0.001 0.01</code> — create CMS with 0.1% error, 99% confidence.<br><code>CMS.INCRBY key hashtag 1</code> — increment count for hashtag.<br><code>CMS.QUERY key hashtag1 hashtag2</code> — query multiple keys at once.</div></div>
-    <div class="choice-row"><div class="choice-label">TOPK INTEGRATION</div><div class="choice-val">Redis also has <code>TOPK.ADD</code> which combines a CMS with a min-heap to maintain the Top-K list automatically. Add events one at a time — Redis maintains the top-K internally. No Flink or separate aggregation layer needed for moderate scales (&lt;100K events/sec).</div></div>
-    <div class="choice-row"><div class="choice-label">MERGE</div><div class="choice-val"><code>CMS.MERGE dest numkeys src1 src2 ...</code> — merge multiple CMS sketches into one. Use for: shard multiple CMS across Redis cluster (one per shard), merge at query time to get global counts. Merge is O(w × d) — constant time regardless of event volume.</div></div>
-  </div>
-</div>
-
-<div class="sec-tag" style="margin-top:24px;">07 · Decision Framework</div>
-<h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:16px;">When to use CMS — and when not to</h2>
-<div class="step-block">
-  <div class="step-block-header"><span class="sb-icon">🎯</span>CMS vs Exact Counting — Ask in Order</div>
-  <div class="step-block-body">
-    <div class="step-row"><div class="step-num">01</div><div class="step-content">
-      <div class="step-q">How many distinct keys do you need to count?</div>
-      <div class="step-options">
-        <div class="step-option opt-yes"><span class="opt-arrow">Few (&lt;1M distinct) →</span><span class="opt-text"><strong>Exact counting with HashMap is fine.</strong> 1M keys × 8 bytes = 8MB — trivially fits in memory. Use Redis HSET or a HashMap. No need for probabilistic structures at this scale.</span></div>
-        <div class="step-option opt-no"><span class="opt-arrow">Many (&gt;10M distinct) →</span><span class="opt-text"><strong>CMS is justified.</strong> 100M distinct keys × 8 bytes = 800MB. CMS achieves same Top-K result in 5KB. The accuracy trade-off is worth it.</span></div>
-      </div>
-    </div></div>
-    <div class="step-row"><div class="step-num">02</div><div class="step-content">
-      <div class="step-q">Can you tolerate small over-counting (CMS never under-counts)?</div>
-      <div class="step-options">
-        <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Use CMS.</strong> CMS guarantees frequency(item) ≤ estimate ≤ frequency(item) + ε×N. The overcount is bounded and predictable. Perfect for: trending topics, popular product ranking, heavy hitter detection in network traffic.</span></div>
-        <div class="step-option opt-no"><span class="opt-arrow">NO (exact counts required) →</span><span class="opt-text"><strong>Exact counting required.</strong> Use a distributed exact counter: Redis INCR per key (limited by memory), or a database COUNT per key (slow at scale), or a streaming aggregation into a database (Flink → Cassandra with exact counts).</span></div>
-      </div>
-    </div></div>
-    <div class="step-row"><div class="step-num">03</div><div class="step-content">
-      <div class="step-q">Do you need to track individual item counts or just find the Top-K?</div>
-      <div class="step-options">
-        <div class="step-option opt-yes"><span class="opt-arrow">Just Top-K →</span><span class="opt-text"><strong>CMS + min-heap (or Redis TOPK).</strong> Maintain a min-heap of size K. For each new item: query CMS for its estimated count. If estimate > heap minimum, replace minimum with this item. O(log K) per update. K is typically small (top 10, top 100).</span></div>
-        <div class="step-option opt-no"><span class="opt-arrow">All item counts →</span><span class="opt-text"><strong>CMS alone.</strong> Query any key in O(d) time — constant regardless of vocabulary size. Cannot enumerate all keys (CMS stores counts, not keys). Combine with a key registry if you need to iterate over all counted items.</span></div>
-      </div>
-    </div></div>
-  </div>
-</div>
-
-</div>
-
 
 <section id="req-nfr-cms">
-  <div class="sec-tag">📋 · Requirements & Scale</div>
-  <h2>Requirements & Non-Functional Constraints</h2>
+  <div class="sec-tag">📋 · Requirements &amp; Scale</div>
+  <h2>Requirements &amp; Non-Functional Constraints</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
-<div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Approximate frequency counting for N distinct items in O(w×d) memory</td></tr><tr><td><strong>FR2</strong></td><td>O(1) update: INCR count for an item (hash + increment)</td></tr><tr><td><strong>FR3</strong></td><td>O(1) query: GET approximate count for any item</td></tr><tr><td><strong>FR4</strong></td><td>Never undercount: errors are always overcounts, bounded by ε</td></tr><tr><td><strong>FR5</strong></td><td>Mergeable: combine sketches from different machines (distributed counting)</td></tr><tr><td><strong>FR6</strong></td><td>Complement min-heap: together produce Top-K in bounded memory</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Memory: w×d integers. Typical: 4 hash functions × 2048 cols = 32KB</td></tr><tr><td><strong>NFR2</strong></td><td>False positive: overcount ≤ ε×N with probability 1−δ</td></tr><tr><td><strong>NFR3</strong></td><td>Parameters: w = e/ε (width), d = ln(1/δ) (depth) — tunable</td></tr><tr><td><strong>NFR4</strong></td><td>For 1% error (ε=0.01): w = e/0.01 ≈ 272 columns</td></tr><tr><td><strong>NFR5</strong></td><td>For 99% confidence (δ=0.01): d = ln(100) ≈ 5 rows</td></tr><tr><td><strong>NFR6</strong></td><td>Total: 5 × 272 = 1360 counters = 5.4KB for 1% error, 99% confidence</td></tr></tbody></table></div>
-</div>
+    <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td>FR1</td><td>Approximate frequency counting for N distinct items in O(w×d) memory</td></tr><tr><td>FR2</td><td>O(1) update: INCR count for an item (hash + increment)</td></tr><tr><td>FR3</td><td>O(1) query: GET approximate count for any item</td></tr><tr><td>FR4</td><td>Never undercount: errors are always overcounts, bounded by ε</td></tr><tr><td>FR5</td><td>Mergeable: combine sketches from different machines</td></tr><tr><td>FR6</td><td>Complement min-heap: together produce Top-K in bounded memory</td></tr></tbody></table></div>
+    <div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td>NFR1</td><td>Memory: w×d integers. Typical: 4 rows × 2048 cols = 32KB</td></tr><tr><td>NFR2</td><td>False positive: overcount ≤ ε×N with probability 1−δ</td></tr><tr><td>NFR3</td><td>Parameters: w = e/ε (width), d = ln(1/δ) (depth) — tunable</td></tr><tr><td>NFR4</td><td>For 1% error (ε=0.01): w = e/0.01 ≈ 272 columns</td></tr><tr><td>NFR5</td><td>For 99% confidence (δ=0.01): d = ln(100) ≈ 5 rows</td></tr><tr><td>NFR6</td><td>Total: 5 × 272 = 1360 counters = 5.4KB for 1% error, 99% confidence</td></tr></tbody></table></div>
+  </div>
 </section>
 
 <section id="tradeoff-cms">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
   <p>Every senior interview ends here. Know your choices and their costs.</p>
-  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">CMS vs exact HashMap</td><td>CMS when distinct items are too large for exact counting</td><td><span class="dot g"></span>Fixed memory: 5.4KB for any vocabulary size (1M or 1B distinct items). O(1) operations. Mergeable across nodes</td><td><span class="dot a"></span>Overcount error: cannot get exact count. Cannot enumerate all items (no keys stored). Cannot delete items</td><td>HashMap when distinct items < 10M and exact counts required. CMS for streaming with unbounded distinct items</td></tr><tr><td class="row-head">Width (w) tuning</td><td>Wider = lower error rate</td><td><span class="dot g"></span>w = 272 → 1% error. w = 2720 → 0.1% error. Linear tradeoff</td><td><span class="dot a"></span>Linear memory cost. Wider sketch = more cache misses = slower in practice</td><td>w = e/ε where ε is target error fraction. Start with 1% error (w=272) — accurate enough for Top-K trending</td></tr><tr><td class="row-head">Depth (d) tuning</td><td>Deeper = higher confidence</td><td><span class="dot g"></span>d = 5 → 99% confidence. d = 7 → 99.9% confidence. Each row is independent hash function</td><td><span class="dot a"></span>Logarithmic confidence gain: doubling d gives √ confidence increase. Diminishing returns beyond d=7</td><td>d = ceil(ln(1/δ)). d=5 gives 99% confidence that error < ε×N. Sufficient for most production use cases</td></tr><tr><td class="row-head">CMS vs HyperLogLog</td><td>CMS for frequency, HLL for cardinality</td><td><span class="dot g"></span>CMS: "how many times did item X appear?" HLL: "how many distinct items appeared?" Different questions entirely</td><td><span class="dot a"></span>Cannot use CMS to count distinct items. Cannot use HLL to find frequency of specific items</td><td>Use both together: HLL for "how many unique viewers?" CMS for "which videos were viewed most often?"</td></tr><tr><td class="row-head">Top-K approach</td><td>CMS + Min-heap of size K</td><td><span class="dot g"></span>CMS provides O(1) count estimate for any item. Min-heap tracks only K candidates — O(K) memory</td><td><span class="dot a"></span>Heap maintenance: O(log K) on each event. Must decide: when to evict from heap? Use CMS count threshold</td><td>Exact Top-K (MapReduce full count) for batch. CMS+heap for real-time streaming with bounded memory</td></tr></tbody></table>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">CMS vs exact HashMap</td><td>CMS when distinct items too large for exact counting</td><td><span class="dot g"></span>Fixed memory: 5.4KB for any vocab size. O(1) ops. Mergeable</td><td><span class="dot a"></span>Cannot get exact count. Cannot enumerate keys. No deletion</td><td>HashMap when distinct items &lt; 10M and exact counts required</td></tr><tr><td class="row-head">Width (w) tuning</td><td>Wider = lower error rate</td><td><span class="dot g"></span>w=272 → 1% error. w=2720 → 0.1% error. Linear tradeoff</td><td><span class="dot a"></span>Linear memory cost. Wider sketch = more cache misses</td><td>w = e/ε where ε is target error fraction</td></tr><tr><td class="row-head">Depth (d) tuning</td><td>Deeper = higher confidence</td><td><span class="dot g"></span>d=5 → 99% confidence. d=7 → 99.9%. Each row independent hash</td><td><span class="dot a"></span>Logarithmic confidence gain. Diminishing returns beyond d=7</td><td>d = ceil(ln(1/δ)). d=5 sufficient for most production cases</td></tr><tr><td class="row-head">CMS vs HyperLogLog</td><td>CMS for frequency, HLL for cardinality</td><td><span class="dot g"></span>CMS: "how many times?" HLL: "how many distinct?" Different questions</td><td><span class="dot a"></span>Cannot use CMS to count distinct items</td><td>Use both: HLL for unique viewers, CMS for most-viewed videos</td></tr><tr><td class="row-head">Top-K approach</td><td>CMS + Min-heap of size K</td><td><span class="dot g"></span>CMS gives O(1) count estimate. Heap tracks K candidates</td><td><span class="dot a"></span>Heap maintenance: O(log K) per event</td><td>Exact Top-K (MapReduce) for batch. CMS+heap for real-time</td></tr></tbody></table>
 </section>
 
 <section id="schema-cms">
   <div class="sec-tag">🗃️ · Reference</div>
-  <h2>Quick Reference</h2>
-  <h4>CMS Sizing Calculator</h4><table class="flow-table"><thead><tr><th>Error (ε)</th><th>Width (w)</th><th>Depth (d)</th><th>Memory</th><th>Confidence</th></tr></thead><tbody><tr><td>10% (coarse)</td><td>28 cols</td><td>5 rows</td><td>560 counters = 2.2KB</td><td>99%</td></tr><tr><td>1% (standard)</td><td>272 cols</td><td>5 rows</td><td>1,360 counters = 5.4KB</td><td>99%</td></tr><tr><td>0.1% (precise)</td><td>2,718 cols</td><td>5 rows</td><td>13,590 counters = 54KB</td><td>99%</td></tr><tr><td>1% (high conf)</td><td>272 cols</td><td>7 rows</td><td>1,904 counters = 7.6KB</td><td>99.9%</td></tr><tr><td>1% (very high)</td><td>272 cols</td><td>10 rows</td><td>2,720 counters = 10.8KB</td><td>99.99%</td></tr></tbody></table>
+  <h2>Quick Reference — CMS Sizing</h2>
+  <table class="flow-table"><thead><tr><th>Error (ε)</th><th>Width (w)</th><th>Depth (d)</th><th>Memory</th><th>Confidence</th></tr></thead><tbody><tr><td>10% (coarse)</td><td>28 cols</td><td>5 rows</td><td>560 counters = 2.2KB</td><td>99%</td></tr><tr><td>1% (standard)</td><td>272 cols</td><td>5 rows</td><td>1,360 counters = 5.4KB</td><td>99%</td></tr><tr><td>0.1% (precise)</td><td>2,718 cols</td><td>5 rows</td><td>13,590 counters = 54KB</td><td>99%</td></tr><tr><td>1% (high conf)</td><td>272 cols</td><td>7 rows</td><td>1,904 counters = 7.6KB</td><td>99.9%</td></tr><tr><td>1% (very high)</td><td>272 cols</td><td>10 rows</td><td>2,720 counters = 10.8KB</td><td>99.99%</td></tr></tbody></table>
 </section>
-
 
 <section id="cms-concepts-deep">
   <div class="sec-tag">🃏 · Core Concepts</div>
@@ -1102,7 +1105,7 @@
       <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Why Minimum, Not Average?</span><span class="k-tag">Algorithm</span></div>
       <div class="k-card-body"><div class="k-point">
         <div class="k-point-label">The intuition</div>
-        <div class="k-point-text"><strong>Collisions inflate counts. The minimum is the least-inflated estimate.</strong><br>If item A hashes to the same column as 100 other items in row 1, row 1's counter is inflated by those 100 items. But the probability that A ALSO collides with 100 items in rows 2, 3, 4, and 5 simultaneously is tiny. The minimum across d rows is very likely to be the least-collided estimate.</div>
+        <div class="k-point-text"><strong>Collisions inflate counts. The minimum is the least-inflated estimate.</strong><br>If item A hashes to the same column as 100 other items in row 1, row 1's counter is inflated. But the probability that A ALSO collides with 100 items in rows 2, 3, 4, and 5 simultaneously is tiny. The minimum across d rows is very likely to be the least-collided estimate.</div>
         <div class="k-warn"><span class="k-icon">⚠</span><span>Average would be wrong: averaging inflated and un-inflated estimates gives a biased high estimate. Minimum gives a bound: true_count ≤ CMS_estimate ≤ true_count + ε×N.</span></div>
       </div></div>
     </div>
@@ -1110,23 +1113,23 @@
       <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Parameter Tuning</span><span class="k-tag">Configuration</span></div>
       <div class="k-card-body"><div class="k-point">
         <div class="k-point-label">How to size it</div>
-        <div class="k-point-text"><strong>Two parameters: w (width = columns) and d (depth = rows = hash functions).</strong><br>w = ⌈e/ε⌉ where ε is the maximum error as a fraction of total events N. For 1% error: w = e/0.01 ≈ 272.<br>d = ⌈ln(1/δ)⌉ where δ is the failure probability. For 99% confidence: d = ln(100) ≈ 5.<br>Memory: 5 × 272 = 1,360 counters. At 4 bytes each = 5.4KB for ANY vocabulary size.</div>
-        <div class="k-good"><span class="k-icon">✓</span><span>Halving the error rate (0.5% instead of 1%) doubles w (544 columns) — memory doubles. Adding one more hash function (d+1) increases confidence by e× — logarithmic improvement.</span></div>
+        <div class="k-point-text"><strong>Two parameters: w (width = columns) and d (depth = rows = hash functions).</strong><br>w = ⌈e/ε⌉ where ε is the maximum error as a fraction of total events N. For 1% error: w = e/0.01 ≈ 272.<br>d = ⌈ln(1/δ)⌉ where δ is the failure probability. For 99% confidence: d = ln(100) ≈ 5.<br>Memory: 5 × 272 = 1,360 counters × 4 bytes = 5.4KB for ANY vocabulary size.</div>
+        <div class="k-good"><span class="k-icon">✓</span><span>Halving the error rate doubles w (544 columns). Adding one more hash function (d+1) multiplies confidence by e — logarithmic improvement.</span></div>
       </div></div>
     </div>
     <div class="k-card">
       <div class="k-card-head"><span class="k-num">04</span><span class="k-title">CMS + Min-Heap = Top-K</span><span class="k-tag">Top-K Integration</span></div>
       <div class="k-card-body"><div class="k-point">
         <div class="k-point-label">Why you need both</div>
-        <div class="k-point-text"><strong>CMS answers "how often?" — min-heap answers "which K items are most frequent?"</strong><br>CMS alone: can tell you the count of any specific item but cannot enumerate which items are in the top K (it doesn't store item identities).<br>Min-heap alone: would need to track exact counts for every distinct item — O(N) memory for N distinct items.<br>Together: each event → CMS.update(item) → CMS.query(item) → if count > heap.min → heap.push(item, count). Heap bounded at size K. Total memory: O(w×d + K), independent of distinct item count.</div>
-        <div class="k-good"><span class="k-icon">✓</span><span>At 1B distinct hashtags: exact HashMap = 8GB+ of memory. CMS + K=1000 heap = 5.4KB + 8KB = 14KB total. The data structure is what makes real-time Top-K feasible.</span></div>
+        <div class="k-point-text"><strong>CMS answers "how often?" — min-heap answers "which K items are most frequent?"</strong><br>CMS alone cannot enumerate which items are in the top K (it doesn't store item identities).<br>Min-heap alone would need exact counts for every distinct item — O(N) memory.<br>Together: each event → CMS.update(item) → CMS.query(item) → if count &gt; heap.min → heap.push(item, count). Total memory: O(w×d + K), independent of distinct item count.</div>
+        <div class="k-good"><span class="k-icon">✓</span><span>At 1B distinct hashtags: exact HashMap = 8GB+. CMS + K=1000 heap = 5.4KB + 8KB = 14KB total.</span></div>
       </div></div>
     </div>
     <div class="k-card">
       <div class="k-card-head"><span class="k-num">05</span><span class="k-title">Distributed CMS (Merging)</span><span class="k-tag">Scale</span></div>
       <div class="k-card-body"><div class="k-point">
         <div class="k-point-label">Merging across nodes</div>
-        <div class="k-point-text"><strong>CMS sketches built on different nodes with the same parameters and hash functions can be merged by element-wise addition.</strong><br>Node A processes partition 1: sketch_A. Node B processes partition 2: sketch_B. Global sketch = sketch_A + sketch_B (add corresponding cells). Same error guarantee as if all events were processed on one node.<br>Used in: Flink's distributed Top-K job (each task maintains a local CMS + heap, merge step every window), Redis Cluster (each shard maintains local CMS, coordinator merges periodically).</div>
+        <div class="k-point-text"><strong>CMS sketches built on different nodes with the same parameters can be merged by element-wise addition.</strong><br>Node A processes partition 1: sketch_A. Node B: sketch_B. Global = sketch_A + sketch_B (add corresponding cells). Same error guarantee as if all events were processed on one node.<br>Used in: Flink distributed Top-K (each task: local CMS + heap, merge every window), Redis Cluster (each shard: local CMS, coordinator merges periodically).</div>
         <div class="k-good"><span class="k-icon">✓</span><span>Mergeability is the property that makes CMS work in MapReduce, Flink, and distributed stream processing — unlike exact counting which requires coordination on every event.</span></div>
       </div></div>
     </div>
