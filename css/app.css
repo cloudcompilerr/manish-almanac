@@ -37,13 +37,13 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tp);m
 .coll-count{font-size:13px;color:var(--ts);}
 .coll-tag{font-size:10px;font-weight:600;background:var(--as);color:var(--ac);border-radius:8px;padding:1px 7px;}
 
-/* COLLECTION ITEM VIEWER — flows in document so browser scrollbar is native */
-#coll-item{display:none;min-height:100vh;background:var(--bg);}
-#coll-item.open{display:block;}
-.ci-header{padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--br);background:rgba(250,249,247,.96);backdrop-filter:blur(20px);z-index:10;position:sticky;top:0;}
+/* COLLECTION ITEM VIEWER — fixed full-screen overlay; iframe fills viewport reliably */
+#coll-item{display:none;position:fixed;inset:0;background:var(--bg);flex-direction:column;z-index:400;}
+#coll-item.open{display:flex;}
+.ci-header{padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--br);background:rgba(250,249,247,.96);backdrop-filter:blur(20px);z-index:10;}
 .ci-back{background:none;border:none;font-size:17px;color:var(--ac);cursor:pointer;padding:4px 0;font-weight:500;}
 .ci-title{font-size:17px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#ci-iframe{width:100%;border:none;display:block;background:#fff;min-height:100vh;}
+#ci-iframe{flex:1;width:100%;border:none;display:block;background:#fff;}
 
 /* DETAIL */
 .note-detail{display:none;min-height:100vh;}

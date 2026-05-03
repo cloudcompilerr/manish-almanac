@@ -55,13 +55,6 @@ function openCollItem(id){
   document.getElementById('coll-panel').style.display='none';
   document.getElementById('coll-item').classList.add('open');
   window.scrollTo(0,0);
-  function fitIframe(){
-    try{
-      var h=iframe.contentDocument.body.scrollHeight;
-      if(h>100) iframe.style.height=h+'px';
-    }catch(e){}
-  }
-  iframe.onload=function(){ fitIframe(); setTimeout(fitIframe,400); };
   if(item.srcdoc){
     iframe.srcdoc=item.srcdoc;
   } else {
@@ -80,7 +73,7 @@ function closeCollItem(){
   window.scrollTo(0, _collScrollY);
   setTimeout(function(){
     var f=document.getElementById('ci-iframe');
-    if(f){f.srcdoc='';f.style.height='';}
+    if(f) f.srcdoc='';
   },50);
 }
 
