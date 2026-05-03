@@ -43,7 +43,7 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tp);m
 .ci-header{padding:13px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--br);background:rgba(250,249,247,.96);backdrop-filter:blur(20px);z-index:10;position:sticky;top:0;}
 .ci-back{background:none;border:none;font-size:17px;color:var(--ac);cursor:pointer;padding:4px 0;font-weight:500;}
 .ci-title{font-size:17px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#ci-iframe{width:100%;border:none;display:block;background:#fff;}
+#ci-iframe{width:100%;border:none;display:block;background:#fff;min-height:100vh;}
 
 /* DETAIL */
 .note-detail{display:none;min-height:100vh;}

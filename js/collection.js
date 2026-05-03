@@ -32,6 +32,7 @@ const COLLECTION_DATA = {
   llm_context_window: { title: "The 128k Problem — How to Feed an LLM Without Hallucinating", file: "collection/llm-context-window-selection.html" },
 };
 
+var _collScrollY = 0;
 function openCollection(){
   document.getElementById('list').style.display='none';
   document.getElementById('coll-panel').classList.add('open');
@@ -48,6 +49,7 @@ function closeCollection(){
 function openCollItem(id){
   var item=COLLECTION_DATA[id];
   if(!item)return;
+  _collScrollY = window.scrollY;
   document.getElementById('ci-title').textContent=item.title;
   var iframe=document.getElementById('ci-iframe');
   document.getElementById('coll-panel').style.display='none';
@@ -75,7 +77,7 @@ function openCollItem(id){
 function closeCollItem(){
   document.getElementById('coll-item').classList.remove('open');
   document.getElementById('coll-panel').style.display='';
-  window.scrollTo(0,0);
+  window.scrollTo(0, _collScrollY);
   setTimeout(function(){
     var f=document.getElementById('ci-iframe');
     if(f){f.srcdoc='';f.style.height='';}
