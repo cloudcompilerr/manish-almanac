@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pipeline — Director-Level Breakdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,900;1,500;1,600&family=Source+Serif+4:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1614;
+    --paper: #faf7f2;
+    --surface: #f2ece2;
+    --border: #e0d5c5;
+    --border2: #c8bfae;
+    --amber: #b06e14;
+    --amber-bg: #fdf5e6;
+    --amber-border: #d9a84e;
+    --amber-soft: rgba(176,110,20,0.10);
+    --muted: #7a6f60;
+    --text-on-amber: #3d2608;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Playfair Display', serif;
+    --body: 'Source Serif 4', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--body);
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 17px;
+  }
+
+  /* ── MASTHEAD ── */
+  .masthead {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 52px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 8% 50%, rgba(176,110,20,0.14), transparent 52%),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 40px,
+        rgba(255,255,255,0.012) 40px,
+        rgba(255,255,255,0.012) 80px
+      );
+    pointer-events: none;
+  }
+  .masthead-inner { max-width: 880px; margin: 0 auto; position: relative; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--amber-border);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 28px; height: 1px;
+    background: var(--amber-border);
+    flex-shrink: 0;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.12;
+    margin: 0 0 20px;
+    color: var(--paper);
+    letter-spacing: -0.5px;
+  }
+  h1 em { color: var(--amber-border); font-style: italic; }
+  .lede {
+    color: #a8998a;
+    font-size: 17.5px;
+    max-width: 640px;
+    line-height: 1.65;
+  }
+
+  /* ── WRAP ── */
+  .wrap { max-width: 880px; margin: 0 auto; padding: 48px 28px 100px; }
+
+  /* ── AXES STRIP ── */
+  .axes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 0 0 48px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .axis { background: var(--amber-bg); padding: 20px 18px; }
+  .axis .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .axis .desc { font-size: 14px; color: var(--muted); line-height: 1.55; }
+
+  /* ── PIPELINE FLOW ── */
+  .flow-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 56px;
+    align-items: center;
+  }
+  .flow a {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 8px 13px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: border-color .15s, background .15s;
+  }
+  .flow a:hover { border-color: var(--amber-border); background: var(--amber-bg); }
+  .flow a .n { color: var(--amber); font-weight: 700; }
+  .flow-arrow { color: var(--border2); font-size: 14px; }
+
+  /* ── LAYER SECTIONS ── */
+  .layer {
+    border-top: 2px solid var(--border);
+    padding: 48px 0 8px;
+    scroll-margin-top: 24px;
+  }
+  .layer:first-of-type { border-top: none; }
+  .layer-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+  }
+  .layer-eyebrow .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    border: 1.5px solid var(--amber-border);
+    border-radius: 50%;
+    font-size: 11px;
+    color: var(--amber);
+    background: var(--amber-bg);
+    flex-shrink: 0;
+  }
+  .layer h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-style: italic;
+    font-size: clamp(22px, 3vw, 30px);
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .components {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+  .components .arrow { color: var(--amber-border); }
+
+  .block { margin-bottom: 24px; }
+  .block-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .block p { margin: 0 0 10px; }
+  .block p:last-child { margin-bottom: 0; }
+  .block ul { margin: 8px 0 0; padding-left: 22px; }
+  .block li { margin-bottom: 7px; }
+  .block li strong { color: var(--ink); }
+
+  /* ── SAY THIS ── */
+  .say-this {
+    background: var(--amber-bg);
+    border-left: 3px solid var(--amber);
+    padding: 18px 22px;
+    border-radius: 0 5px 5px 0;
+    margin-top: 8px;
+  }
+  .say-this .block-label { color: var(--amber); margin-bottom: 10px; }
+  .say-this p {
+    font-style: italic;
+    color: var(--text-on-amber);
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  code, .term {
+    font-family: var(--mono);
+    font-size: 0.84em;
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--amber);
+    border: 1px solid var(--border);
+  }
+
+  /* ── CLOSING ── */
+  .closing {
+    border-top: 2px solid var(--border);
+    margin-top: 56px;
+    padding-top: 48px;
+  }
+  .closing > h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-style: italic;
+    font-size: clamp(24px, 3.2vw, 32px);
+    margin: 0 0 18px;
+    color: var(--amber);
+  }
+  .closing > p { color: var(--ink); margin-bottom: 0; }
+
+  .faq { margin-top: 32px; }
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    background: var(--surface);
+  }
+  .faq-q {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--amber);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .faq-a { font-size: 15.5px; color: var(--ink); margin: 0; }
+
+  .closer-line {
+    margin-top: 40px;
+    padding: 24px 28px;
+    border: 1.5px solid var(--amber-border);
+    border-radius: 5px;
+    background: var(--amber-bg);
+  }
+  .closer-line p {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 18px;
+    margin: 0;
+    color: var(--text-on-amber);
+    line-height: 1.65;
+  }
+
+  @media (max-width: 600px) {
+    .axes { grid-template-columns: 1fr; }
+    .masthead { padding: 44px 20px 40px; }
+    .wrap { padding: 36px 18px 80px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">RAG Architecture — Interview Command Sheet</div>
+    <h1>The end-to-end RAG pipeline,<br>read at <em>director altitude</em></h1>
+    <p class="lede">Eight layers, each explained three ways: in plain English, in what's actually happening under the hood, and — most importantly — in the framing a Director of Engineering uses to turn a component into a trade-off they own.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="axes">
+    <div class="axis">
+      <div class="label">Quality</div>
+      <div class="desc">Recall@K, precision after rerank, groundedness / hallucination rate.</div>
+    </div>
+    <div class="axis">
+      <div class="label">Latency</div>
+      <div class="desc">P50 / P99 budget, broken down per stage — not one number for the whole pipeline.</div>
+    </div>
+    <div class="axis">
+      <div class="label">Cost</div>
+      <div class="desc">$ per query — embedding calls, vector DB ops, reranker compute, LLM tokens.</div>
+    </div>
+  </div>
+
+  <div class="flow-title">The pipeline — jump to any layer</div>
+  <div class="flow">
+    <a href="#ingestion"><span class="n">01</span> Ingestion</a>
+    <span class="flow-arrow">→</span>
+    <a href="#query"><span class="n">02</span> Query Processing</a>
+    <span class="flow-arrow">→</span>
+    <a href="#retrieval"><span class="n">03</span> Retrieval</a>
+    <span class="flow-arrow">→</span>
+    <a href="#rerank"><span class="n">04</span> Reranking</a>
+    <span class="flow-arrow">→</span>
+    <a href="#context"><span class="n">05</span> Context Building</a>
+    <span class="flow-arrow">→</span>
+    <a href="#generation"><span class="n">06</span> Generation</a>
+    <span class="flow-arrow">→</span>
+    <a href="#validation"><span class="n">07</span> Validation</a>
+    <span class="flow-arrow">→</span>
+    <a href="#observability"><span class="n">08</span> Observability</a>
+  </div>
+
+  <!-- LAYER 1 -->
+  <section class="layer" id="ingestion">
+    <div class="layer-eyebrow"><span class="num">01</span> Ingestion</div>
+    <h2>Building the catalog before anyone asks a question</h2>
+    <div class="components">Doc loader <span class="arrow">→</span> chunker <span class="arrow">→</span> embedder <span class="arrow">→</span> VDB writer</div>
+
+    <div class="block">
+      <div class="block-label">Plain English</div>
+      <p>Think of building a library's card catalog. You collect the books (doc loader), cut each one into sections short enough that someone can find a fact without reading the whole book (chunker), write a "gist" of each section that captures what it's <em>about</em> rather than just its title (embedder), and file those gist-cards into a catalog organized by meaning, not alphabetically (vector DB writer).</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">What's actually happening</div>
+      <p>Documents arrive from sources like S3, Confluence, or internal databases. Each is split into chunks — typically 200–500 tokens. Too large and retrieval becomes imprecise (you fetch a whole page to answer a one-line question); too small and you lose surrounding context. Each chunk is converted into a vector — an array of a few hundred to a few thousand numbers — by an embedding model, and that vector plus metadata (source, position, timestamp) is written to a vector database.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">The director's lens — concerns and trade-offs</div>
+      <ul>
+        <li><strong>Throughput:</strong> embedding APIs are often rate-limited. At 10M+ documents, ingestion becomes a batching and queueing problem, not a "run a script" problem.</li>
+        <li><strong>Idempotency:</strong> if ingestion crashes and retries, you must not create duplicate vectors. The fix is <code>chunk_id = hash(source_id + position + content_hash)</code> with upsert semantics, never plain insert.</li>
+        <li><strong>Re-embed on update:</strong> when a source document changes, content-hash diffing lets you re-embed only the changed chunks. But if you ever <em>change embedding models</em>, that's a full-corpus re-embed — a capacity-planning event, not a config change.</li>
+        <li><strong>Chunking strategy</strong> (fixed-size vs. semantic/section-aware vs. hierarchical parent-child) is decided early and is expensive to change later — it's the single biggest precision/recall lever in this layer.</li>
+      </ul>
+    </div>
+
+    <div class="say-this">
+      <div class="block-label">Interview frame</div>
+      <p>"I'd treat ingestion as a CDC pipeline, not a batch script — deterministic chunk IDs for idempotent upserts, content-hash diffing so updates only re-embed what changed, and I'd flag any embedding-model upgrade as a capacity-planning exercise, because on a large corpus a full re-embed is a multi-day, real-cost project."</p>
+    </div>
+  </section>
+
+  <!-- LAYER 2 -->
+  <section class="layer" id="query">
+    <div class="layer-eyebrow"><span class="num">02</span> Query Processing</div>
+    <h2>Cleaning up the question before you go searching</h2>
+    <div class="components">Query rewriter / expansion <span class="arrow">→</span> spell check</div>
+
+    <div class="block">
+      <div class="block-label">Plain English</div>
+      <p>Before the system goes looking for an answer, it tidies up your question — fixing typos, expanding shorthand, and resolving "it" or "that" from earlier in the conversation. Sometimes it rewrites one ambiguous question into two or three versions covering different possible meanings, the way a good reference librarian asks "do you mean X or Y?" before searching.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">What's actually happening</div>
+      <p>A (usually smaller, cheaper) LLM rewrites the raw query: correcting spelling, resolving pronouns and context from chat history, and optionally generating multiple paraphrases or even a <em>hypothetical answer</em> (HyDE) — that hypothetical answer gets embedded instead of the raw question, because an "answer-shaped" vector often matches the corpus better than a "question-shaped" one.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">The director's lens — concerns and trade-offs</div>
+      <ul>
+        <li><strong>Recall:</strong> rewriting catches relevant chunks that wouldn't have matched the raw query's exact wording.</li>
+        <li><strong>Ambiguity handling:</strong> a one-word query like "Java" needs disambiguation by conversational context before retrieval even starts.</li>
+        <li><strong>The cost:</strong> this step adds an LLM call to the critical path — every query now pays extra latency and token cost. Multi-query expansion fans out retrieval N times, multiplying load on the vector DB.</li>
+        <li><strong>The director's call:</strong> make this conditional. Only trigger rewriting/expansion when first-pass retrieval confidence is low, rather than running it unconditionally on every query.</li>
+      </ul>
+    </div>
+
+    <div class="say-this">
+      <div class="block-label">Interview frame</div>
+      <p>"Query rewriting is a recall lever, but it's also a latency and cost multiplier sitting in the critical path. I'd want it gated — triggered only when initial retrieval scores fall below a threshold — rather than firing on every single query."</p>
+    </div>
+  </section>
+
+  <!-- LAYER 3 -->
+  <section class="layer" id="retrieval">
+    <div class="layer-eyebrow"><span class="num">03</span> Retrieval</div>
+    <h2>Two search engines, one referee</h2>
+    <div class="components">Dense ANN <span class="arrow">→</span> sparse BM25 <span class="arrow">→</span> RRF fusion</div>
+
+    <div class="block">
+      <div class="block-label">Plain English</div>
+      <p>Two different search engines run side by side. One searches by <em>meaning</em> — it finds documents conceptually related to your question even if they don't share a single word (dense / ANN). The other searches by exact keyword match, like a classic search engine (sparse / BM25). A referee — Reciprocal Rank Fusion (RRF) — then merges the two ranked lists, favoring anything that ranks highly in either.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">What's actually happening</div>
+      <p>Dense retrieval runs an Approximate Nearest Neighbor search (e.g., HNSW or IVF-style indexes) over the embeddings written during ingestion. BM25 runs a TF-IDF-style search over a classic inverted index. RRF combines the two ranked lists using each item's <em>rank position</em> rather than raw scores — which sidesteps the problem that dense similarity scores and BM25 scores live on completely different, incompatible scales.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">The director's lens — concerns and trade-offs</div>
+      <ul>
+        <li><strong>Why hybrid (the single most important point):</strong> dense embeddings "smear" everything into semantic space and are weak on exact-match needs — product SKUs, error codes, names, version numbers. BM25 is weak on synonyms and paraphrase. Hybrid hedges both blind spots.</li>
+        <li><strong>RRF vs. learned fusion:</strong> RRF is parameter-free and robust — a strong production default. The reranker (next layer) does the more sophisticated fusion anyway, so RRF only needs to be "good enough to surface the right candidates into the top 50–100."</li>
+        <li><strong>Latency P99:</strong> ANN is fast on average but has tail-latency spikes on large indexes; running both searches in parallel and fusing adds a small, real cost.</li>
+        <li><strong>Index staleness:</strong> if the vector index updates asynchronously from ingestion, there's a window where new or edited documents aren't yet retrievable — this is an explicit SLA decision, not an accident.</li>
+      </ul>
+    </div>
+
+    <div class="say-this">
+      <div class="block-label">Interview frame</div>
+      <p>"I think of retrieval as a recall-maximizing funnel — hybrid dense plus sparse with RRF fusion casts a wide net cheaply, and I accept some noise here because precision is the reranker's job downstream. The architectural question I'd own is index staleness — what's our SLA between a document being ingested and being retrievable, and does that match what the business actually needs?"</p>
+    </div>
+  </section>
+
+  <!-- LAYER 4 -->
+  <section class="layer" id="rerank">
+    <div class="layer-eyebrow"><span class="num">04</span> Reranking</div>
+    <h2>Where retrieval's recall becomes generation's precision</h2>
+    <div class="components">Cross-encoder reranker <span class="arrow">→</span> top-K selection</div>
+
+    <div class="block">
+      <div class="block-label">Plain English</div>
+      <p>Of the 50–100 candidates retrieval found, a slower but much smarter model reads each one side-by-side with your actual question and gives it a precise relevance score — like a human expert actually reading each shortlisted resume instead of just scanning for keywords. Only the top few survive.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">What's actually happening</div>
+      <p>A cross-encoder takes (query, chunk) pairs and jointly encodes both to produce a relevance score — far more accurate than comparing two pre-computed vectors (a bi-encoder), but it <em>can't be pre-computed</em>, because the score depends on the specific query. It must run at query time, for every candidate, every time.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">The director's lens — concerns and trade-offs</div>
+      <ul>
+        <li><strong>This is the classic two-stage funnel</strong> in information retrieval: cheap-and-broad (retrieval), then expensive-and-narrow (reranking). It's the only way to get cross-encoder-level precision without running a cross-encoder against the entire corpus on every query.</li>
+        <li><strong>Latency budget:</strong> scoring 50–100 pairs at ~100–200ms is usually the single biggest <em>controllable</em> latency cost in the whole pipeline.</li>
+        <li><strong>The dial:</strong> candidate-set size into the reranker (top-50 vs. top-100) directly trades latency against precision. Model size (distilled cross-encoders, e.g., MiniLM-class) trades accuracy for speed.</li>
+        <li><strong>Hardware shift:</strong> the reranker is often the first GPU-bound component in the pipeline — capacity planning here looks different from the CPU-bound retrieval layer.</li>
+      </ul>
+    </div>
+
+    <div class="say-this">
+      <div class="block-label">Interview frame</div>
+      <p>"If I had to spend my latency budget in one place, it's here — reranking is where retrieval's recall gets converted into the precision that generation actually needs. I'd tune the candidate-set size as the primary recall/latency dial, and I'd pick a distilled cross-encoder if the latency budget is tight, accepting a small precision hit deliberately rather than by default."</p>
+    </div>
+  </section>
+
+  <!-- LAYER 5 -->
+  <section class="layer" id="context">
+    <div class="layer-eyebrow"><span class="num">05</span> Context Building</div>
+    <h2>Packing the briefing document</h2>
+    <div class="components">Chunk assembly <span class="arrow">→</span> deduplication <span class="arrow">→</span> token counting</div>
+
+    <div class="block">
+      <div class="block-label">Plain English</div>
+      <p>We take the winning chunks and pack them into a tidy briefing for the AI — removing anything that repeats itself, and making sure the whole package fits within the AI's "reading limit" so nothing gets cut off mid-sentence.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">What's actually happening</div>
+      <p>The selected top-K chunks — often overlapping, especially when the corpus has near-duplicate documents — get deduplicated and possibly merged if adjacent. A token counter then ensures the total (system prompt + conversation history + retrieved context + query + reserved generation tokens) fits inside the model's context window.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">The director's lens — concerns and trade-offs</div>
+      <ul>
+        <li><strong>"Lost in the middle":</strong> LLMs attend more strongly to information at the start and end of a long context than to the middle. Chunk <em>ordering</em> — not just selection — is a real, measurable lever: put the strongest evidence first and/or last.</li>
+        <li><strong>Deduplication should be semantic, not exact-match</strong> — near-duplicate chunks from different document versions silently waste context budget.</li>
+        <li><strong>Token budget is a planning exercise:</strong> you decide upfront how many tokens go to system prompt, history, retrieved context, and reserved output — and this directly trades off against per-query cost, since more context tokens means more $.</li>
+      </ul>
+    </div>
+
+    <div class="say-this">
+      <div class="block-label">Interview frame</div>
+      <p>"This is where I'd push back on 'just add more chunks.' Beyond a point, more context degrades answer quality due to the lost-in-the-middle effect and increases cost linearly. I'd treat the token budget as a fixed allocation across system prompt, history, and retrieved context, and order chunks by relevance rather than retrieval rank — strongest evidence at the edges of the context window."</p>
+    </div>
+  </section>
+
+  <!-- LAYER 6 -->
+  <section class="layer" id="generation">
+    <div class="layer-eyebrow"><span class="num">06</span> Generation</div>
+    <h2>Where the actual answer gets written</h2>
+    <div class="components">System prompt + context + query <span class="arrow">→</span> LLM <span class="arrow">→</span> parser</div>
+
+    <div class="block">
+      <div class="block-label">Plain English</div>
+      <p>This is where the AI reads everything — its instructions on how to behave, the evidence we gathered, and your question — and writes an answer. A final step then extracts that answer in whatever shape the application needs: plain text, JSON, a form.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">What's actually happening</div>
+      <p>The assembled prompt goes to the LLM. The system prompt typically carries "grounding instructions" — answer only from the provided context, cite sources, decline if the context is insufficient. Output often streams token-by-token for perceived speed, and a parser extracts structured fields when the application needs JSON or a similar format.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">The director's lens — concerns and trade-offs</div>
+      <ul>
+        <li><strong>This stage is usually the dominant cost line item</strong> — both input tokens (the context you built) and output tokens.</li>
+        <li><strong>Model tiering / routing:</strong> not every query needs the most expensive model. Route simple factual queries to a cheaper/smaller model, and escalate complex multi-hop queries (flagged by the rewriter or a classifier) to a frontier model — a major lever at scale.</li>
+        <li><strong>Grounding instructions are the first, cheapest hallucination defense</strong> — but prompt-only grounding is never sufficient on its own, which is exactly why Layer 7 exists.</li>
+        <li><strong>Output reliability:</strong> structured-output / function-calling modes are more reliable than regex-parsing free text, though they can constrain the model's "reasoning space." Malformed-output failure rates compound at scale.</li>
+      </ul>
+    </div>
+
+    <div class="say-this">
+      <div class="block-label">Interview frame</div>
+      <p>"Generation is usually the dominant cost line item, so I'd design for model routing — a cheap model handles the bulk of straightforward queries, and only queries flagged as complex escalate to a frontier model. On output, I'd push for structured-output modes over regex-parsed free text, because malformed-output failures compound across millions of queries."</p>
+    </div>
+  </section>
+
+  <!-- LAYER 7 -->
+  <section class="layer" id="validation">
+    <div class="layer-eyebrow"><span class="num">07</span> Validation</div>
+    <h2>The trust layer</h2>
+    <div class="components">Citation check <span class="arrow">→</span> guardrail <span class="arrow">→</span> confidence score</div>
+
+    <div class="block">
+      <div class="block-label">Plain English</div>
+      <p>Before the answer reaches you, the system runs a final check: does this answer actually match what's in the source documents (citation check)? Does it break any safety rule — leaking private data, saying something inappropriate (guardrail)? And how confident should we be that it's correct (confidence score) — should it say "I don't have enough information" instead of guessing?</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">What's actually happening</div>
+      <p>Citation checking often uses a smaller NLI (natural language inference) model, or a second LLM call, to verify each claim in the answer is <em>entailed by</em> the retrieved context — flagging unsupported claims as candidate hallucinations. Guardrails are separate classifiers for PII, toxicity, and jailbreak/prompt-injection detection, run on input and output. Confidence scoring combines signals — retrieval similarity, generation log-probabilities, self-consistency across repeated calls — into a single score that gates whether the answer is shown as-is, shown with a caveat, or replaced by a fallback.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">The director's lens — concerns and trade-offs</div>
+      <ul>
+        <li><strong>This layer is what separates a RAG demo from a production system.</strong> At director level, this is where you show you treat trust as an <em>engineered, measured property</em> — not a hope.</li>
+        <li><strong>Cost vs. rigor:</strong> a full NLI check on every claim adds latency and cost. Many production systems sample-check, or only run the full check when the confidence score is already borderline.</li>
+        <li><strong>Hallucination rate as an SLA:</strong> a director should be able to say "we track hallucination rate via [method] and target X%" — turning a fuzzy quality worry into an owned, monitored metric.</li>
+      </ul>
+    </div>
+
+    <div class="say-this">
+      <div class="block-label">Interview frame</div>
+      <p>"I think of this as the trust layer — without it, RAG is just plausible-sounding text generation with extra steps. I'd run a lightweight entailment check on every response with a confidence score that gates output: high confidence shows the answer with citations, medium adds a caveat, low falls back to 'I don't have enough information.' And I'd track hallucination rate as a measured SLA, not an afterthought."</p>
+    </div>
+  </section>
+
+  <!-- LAYER 8 -->
+  <section class="layer" id="observability">
+    <div class="layer-eyebrow"><span class="num">08</span> Observability</div>
+    <h2>The operational backbone</h2>
+    <div class="components">Trace logs <span class="arrow">→</span> metrics <span class="arrow">→</span> eval runs <span class="arrow">→</span> user feedback</div>
+
+    <div class="block">
+      <div class="block-label">Plain English</div>
+      <p>Everything above is being watched. Every step logs what it did and how long it took (trace logs). Key numbers — speed, accuracy, cost — are tracked over time (metrics). Automated quality tests run regularly to catch regressions (eval runs). Real user feedback — thumbs up/down — feeds back into making the system better.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">What's actually happening</div>
+      <p>Distributed tracing (e.g., OpenTelemetry) instruments each pipeline stage so you can see, per query, how much time and cost each layer consumed and where failures occur. Dashboards track latency percentiles, recall/precision, hallucination rate, and cost-per-query over time. "Golden" eval datasets — curated query/answer pairs with known-correct answers — run against the pipeline before any deploy, as regression tests. User feedback gets converted into new eval cases.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">The director's lens — concerns and trade-offs</div>
+      <ul>
+        <li><strong>This is the layer that most distinguishes "I built a RAG prototype" from "I operate a RAG system at scale."</strong> Directors are evaluated heavily on operational maturity, not architecture diagrams alone.</li>
+        <li><strong>The eval flywheel:</strong> production issues → user feedback → new eval cases → regression-gated CI → fewer production issues. Articulating this loop explicitly is a strong senior-level signal.</li>
+        <li><strong>Per-stage cost/latency attribution</strong> lets you answer "where do we spend our budget" with data — exactly the question a director should be able to answer about their own systems.</li>
+      </ul>
+    </div>
+
+    <div class="say-this">
+      <div class="block-label">Interview frame</div>
+      <p>"Observability is what makes the rest of this operable. I'd want per-stage latency and cost attribution so I can say precisely where our P99 and our dollar-per-query go, a golden eval set that gates any change to retrieval, prompts, or models in CI, and a feedback loop that converts user thumbs-down into new eval cases — that loop is what turns a static system into one that measurably improves."</p>
+    </div>
+  </section>
+
+  <!-- CLOSING -->
+  <div class="closing">
+    <h2>Tying it together</h2>
+    <p>The strongest answer to "walk me through a RAG architecture" isn't a list of eight components — it's the three axes from the top of this page, applied consistently across every layer. Quality, latency, and cost aren't separate concerns; they're the same budget, spent differently at each stage.</p>
+
+    <div class="closer-line">
+      <p>"I'd own this system not as eight independent components, but as a budget — a latency budget, a cost budget, and a quality bar — and every architectural choice in each layer is a trade against those three. The director-level job isn't picking the 'best' algorithm at each layer; it's making the trade-offs explicit, measurable, and owned."</p>
+    </div>
+
+    <div class="faq">
+      <div class="block-label" style="margin-bottom:16px;">Likely follow-up questions</div>
+
+      <div class="faq-item">
+        <div class="faq-q">"What happens when retrieval finds nothing relevant?"</div>
+        <p class="faq-a">The confidence score (Layer 7) should come back low, and the system should answer "I don't have enough information" rather than let generation hallucinate from weak context. It can start even earlier — a similarity threshold below which you don't bother calling generation at all.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">"How would you scale this 10x?"</div>
+        <p class="faq-a">Identify per-stage bottlenecks first (observability tells you this): shard the ANN index, horizontally scale the GPU-bound reranker, lean harder on model routing for generation. Then add caching at multiple layers — embedding cache, retrieval cache, and full-response cache for repeated questions.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">"How do you evaluate RAG quality without human labels?"</div>
+        <p class="faq-a">LLM-as-judge for offline evaluation, synthetic QA pairs generated from the corpus itself for a golden eval set, and implicit signals — re-asks, dwell time, thumbs feedback — for online evaluation.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">"How do you handle multi-tenant data isolation?"</div>
+        <p class="faq-a">Metadata filtering at query time (<code>tenant_id</code> as a hard filter on the vector DB query) for shared-index efficiency, versus separate indexes per tenant for strict isolation at higher operational cost — the choice depends on tenant count, data sensitivity, and compliance requirements.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
