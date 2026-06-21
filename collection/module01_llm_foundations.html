@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 1: LLM Foundations &amp; Your First Production AI Call</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--pg:#336791;--pg-bg:#eef4fb;--mg:#13aa52;--mg-bg:#edfaf2;--dy:#ff9900;--dy-bg:#fff8ec;--ca:#1287b1;--ca-bg:#eaf6fb;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:640px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+h4{font-size:13px;font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}
+.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:2;overflow-x:auto;margin:14px 0;color:#c8c4b8;border:1px solid #1e1c18;}
+.codeblock .c{color:#3e3d36;}.codeblock .k{color:#e8b84b;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}.codeblock .t{color:#7aaee0;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.good{color:var(--green);font-weight:600;}.warn{color:var(--amber);font-weight:600;}.bad{color:var(--red);font-weight:600;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;justify-content:space-between;}
+.sd-example-title{font-family:var(--serif);font-size:16px;color:#f0ece4;font-weight:700;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6a6458;border:1px solid #2e2c28;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:120px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3830;line-height:1.6;}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:155px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+@media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}}
+.k-section{margin:28px 0;}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border,#e0dbd0);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-point-text p{margin:8px 0 0;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Agentic AI Mastery · Module 1 · Manish-Almanac</div>
+    <h1>LLM Foundations<br><em>& Your First Production AI Call</em></h1>
+    <p class="hero-sub">Tokens, roles, and temperature — the mental model behind every Claude API call — built production-grade in Spring AI 2.0 and Python LangChain, side by side, with EngOrgAI v0.1 as the first capstone increment.</p>
+    <div class="db-pills">
+      <span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">Spring AI 2.0 GA</span>
+      <span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Spring Boot 4.1</span>
+      <span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">LangChain</span>
+      <span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Claude Haiku 4.5</span>
+      <span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:rgba(96,64,160,.08)">Production-Grade</span>
+    </div>
+    <p style="margin-top:18px;font-family:var(--mono);font-size:11px;color:#8a8470;"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery" style="color:#e8b84b;text-decoration:none;border-bottom:1px solid rgba(232,184,75,.4);">github.com/cloudcompilerr/agentic-ai-mastery</a> · branch <code style="background:rgba(255,255,255,.08);color:#d8d4c8;">main</code></p>
+  </div>
+</div>
+<nav class="nav">
+  <a href="#mentalmodel">Tokens, Roles & Temperature</a>
+  <a href="#rosetta">The Rosetta Stone</a>
+  <a href="#productionbar">Production-Grade Bar</a>
+  <a href="#deepdives">Four Decisions That Shaped Module 1</a>
+  <a href="#capstone">EngOrgAI v0.1</a>
+  <a href="#tradeoffs">Trade-off Matrix</a>
+  <a href="#reference">Quick Reference</a>
+</nav>
+<div class="wrap">
+
+<section id="mentalmodel">
+  <div class="sec-tag">01 · Mental Model</div>
+  <h2>Tokens, Roles & Temperature</h2>
+  <p>Every Claude API call, in either stack, is built from the same five ingredients.</p>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">Token</div><div class="concept-def">The atomic unit an LLM actually sees — roughly <code>¾</code> of a word on average. Every dollar and millisecond in this course is measured in tokens, not characters.</div></div>
+    <div class="concept-row"><div class="concept-term">System Role</div><div class="concept-def">Sent once per conversation, defines persona and constraints. Spring AI: <code>.system("...")</code>. LangChain: <code>SystemMessage(content="...")</code>. This is where EngOrgAI's "concise, director-facing" personality lives.</div></div>
+    <div class="concept-row"><div class="concept-term">User Role</div><div class="concept-def">The actual ask. Spring AI: <code>.user("...")</code>. LangChain: <code>HumanMessage(content="...")</code>.</div></div>
+    <div class="concept-row"><div class="concept-term">Temperature</div><div class="concept-def">Controls randomness. <code>0</code> = deterministic, repeatable, factual — what an engineering-leadership assistant needs. Higher values trade consistency for creativity.</div></div>
+    <div class="concept-row"><div class="concept-term">Usage Metadata</div><div class="concept-def">Every response carries back prompt/completion/total token counts — the foundation for cost tracking, latency monitoring, and, as this module proved, catching API hallucinations through compilation rather than assumption.</div></div>
+  </div>
+</section>
+
+<section id="rosetta">
+  <div class="sec-tag">02 · Cross-Stack Mapping</div>
+  <h2>The Rosetta Stone</h2>
+  <p>Same concept, two idioms. Built sequentially — Spring first, then the deliberate Python translation while the concept was fresh.</p>
+  <table class="comp-table">
+    <thead><tr><th>Concept</th><th>Spring AI 2.0</th><th>LangChain (Python)</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Chat client</td><td><code>ChatClient.Builder</code> → <code>ChatClient</code> bean</td><td><code>ChatAnthropic(model=..., temperature=0)</code></td></tr>
+      <tr><td class="row-head">System prompt</td><td><code>.system("...")</code></td><td><code>SystemMessage(content="...")</code></td></tr>
+      <tr><td class="row-head">User prompt</td><td><code>.user("...")</code></td><td><code>HumanMessage(content="...")</code></td></tr>
+      <tr><td class="row-head">Trigger call</td><td><code>.call().chatResponse()</code></td><td><code>.invoke(messages)</code></td></tr>
+      <tr><td class="row-head">Extract text</td><td><code>response.getResult().getOutput().getText()</code></td><td><code>response.content</code></td></tr>
+      <tr><td class="row-head">Token usage</td><td><code>response.getMetadata().getUsage()</code></td><td><code>response.usage_metadata</code></td></tr>
+      <tr><td class="row-head">Retries</td><td><code>spring.ai.retry.*</code> in <code>application.yml</code></td><td><code>max_retries=3</code> constructor param</td></tr>
+      <tr><td class="row-head">Testing</td><td>JUnit 5 + Mockito</td><td>pytest + <code>unittest.mock</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="productionbar">
+  <div class="sec-tag">03 · Quality Bar</div>
+  <h2>Production-Grade From Day One</h2>
+  <p>This course is being built as if it runs in a real retail/fintech environment — every module, not just the capstones.</p>
+  <table class="comp-table">
+    <thead><tr><th>Concern</th><th>Spring AI</th><th>Python</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Config</td><td><code>application.yml</code> + env var</td><td><code>.env</code> via explicit <code>load_dotenv()</code></td></tr>
+      <tr><td class="row-head">Logging</td><td>SLF4J, structured</td><td>Python <code>logging</code>, same fields</td></tr>
+      <tr><td class="row-head">Error handling</td><td>Typed <code>RuntimeException</code> subclass</td><td>Typed <code>Exception</code> subclass</td></tr>
+      <tr><td class="row-head">Retries</td><td><code>spring.ai.retry.*</code></td><td><code>max_retries</code></td></tr>
+      <tr><td class="row-head">Token/latency tracking</td><td>Every call</td><td>Every call</td></tr>
+      <tr><td class="row-head">Testing</td><td>JUnit 5 + Mockito, no live calls</td><td>pytest + mocks, no live calls</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="deepdives">
+  <div class="sec-tag">04 · Real Decisions</div>
+  <h2>Four Decisions That Shaped Module 1</h2>
+  <div class="k-cards">
+
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">01</span><span class="k-title">The CostAwareResponse Hallucination</span></div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">What happened</div>
+          <div class="k-point-text">A Spring AI response wrapper called <code>CostAwareResponse</code> was suggested for token tracking. It doesn't exist — a fabricated class name that failed at compile time the moment it was tried.
+          <p>The real, verified pattern: chain <code>.call().chatResponse()</code>, then read <code>response.getMetadata().getUsage()</code> for prompt/completion/total token counts. No custom wrapper needed.</p>
+          </div>
+          <div class="k-good"><span class="k-icon">✓</span><span>The lesson: validate against real compiled behavior, not assumed APIs — especially for fast-moving libraries where method signatures change between versions.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Switching Mid-Build: M2 Milestone → 2.0.0 GA</span></div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">What happened</div>
+          <div class="k-point-text">The course originally targeted Spring AI <code>2.0.0-M2</code>, a pre-release milestone. Mid-Module-1, a version check revealed Spring AI <strong>2.0.0 GA shipped June 12, 2026</strong> — built on Spring Boot 4.1 / Spring Framework 7 / Jackson 3 — with Spring Boot 3.5 reaching end-of-life June 30, 2026, just 18 days later.
+          <p>Verdict: rebuild the project skeleton on Boot 4.1 + Spring AI 2.0 GA before writing further module code, rather than build fresh on a stack with zero forward runway.</p>
+          </div>
+          <div class="k-info"><span class="k-icon">→</span><span>This is the kind of judgment call a real engineering team makes constantly: a fresh build should target the currently-supported baseline, not whatever was true when the plan was first written.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">03</span><span class="k-title">One Shared AiConfig, Not One Per Capstone</span></div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">The decision</div>
+          <div class="k-point-text">EngOrgAI's original v0.1 skeleton called for its own <code>AiConfig.java</code>. Instead, a single <code>ChatClient</code> bean lives in <code>com.manish.config.AiConfig</code> — built once, injected everywhere.
+          <p>Every module and capstone service receives a ready-made <code>ChatClient</code> via constructor injection — no duplicated client construction, one place to add cross-cutting concerns as the course reaches RAG and tool calling.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">04</span><span class="k-title">Python Syntax Notes: A Companion File, Not Comments</span></div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">The decision</div>
+          <div class="k-point-text">New to Python, strong in Java. Rather than clutter production-grade Python files with beginner-syntax comments, every code block gets a short syntax-notes table — decorators, dict literals, type hints — anchored to the Java equivalent, written to a separate companion file: <code>python/PYTHON_SYNTAX_NOTES.md</code>.
+          </div>
+          <div class="k-good"><span class="k-icon">✓</span><span>The codebase stays interview/portfolio-clean; the learning trail stays fully intact, just in its own file.</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="capstone">
+  <div class="sec-tag">05 · Capstone A</div>
+  <h2>EngOrgAI v0.1</h2>
+  <p>The first increment of the Engineering Director's AI assistant: a single ask/answer loop, fully production-instrumented, built identically in both stacks.</p>
+  <div class="sd-example">
+    <div class="sd-example-head"><span class="sd-example-title">Live Interaction</span><span class="sd-example-tag">claude-haiku-4-5</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">Question</div><div class="choice-val">"How does the team's velocity look this sprint?"</div></div>
+      <div class="choice-row"><div class="choice-label">Response</div><div class="choice-val">Declined to guess without data, asked for current vs. historical sprint metrics and blockers, then reframed: <em>"Is this velocity sustainable and predictable? That matters more than the absolute number."</em></div></div>
+      <div class="choice-row"><div class="choice-label">Tokens</div><div class="choice-val">90 prompt + 173 completion = 263 total · 3,374ms latency</div></div>
+    </div>
+  </div>
+  <div class="analogy">
+    <div class="analogy-label">System Prompt</div>
+    <div class="analogy-text">"You are <strong>EngOrgAI</strong>, an assistant for a Software Development Manager leading a large engineering organization in a retail/fintech context. You help with sprint analysis, team health signals, incident summaries, and general engineering-leadership questions. Be concise, direct, and practical."</div>
+  </div>
+</section>
+
+<section id="tradeoffs">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <table class="matrix">
+    <thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Spring Boot baseline</td><td>4.1.x</td><td><span class="dot g"></span>Active support, Jackson 3, Framework 7 — matches Spring AI 2.0 GA's intended baseline</td><td><span class="dot a"></span>Newer, less battle-tested; smaller answer base than 3.x</td><td>If a critical dependency hasn't published a 4.x-compatible release</td></tr>
+      <tr><td class="row-head">Shared vs per-capstone AiConfig</td><td>One shared bean</td><td><span class="dot g"></span>Single point of configuration, no duplicated client setup</td><td><span class="dot a"></span>Less isolation if capstones need different model profiles concurrently</td><td>If Capstone B (Module 12+) needs a genuinely different model/temperature</td></tr>
+      <tr><td class="row-head">Retry strategy</td><td>Framework-native</td><td><span class="dot g"></span>Zero custom code, consistent across both stacks</td><td><span class="dot a"></span>No per-error-type control yet (429 vs 5xx)</td><td>Module 9+ when evaluation/guardrails need provider-specific logic</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="reference">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <table class="comp-table">
+    <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/config/AiConfig.java" style="color:var(--blue);">config/AiConfig.java</a></td><td>Shared ChatClient bean</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module01/LlmFoundationsService.java" style="color:var(--blue);">module01/LlmFoundationsService.java</a></td><td>Foundational ask/answer + token logging</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/capstone/engorgai/DirectorAssistantService.java" style="color:var(--blue);">capstone/engorgai/DirectorAssistantService.java</a></td><td>EngOrgAI v0.1 — director-facing assistant</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/modules/module01/llm_foundations.py" style="color:var(--blue);">modules/module01/llm_foundations.py</a></td><td>Python equivalent of foundational service</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/capstone/engorgai/director_assistant.py" style="color:var(--blue);">capstone/engorgai/director_assistant.py</a></td><td>Python EngOrgAI v0.1</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/PYTHON_SYNTAX_NOTES.md" style="color:var(--blue);">python/PYTHON_SYNTAX_NOTES.md</a></td><td>Companion Python-for-Java-developers reference</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:10px;font-size:12px;color:var(--muted);">Links assume the standard <code>spring/src/main/java/com/manish/...</code> and <code>python/...</code> layout from the project structure doc. If anything's been pushed under different paths, the links will 404 — easy fix once confirmed.</p>
+</section>
+
+</div>
+<div class="footer">MODULE 1 · LLM FOUNDATIONS · SPRING AI · LANGCHAIN · CLAUDE · ENGORGAI · MANISH-ALMANAC</div>
+</body>
+</html>
