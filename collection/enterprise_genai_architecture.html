@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enterprise Generative AI Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,900;1,500;1,600&family=Source+Serif+4:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1614;
+    --paper: #faf7f2;
+    --surface: #f2ece2;
+    --border: #e0d5c5;
+    --border2: #c8bfae;
+    --amber: #b06e14;
+    --amber-bg: #fdf5e6;
+    --amber-border: #d9a84e;
+    --amber-soft: rgba(176,110,20,0.10);
+    --muted: #7a6f60;
+    --text-on-amber: #3d2608;
+    --red: #c0392b;
+    --green: #1a7a4a;
+    --blue: #1a4f8a;
+    --purple: #5a3e8a;
+    --red-bg: #fdf0ee;
+    --green-bg: #edf8f2;
+    --blue-bg: #edf2fb;
+    --purple-bg: #f4f0fb;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Playfair Display', serif;
+    --body: 'Source Serif 4', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--body);
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 17px;
+  }
+
+  /* ── MASTHEAD ── */
+  .masthead {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 60px 40px 52px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 8% 50%, rgba(176,110,20,0.14), transparent 52%),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 40px,
+        rgba(255,255,255,0.012) 40px,
+        rgba(255,255,255,0.012) 80px
+      );
+    pointer-events: none;
+  }
+  .masthead-inner { max-width: 880px; margin: 0 auto; position: relative; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--amber-border);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 28px; height: 1px;
+    background: var(--amber-border);
+    flex-shrink: 0;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.12;
+    margin: 0 0 20px;
+    color: var(--paper);
+    letter-spacing: -0.5px;
+  }
+  h1 em { color: var(--amber-border); font-style: italic; }
+  .lede {
+    color: #a8998a;
+    font-size: 17.5px;
+    max-width: 660px;
+    line-height: 1.65;
+  }
+
+  /* ── WRAP ── */
+  .wrap { max-width: 880px; margin: 0 auto; padding: 48px 28px 100px; }
+
+  /* ── SCOPE STRIP ── */
+  .axes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 0 0 48px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .axis { background: var(--amber-bg); padding: 20px 18px; }
+  .axis .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .axis .desc { font-size: 14px; color: var(--muted); line-height: 1.55; }
+
+  /* ── FLOW NAV ── */
+  .flow-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 56px;
+    align-items: center;
+  }
+  .flow a {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 8px 13px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: border-color .15s, background .15s;
+  }
+  .flow a:hover { border-color: var(--amber-border); background: var(--amber-bg); }
+  .flow a .n { color: var(--amber); font-weight: 700; }
+
+  /* ── LAYER SECTIONS ── */
+  .layer {
+    border-top: 2px solid var(--border);
+    padding: 48px 0 8px;
+    scroll-margin-top: 24px;
+  }
+  .layer:first-of-type { border-top: none; }
+  .layer-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+  }
+  .layer-eyebrow .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    border: 1.5px solid var(--amber-border);
+    border-radius: 50%;
+    font-size: 11px;
+    color: var(--amber);
+    background: var(--amber-bg);
+    flex-shrink: 0;
+  }
+  .layer-eyebrow.ops .num { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+  .layer-eyebrow.eval .num { border-color: var(--purple); color: var(--purple); background: var(--purple-bg); }
+  .layer h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-style: italic;
+    font-size: clamp(22px, 3vw, 30px);
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .components {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+
+  .block { margin-bottom: 24px; }
+  .block-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .block p { margin: 0 0 10px; }
+  .block p:last-child { margin-bottom: 0; }
+  .block ul { margin: 8px 0 0; padding-left: 22px; }
+  .block li { margin-bottom: 7px; }
+  .block li strong { color: var(--ink); }
+
+  code, .term {
+    font-family: var(--mono);
+    font-size: 0.84em;
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--amber);
+    border: 1px solid var(--border);
+  }
+
+  /* ── EXECUTIVE STACK DIAGRAM ── */
+  .stack-diagram {
+    background: var(--ink);
+    border-radius: 8px;
+    padding: 28px 24px;
+    margin-bottom: 12px;
+  }
+  .v-layer {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .v-layer-title {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #e8e0d2;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 8px;
+  }
+  .v-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: #cfc6b8;
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+  .v-tag-hl { border-color: var(--amber-border); color: #f6e2b8; background: rgba(217,168,78,0.12); }
+  .v-connector { text-align: center; color: var(--border2); font-size: 13px; margin: 0 0 8px; opacity: .5; }
+  .v-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .v-split-cell { padding: 12px 14px; border-radius: 6px; }
+  .v-py-cell { background: rgba(26,79,138,0.10); border: 1px solid rgba(26,79,138,0.35); }
+  .v-jv-cell { background: rgba(26,122,74,0.10); border: 1px solid rgba(26,122,74,0.35); }
+  .v-split-title { font-family: var(--mono); font-size: 10.5px; font-weight: 700; margin-bottom: 8px; }
+  .v-pillars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  @media (max-width: 560px) {
+    .v-split, .v-pillars { grid-template-columns: 1fr; }
+  }
+
+  /* ── ROSETTA TABLE ── */
+  .rosetta-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+  }
+  .rosetta-table th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    text-align: left;
+    color: #fff;
+  }
+  .rosetta-table th.concept { background: var(--ink); width: 22%; }
+  .rosetta-table th.py { background: var(--blue); width: 39%; }
+  .rosetta-table th.jv { background: var(--green); width: 39%; }
+  .rosetta-table td {
+    padding: 12px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+    background: var(--surface);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .rosetta-table td.row-head {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 12.5px;
+    background: var(--amber-bg);
+    color: var(--text-on-amber);
+  }
+  .rosetta-table em { color: var(--muted); }
+
+  /* ── TOPOLOGY BLOCKS ── */
+  .content-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--amber);
+    border-radius: 0 6px 6px 0;
+    padding: 22px 24px;
+    margin-bottom: 24px;
+  }
+  .content-block.top1 { border-left-color: var(--green); }
+  .content-block.top2 { border-left-color: var(--blue); }
+  .content-block.top3 { border-left-color: var(--purple); }
+  .content-block .block-title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-style: italic;
+    font-size: 19px;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+
+  /* ── CLOSING ── */
+  .closing {
+    border-top: 2px solid var(--border);
+    margin-top: 56px;
+    padding-top: 48px;
+  }
+  .closing > h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-style: italic;
+    font-size: clamp(24px, 3.2vw, 32px);
+    margin: 0 0 18px;
+    color: var(--amber);
+  }
+  .closing > p { color: var(--ink); margin-bottom: 0; }
+
+  .closer-line {
+    margin-top: 40px;
+    padding: 24px 28px;
+    border: 1.5px solid var(--amber-border);
+    border-radius: 5px;
+    background: var(--amber-bg);
+  }
+  .closer-line p {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 18px;
+    margin: 0;
+    color: var(--text-on-amber);
+    line-height: 1.65;
+  }
+
+  @media (max-width: 600px) {
+    .axes { grid-template-columns: 1fr; }
+    .masthead { padding: 44px 20px 40px; }
+    .wrap { padding: 36px 18px 80px; }
+    .rosetta-table { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">GenAI Systems Architecture — Engineering Leader's Guide</div>
+    <h1>Enterprise Generative AI <em>Architecture</em></h1>
+    <p class="lede">Ten architectural layers from the UI down to the foundation model, a Python-vs-Java rosetta stone for translating between ecosystems, and three production reference architectures — each annotated with the concrete forces that actually drove the stack choice.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="axes">
+    <div class="axis">
+      <div class="label">Layers</div>
+      <div class="desc">10 layers, UI to foundation model — what each one means and why it has to exist.</div>
+    </div>
+    <div class="axis">
+      <div class="label">Ecosystems</div>
+      <div class="desc">Python AI stack vs. Spring/Java AI stack — where they diverge, and where they don't.</div>
+    </div>
+    <div class="axis">
+      <div class="label">Topologies</div>
+      <div class="desc">3 production reference architectures, with the forces that drove each one.</div>
+    </div>
+  </div>
+
+  <div class="flow-title">The stack — jump to any layer</div>
+  <div class="flow">
+    <a href="#overview">Overview</a>
+    <a href="#layer-1"><span class="n">01</span> Edge</a>
+    <a href="#layer-2"><span class="n">02</span> Brain</a>
+    <a href="#layer-3"><span class="n">03</span> Workflows</a>
+    <a href="#layer-4"><span class="n">04</span> RAG</a>
+    <a href="#layer-5"><span class="n">05</span> Gateways</a>
+    <a href="#layer-6"><span class="n">06</span> Protocols</a>
+    <a href="#layer-7"><span class="n">07</span> Serving</a>
+    <a href="#layer-8"><span class="n">08</span> Models</a>
+    <a href="#layer-9"><span class="n">09</span> Firewall</a>
+    <a href="#layer-10"><span class="n">10</span> QA</a>
+    <a href="#rosetta">Rosetta Stone</a>
+    <a href="#topologies">Topologies</a>
+  </div>
+
+  <!-- EXECUTIVE VISUAL SUMMARY -->
+  <section class="layer" id="overview" style="border-top:none;padding-top:0;">
+    <div class="layer-eyebrow"><span class="num">＃</span> Executive View</div>
+    <h2>The stack, end to end</h2>
+    <div class="components">A request's full path from a user's browser down to the weights, with the two cross-cutting pillars (LLMOps and evaluation) that watch every layer above them.</div>
+
+    <div class="stack-diagram">
+      <div class="v-layer">
+        <div class="v-layer-title">1. Application & Presentation Layer</div>
+        <span class="v-tag">Angular / React UIs</span>
+        <span class="v-tag">Streamlit</span>
+        <span class="v-tag v-tag-hl">Vercel AI SDK</span>
+      </div>
+      <div class="v-connector">↓</div>
+      <div class="v-layer">
+        <div class="v-layer-title">2. Low-Code Automation & Workflows</div>
+        <span class="v-tag v-tag-hl">n8n</span>
+        <span class="v-tag">Flowise</span>
+        <span class="v-tag">LangFlow</span>
+        <span class="v-tag">Make.com AI</span>
+      </div>
+      <div class="v-connector">↓</div>
+      <div class="v-layer" style="padding-bottom:6px;">
+        <div class="v-layer-title">3. The Great Orchestration Divide</div>
+        <div class="v-split">
+          <div class="v-split-cell v-py-cell">
+            <div class="v-split-title" style="color:#7aaee0;">Python AI Ecosystem</div>
+            <span class="v-tag">LangChain</span><span class="v-tag">CrewAI</span><span class="v-tag">LangGraph</span>
+          </div>
+          <div class="v-split-cell v-jv-cell">
+            <div class="v-split-title" style="color:#6fc497;">Spring AI & Java Ecosystem</div>
+            <span class="v-tag">Spring AI</span><span class="v-tag">LangChain4j</span>
+          </div>
+        </div>
+      </div>
+      <div class="v-connector">↓</div>
+      <div class="v-layer">
+        <div class="v-layer-title">4. Data, Memory & RAG Engine</div>
+        <span class="v-tag">pgvector</span><span class="v-tag">Pinecone</span><span class="v-tag v-tag-hl">GraphRAG</span><span class="v-tag">LlamaParse</span>
+      </div>
+      <div class="v-connector">↓</div>
+      <div class="v-layer">
+        <div class="v-layer-title">5. Model Access & Gateways</div>
+        <span class="v-tag v-tag-hl">LiteLLM</span><span class="v-tag">OpenRouter</span><span class="v-tag">Portkey</span>
+      </div>
+      <div class="v-connector">↓</div>
+      <div class="v-layer">
+        <div class="v-layer-title">6. Protocols (The Connective Tissue)</div>
+        <span class="v-tag v-tag-hl">MCP</span><span class="v-tag">A2A</span>
+      </div>
+      <div class="v-connector">↓</div>
+      <div class="v-layer">
+        <div class="v-layer-title">7. Model Serving & Model-as-a-Service</div>
+        <span class="v-tag">AWS Bedrock</span><span class="v-tag v-tag-hl">vLLM</span><span class="v-tag">Hugging Face TGI</span>
+      </div>
+      <div class="v-connector">↓</div>
+      <div class="v-layer" style="margin-bottom:16px;">
+        <div class="v-layer-title">8. Foundation Models (The Base)</div>
+        <span class="v-tag">GPT-5.x</span><span class="v-tag">Claude Opus/Sonnet</span><span class="v-tag">Llama 4</span><span class="v-tag">DeepSeek V3/V4</span>
+      </div>
+
+      <div class="v-pillars">
+        <div class="v-layer" style="margin-bottom:0;">
+          <div class="v-layer-title" style="font-size:9.5px;">LLMOps & Guardrails</div>
+          <span class="v-tag">LangSmith</span><span class="v-tag">NeMo</span><span class="v-tag">Promptfoo</span>
+        </div>
+        <div class="v-layer" style="margin-bottom:0;">
+          <div class="v-layer-title" style="font-size:9.5px;">Automated Eval</div>
+          <span class="v-tag">Ragas</span><span class="v-tag">DeepEval</span><span class="v-tag">G-Eval</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAYER 1 -->
+  <section class="layer" id="layer-1">
+    <div class="layer-eyebrow"><span class="num">01</span> Application & Presentation Layer</div>
+    <h2>The Edge</h2>
+    <div class="components">Angular, React, Vercel AI SDK, Streamlit, Gradio, Chainlit.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>The frontend user experience and API gateway topology that manages user sessions, downstream system state, and asynchronous streaming connections (Server-Sent Events).</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>Raw LLM token outputs have high time-to-first-token (TTFT) latency. This layer streams responses character-by-character to reduce perceived latency, handles WebSocket channels for real-time human-in-the-loop interventions, and dynamically renders AI-generated artifacts (like structured JSON converted into UI charts or components).</p>
+    </div>
+  </section>
+
+  <!-- LAYER 2 -->
+  <section class="layer" id="layer-2">
+    <div class="layer-eyebrow"><span class="num">02</span> Orchestration & Agentic Logic</div>
+    <h2>The Brain</h2>
+    <div class="components">LangChain, LlamaIndex, DSPy, CrewAI, AutoGen, LangGraph, Spring AI, LangChain4j.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>The execution middleware that chains prompts, contextual memory, tool bindings, and stateful multi-step LLM calls into a programmatic workflow.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>Foundation models are stateless text predictors. Orchestration frameworks give them memory, handle state machines for multi-agent collaboration (e.g., planner, actor, critic), translate native code execution or system APIs into "function calling," and manage complex retry/fallback logic when an upstream API model fails.</p>
+    </div>
+  </section>
+
+  <!-- LAYER 3 -->
+  <section class="layer" id="layer-3">
+    <div class="layer-eyebrow"><span class="num">03</span> Low-Code Automation & Workflows</div>
+    <h2>The Democratization Layer</h2>
+    <div class="components">n8n, Flowise, LangFlow, Make.com AI, Dify.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>Visual drag-and-drop nodes and event-driven automation interfaces that wrap around code blocks, external webhooks, and AI prompts.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>It bridges the gap between software engineers and product/data operations teams. Instead of hardcoding simple prompt schedules, routing logic, or third-party CRM syncs inside the core codebase, this layer allows rapid pipeline prototyping and business-logic adjustments without triggering full deployment cycles.</p>
+    </div>
+  </section>
+
+  <!-- LAYER 4 -->
+  <section class="layer" id="layer-4">
+    <div class="layer-eyebrow"><span class="num">04</span> Data, Memory & RAG Engine</div>
+    <h2>The Context Window</h2>
+    <div class="components">pgvector, Pinecone, Qdrant, Milvus, Unstructured.io, LlamaParse, GraphRAG (Neo4j), Docling.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>The indexing, document chunking, and semantic vector retrieval infrastructure that matches user queries against a private corporate knowledge base.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>General-purpose LLMs lack access to private data and hallucinate when their pre-training context fails. This layer chunks complex, multi-modal documents (PDFs, DB tables), passes them through embedding models, and surfaces the exact semantic context inside a vector search, allowing the LLM to provide verified, grounded answers.</p>
+    </div>
+  </section>
+
+  <!-- LAYER 5 -->
+  <section class="layer" id="layer-5">
+    <div class="layer-eyebrow"><span class="num">05</span> Model Access & Gateways</div>
+    <h2>The Router</h2>
+    <div class="components">LiteLLM, OpenRouter, Portkey, Hugging Face Hub.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>Hubs for discovering open-weight models, and unified API gateways for routing across different commercial providers.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>Hard-coding an application to a single vendor API is a massive liability as pricing shifts and stronger models ship monthly. This layer abstracts the provider into a configuration value, preventing codebase rewrites.</p>
+    </div>
+  </section>
+
+  <!-- LAYER 6 -->
+  <section class="layer" id="layer-6">
+    <div class="layer-eyebrow"><span class="num">06</span> Protocols</div>
+    <h2>The Connective Tissue</h2>
+    <div class="components">Model Context Protocol (MCP), A2A.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>Open standards defining how an agent reaches an external tool, and how two agents reach each other.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>Before protocols, every framework required hand-written integration for every tool and every other agent — an M-tools × N-frameworks problem. Protocols like MCP standardize these connections, including across the Python/Java boundary itself.</p>
+    </div>
+  </section>
+
+  <!-- LAYER 7 -->
+  <section class="layer" id="layer-7">
+    <div class="layer-eyebrow"><span class="num">07</span> Model Serving & MaaS</div>
+    <h2>Model-as-a-Service</h2>
+    <div class="components">AWS Bedrock, Azure OpenAI, GCP Vertex AI, Groq, vLLM, Hugging Face TGI, Ollama.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>The infrastructure abstraction layer where foundation models are hosted, whether accessed via fully-managed multi-tenant cloud endpoints or self-hosted on private hardware.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>Running deep learning models requires massive compute optimization. MaaS (e.g., AWS Bedrock, Groq) abstracts away raw GPU node management, eliminates cold starts, and provides instant scalability via pay-per-token consumption. For custom or fine-tuned weights where data cannot leave the firewall, self-hosted serving engines (like vLLM) perform tensor parallelism, continuous request batching, and high-throughput token compression instead.</p>
+    </div>
+  </section>
+
+  <!-- LAYER 8 -->
+  <section class="layer" id="layer-8">
+    <div class="layer-eyebrow"><span class="num">08</span> Foundation Models</div>
+    <h2>The Cognitive Core</h2>
+    <div class="components">GPT-5.x, Claude Opus/Sonnet, Gemini 1.5 Pro, Llama 4, Mistral, DeepSeek V3/V4.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>The base neural networks trained on internet-scale corpora, separated into proprietary APIs and open weights.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>This is the primary engine for reasoning, translation, and structured output formatting. Selecting a model is a permanent balancing act: proprietary models (GPT-5.x, Claude Opus/Sonnet) offer state-of-the-art coding and math reasoning, while open weights (Llama 4, DeepSeek V3/V4) allow for zero-licensing overhead, infinite fine-tuning control, and local deployment.</p>
+    </div>
+  </section>
+
+  <!-- LAYER 9 -->
+  <section class="layer" id="layer-9">
+    <div class="layer-eyebrow ops"><span class="num">09</span> LLMOps, Telemetry & Guardrails</div>
+    <h2>The Production Firewall</h2>
+    <div class="components">LangSmith, Arize Phoenix, NeMo Guardrails, PromptLayer, Datadog LLMOps, Promptfoo.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>Runtime monitoring, system observability, prompt filtering, and policy enforcement tools sitting between application code and the LLM API endpoints.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>You cannot manage what you do not measure. This layer tracks token consumption costs, monitors request/response latencies, logs full execution traces (so you can see why an agent went loop-crazy), and acts as an inline firewall to dynamically intercept and strip out PII, malicious prompt injections, or toxic generations before they reach an end user.</p>
+    </div>
+  </section>
+
+  <!-- LAYER 10 -->
+  <section class="layer" id="layer-10">
+    <div class="layer-eyebrow eval"><span class="num">10</span> Automated Model Evaluation</div>
+    <h2>The Quality Assurance Layer</h2>
+    <div class="components">Ragas, DeepEval, TruLens, G-Eval, Spring AI Evaluator.</div>
+
+    <div class="block">
+      <div class="block-label">What It Means</div>
+      <p>Frameworks dedicated to programmatically scoring the quality, accuracy, toxicity, and retrieval relevance of an AI system using automated "LLM-as-a-judge" paradigms.</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Why It's Needed</div>
+      <p>Traditional unit testing fails in non-deterministic AI systems. If you tweak a system prompt or change a RAG chunk size, you risk breaking downstream behaviors. This layer runs synthetic data test suites to calculate exact metrics like faithfulness (did the LLM invent facts?), answer relevance (did it answer the prompt?), and context precision (did the search pull the right data?), guaranteeing regressions are caught before production deployment.</p>
+    </div>
+  </section>
+
+  <!-- PART 2: ROSETTA STONE -->
+  <section class="layer" id="rosetta">
+    <div class="layer-eyebrow"><span class="num">⇄</span> The Ecosystem Rosetta Stone</div>
+    <h2>Python vs. Spring/Java</h2>
+    <div class="components">Same architectural concepts, two production ecosystems — rapid prototyping on one side, enterprise scale on the other.</div>
+
+    <table class="rosetta-table">
+      <tr>
+        <th class="concept">Architectural Concept</th>
+        <th class="py">Python AI Ecosystem</th>
+        <th class="jv">Spring/Java Ecosystem</th>
+      </tr>
+      <tr>
+        <td class="row-head">Core Orchestration</td>
+        <td><strong>LangChain / LlamaIndex / LangGraph:</strong> highly dynamic, fastest community adoption of new research patterns.</td>
+        <td><strong>Spring AI / LangChain4j:</strong> strict type-safety, compilation-time checks, seamless native dependency injection into Spring Boot bean lifecycles.</td>
+      </tr>
+      <tr>
+        <td class="row-head">High-Scale Ingestion</td>
+        <td><strong>Airflow / Ray / Celery:</strong> highly flexible, distributed Python worker queues optimal for multi-node mathematical parsing.</td>
+        <td><strong>Spring Batch / Apache Kafka:</strong> enterprise-grade chunk-oriented processing, integrated transaction management, resilient async pipeline streaming.</td>
+      </tr>
+      <tr>
+        <td class="row-head">Data Schemas</td>
+        <td><strong>Pydantic:</strong> dynamic runtime type checking and JSON schema output forcing. Fast iteration.</td>
+        <td><strong>Java Records & Jackson:</strong> native, immutable data structures coupled with type-safe deserialization for predictable contract structures.</td>
+      </tr>
+      <tr>
+        <td class="row-head">Document Parsing</td>
+        <td>Unstructured.io / LlamaParse / Docling</td>
+        <td>Apache Tika / Apache PDFBox / Docling</td>
+      </tr>
+      <tr>
+        <td class="row-head">Protocol SDK (MCP)</td>
+        <td>Official Python SDK / FastMCP</td>
+        <td><strong>Official MCP Java SDK</strong> — built by the Spring team, donated to Anthropic.</td>
+      </tr>
+      <tr>
+        <td class="row-head">Observability</td>
+        <td>LangSmith / Langfuse Python SDK</td>
+        <td>Micrometer + Actuator (native) / Langfuse Java SDK</td>
+      </tr>
+      <tr>
+        <td class="row-head">Automated Evaluation</td>
+        <td>Ragas / DeepEval / TruLens</td>
+        <td>Spring AI's native Evaluator interface; deeper checks still shell out to the Python tools.</td>
+      </tr>
+      <tr>
+        <td class="row-head">Durable Agent Execution</td>
+        <td>Temporal Python SDK</td>
+        <td>Temporal Java SDK — same product, both first-class.</td>
+      </tr>
+      <tr>
+        <td class="row-head">Fine-Tuning / Training</td>
+        <td>Hugging Face Transformers / Unsloth</td>
+        <td><em>No native equivalent — training stays in Python regardless of serving language.</em></td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- PART 3: TOPOLOGIES -->
+  <section class="layer" id="topologies">
+    <div class="layer-eyebrow"><span class="num">🏗</span> Production Reference Architectures</div>
+    <h2>Three topologies, three driving forces</h2>
+    <div class="components">The same ten layers, assembled three different ways — each assembly driven by a different non-negotiable constraint.</div>
+
+    <div class="content-block top1">
+      <div class="block-title">Topology 1 — The High-Throughput Enterprise Engine</div>
+      <div class="block">
+        <div class="block-label">E2E Stack</div>
+        <p>Angular UI → Apache Kafka → Spring AI &amp; Spring Batch → MCP (@McpTool) → pgvector (PostgreSQL) → Claude Opus/Sonnet via AWS Bedrock → Datadog LLMOps.</p>
+      </div>
+      <div class="block">
+        <div class="block-label">Use Case</div>
+        <p>Processing 500,000+ daily asynchronous order transactions, inventory tracking, and streaming data intelligence.</p>
+      </div>
+      <div class="block">
+        <div class="block-label">Driving Selection Forces</div>
+        <ul>
+          <li><strong>Type-safety & resiliency:</strong> the existing backend microservices architecture demands compilation-time verification. Spring AI integrates directly into existing corporate security configurations without adding separate Python infra complexity.</li>
+          <li><strong>Asynchronous scalability:</strong> Kafka functions as the heavy buffer. Spring Batch reads order streams from high-partition Kafka clusters, processing heavy analytical payloads concurrently using Java 21 virtual threads (or Spring WebFlux) for non-blocking LLM API calls.</li>
+          <li><strong>Data consolidation:</strong> pgvector lets the team keep operational transactional data and vector search indexes in the same PostgreSQL engine (ACID-compliant), avoiding the CAP-theorem overhead of a separate standalone vector store.</li>
+          <li><strong>MaaS (AWS Bedrock):</strong> chosen for enterprise SLA compliance, strict ISO/SOC data privacy boundaries, and predictable pay-per-token pricing that eliminates hardware operational expense.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="content-block top2">
+      <div class="block-title">Topology 2 — The Agentic Research & Prototyping Loop</div>
+      <div class="block">
+        <div class="block-label">E2E Stack</div>
+        <p>Streamlit UI → HTTP/REST sync → LangGraph &amp; CrewAI → MCP → Pinecone &amp; LlamaParse → GPT-5.x native API → LangSmith evaluation.</p>
+      </div>
+      <div class="block">
+        <div class="block-label">Use Case</div>
+        <p>A multi-agent network where independent AI personas (Researcher, Writer, Compliance Critic) execute complex cyclic loops to plan, retrieve, match, and self-correct financial compliance reports.</p>
+      </div>
+      <div class="block">
+        <div class="block-label">Driving Selection Forces</div>
+        <ul>
+          <li><strong>Graph-based state management:</strong> multi-agent collaboration is inherently non-deterministic and cyclic. LangGraph treats the workflow as a stateful directed graph, using a checkpointer to save state at every node, enabling fine-grained agent rollbacks and human-in-the-loop approvals.</li>
+          <li><strong>Bleeding-edge parsing depth:</strong> standard flat RAG fails on tables. LlamaParse is selected because the system must extract intricate tabular schemas from complex PDF financial statements, then route them to specialized sub-agents that can reason over rows and columns.</li>
+          <li><strong>Deep execution traceability & tool precision:</strong> multi-agent loops can spiral into infinite API call chains. GPT-5.x is chosen for its strict JSON-mode tool-binding reliability, while LangSmith is mandated to give developers clear, granular visual traces of every step in the prompt chain — to debug loops and control cost.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="content-block top3">
+      <div class="block-title">Topology 3 — The Sovereign On-Premises Fortress</div>
+      <div class="block">
+        <div class="block-label">E2E Stack</div>
+        <p>React UI → RabbitMQ → Haystack / LlamaIndex → MCP (local) → self-hosted Milvus → vLLM serving Meta Llama 4 (open) → Arize Phoenix &amp; NeMo Guardrails.</p>
+      </div>
+      <div class="block">
+        <div class="block-label">Use Case</div>
+        <p>High-security defense, healthcare, or air-gapped banking applications handling sensitive data that requires zero external API calls.</p>
+      </div>
+      <div class="block">
+        <div class="block-label">Driving Selection Forces</div>
+        <ul>
+          <li><strong>Data sovereignty:</strong> zero tolerance for third-party API exposure. All weights, parsers, and vector stores are hosted entirely within local corporate data centers via Kubernetes, ensuring no SaaS telemetry leaks.</li>
+          <li><strong>High-throughput local serving performance:</strong> vLLM is selected over simple local runtimes because it uses PagedAttention. By paging the key-value (KV) cache, it drastically minimizes GPU memory fragmentation and pushes throughput well above naive Hugging Face Transformers on local server racks.</li>
+          <li><strong>Sovereign guardrails:</strong> because open models lack the built-in ethical/safety filtering of commercial counterparts, NeMo Guardrails is implemented as a hard policy intercept layer directly on top of the model endpoints, applying rule-based and vector-similarity checks to hard-stop generation if PII or disallowed topics are detected.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSING -->
+  <div class="closing">
+    <h2>Tying it together</h2>
+    <p>None of the ten layers exist in isolation, and none of the three topologies are "more correct" than the others — each is the same stack reshaped around one non-negotiable constraint: throughput and type-safety for the enterprise engine, traceable agentic reasoning for the research loop, and data sovereignty for the air-gapped fortress. The job isn't picking the single best tool at each layer; it's naming the constraint first, then letting it pick the stack.</p>
+
+    <div class="closer-line">
+      <p>The Rosetta Stone exists for the same reason: Python and Spring/Java aren't competing answers to "how do you build GenAI systems" — they're the same ten-layer architecture, expressed in whichever ecosystem your organization's existing engineering investment already lives in.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

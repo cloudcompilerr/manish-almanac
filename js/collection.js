@@ -32,6 +32,7 @@ const COLLECTION_DATA = {
   llm_context_window: { title: "The 128k Problem — How to Feed an LLM Without Hallucinating", file: "collection/llm-context-window-selection.html" },
   rag_pipeline_director_breakdown: { title: "RAG Pipeline — Director-Level Breakdown", file: "collection/rag_pipeline_director_breakdown.html" },
   module01_llm_foundations: { title: "Module 1: LLM Foundations & Your First Production AI Call", file: "collection/module01_llm_foundations.html" },
+  enterprise_genai_architecture: { title: "Enterprise Generative AI Architecture", file: "collection/enterprise_genai_architecture.html" },
 };
 
 var _collScrollY = 0;
@@ -114,7 +115,8 @@ function initCollection(){
     ['btn_coll_design_dropbox',function(){openCollItem('design_dropbox');}],
   ['btn_coll_llm_context_window',function(){openCollItem('llm_context_window');}],
   ['btn_coll_rag_pipeline',function(){openCollItem('rag_pipeline_director_breakdown');}],
-  ['btn_coll_module01_llm_foundations',function(){openCollItem('module01_llm_foundations');}]
+  ['btn_coll_module01_llm_foundations',function(){openCollItem('module01_llm_foundations');}],
+  ['btn_coll_enterprise_genai_architecture',function(){openCollItem('enterprise_genai_architecture');}]
   ];
   pairs.forEach(function(p){
     var el=document.getElementById(p[0]);
