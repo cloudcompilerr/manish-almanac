@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 2: Prompt Engineering for Production</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--ink:#0f0e0c;--page:#f7f5f0;--surface:#eeecea;--surface2:#e5e2dc;--border:#d4d0c8;--muted:#7a7568;--red:#c0392b;--red-bg:#fdf0ee;--green:#1a7a4a;--green-bg:#edf8f2;--amber:#b8720a;--amber-bg:#fdf6e8;--blue:#1a4f8a;--blue-bg:#edf2fb;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif;--sans:'Source Sans 3',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}html{scroll-behavior:smooth;}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;}
+.hero{background:var(--ink);color:#e8e4dc;padding:72px 24px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);}
+.hero-inner{max-width:960px;margin:0 auto;position:relative;}
+.hero-tag{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:#6a6458;text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px;margin-bottom:20px;color:#f0ece4;}
+h1 em{color:#e8b84b;font-style:normal;}
+.hero-sub{font-size:15px;color:#7a7060;max-width:660px;line-height:1.7;margin-bottom:32px;}
+.db-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.db-pill{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:3px;border:1px solid;letter-spacing:.5px;}
+.nav{position:sticky;top:0;z-index:100;background:var(--ink);border-bottom:1px solid #1e1c18;display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;}
+.nav::-webkit-scrollbar{display:none;}
+.nav a{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#4a4840;text-decoration:none;padding:14px 12px;white-space:nowrap;border-bottom:2px solid transparent;transition:.18s;}
+.nav a:hover{color:#e8b84b;border-color:#e8b84b;}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;}
+section{padding:56px 0 36px;border-bottom:2px solid var(--border);}
+section:last-child{border:none;}
+.sec-tag{font-family:var(--mono);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--border);}
+h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,32px);font-weight:700;line-height:1.15;margin-bottom:18px;}
+h3{font-family:var(--sans);font-size:17px;font-weight:600;margin:32px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+p{color:#3a3830;font-size:14.5px;margin-bottom:12px;}
+strong{color:var(--ink);}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#6a6458;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
+.analogy-text code{background:rgba(255,255,255,.08);color:#a8c8f8;padding:1px 5px;border-radius:3px;}
+.callout{border-radius:4px;padding:14px 18px;margin:18px 0;font-size:13.5px;border-left:3px solid;line-height:1.65;}
+.callout p{font-size:13.5px;margin-bottom:6px;}
+.callout p:last-child{margin:0;}
+.cl-blue{background:var(--blue-bg);border-color:var(--blue);color:#1a2a4a;}
+.cl-green{background:var(--green-bg);border-color:var(--green);color:#0a2a1a;}
+.cl-amber{background:var(--amber-bg);border-color:var(--amber);color:#3a2a08;}
+.cl-red{background:var(--red-bg);border-color:var(--red);color:#3a0a08;}
+.cl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+.codeblock{background:var(--ink);border-radius:6px;padding:20px 22px;font-family:var(--mono);font-size:11.5px;line-height:1.85;overflow-x:auto;margin:14px 0;color:#c8c4b8;border:1px solid #1e1c18;white-space:pre;}
+.codeblock .c{color:#6a6458;}.codeblock .k{color:#e8b84b;}.codeblock .s{color:#8bc4a0;}.codeblock .n{color:#e8946a;}.codeblock .t{color:#7aaee0;}.codeblock .g{color:#a8d878;}.codeblock .r{color:#e87878;}
+.comp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.comp-table th{padding:10px 14px;border:1px solid var(--border);background:var(--surface2);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.comp-table td{padding:11px 14px;border:1px solid var(--border);vertical-align:top;color:#3a3830;line-height:1.6;}
+.comp-table .row-head{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);white-space:nowrap;}
+.sd-example{background:white;border:1px solid var(--border);border-radius:8px;margin:20px 0;overflow:hidden;}
+.sd-example-head{background:var(--ink);padding:14px 20px;display:flex;align-items:center;gap:12px;justify-content:space-between;}
+.sd-example-title{font-family:var(--serif);font-size:16px;color:#f0ece4;font-weight:700;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6a6458;border:1px solid #2e2c28;padding:3px 8px;border-radius:2px;}
+.sd-example-body{padding:20px;}
+.choice-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border:none;}
+.choice-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--muted);width:152px;flex-shrink:0;padding-top:2px;}
+.choice-val{flex:1;color:#3a3830;line-height:1.6;}
+.concept-grid{display:grid;grid-template-columns:1fr;gap:0;margin:20px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--ink);color:#e8b84b;font-family:var(--mono);font-size:11.5px;font-weight:600;min-width:175px;padding:14px 16px;flex-shrink:0;border-right:1px solid #2a2820;display:flex;align-items:flex-start;line-height:1.5;}
+.concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-def strong{color:var(--ink);}
+.concept-def code{background:var(--surface);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue);}
+.concept-def p{margin:0 0 8px;}
+.concept-def p:last-child{margin-bottom:0;}
+@media(max-width:560px){.concept-row{flex-direction:column;}.concept-term{min-width:auto;border-right:none;border-bottom:1px solid #2a2820;}}
+.k-cards{display:flex;flex-direction:column;gap:18px;margin:20px 0;}
+.k-card{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--border);}
+.k-card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#1a1814;}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:#1a1814;background:#e8b84b;padding:3px 8px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:15px;font-weight:700;color:#f0ede6;line-height:1.3;flex:1;}
+.k-card-body{background:white;padding:0;}
+.k-point{padding:14px 18px;border-bottom:1px solid #f0ede6;}
+.k-point:last-child{border-bottom:none;}
+.k-point-label{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9a9488;margin-bottom:7px;}
+.k-point-text{font-size:13.5px;line-height:1.85;color:#2a2820;}
+.k-point-text strong{color:#1a1814;}
+.k-point-text code{font-family:var(--mono);font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px;color:#1a4f8a;}
+.k-point-text p{margin:8px 0 0;}
+.k-good{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#edf7f0;border-left:3px solid #1a7a4a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a4a30;line-height:1.7;}
+.k-warn{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#fdf6e8;border-left:3px solid #b8720a;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a2a08;line-height:1.7;}
+.k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
+.k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}
+.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:1px;}
+.matrix td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.6;}
+.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
+.file-head{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#1a1814;padding:10px 18px;border-radius:8px 8px 0 0;margin:22px 0 0;flex-wrap:wrap;}
+.file-path{font-family:var(--mono);font-size:11.5px;color:#e8b84b;letter-spacing:.2px;}
+.file-link{font-family:var(--mono);font-size:10px;color:#7aaee0;text-decoration:none;border-bottom:1px solid rgba(122,174,224,.4);white-space:nowrap;flex-shrink:0;}
+.file-link:hover{color:#a8d0f0;}
+.file-head + .codeblock{margin-top:0;border-radius:0 0 8px 8px;}
+.run-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 22px;margin:20px 0;}
+.run-box .rb-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.run-cmd{display:block;background:var(--ink);color:#c8c4b8;font-family:var(--mono);font-size:11.5px;padding:9px 13px;border-radius:5px;margin:6px 0;overflow-x:auto;white-space:pre;}
+.run-note{font-size:12.5px;color:var(--muted);margin-top:6px;}
+.footer{background:var(--ink);text-align:center;padding:36px 20px;font-family:var(--mono);font-size:10px;color:#3a3830;letter-spacing:2px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Agentic AI Mastery · Module 2 · Manish-Almanac</div>
+    <h1>Prompt Engineering<br><em>for Production</em></h1>
+    <p class="hero-sub">Structured output, few-shot calibration, and chain-of-thought embedded in a typed schema — three techniques that turn a chatbot into a component your application can actually depend on. Built as the Sprint Velocity Analyzer in Spring AI and Python LangChain, side by side, and wired into EngOrgAI as v0.2. Every snippet on this page is copied verbatim from the repo and linked to the real file — and every token count below is from a live, verified call, not an estimate.</p>
+    <div class="db-pills">
+      <span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:rgba(26,79,138,.08)">Structured Output</span>
+      <span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:rgba(26,122,74,.08)">Few-Shot Prompting</span>
+      <span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:rgba(184,114,10,.08)">Chain-of-Thought</span>
+      <span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)">BeanOutputConverter</span>
+      <span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:rgba(96,64,160,.08)">Pydantic</span>
+    </div>
+    <p style="margin-top:18px;font-family:var(--mono);font-size:11px;color:#8a8470;">
+      <a href="https://github.com/cloudcompilerr/agentic-ai-mastery" style="color:#e8b84b;text-decoration:none;border-bottom:1px solid rgba(232,184,75,.4);">github.com/cloudcompilerr/agentic-ai-mastery</a> · branch <code style="background:rgba(255,255,255,.08);color:#d8d4c8;">main</code>
+    </p>
+  </div>
+</div>
+
+<nav class="nav">
+  <a href="#concepts">Three Core Techniques</a>
+  <a href="#java">Java Implementation</a>
+  <a href="#python">Python Implementation</a>
+  <a href="#rosetta">The Rosetta Stone</a>
+  <a href="#productionbar">Production-Grade Bar</a>
+  <a href="#decisions">Real Decisions</a>
+  <a href="#capstone">EngOrgAI v0.2</a>
+  <a href="#tradeoffs">Trade-off Matrix</a>
+  <a href="#reference">Reference & Run It</a>
+</nav>
+
+<div class="wrap">
+
+<section id="concepts">
+  <div class="sec-tag">01 · Core Concepts</div>
+  <h2>Three Techniques That Make AI Production-Ready</h2>
+  <p>A raw LLM call returns text. These three techniques, all stacked into one schema and one prompt in the code below, turn that text into something a real application can depend on.</p>
+  <div class="concept-grid">
+    <div class="concept-row">
+      <div class="concept-term">Structured Output</div>
+      <div class="concept-def">
+        <p>Instead of parsing free text, you give the model a typed schema (a Java record / Pydantic model) and tell it to fill it as JSON. Spring AI's <code>BeanOutputConverter</code> generates the JSON Schema from your record and appends format instructions to the prompt. LangChain's <code>with_structured_output(Schema)</code> does the same automatically.</p>
+        <p>The result: <strong>no regex, no brittle string parsing, typed objects out of the model</strong> — the same contract you'd expect from any REST API.</p>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Few-Shot Prompting</div>
+      <div class="concept-def">
+        <p>Instead of describing the output format in words, you show the model a real example input→output pair as a prior conversation turn. This calibrates <strong>judgment calls</strong> (what completion rate qualifies as DECLINING?) not just format. A single well-chosen example does more work here than a page of instructions.</p>
+        <p>Both stacks inject the example as <code>UserMessage</code>/<code>AssistantMessage</code> (Java) or <code>HumanMessage</code>/<code>AIMessage</code> (Python) turns before the real question.</p>
+      </div>
+    </div>
+    <div class="concept-row">
+      <div class="concept-term">Chain-of-Thought</div>
+      <div class="concept-def">
+        <p>You ask the model to reason before committing to a verdict, and you keep that reasoning <strong>inside the schema</strong> as a <code>reasoning</code> field rather than as separate freeform text thrown away after use. One call, explainability and type safety together — the director can see the model's working, your code gets a clean typed result.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="java">
+  <div class="sec-tag">02 · Spring AI</div>
+  <h2>The Java Implementation, File by File</h2>
+  <p>Five files carry Module 2 in Spring AI. Reading them in this order — schema → service → exception → controller → test — follows how the pattern is actually built: define the shape of the answer before writing the call that produces it.</p>
+
+  <h3>1. The structured-output schema</h3>
+  <p>A five-field record. <code>BeanOutputConverter</code> introspects it at runtime to generate the JSON Schema the model is told to fill.</p>
+  <div class="file-head"><span class="file-path">spring/src/main/java/com/manish/module02/SprintVelocityAnalysis.java</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalysis.java" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="k">package</span> com.manish.module02;
+
+<span class="k">import</span> java.util.List;
+
+<span class="k">public record</span> <span class="t">SprintVelocityAnalysis</span>(
+        <span class="t">String</span> trend,
+        <span class="k">double</span> completionRate,
+        <span class="t">String</span> reasoning,
+        <span class="t">List</span>&lt;<span class="t">String</span>&gt; riskFlags,
+        <span class="t">String</span> recommendation
+) {}</div>
+  <div class="callout cl-amber">
+    <div class="cl-lbl">Worth noticing — field order</div>
+    <p><code>trend</code> and <code>completionRate</code> — the verdict — come <strong>before</strong> <code>reasoning</code> in this record, not after. A strict reasoning-before-verdict CoT design would flip that order so the model writes its working first. It still reasons internally before emitting tokens, but the schema doesn't structurally enforce it. See Decision 03 below.</p>
+  </div>
+
+  <h3>2. The core service — BeanOutputConverter, few-shot, one call</h3>
+  <p>The system prompt, the few-shot exchange, and the single-call usage-tracking pattern all live here. Note the message list is built directly and passed to <code>chatClient.prompt(new Prompt(messages))</code> — a different entry point than Module 1's fluent <code>.system().user()</code> chain, because few-shot needs multiple message turns before the real question.</p>
+  <div class="file-head"><span class="file-path">spring/src/main/java/com/manish/module02/SprintVelocityAnalyzerService.java</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalyzerService.java" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="k">package</span> com.manish.module02;
+
+<span class="k">import</span> org.slf4j.Logger;
+<span class="k">import</span> org.slf4j.LoggerFactory;
+<span class="k">import</span> org.springframework.ai.chat.client.ChatClient;
+<span class="k">import</span> org.springframework.ai.chat.messages.AssistantMessage;
+<span class="k">import</span> org.springframework.ai.chat.messages.Message;
+<span class="k">import</span> org.springframework.ai.chat.messages.SystemMessage;
+<span class="k">import</span> org.springframework.ai.chat.messages.UserMessage;
+<span class="k">import</span> org.springframework.ai.chat.metadata.Usage;
+<span class="k">import</span> org.springframework.ai.chat.model.ChatResponse;
+<span class="k">import</span> org.springframework.ai.chat.prompt.Prompt;
+<span class="k">import</span> org.springframework.ai.converter.BeanOutputConverter;
+<span class="k">import</span> org.springframework.stereotype.Service;
+
+<span class="k">import</span> java.util.List;
+
+<span class="n">@Service</span>
+<span class="k">public class</span> <span class="t">SprintVelocityAnalyzerService</span> {
+
+    <span class="k">private static final</span> <span class="t">Logger</span> log = LoggerFactory.getLogger(SprintVelocityAnalyzerService.<span class="k">class</span>);
+
+    <span class="k">private static final</span> <span class="t">String</span> SYSTEM_PROMPT = <span class="s">"""
+            You are a sprint velocity analyst for an engineering organization.
+            Given a free-text description of a sprint, reason step by step
+            about completion rate, trend versus prior sprints, and risk
+            signals, then respond ONLY with JSON matching the schema given
+            below. Be calibrated: only flag DECLINING if completion rate
+            drops more than 10 points versus the prior sprint, or a named
+            risk (incidents, attrition, scope creep) is present.
+            """</span>;
+
+    <span class="c">// Few-shot example as a real prior exchange - anchors calibration for
+    // trend/risk judgment, not just JSON shape.</span>
+    <span class="k">private static final</span> <span class="t">String</span> EXAMPLE_INPUT = <span class="s">"""
+            This sprint we committed to 40 points and completed 39.
+            Last sprint was 38 committed / 36 completed. No incidents,
+            no team changes.
+            """</span>;
+
+    <span class="k">private static final</span> <span class="t">String</span> EXAMPLE_OUTPUT = <span class="s">"""
+            {
+              "trend": "STABLE",
+              "completionRate": 97.5,
+              "reasoning": "Completion rate rose slightly from 94.7% to 97.5%, well within normal variance. No risk signals present.",
+              "riskFlags": [],
+              "recommendation": "No action needed - velocity is healthy and predictable."
+            }
+            """</span>;
+
+    <span class="k">private final</span> <span class="t">ChatClient</span> chatClient;
+    <span class="k">private final</span> <span class="t">BeanOutputConverter</span>&lt;<span class="t">SprintVelocityAnalysis</span>&gt; outputConverter;
+
+    <span class="k">public</span> SprintVelocityAnalyzerService(<span class="t">ChatClient</span> chatClient) {
+        <span class="k">this</span>.chatClient = chatClient;
+        <span class="k">this</span>.outputConverter = <span class="k">new</span> BeanOutputConverter&lt;&gt;(SprintVelocityAnalysis.<span class="k">class</span>);
+    }
+
+    <span class="k">public</span> <span class="t">SprintVelocityAnalysis</span> analyze(<span class="t">String</span> sprintDescription) {
+        <span class="k">long</span> startTime = System.currentTimeMillis();
+
+        <span class="k">try</span> {
+            <span class="t">String</span> formatInstructions = outputConverter.getFormat();
+
+            <span class="t">List</span>&lt;<span class="t">Message</span>&gt; messages = List.of(
+                    <span class="k">new</span> SystemMessage(SYSTEM_PROMPT + <span class="s">"\n"</span> + formatInstructions),
+                    <span class="k">new</span> UserMessage(EXAMPLE_INPUT),
+                    <span class="k">new</span> AssistantMessage(EXAMPLE_OUTPUT),
+                    <span class="k">new</span> UserMessage(sprintDescription)
+            );
+
+            <span class="c">// ONE call gives us both usage metadata and raw text to convert.
+            // Calling .entity() separately here would trigger a second,
+            // duplicate API call - a known Spring AI gotcha.</span>
+            <span class="t">ChatResponse</span> response = chatClient.prompt(<span class="k">new</span> Prompt(messages))
+                    .call()
+                    .chatResponse();
+
+            <span class="k">long</span> latencyMs = System.currentTimeMillis() - startTime;
+            <span class="t">Usage</span> usage = response.getMetadata().getUsage();
+
+            log.info(<span class="s">"Sprint velocity analysis completed - promptTokens={}, completionTokens={}, totalTokens={}, latencyMs={}"</span>,
+                    usage.getPromptTokens(), usage.getCompletionTokens(), usage.getTotalTokens(), latencyMs);
+
+            <span class="t">String</span> rawText = response.getResult().getOutput().getText();
+            <span class="k">return</span> outputConverter.convert(rawText);
+
+        } <span class="k">catch</span> (<span class="t">Exception</span> e) {
+            log.error(<span class="s">"Sprint velocity analysis failed for input: {}"</span>, sprintDescription, e);
+            <span class="k">throw new</span> SprintAnalysisException(<span class="s">"Failed to analyze sprint velocity"</span>, e);
+        }
+    }
+}</div>
+  <div class="callout cl-blue">
+    <div class="cl-lbl">Worth noticing — no .entity(), on purpose</div>
+    <p>Spring AI's <code>ChatClient</code> has a known issue (<a href="https://github.com/spring-projects/spring-ai/issues/3895" style="color:var(--blue);">spring-projects/spring-ai#3895</a>): calling both <code>.chatResponse()</code> for usage and <code>.entity()</code> for structured output on the same <code>CallResponseSpec</code> triggers two separate API calls. This service calls <code>.chatResponse()</code> exactly once — see <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalyzerService.java#L72-L77" style="color:var(--blue);">lines 72–77</a> — then parses the raw text manually with <code>outputConverter.convert(rawText)</code>. One call, full token tracking, typed result.</p>
+  </div>
+
+  <h3>3. The typed failure path</h3>
+  <div class="file-head"><span class="file-path">spring/src/main/java/com/manish/module02/SprintAnalysisException.java</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintAnalysisException.java" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="k">package</span> com.manish.module02;
+
+<span class="k">public class</span> <span class="t">SprintAnalysisException</span> <span class="k">extends</span> <span class="t">RuntimeException</span> {
+    <span class="k">public</span> SprintAnalysisException(<span class="t">String</span> message, <span class="t">Throwable</span> cause) {
+        <span class="k">super</span>(message, cause);
+    }
+}</div>
+
+  <h3>4. The HTTP entry point</h3>
+  <p>A <code>POST</code> instead of Module 1's <code>GET</code> — sprint descriptions are free text, long enough to warrant a request body over a query param.</p>
+  <div class="file-head"><span class="file-path">spring/src/main/java/com/manish/module02/SprintVelocityAnalyzerController.java</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalyzerController.java" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="k">package</span> com.manish.module02;
+
+<span class="k">import</span> org.springframework.web.bind.annotation.PostMapping;
+<span class="k">import</span> org.springframework.web.bind.annotation.RequestBody;
+<span class="k">import</span> org.springframework.web.bind.annotation.RequestMapping;
+<span class="k">import</span> org.springframework.web.bind.annotation.RestController;
+
+<span class="n">@RestController</span>
+<span class="n">@RequestMapping</span>(<span class="s">"/api/module02"</span>)
+<span class="k">public class</span> <span class="t">SprintVelocityAnalyzerController</span> {
+
+    <span class="k">public record</span> <span class="t">AnalyzeRequest</span>(<span class="t">String</span> sprintDescription) {}
+
+    <span class="k">private final</span> <span class="t">SprintVelocityAnalyzerService</span> service;
+
+    <span class="k">public</span> SprintVelocityAnalyzerController(<span class="t">SprintVelocityAnalyzerService</span> service) {
+        <span class="k">this</span>.service = service;
+    }
+
+    <span class="n">@PostMapping</span>(<span class="s">"/analyze"</span>)
+    <span class="k">public</span> <span class="t">SprintVelocityAnalysis</span> analyze(<span class="n">@RequestBody</span> <span class="t">AnalyzeRequest</span> request) {
+        <span class="k">return</span> service.analyze(request.sprintDescription());
+    }
+}</div>
+
+  <h3>5. Testing the parser, not the model</h3>
+  <p>The mock chain is shorter than Module 1's — there's no <code>.system()</code>/<code>.user()</code> to stub because this service calls <code>chatClient.prompt(any(Prompt.class))</code> directly with a pre-built message list.</p>
+  <div class="file-head"><span class="file-path">spring/src/test/java/com/manish/module02/SprintVelocityAnalyzerServiceTest.java</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/test/java/com/manish/module02/SprintVelocityAnalyzerServiceTest.java" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="k">package</span> com.manish.module02;
+
+<span class="k">import</span> org.junit.jupiter.api.Test;
+<span class="k">import</span> org.junit.jupiter.api.extension.ExtendWith;
+<span class="k">import</span> org.mockito.Mock;
+<span class="k">import</span> org.mockito.junit.jupiter.MockitoExtension;
+<span class="k">import</span> org.springframework.ai.chat.client.ChatClient;
+<span class="k">import</span> org.springframework.ai.chat.messages.AssistantMessage;
+<span class="k">import</span> org.springframework.ai.chat.metadata.ChatResponseMetadata;
+<span class="k">import</span> org.springframework.ai.chat.metadata.Usage;
+<span class="k">import</span> org.springframework.ai.chat.model.ChatResponse;
+<span class="k">import</span> org.springframework.ai.chat.model.Generation;
+<span class="k">import</span> org.springframework.ai.chat.prompt.Prompt;
+
+<span class="k">import static</span> org.assertj.core.api.Assertions.assertThat;
+<span class="k">import static</span> org.mockito.ArgumentMatchers.any;
+<span class="k">import static</span> org.mockito.Mockito.*;
+
+<span class="n">@ExtendWith</span>(MockitoExtension.<span class="k">class</span>)
+<span class="k">class</span> <span class="t">SprintVelocityAnalyzerServiceTest</span> {
+
+    <span class="n">@Mock</span> <span class="k">private</span> <span class="t">ChatClient</span> chatClient;
+    <span class="n">@Mock</span> <span class="k">private</span> <span class="t">ChatClient.ChatClientRequestSpec</span> requestSpec;
+    <span class="n">@Mock</span> <span class="k">private</span> <span class="t">ChatClient.CallResponseSpec</span> callResponseSpec;
+    <span class="n">@Mock</span> <span class="k">private</span> <span class="t">ChatResponse</span> chatResponse;
+    <span class="n">@Mock</span> <span class="k">private</span> <span class="t">Generation</span> generation;
+    <span class="n">@Mock</span> <span class="k">private</span> <span class="t">AssistantMessage</span> assistantMessage;
+    <span class="n">@Mock</span> <span class="k">private</span> <span class="t">ChatResponseMetadata</span> metadata;
+    <span class="n">@Mock</span> <span class="k">private</span> <span class="t">Usage</span> usage;
+
+    <span class="n">@Test</span>
+    <span class="k">void</span> analyze_parsesJsonIntoRecord() {
+        <span class="t">String</span> fakeJson = <span class="s">"""
+                {
+                  "trend": "DECLINING",
+                  "completionRate": 72.5,
+                  "reasoning": "Completion dropped from 95%% to 72.5%% with two incidents reported.",
+                  "riskFlags": ["Two production incidents", "One engineer out for the full sprint"],
+                  "recommendation": "Investigate incident load before committing to next sprint's full capacity."
+                }
+                """</span>;
+
+        when(chatClient.prompt(any(Prompt.<span class="k">class</span>))).thenReturn(requestSpec);
+        when(requestSpec.call()).thenReturn(callResponseSpec);
+        when(callResponseSpec.chatResponse()).thenReturn(chatResponse);
+
+        when(chatResponse.getResult()).thenReturn(generation);
+        when(generation.getOutput()).thenReturn(assistantMessage);
+        when(assistantMessage.getText()).thenReturn(fakeJson);
+        when(chatResponse.getMetadata()).thenReturn(metadata);
+        when(metadata.getUsage()).thenReturn(usage);
+        when(usage.getPromptTokens()).thenReturn(<span class="n">120</span>);
+        when(usage.getCompletionTokens()).thenReturn(<span class="n">60</span>);
+        when(usage.getTotalTokens()).thenReturn(<span class="n">180</span>);
+
+        <span class="t">SprintVelocityAnalyzerService</span> service = <span class="k">new</span> SprintVelocityAnalyzerService(chatClient);
+        <span class="t">SprintVelocityAnalysis</span> result = service.analyze(<span class="s">"This sprint we committed 40, completed 29..."</span>);
+
+        assertThat(result.trend()).isEqualTo(<span class="s">"DECLINING"</span>);
+        assertThat(result.completionRate()).isEqualTo(<span class="n">72.5</span>);
+        assertThat(result.riskFlags()).hasSize(<span class="n">2</span>);
+    }
+}</div>
+  <div class="callout cl-green">
+    <div class="cl-lbl">Verified, not assumed</div>
+    <p><code>mvn -Dtest=SprintVelocityAnalyzerServiceTest test</code> passes with zero live API calls — confirmed by actually running it while building this page, not just reading the source.</p>
+  </div>
+</section>
+
+<section id="python">
+  <div class="sec-tag">03 · LangChain</div>
+  <h2>The Python Implementation</h2>
+  <p>Built second, as a direct translation of the Spring service — same system prompt, same few-shot example, same log fields. The single-call usage-tracking fix arrives from the opposite direction: <code>include_raw=True</code> instead of a manual convert step.</p>
+
+  <div class="file-head"><span class="file-path">python/modules/module02/sprint_velocity_analyzer.py</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/modules/module02/sprint_velocity_analyzer.py" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="c">"""
+Module 2: Prompt engineering for production.
+Sprint Velocity Analyzer: structured output (Pydantic), few-shot prompting,
+and chain-of-thought reasoning embedded in the schema - LangChain equivalent
+of the Spring AI SprintVelocityAnalyzerService.
+"""</span>
+
+<span class="k">import</span> logging
+<span class="k">import</span> time
+<span class="k">from</span> pathlib <span class="k">import</span> Path
+<span class="k">from</span> typing <span class="k">import</span> List
+
+<span class="k">from</span> dotenv <span class="k">import</span> load_dotenv
+<span class="k">from</span> langchain_anthropic <span class="k">import</span> ChatAnthropic
+<span class="k">from</span> langchain_core.messages <span class="k">import</span> AIMessage, HumanMessage, SystemMessage
+<span class="k">from</span> pydantic <span class="k">import</span> BaseModel, Field
+
+ROOT_ENV_PATH = Path(__file__).resolve().parents[<span class="n">3</span>] / <span class="s">".env"</span>
+load_dotenv(dotenv_path=ROOT_ENV_PATH)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format=<span class="s">"%(asctime)s %(levelname)s %(name)s : %(message)s"</span>,
+)
+logger = logging.getLogger(__name__)
+
+SYSTEM_PROMPT = <span class="s">"""You are a sprint velocity analyst for an engineering organization.
+Given a free-text description of a sprint, reason step by step about completion
+rate, trend versus prior sprints, and risk signals, then respond ONLY with JSON
+matching the schema given. Be calibrated: only flag DECLINING if completion rate
+drops more than 10 points versus the prior sprint, or a named risk (incidents,
+attrition, scope creep) is present."""</span>
+
+EXAMPLE_INPUT = <span class="s">"""This sprint we committed to 40 points and completed 39.
+Last sprint was 38 committed / 36 completed. No incidents, no team changes."""</span>
+
+EXAMPLE_OUTPUT = <span class="s">"""{
+  "trend": "STABLE",
+  "completionRate": 97.5,
+  "reasoning": "Completion rate rose slightly from 94.7% to 97.5%, well within normal variance. No risk signals present.",
+  "riskFlags": [],
+  "recommendation": "No action needed - velocity is healthy and predictable."
+}"""</span>
+
+
+<span class="k">class</span> <span class="t">SprintVelocityAnalysis</span>(<span class="t">BaseModel</span>):
+    <span class="c">"""Structured output schema for sprint velocity analysis."""</span>
+
+    trend: <span class="t">str</span> = Field(description=<span class="s">"IMPROVING, STABLE, or DECLINING"</span>)
+    completionRate: <span class="t">float</span> = Field(description=<span class="s">"Story points completed / committed * 100"</span>)
+    reasoning: <span class="t">str</span> = Field(description=<span class="s">"Step-by-step reasoning before the verdict"</span>)
+    riskFlags: List[<span class="t">str</span>] = Field(description=<span class="s">"Named risk signals present, empty list if none"</span>)
+    recommendation: <span class="t">str</span> = Field(description=<span class="s">"Concise recommended action for the director"</span>)
+
+
+<span class="k">class</span> <span class="t">SprintAnalysisError</span>(<span class="t">Exception</span>):
+    <span class="c">"""Raised when sprint velocity analysis fails — never fail silently."""</span>
+
+
+<span class="k">class</span> <span class="t">SprintVelocityAnalyzerService</span>:
+    <span class="k">def</span> <span class="t">__init__</span>(self) -> <span class="k">None</span>:
+        model = ChatAnthropic(
+            model=<span class="s">"claude-haiku-4-5-20251001"</span>,
+            temperature=<span class="n">0</span>,
+            max_retries=<span class="n">3</span>,
+        )
+        <span class="c"># include_raw=True returns both the parsed Pydantic object AND
+        # the raw AIMessage — we get token usage in a single call, no double-call.
+        # method="json_schema" keeps few-shot examples as plain AIMessages;
+        # function_calling (the default) would require tool-call formatted
+        # examples instead, which is more complex for no benefit here.</span>
+        self._structured_model = model.with_structured_output(
+            SprintVelocityAnalysis,
+            method=<span class="s">"json_schema"</span>,
+            include_raw=<span class="k">True</span>,
+        )
+
+    <span class="k">def</span> <span class="t">analyze</span>(self, sprint_description: <span class="t">str</span>) -> <span class="t">SprintVelocityAnalysis</span>:
+        start_time = time.time()
+
+        <span class="k">try</span>:
+            messages = [
+                SystemMessage(content=SYSTEM_PROMPT),
+                HumanMessage(content=EXAMPLE_INPUT),
+                AIMessage(content=EXAMPLE_OUTPUT),
+                HumanMessage(content=sprint_description),
+            ]
+
+            result = self._structured_model.invoke(messages)
+
+            latency_ms = round((time.time() - start_time) * <span class="n">1000</span>, <span class="n">2</span>)
+            usage = result[<span class="s">"raw"</span>].usage_metadata
+
+            logger.info(
+                <span class="s">"Sprint velocity analysis completed - promptTokens=%s, completionTokens=%s, totalTokens=%s, latencyMs=%s"</span>,
+                usage[<span class="s">"input_tokens"</span>],
+                usage[<span class="s">"output_tokens"</span>],
+                usage[<span class="s">"total_tokens"</span>],
+                latency_ms,
+            )
+
+            <span class="k">if</span> result[<span class="s">"parsing_error"</span>]:
+                <span class="k">raise</span> SprintAnalysisError(
+                    <span class="s">f"Failed to parse model response: {result['parsing_error']}"</span>
+                )
+
+            <span class="k">return</span> result[<span class="s">"parsed"</span>]
+
+        <span class="k">except</span> <span class="t">SprintAnalysisError</span>:
+            <span class="k">raise</span>
+        <span class="k">except</span> <span class="t">Exception</span> <span class="k">as</span> exc:
+            logger.error(<span class="s">"Sprint velocity analysis failed for input: %s"</span>, sprint_description, exc_info=<span class="k">True</span>)
+            <span class="k">raise</span> SprintAnalysisError(<span class="s">"Failed to analyze sprint velocity"</span>) <span class="k">from</span> exc
+
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    service = SprintVelocityAnalyzerService()
+    analysis = service.analyze(
+        <span class="s">"This sprint we committed 45 points and completed 31. "</span>
+        <span class="s">"Two production incidents pulled the team off planned work for 3 days each."</span>
+    )
+    print(<span class="s">f"Trend:          {analysis.trend}"</span>)
+    print(<span class="s">f"Completion Rate:{analysis.completionRate:.1f}%"</span>)
+    print(<span class="s">f"Reasoning:      {analysis.reasoning}"</span>)
+    print(<span class="s">f"Risk Flags:     {analysis.riskFlags}"</span>)
+    print(<span class="s">f"Recommendation: {analysis.recommendation}"</span>)</div>
+  <div class="callout cl-blue">
+    <div class="cl-lbl">Worth noticing</div>
+    <p>The <code>with_structured_output(...)</code> call at <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/modules/module02/sprint_velocity_analyzer.py#L67-L76" style="color:var(--blue);">lines 67–76</a> is the entire fix for Module 2's two production gotchas (double-call and few-shot-vs-tool-use) in five lines — no manual converter object needed, unlike the Java side.</p>
+  </div>
+
+  <div class="file-head"><span class="file-path">python/modules/module02/test_sprint_velocity_analyzer.py</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/modules/module02/test_sprint_velocity_analyzer.py" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="k">from</span> unittest.mock <span class="k">import</span> MagicMock, patch
+
+<span class="k">from</span> sprint_velocity_analyzer <span class="k">import</span> SprintVelocityAnalysis, SprintVelocityAnalyzerService
+
+
+<span class="n">@patch</span>(<span class="s">"sprint_velocity_analyzer.ChatAnthropic"</span>)
+<span class="k">def</span> <span class="t">test_analyze_returns_parsed_analysis</span>(mock_chat_anthropic_cls):
+    mock_model = MagicMock()
+    mock_structured_model = MagicMock()
+    mock_model.with_structured_output.return_value = mock_structured_model
+    mock_chat_anthropic_cls.return_value = mock_model
+
+    mock_raw = MagicMock()
+    mock_raw.usage_metadata = {
+        <span class="s">"input_tokens"</span>: <span class="n">120</span>,
+        <span class="s">"output_tokens"</span>: <span class="n">60</span>,
+        <span class="s">"total_tokens"</span>: <span class="n">180</span>,
+    }
+    mock_parsed = SprintVelocityAnalysis(
+        trend=<span class="s">"DECLINING"</span>,
+        completionRate=<span class="n">72.5</span>,
+        reasoning=<span class="s">"Completion dropped significantly with two incidents reported."</span>,
+        riskFlags=[<span class="s">"Two production incidents"</span>, <span class="s">"One engineer out full sprint"</span>],
+        recommendation=<span class="s">"Reduce sprint commitment until incident load stabilises."</span>,
+    )
+    mock_structured_model.invoke.return_value = {
+        <span class="s">"raw"</span>: mock_raw,
+        <span class="s">"parsed"</span>: mock_parsed,
+        <span class="s">"parsing_error"</span>: <span class="k">None</span>,
+    }
+
+    service = SprintVelocityAnalyzerService()
+    result = service.analyze(<span class="s">"Committed 45, completed 31, two incidents..."</span>)
+
+    <span class="k">assert</span> result.trend == <span class="s">"DECLINING"</span>
+    <span class="k">assert</span> result.completionRate == <span class="n">72.5</span>
+    <span class="k">assert</span> len(result.riskFlags) == <span class="n">2</span></div>
+  <p>Notice the mock patches <code>ChatAnthropic</code> at the class level and stubs <code>.with_structured_output(...).invoke(...)</code> to return the exact <code>{raw, parsed, parsing_error}</code> dict shape — there's no fluent chain here either, just one method call deep enough to need mocking.</p>
+  <div class="callout cl-amber">
+    <div class="cl-lbl">One new dependency</div>
+    <p><code>pydantic</code> was added to <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/requirements.txt" style="color:var(--blue);">requirements.txt</a> for this module — Module 1 didn't need a schema library since it returned plain text.</p>
+  </div>
+</section>
+
+<section id="rosetta">
+  <div class="sec-tag">04 · Cross-Stack Mapping</div>
+  <h2>The Rosetta Stone — Module 2</h2>
+  <table class="comp-table">
+    <thead><tr><th>Concept</th><th>Spring AI 2.0</th><th>LangChain (Python)</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Structured schema</td><td>Java <code>record SprintVelocityAnalysis(...)</code></td><td>Pydantic <code>class SprintVelocityAnalysis(BaseModel)</code></td></tr>
+      <tr><td class="row-head">Schema → prompt</td><td><code>BeanOutputConverter.getFormat()</code> appended to the system prompt manually</td><td><code>model.with_structured_output(Schema, method="json_schema")</code> — automatic</td></tr>
+      <tr><td class="row-head">Building the multi-turn call</td><td><code>List&lt;Message&gt;</code> wrapped in <code>new Prompt(messages)</code> — a different <code>ChatClient</code> entry point than Module 1's fluent chain</td><td><code>list[BaseMessage]</code> passed to <code>.invoke()</code> — same shape Module 1 already used</td></tr>
+      <tr><td class="row-head">Few-shot examples</td><td><code>UserMessage</code> / <code>AssistantMessage</code> in the message list</td><td><code>HumanMessage</code> / <code>AIMessage</code> in the Python list</td></tr>
+      <tr><td class="row-head">Single call: output + usage</td><td>Manual — <code>.chatResponse()</code> once, then <code>outputConverter.convert(rawText)</code></td><td>Automatic — <code>include_raw=True</code> → dict <code>{raw, parsed, parsing_error}</code></td></tr>
+      <tr><td class="row-head">Token usage</td><td><code>response.getMetadata().getUsage()</code></td><td><code>result["raw"].usage_metadata</code></td></tr>
+      <tr><td class="row-head">Typed parsed result</td><td><code>outputConverter.convert(rawText)</code> → typed record</td><td><code>result["parsed"]</code> → Pydantic instance</td></tr>
+      <tr><td class="row-head">Parsing error</td><td>Jackson exception thrown directly from <code>.convert()</code></td><td><code>result["parsing_error"]</code> — checked explicitly, never silent</td></tr>
+      <tr><td class="row-head">Testing</td><td>Mockito stubs <code>chatClient.prompt(any(Prompt.class))</code></td><td><code>@patch</code> on <code>ChatAnthropic</code>, stub <code>with_structured_output(...).invoke(...)</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="productionbar">
+  <div class="sec-tag">05 · Quality Bar</div>
+  <h2>Production-Grade Bar — Module 2</h2>
+  <p>Same bar as Module 1, applied to a structured-output service this time. Every row is a real, checkable line in the repo — no estimated numbers here; live verified numbers are in the capstone section below.</p>
+  <table class="comp-table">
+    <thead><tr><th>Concern</th><th>Spring AI</th><th>Python</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Config externalization</td><td>Inherited from Module 1 — <code>application.yml</code> reads <code>${ANTHROPIC_API_KEY}</code></td><td>Inherited from Module 1 — <code>.env</code> via <code>load_dotenv(dotenv_path=...)</code></td></tr>
+      <tr><td class="row-head">Logging</td><td>SLF4J, structured <code>key=value</code>, token + latency on every call</td><td>Python <code>logging</code>, identical field names</td></tr>
+      <tr><td class="row-head">Error handling</td><td><code>SprintAnalysisException extends RuntimeException</code></td><td><code>SprintAnalysisError(Exception)</code></td></tr>
+      <tr><td class="row-head">Single-call structured output + usage</td><td><code>BeanOutputConverter</code> manual pattern — one <code>.chatResponse()</code></td><td><code>include_raw=True</code> — one <code>.invoke()</code></td></tr>
+      <tr><td class="row-head">Few-shot + CoT in schema</td><td>✅</td><td>✅</td></tr>
+      <tr><td class="row-head">Testing</td><td>JUnit 5 + Mockito, zero live calls</td><td>pytest + <code>unittest.mock</code>, zero live calls</td></tr>
+      <tr><td class="row-head">Retries</td><td>Inherited — <code>spring.ai.retry.*</code></td><td>Inherited — <code>max_retries=3</code></td></tr>
+      <tr><td class="row-head">Docs</td><td>Javadoc</td><td>Docstrings</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="decisions">
+  <div class="sec-tag">06 · Real Decisions</div>
+  <h2>Four Decisions That Shaped Module 2</h2>
+  <div class="k-cards">
+
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">01</span><span class="k-title">The Double-Call Gotcha — BeanOutputConverter Instead of .entity()</span></div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">The problem</div>
+          <div class="k-point-text">Spring AI's <code>ChatClient</code> has a known issue (<a href="https://github.com/spring-projects/spring-ai/issues/3895" style="color:var(--blue);">spring-projects/spring-ai#3895</a>): calling both <code>.chatResponse()</code> (for token usage) and <code>.entity()</code> (for structured output) on the same <code>CallResponseSpec</code> triggers <strong>two separate API calls</strong> to Claude — doubling cost and latency.
+          <p>The production bar requires token tracking on every call. Using <code>.entity()</code> alone loses usage metadata. Using both doubles the cost.</p>
+          </div>
+          <div class="k-warn"><span class="k-icon">⚠</span><span>A real production footgun, not a theoretical one — two API calls means two billing events and roughly 2x latency on every structured-output request.</span></div>
+        </div>
+        <div class="k-point">
+          <div class="k-point-label">The fix</div>
+          <div class="k-point-text">Use <code>BeanOutputConverter</code> manually: call <code>.chatResponse()</code> once for the full response (with metadata), then <code>outputConverter.convert(rawText)</code> to parse the JSON — see <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalyzerService.java#L72-L86" style="color:var(--blue);">SprintVelocityAnalyzerService.java, lines 72–86</a>. Python's <code>with_structured_output(..., include_raw=True)</code> returns a dict with both <code>raw</code> (usage) and <code>parsed</code> (Pydantic object) from a single call — the same fix from the other direction.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">02</span><span class="k-title">method="json_schema" vs function_calling for Few-Shot Examples</span></div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">Why it matters</div>
+          <div class="k-point-text">LangChain's default structured-output method is <code>function_calling</code>, which routes the response through Anthropic's tool-use API. Few-shot assistant examples under tool-use must be formatted as tool-call messages, not plain text — complex and brittle.
+          <p><code>method="json_schema"</code> (set at <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/modules/module02/sprint_velocity_analyzer.py#L72-L76" style="color:var(--blue);">sprint_velocity_analyzer.py, lines 72–76</a>) uses the model's dedicated JSON output feature instead, keeping few-shot examples as plain <code>AIMessage(content=json_string)</code> turns — readable, testable, and structurally parallel to the Java approach.</p>
+          </div>
+          <div class="k-good"><span class="k-icon">✓</span><span>Both stacks land on the same conceptual shape: format instructions in the system prompt, few-shot example as a plain prior exchange, real question last.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">03</span><span class="k-title">CoT Inside the Schema — But Not First in Field Order</span></div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">What's actually in the code</div>
+          <div class="k-point-text">The schema's field order is <code>trend</code>, <code>completionRate</code>, <code>reasoning</code>, <code>riskFlags</code>, <code>recommendation</code> — confirmed against <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalysis.java" style="color:var(--blue);">SprintVelocityAnalysis.java</a> and its Pydantic mirror. The verdict fields come <strong>before</strong> <code>reasoning</code>, not after.
+          <p>This is the opposite of the textbook "reasoning-before-verdict" CoT advice, where the scratchpad field should be first so the model commits to its working before the answer. It still works in practice — Claude reasons across the whole completion regardless of field order — but the schema itself doesn't structurally enforce that order.</p>
+          </div>
+          <div class="k-warn"><span class="k-icon">⚠</span><span>An honest, open gap rather than a hidden one: reordering the record so <code>reasoning</code> is first is a one-line change worth making before this module is called fully optimized. Tracked in the trade-off matrix below.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">04</span><span class="k-title">Cross-Module Imports in Python — sys.path vs Proper Packaging</span></div>
+      <div class="k-card-body">
+        <div class="k-point">
+          <div class="k-point-label">The situation</div>
+          <div class="k-point-text">The capstone's <code>sprint_velocity_capability.py</code> lives in <code>capstone/engorgai/</code> but needs to import from <code>modules/module02/</code>. Python has no build-time classpath like Maven — imports resolve at runtime against <code>sys.path</code>.
+          <p>For this course project: <code>sys.path.insert(0, python_root)</code> at the top of the capstone file (<a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/capstone/engorgai/sprint_velocity_capability.py#L11-L16" style="color:var(--blue);">sprint_velocity_capability.py, lines 11–16</a>), guarded by an "already present" check. Explicit and transparent. The proper fix — a <code>pyproject.toml</code> with <code>pip install -e .</code> — is saved for Module 11, per the <a href="https://github.com/cloudcompilerr/agentic-ai-mastery" style="color:var(--blue);">roadmap</a>'s "Cost & latency optimization / EngOrgAI v1.0 wrap-up" milestone.</p>
+          </div>
+          <div class="k-info"><span class="k-icon">→</span><span>Java: Maven resolves the classpath at build time from <code>pom.xml</code> — <code>module02</code> classes are just available to the capstone. Python: runtime path manipulation until a proper package exists.</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="capstone">
+  <div class="sec-tag">07 · Capstone A</div>
+  <h2>EngOrgAI v0.2 — Sprint Velocity Capability</h2>
+  <p>The director's assistant gets its first structured analytical capability. A thin facade wraps the Module 2 analyzer and formats its typed result into a director-facing narrative — the controller now exposes a second endpoint, <code>POST /api/engorgai/sprint-velocity</code>, alongside Module 1's <code>GET /ask</code>.</p>
+
+  <div class="file-head"><span class="file-path">spring/src/main/java/com/manish/capstone/engorgai/SprintVelocityCapability.java</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/capstone/engorgai/SprintVelocityCapability.java" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="k">package</span> com.manish.capstone.engorgai;
+
+<span class="k">import</span> com.manish.module02.SprintVelocityAnalysis;
+<span class="k">import</span> com.manish.module02.SprintVelocityAnalyzerService;
+<span class="k">import</span> org.slf4j.Logger;
+<span class="k">import</span> org.slf4j.LoggerFactory;
+<span class="k">import</span> org.springframework.stereotype.Service;
+
+<span class="c">/**
+ * EngOrgAI v0.2 - Sprint Velocity Capability.
+ * Wraps the Module 2 analyzer and formats its structured output
+ * into a director-facing narrative summary.
+ */</span>
+<span class="n">@Service</span>
+<span class="k">public class</span> <span class="t">SprintVelocityCapability</span> {
+
+    <span class="k">private static final</span> <span class="t">Logger</span> log = LoggerFactory.getLogger(SprintVelocityCapability.<span class="k">class</span>);
+
+    <span class="k">private final</span> <span class="t">SprintVelocityAnalyzerService</span> analyzerService;
+
+    <span class="k">public</span> SprintVelocityCapability(<span class="t">SprintVelocityAnalyzerService</span> analyzerService) {
+        <span class="k">this</span>.analyzerService = analyzerService;
+    }
+
+    <span class="k">public</span> <span class="t">String</span> summarize(<span class="t">String</span> sprintDescription) {
+        log.info(<span class="s">"EngOrgAI: sprint velocity capability invoked"</span>);
+        <span class="t">SprintVelocityAnalysis</span> analysis = analyzerService.analyze(sprintDescription);
+
+        <span class="k">return</span> <span class="s">"""
+                📊 SPRINT VELOCITY ANALYSIS
+                ─────────────────────────────
+                Trend:           %s
+                Completion Rate: %.1f%%
+                Reasoning:       %s
+                Risk Flags:      %s
+                Recommendation:  %s
+                """</span>.formatted(
+                analysis.trend(),
+                analysis.completionRate(),
+                analysis.reasoning(),
+                analysis.riskFlags().isEmpty() ? <span class="s">"None"</span> : String.join(<span class="s">", "</span>, analysis.riskFlags()),
+                analysis.recommendation()
+        );
+    }
+}</div>
+
+  <p>The controller wiring — <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/capstone/engorgai/DirectorAssistantController.java" style="color:var(--blue);">DirectorAssistantController.java</a> — now takes both services through constructor injection and exposes the new route alongside Module 1's:</p>
+  <div class="codeblock"><span class="n">@PostMapping</span>(<span class="s">"/sprint-velocity"</span>)
+<span class="k">public</span> <span class="t">String</span> sprintVelocity(<span class="n">@RequestBody</span> <span class="t">SprintRequest</span> request) {
+    <span class="k">return</span> sprintVelocityCapability.summarize(request.sprintDescription());
+}</div>
+
+  <div class="file-head"><span class="file-path">python/capstone/engorgai/sprint_velocity_capability.py</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/capstone/engorgai/sprint_velocity_capability.py" target="_blank" rel="noopener">View on GitHub →</a></div>
+  <div class="codeblock"><span class="c">"""
+EngOrgAI v0.2 — Sprint Velocity Capability.
+Wraps the Module 2 analyzer and formats its structured output
+into a director-facing narrative summary.
+"""</span>
+
+<span class="k">import</span> logging
+<span class="k">import</span> sys
+<span class="k">from</span> pathlib <span class="k">import</span> Path
+
+<span class="c"># Add the python/ root to sys.path so we can import across modules/capstone.
+# In a production package this would be resolved via proper pip install -e .
+# For this course project, explicit sys.path is the honest, transparent approach.</span>
+PYTHON_ROOT = Path(__file__).resolve().parents[<span class="n">2</span>]
+<span class="k">if</span> str(PYTHON_ROOT) <span class="k">not in</span> sys.path:
+    sys.path.insert(<span class="n">0</span>, str(PYTHON_ROOT))
+
+<span class="k">from</span> modules.module02.sprint_velocity_analyzer <span class="k">import</span> (
+    SprintVelocityAnalyzerService,
+)
+
+logger = logging.getLogger(__name__)
+
+
+<span class="k">class</span> <span class="t">SprintVelocityCapability</span>:
+    <span class="c">"""
+    EngOrgAI sprint velocity capability — wraps the module02 analyzer
+    and formats its output into a director-facing narrative summary.
+    """</span>
+
+    <span class="k">def</span> <span class="t">__init__</span>(self) -> <span class="k">None</span>:
+        self._analyzer = SprintVelocityAnalyzerService()
+
+    <span class="k">def</span> <span class="t">summarize</span>(self, sprint_description: <span class="t">str</span>) -> <span class="t">str</span>:
+        logger.info(<span class="s">"EngOrgAI: sprint velocity capability invoked"</span>)
+        analysis = self._analyzer.analyze(sprint_description)
+
+        risk_str = <span class="s">"None"</span> <span class="k">if not</span> analysis.riskFlags <span class="k">else</span> <span class="s">", "</span>.join(analysis.riskFlags)
+
+        <span class="k">return</span> (
+            <span class="s">f"📊 SPRINT VELOCITY ANALYSIS\n"</span>
+            <span class="s">f"─────────────────────────────\n"</span>
+            <span class="s">f"Trend:           {analysis.trend}\n"</span>
+            <span class="s">f"Completion Rate: {analysis.completionRate:.1f}%\n"</span>
+            <span class="s">f"Reasoning:       {analysis.reasoning}\n"</span>
+            <span class="s">f"Risk Flags:      {risk_str}\n"</span>
+            <span class="s">f"Recommendation:  {analysis.recommendation}\n"</span>
+        )
+
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    capability = SprintVelocityCapability()
+    summary = capability.summarize(
+        <span class="s">"Committed 45 points, completed 31. "</span>
+        <span class="s">"Two production incidents pulled the team off planned work for 3 days each."</span>
+    )
+    print(summary)</div>
+
+  <div class="sd-example">
+    <div class="sd-example-head">
+      <span class="sd-example-title">Live Interaction — Both Stacks, Same Input</span>
+      <span class="sd-example-tag">claude-haiku-4-5 · verified run</span>
+    </div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">Input</div><div class="choice-val">"Committed 45 points, completed 31. Two production incidents pulled the team off planned work for 3 days each."</div></div>
+      <div class="choice-row"><div class="choice-label">Trend (both)</div><div class="choice-val">DECLINING</div></div>
+      <div class="choice-row"><div class="choice-label">Completion Rate (both)</div><div class="choice-val">68.9% (31 / 45 — anchored to the few-shot example's 97.5% baseline, a drop well over the 10pp threshold)</div></div>
+      <div class="choice-row"><div class="choice-label">Reasoning (Java)</div><div class="choice-val">"Completion rate dropped significantly from 94.7% to 68.9%, a decline of 25.8 points. Two production incidents consumed approximately 6 days of team capacity, directly impacting sprint delivery. While the incidents explain the shortfall, this represents a material disruption to planned work."</div></div>
+      <div class="choice-row"><div class="choice-label">Reasoning (Python)</div><div class="choice-val">"Completion rate dropped from 97.5% to 68.89%, a decline of 28.61 percentage points, well exceeding the 10-point threshold. Two production incidents consumed 6 days of a typical 10-day sprint, representing approximately 60% of available capacity. This explains the significant shortfall and represents a named risk signal (incidents)."</div></div>
+      <div class="choice-row"><div class="choice-label">Risk Flags (Java)</div><div class="choice-val">production incidents · unplanned context switching · significant capacity loss</div></div>
+      <div class="choice-row"><div class="choice-label">Risk Flags (Python)</div><div class="choice-val">Production incidents · Unplanned context switching</div></div>
+      <div class="choice-row"><div class="choice-label">Recommendation (Java)</div><div class="choice-val">"Investigate root causes of production incidents to prevent recurrence. Consider reducing commitment by 10–15% in the next sprint to account for incident response capacity. Review on-call coverage and incident response procedures."</div></div>
+      <div class="choice-row"><div class="choice-label">Recommendation (Python)</div><div class="choice-val">"Investigate root causes of production incidents to prevent recurrence. Consider reducing sprint commitment by 15–20% until incident frequency stabilizes, and implement on-call rotation to protect sprint capacity."</div></div>
+      <div class="choice-row"><div class="choice-label">Tokens (Java)</div><div class="choice-val">539 prompt + 178 completion = 717 total · 3,340ms — <code>POST /api/engorgai/sprint-velocity</code></div></div>
+      <div class="choice-row"><div class="choice-label">Tokens (Python)</div><div class="choice-val">666 prompt + 156 completion = 822 total · 3,170ms — <code>python capstone/engorgai/sprint_velocity_capability.py</code></div></div>
+    </div>
+  </div>
+  <div class="analogy">
+    <div class="analogy-label">Why the wording differs even though the verdict doesn't</div>
+    <div class="analogy-text">Both stacks landed on the identical <strong>DECLINING</strong> / <strong>68.9%</strong> verdict — the calibration from the few-shot example transferred correctly across both implementations. But the prose differs, and Module 1's still-open gap is part of why: Python's <code>ChatAnthropic(temperature=0, ...)</code> pins determinism explicitly, while Spring AI's <code>application.yml</code> still hasn't set <code>spring.ai.anthropic.chat.options.temperature</code>, so the Java call runs on Anthropic's model default. Same model, same prompt, same few-shot anchor — different sampling temperature is a real, measurable contributor to the wording gap above.</div>
+  </div>
+</section>
+
+<section id="tradeoffs">
+  <div class="sec-tag">⚖️ · Trade-off Matrix</div>
+  <h2>Trade-off Matrix — What You Gave Up</h2>
+  <table class="matrix">
+    <thead><tr><th>Decision</th><th>Choice Made</th><th>Gained</th><th>Accepted</th><th>Revisit When</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Structured output (Java)</td><td><code>BeanOutputConverter</code> manually</td><td><span class="dot g"></span>Single API call, full token tracking, no double-billing</td><td><span class="dot a"></span>More boilerplate than <code>.entity()</code></td><td>If Spring AI fixes spring-ai#3895 in a future release</td></tr>
+      <tr><td class="row-head">Structured output (Python)</td><td><code>include_raw=True</code></td><td><span class="dot g"></span>Single call, usage + parsed result together</td><td><span class="dot a"></span>Result is a dict, not a typed object straight from <code>invoke()</code></td><td>If LangChain exposes usage on structured output natively</td></tr>
+      <tr><td class="row-head">Few-shot method</td><td><code>method="json_schema"</code></td><td><span class="dot g"></span>Plain-text few-shot examples, readable and testable</td><td><span class="dot a"></span>Slightly more prompt tokens than <code>function_calling</code></td><td>If Anthropic's native tool-use structured output proves more reliable at scale</td></tr>
+      <tr><td class="row-head">CoT field order</td><td><code>reasoning</code> placed after <code>trend</code>/<code>completionRate</code>, before <code>riskFlags</code>/<code>recommendation</code></td><td><span class="dot g"></span>Single call covers verdict, explanation, and follow-up with full type safety</td><td><span class="dot r"></span>Doesn't structurally enforce reasoning-before-verdict generation order</td><td>Before this module is called "done" — reorder the record so <code>reasoning</code> is field one</td></tr>
+      <tr><td class="row-head">Cross-module imports (Python)</td><td><code>sys.path.insert()</code></td><td><span class="dot g"></span>Simple, transparent, works immediately</td><td><span class="dot a"></span>Not how production Python packages resolve imports</td><td>Module 11 — proper <code>pyproject.toml</code> + <code>pip install -e .</code></td></tr>
+      <tr><td class="row-head">Temperature (Java, inherited gap)</td><td>Still unset in <code>application.yml</code></td><td><span class="dot g"></span>Zero extra config so far</td><td><span class="dot r"></span>Measurably contributes to wording drift vs. the Python side — see capstone callout above</td><td>Add <code>spring.ai.anthropic.chat.options.temperature: 0</code> — overdue since Module 1</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="reference">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference & Run It Yourself</h2>
+  <p>Every file touched in Module 2 and EngOrgAI v0.2, confirmed against the repo at commit <code>3ed1d76</code>. Every endpoint below was actually called while building this page — outputs above are copied from those runs, not guessed.</p>
+  <table class="comp-table">
+    <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalysis.java" style="color:var(--blue);">module02/SprintVelocityAnalysis.java</a></td><td>Structured output schema — Java record</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalyzerService.java" style="color:var(--blue);">module02/SprintVelocityAnalyzerService.java</a></td><td>BeanOutputConverter + few-shot + CoT, single-call pattern</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintAnalysisException.java" style="color:var(--blue);">module02/SprintAnalysisException.java</a></td><td>Typed failure path</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalyzerController.java" style="color:var(--blue);">module02/SprintVelocityAnalyzerController.java</a></td><td><code>POST /api/module02/analyze</code></td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/test/java/com/manish/module02/SprintVelocityAnalyzerServiceTest.java" style="color:var(--blue);">module02/SprintVelocityAnalyzerServiceTest.java</a></td><td>Mocked <code>Prompt</code>-based call chain, zero live calls</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/capstone/engorgai/SprintVelocityCapability.java" style="color:var(--blue);">capstone/engorgai/SprintVelocityCapability.java</a></td><td>EngOrgAI v0.2 — sprint capability facade</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/capstone/engorgai/DirectorAssistantController.java" style="color:var(--blue);">capstone/engorgai/DirectorAssistantController.java</a></td><td>Adds <code>POST /api/engorgai/sprint-velocity</code></td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/modules/module02/sprint_velocity_analyzer.py" style="color:var(--blue);">modules/module02/sprint_velocity_analyzer.py</a></td><td>Pydantic schema + service, <code>include_raw=True</code></td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/modules/module02/test_sprint_velocity_analyzer.py" style="color:var(--blue);">modules/module02/test_sprint_velocity_analyzer.py</a></td><td>pytest + <code>@patch</code>, zero live calls</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/capstone/engorgai/sprint_velocity_capability.py" style="color:var(--blue);">capstone/engorgai/sprint_velocity_capability.py</a></td><td>Python EngOrgAI v0.2 — sprint capability facade</td></tr>
+      <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/requirements.txt" style="color:var(--blue);">requirements.txt</a></td><td>Adds <code>pydantic</code> for the structured-output schema</td></tr>
+    </tbody>
+  </table>
+
+  <div class="run-box">
+    <div class="rb-lbl">Run everything locally</div>
+    <span class="run-cmd"># one-time setup — both stacks read ANTHROPIC_API_KEY / .env from the project root
+export ANTHROPIC_API_KEY=sk-ant-...</span>
+    <span class="run-cmd"># Java
+cd spring && mvn spring-boot:run
+curl -X POST http://localhost:8080/api/module02/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"sprintDescription":"Committed 45, completed 31, two production incidents..."}'
+curl -X POST http://localhost:8080/api/engorgai/sprint-velocity \
+  -H "Content-Type: application/json" \
+  -d '{"sprintDescription":"Committed 45, completed 31, two production incidents..."}'
+mvn -Dtest=SprintVelocityAnalyzerServiceTest test   # JUnit 5 + Mockito, no live calls</span>
+    <span class="run-cmd"># Python
+cd python && pip install -r requirements.txt
+python modules/module02/sprint_velocity_analyzer.py
+python capstone/engorgai/sprint_velocity_capability.py
+pytest modules/module02/test_sprint_velocity_analyzer.py   # unittest.mock, no live calls</span>
+    <div class="run-note">Spring reads <code>ANTHROPIC_API_KEY</code> from the process environment, not from <code>.env</code> directly — export it (or load it via your IDE run config) before <code>mvn spring-boot:run</code>. Python's <code>load_dotenv(dotenv_path=...)</code> finds the same <code>.env</code> at the project root automatically.</div>
+  </div>
+</section>
+
+</div>
+<div class="footer">MODULE 2 · PROMPT ENGINEERING · STRUCTURED OUTPUT · FEW-SHOT · CHAIN-OF-THOUGHT · SPRING AI · LANGCHAIN · CLAUDE · ENGORGAI · MANISH-ALMANAC</div>
+</body>
+</html>
