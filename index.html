@@ -296,10 +296,11 @@ function saveCollCatState(){
   </div>
   <div id="coll-no-results" class="coll-no-results" hidden>No matches. Try a different term, or clear search.</div>
     <div style="padding:6px 0">
-    <details class="coll-cat" data-cat="foundations" open>
+    <details class="coll-cat" data-cat="foundations" style="--catclr:#1a4f8a" open>
       <summary class="coll-cat-summary">
         <span class="coll-cat-chevron">▸</span>
-        <span class="coll-cat-label" style="color:#1a4f8a">FOUNDATIONS</span>
+        <span class="coll-cat-dot"></span>
+        <span class="coll-cat-label">Foundations</span>
         <span class="coll-cat-count">3</span>
       </summary>
       <div class="coll-cat-items">
@@ -335,10 +336,11 @@ function saveCollCatState(){
     </button>
       </div>
     </details>
-    <details class="coll-cat" data-cat="data-layer">
+    <details class="coll-cat" data-cat="data-layer" style="--catclr:#1a7a4a">
       <summary class="coll-cat-summary">
         <span class="coll-cat-chevron">▸</span>
-        <span class="coll-cat-label" style="color:#1a7a4a">DATA LAYER</span>
+        <span class="coll-cat-dot"></span>
+        <span class="coll-cat-label">Data Layer</span>
         <span class="coll-cat-count">4</span>
       </summary>
       <div class="coll-cat-items">
@@ -384,10 +386,11 @@ function saveCollCatState(){
     </button>
       </div>
     </details>
-    <details class="coll-cat" data-cat="compute-traffic">
+    <details class="coll-cat" data-cat="compute-traffic" style="--catclr:#b8720a">
       <summary class="coll-cat-summary">
         <span class="coll-cat-chevron">▸</span>
-        <span class="coll-cat-label" style="color:#b8720a">COMPUTE & TRAFFIC</span>
+        <span class="coll-cat-dot"></span>
+        <span class="coll-cat-label">Compute & Traffic</span>
         <span class="coll-cat-count">4</span>
       </summary>
       <div class="coll-cat-items">
@@ -433,10 +436,11 @@ function saveCollCatState(){
     </button>
       </div>
     </details>
-    <details class="coll-cat" data-cat="apis-protocols">
+    <details class="coll-cat" data-cat="apis-protocols" style="--catclr:#6040a0">
       <summary class="coll-cat-summary">
         <span class="coll-cat-chevron">▸</span>
-        <span class="coll-cat-label" style="color:#6040a0">APIs & PROTOCOLS</span>
+        <span class="coll-cat-dot"></span>
+        <span class="coll-cat-label">APIs & Protocols</span>
         <span class="coll-cat-count">2</span>
       </summary>
       <div class="coll-cat-items">
@@ -462,11 +466,12 @@ function saveCollCatState(){
     </button>
       </div>
     </details>
-    <details class="coll-cat" data-cat="systems-practice">
+    <details class="coll-cat" data-cat="systems-practice" style="--catclr:#c0392b">
       <summary class="coll-cat-summary">
         <span class="coll-cat-chevron">▸</span>
-        <span class="coll-cat-label" style="color:#c0392b">SYSTEMS IN PRACTICE</span>
-        <span class="coll-cat-count">7</span>
+        <span class="coll-cat-dot"></span>
+        <span class="coll-cat-label">Systems in Practice</span>
+        <span class="coll-cat-count">3</span>
       </summary>
       <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_observability">
@@ -499,6 +504,91 @@ function saveCollCatState(){
         <span class="coll-tag">Algorithm</span>
       </div>
     </button>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="platinum-foundations" style="--catclr:#8B008B">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-dot"></span>
+        <span class="coll-cat-label">Platinum — Foundations</span>
+        <span class="coll-cat-count">6</span>
+      </summary>
+      <div class="coll-cat-items">
+    <button class="note-row" id="btn_coll_security">
+      <div class="note-icon">🔐</div>
+      <div class="note-preview"><div class="note-title">Security & Authentication</div><div class="note-snippet">JWT · OAuth 2.0 · TLS/mTLS · RBAC · SSRF · XSS · Zero Trust</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Security</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_scalability">
+      <div class="note-icon">📈</div>
+      <div class="note-preview"><div class="note-title">Scalability Patterns</div><div class="note-snippet">Back-of-Envelope · CQRS · Event Sourcing · Circuit Breaker</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Patterns</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_api_design">
+      <div class="note-icon">🔌</div>
+      <div class="note-preview"><div class="note-title">API Design</div><div class="note-snippet">REST · Pagination · Versioning · Idempotency · GraphQL</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">API</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_data_structures">
+      <div class="note-icon">🌳</div>
+      <div class="note-preview"><div class="note-title">Data Structures for SysDesign</div><div class="note-snippet">Bloom Filter · Trie · Merkle Tree · Quadtree · Skip List</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">CS Fundamentals</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_microservices">
+      <div class="note-icon">🧩</div>
+      <div class="note-preview"><div class="note-title">Microservices Patterns</div><div class="note-snippet">Saga · Strangler Fig · Sidecar · Outbox · Service Discovery</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Architecture</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_interview_framework">
+      <div class="note-icon">🎯</div>
+      <div class="note-preview"><div class="note-title">Interview Framework</div><div class="note-snippet">Requirements · Estimation · 45-min Plan · Common Mistakes</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Process</span></div>
+    </button>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="system-walkthroughs" style="--catclr:#2c3e50">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-dot"></span>
+        <span class="coll-cat-label">Full System Walkthroughs</span>
+        <span class="coll-cat-count">5</span>
+      </summary>
+      <div class="coll-cat-items">
+    <button class="note-row" id="btn_coll_design_twitter">
+      <div class="note-icon">🐦</div>
+      <div class="note-preview"><div class="note-title">Design Twitter / X</div><div class="note-snippet">Feed · Fan-out · Celebrity Problem · Redis ZSET</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_design_uber">
+      <div class="note-icon">🚗</div>
+      <div class="note-preview"><div class="note-title">Design Uber</div><div class="note-snippet">Geospatial Matching · Surge Pricing · WebSocket · Redis GEO</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_design_whatsapp">
+      <div class="note-icon">💬</div>
+      <div class="note-preview"><div class="note-title">Design WhatsApp</div><div class="note-snippet">WebSocket · E2EE Signal Protocol · 600M Connections</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_design_youtube">
+      <div class="note-icon">▶️</div>
+      <div class="note-preview"><div class="note-title">Design YouTube</div><div class="note-snippet">HLS · Transcoding · CDN · Adaptive Bitrate · Recommendations</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+    <button class="note-row" id="btn_coll_design_dropbox">
+      <div class="note-icon">📦</div>
+      <div class="note-preview"><div class="note-title">Design Dropbox</div><div class="note-snippet">Delta Sync · Deduplication · Chunked Upload · Conflict Resolution</div></div>
+      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
+    </button>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="ai-engineering" style="--catclr:#1a6b6b">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-dot"></span>
+        <span class="coll-cat-label">AI & Agentic Engineering</span>
+        <span class="coll-cat-count">6</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_ai">
       <div class="note-icon">🤖</div>
       <div class="note-preview">
@@ -539,88 +629,6 @@ function saveCollCatState(){
         <span class="coll-tag">AI / Leadership</span>
       </div>
     </button>
-      </div>
-    </details>
-    <details class="coll-cat" data-cat="platinum-foundations">
-      <summary class="coll-cat-summary">
-        <span class="coll-cat-chevron">▸</span>
-        <span class="coll-cat-label" style="color:#8B008B">PLATINUM — FOUNDATIONS</span>
-        <span class="coll-cat-count">6</span>
-      </summary>
-      <div class="coll-cat-items">
-    <button class="note-row" id="btn_coll_security">
-      <div class="note-icon">🔐</div>
-      <div class="note-preview"><div class="note-title">Security & Authentication</div><div class="note-snippet">JWT · OAuth 2.0 · TLS/mTLS · RBAC · SSRF · XSS · Zero Trust</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Security</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_scalability">
-      <div class="note-icon">📈</div>
-      <div class="note-preview"><div class="note-title">Scalability Patterns</div><div class="note-snippet">Back-of-Envelope · CQRS · Event Sourcing · Circuit Breaker</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Patterns</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_api_design">
-      <div class="note-icon">🔌</div>
-      <div class="note-preview"><div class="note-title">API Design</div><div class="note-snippet">REST · Pagination · Versioning · Idempotency · GraphQL</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">API</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_data_structures">
-      <div class="note-icon">🌳</div>
-      <div class="note-preview"><div class="note-title">Data Structures for SysDesign</div><div class="note-snippet">Bloom Filter · Trie · Merkle Tree · Quadtree · Skip List</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">CS Fundamentals</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_microservices">
-      <div class="note-icon">🧩</div>
-      <div class="note-preview"><div class="note-title">Microservices Patterns</div><div class="note-snippet">Saga · Strangler Fig · Sidecar · Outbox · Service Discovery</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Architecture</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_interview_framework">
-      <div class="note-icon">🎯</div>
-      <div class="note-preview"><div class="note-title">Interview Framework</div><div class="note-snippet">Requirements · Estimation · 45-min Plan · Common Mistakes</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Process</span></div>
-    </button>
-      </div>
-    </details>
-    <details class="coll-cat" data-cat="system-walkthroughs">
-      <summary class="coll-cat-summary">
-        <span class="coll-cat-chevron">▸</span>
-        <span class="coll-cat-label" style="color:#2c3e50">FULL SYSTEM WALKTHROUGHS</span>
-        <span class="coll-cat-count">5</span>
-      </summary>
-      <div class="coll-cat-items">
-    <button class="note-row" id="btn_coll_design_twitter">
-      <div class="note-icon">🐦</div>
-      <div class="note-preview"><div class="note-title">Design Twitter / X</div><div class="note-snippet">Feed · Fan-out · Celebrity Problem · Redis ZSET</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_design_uber">
-      <div class="note-icon">🚗</div>
-      <div class="note-preview"><div class="note-title">Design Uber</div><div class="note-snippet">Geospatial Matching · Surge Pricing · WebSocket · Redis GEO</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_design_whatsapp">
-      <div class="note-icon">💬</div>
-      <div class="note-preview"><div class="note-title">Design WhatsApp</div><div class="note-snippet">WebSocket · E2EE Signal Protocol · 600M Connections</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_design_youtube">
-      <div class="note-icon">▶️</div>
-      <div class="note-preview"><div class="note-title">Design YouTube</div><div class="note-snippet">HLS · Transcoding · CDN · Adaptive Bitrate · Recommendations</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-    <button class="note-row" id="btn_coll_design_dropbox">
-      <div class="note-icon">📦</div>
-      <div class="note-preview"><div class="note-title">Design Dropbox</div><div class="note-snippet">Delta Sync · Deduplication · Chunked Upload · Conflict Resolution</div></div>
-      <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
-    </button>
-      </div>
-    </details>
-    <details class="coll-cat" data-cat="agentic-ai-mastery">
-      <summary class="coll-cat-summary">
-        <span class="coll-cat-chevron">▸</span>
-        <span class="coll-cat-label" style="color:#1a6b6b">AGENTIC AI MASTERY</span>
-        <span class="coll-cat-count">2</span>
-      </summary>
-      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_module01_llm_foundations">
       <div class="note-icon">🧠</div>
       <div class="note-preview">
