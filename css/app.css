@@ -97,16 +97,18 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 
 /* MODE */
 .mode-row{display:flex;margin:12px 20px 8px;background:var(--br);border-radius:11px;padding:3px;gap:2px;}
-.mode-btn{flex:1;padding:8px 6px;border-radius:8px;border:none;font-size:11.5px;font-weight:700;cursor:pointer;transition:all .18s;background:none;color:var(--ts);}
+.mode-btn{flex:1;padding:9px 6px;border-radius:8px;border:none;font-size:11.5px;font-weight:700;cursor:pointer;transition:all .18s;background:none;color:var(--ts);}
+.mode-btn:hover{color:var(--tp);}
 .mode-btn.on{background:var(--sf);color:var(--tp);box-shadow:0 1px 4px rgba(0,0,0,.12);}
 
 /* VOICE */
-.voice-wrap{margin:0 20px 6px;background:var(--sf);border:1px solid var(--br);border-radius:14px;overflow:hidden;}
+.voice-wrap{margin:0 20px 6px;background:var(--sf);border:1px solid var(--br);border-radius:14px;overflow:hidden;box-shadow:var(--sh-sm);}
 .voice-top{padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--br);}
 .vlbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ts);}
 .vtimer{font-size:12px;color:var(--ts);font-variant-numeric:tabular-nums;}
 .mic-wrap{display:flex;justify-content:center;padding:16px 0 4px;}
-.mic-btn{width:68px;height:68px;border-radius:50%;background:var(--as);border:2px solid rgba(200,169,110,.4);font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;}
+.mic-btn{width:68px;height:68px;border-radius:50%;background:var(--as);border:2px solid rgba(200,169,110,.4);font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;transition:transform .12s,box-shadow .15s;}
+.mic-btn:hover{box-shadow:0 2px 10px rgba(200,169,110,.3);}
 .mic-btn:active{transform:scale(.92);}
 .mic-btn.on{background:#fff0f0;border-color:rgba(200,60,60,.5);animation:mPulse 1s ease-in-out infinite;}
 @keyframes mPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
@@ -117,8 +119,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @keyframes wv{0%,100%{height:4px;opacity:.4}50%{height:22px;opacity:1}}
 .vstatus{text-align:center;font-size:12.5px;color:var(--ts);padding:5px 14px 3px;font-style:italic;min-height:24px;}
 .vstatus.on{color:#c0392b;font-style:normal;font-weight:500;}
-.tbox{margin:7px 14px 11px;padding:10px 12px;background:var(--bg);border:1px solid var(--br);border-radius:9px;font-size:14px;line-height:1.65;color:var(--tp);min-height:48px;outline:none;-webkit-user-select:text;user-select:text;}
+.tbox{margin:7px 14px 11px;padding:10px 12px;background:var(--bg);border:1px solid var(--br);border-radius:9px;font-size:14px;line-height:1.65;color:var(--tp);min-height:48px;outline:none;-webkit-user-select:text;user-select:text;transition:border-color .15s,box-shadow .15s;}
 .tbox:empty::before{content:attr(data-ph);color:var(--ts);font-style:italic;}
+.tbox:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--as);}
 .vactions{display:flex;gap:8px;padding:0 14px 14px;}
 .btn-cl{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;border:1.5px solid var(--br);background:var(--bg);color:var(--ts);cursor:pointer;transition:border-color .15s,background-color .15s;}
 .btn-cl:hover{border-color:var(--ac);background:var(--as);}
@@ -301,6 +304,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .db-section{margin-bottom:18px;}
 .db-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ts);margin-bottom:8px;}
 .db-provider-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+@media(max-width:374px){.db-provider-grid{grid-template-columns:1fr;}}
+@media(min-width:1024px){.db-provider-grid{grid-template-columns:repeat(4,1fr);}}
 .db-pcard{border:1.5px solid var(--br);border-radius:11px;padding:11px 12px;cursor:pointer;background:var(--sf);transition:all .15s;position:relative;}
 .db-pcard.sel{border-color:var(--ac);background:var(--as);}
 .db-pcard.sel::after{content:'✓';position:absolute;top:8px;right:10px;font-size:11px;font-weight:700;color:var(--ac);}
@@ -407,4 +412,21 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   user-select:none;
   border-bottom:1px solid var(--br);
   background:var(--bg);
+}
+
+/* ── Comfortable centered reading column on wide screens ──
+   Quick Ref and Debate Arena are full-bleed by default (mobile-first).
+   Past 1024px that stretches input cards and response text uncomfortably
+   wide, so the content column (not the sticky header) gets centered. */
+@media(min-width:1024px){
+  .mode-row,.voice-wrap,.prov-strip,.chips,.sprog,.thinking,.rarea{
+    max-width:720px;margin-left:auto;margin-right:auto;
+  }
+  .db-body{max-width:760px;margin-left:auto;margin-right:auto;}
+  .mode-btn{font-size:12.5px;padding:10px 8px;}
+}
+@media(min-width:1280px){
+  .mode-row,.voice-wrap,.prov-strip,.chips,.sprog,.thinking,.rarea,.db-body{
+    max-width:780px;
+  }
 }
