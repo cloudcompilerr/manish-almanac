@@ -4,23 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/app.css">
-<title>Notes</title>
-
-<style>
-    .coll-cat-divider{display:flex;align-items:center;gap:10px;padding:14px 16px 6px;margin-top:2px;}
-    .coll-cat-line{flex:1;height:1px;background:var(--br,#e8e4dd);}
-    .coll-cat-label{font-family:monospace;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;white-space:nowrap;font-weight:600;opacity:.75;}
-</style>
+<title>Almanac — AI-Assisted Engineering Practice</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231a1916'/><text x='32' y='45' font-family='Georgia,serif' font-size='36' font-weight='700' fill='%23c8a96e' text-anchor='middle'>A</text></svg>">
 </head>
 <body>
 
 <!-- LIST -->
 <div id="list">
   <div class="app-header">
-    <div class="app-title">Notes</div>
-    <div class="note-count">4 items</div>
+    <div class="app-title">Almanac</div>
+    <div class="note-count">AI-assisted engineering practice</div>
   </div>
   <div style="padding:6px 0">
+    <div class="section-divider">AI Tools</div>
+    <div class="tool-group">
     <button class="note-row" id="btn_coding">
       <div class="note-icon">☕</div>
       <div class="note-preview"><div class="note-title">Quick Ref – Java</div><div class="note-snippet">Tap to solve a coding problem…</div></div>
@@ -36,12 +33,15 @@
       <div class="note-preview"><div class="note-title">LLM Debate Arena</div><div class="note-snippet">Ask all AIs at once — debate, judge, synthesize best answer</div></div>
       <div class="note-date">New</div>
     </button>
-    <div class="section-divider">My Collection</div>
+    </div>
+    <div class="section-divider">Knowledge Library</div>
+    <div class="tool-group">
     <button class="note-row" id="btn_collection">
       <div class="note-icon">📚</div>
       <div class="note-preview"><div class="note-title">My Collection</div><div class="note-snippet">Caching · Load Balancing · Consistent Hashing · Rate Limiting · +29 more</div></div>
       <div class="note-date">33 items</div>
     </button>
+    </div>
   </div>
 </div>
 
@@ -142,9 +142,60 @@ document.addEventListener('DOMContentLoaded',function(){
   }catch(e){try{onProviderChange();}catch(e2){}}
   document.getElementById('tbox').addEventListener('input',chkBtn);
   initCollection();
+  loadCollCatState();
+  document.querySelectorAll('#coll-panel .coll-cat').forEach(function(c){
+    c.addEventListener('toggle', saveCollCatState);
+  });
 });
 
-
+/* ═══ COLLECTION SEARCH + CATEGORY STATE ═══ */
+var _collSearchPrevOpen = null;
+function filterCollection(raw){
+  var q = (raw || '').trim().toLowerCase();
+  var cats = document.querySelectorAll('#coll-panel .coll-cat');
+  var noResults = document.getElementById('coll-no-results');
+  if (q && _collSearchPrevOpen === null) {
+    _collSearchPrevOpen = [];
+    cats.forEach(function(c){ if (c.open) _collSearchPrevOpen.push(c); });
+  }
+  if (!q) {
+    cats.forEach(function(c){
+      c.style.display = '';
+      c.querySelectorAll('.note-row').forEach(function(r){ r.hidden = false; });
+      if (_collSearchPrevOpen) c.open = _collSearchPrevOpen.indexOf(c) > -1;
+    });
+    _collSearchPrevOpen = null;
+    if (noResults) noResults.hidden = true;
+    return;
+  }
+  var anyVisible = false;
+  cats.forEach(function(c){
+    var catHasMatch = false;
+    c.querySelectorAll('.note-row').forEach(function(r){
+      var hit = r.textContent.toLowerCase().indexOf(q) > -1;
+      r.hidden = !hit;
+      if (hit) { catHasMatch = true; anyVisible = true; }
+    });
+    c.style.display = catHasMatch ? '' : 'none';
+    if (catHasMatch) c.open = true;
+  });
+  if (noResults) noResults.hidden = anyVisible;
+}
+function loadCollCatState(){
+  try{
+    var saved = JSON.parse(localStorage.getItem('nt_v6_coll_open_cats') || 'null');
+    if (saved) {
+      document.querySelectorAll('#coll-panel .coll-cat').forEach(function(c){
+        if (saved.hasOwnProperty(c.dataset.cat)) c.open = !!saved[c.dataset.cat];
+      });
+    }
+  }catch(e){}
+}
+function saveCollCatState(){
+  var state = {};
+  document.querySelectorAll('#coll-panel .coll-cat').forEach(function(c){ state[c.dataset.cat] = c.open; });
+  try{ localStorage.setItem('nt_v6_coll_open_cats', JSON.stringify(state)); }catch(e){}
+}
 
 </script>
 
@@ -233,13 +284,25 @@ document.addEventListener('DOMContentLoaded',function(){
 
 <!-- MY COLLECTION — list panel -->
 <div id="coll-panel">
-  <div class="coll-header">
-    <button class="coll-back" id="btn_coll_back">‹ Notes</button>
-    <div class="coll-title">My Collection</div>
-    <div class="coll-count">33 items</div>
+  <div class="coll-top-sticky">
+    <div class="coll-header">
+      <button class="coll-back" id="btn_coll_back">‹ Notes</button>
+      <div class="coll-title">My Collection</div>
+      <div class="coll-count">33 items</div>
+    </div>
+    <div class="coll-search-wrap">
+      <input type="search" id="coll-search" class="coll-search-input" placeholder="Search by title, topic, or tag…" autocomplete="off" oninput="filterCollection(this.value)">
+    </div>
   </div>
+  <div id="coll-no-results" class="coll-no-results" hidden>No matches. Try a different term, or clear search.</div>
     <div style="padding:6px 0">
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#1a4f8a">FOUNDATIONS</span><span class="coll-cat-line"></span></div>
+    <details class="coll-cat" data-cat="foundations" open>
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-label" style="color:#1a4f8a">FOUNDATIONS</span>
+        <span class="coll-cat-count">3</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_distributed_systems">
       <div class="note-icon">⚙️</div>
       <div class="note-preview">
@@ -270,7 +333,15 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">Rate Limiting</span>
       </div>
     </button>
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#1a7a4a">DATA LAYER</span><span class="coll-cat-line"></span></div>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="data-layer">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-label" style="color:#1a7a4a">DATA LAYER</span>
+        <span class="coll-cat-count">4</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_caching">
       <div class="note-icon">🔥</div>
       <div class="note-preview">
@@ -311,7 +382,15 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">Storage</span>
       </div>
     </button>
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#b8720a">COMPUTE & TRAFFIC</span><span class="coll-cat-line"></span></div>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="compute-traffic">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-label" style="color:#b8720a">COMPUTE & TRAFFIC</span>
+        <span class="coll-cat-count">4</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_load_balancing">
       <div class="note-icon">⚖️</div>
       <div class="note-preview">
@@ -352,7 +431,15 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">Streaming</span>
       </div>
     </button>
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#6040a0">APIs & PROTOCOLS</span><span class="coll-cat-line"></span></div>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="apis-protocols">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-label" style="color:#6040a0">APIs & PROTOCOLS</span>
+        <span class="coll-cat-count">2</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_protocols">
       <div class="note-icon">🔌</div>
       <div class="note-preview">
@@ -373,7 +460,15 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">Search</span>
       </div>
     </button>
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#c0392b">SYSTEMS IN PRACTICE</span><span class="coll-cat-line"></span></div>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="systems-practice">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-label" style="color:#c0392b">SYSTEMS IN PRACTICE</span>
+        <span class="coll-cat-count">7</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_observability">
       <div class="note-icon">📊</div>
       <div class="note-preview">
@@ -444,8 +539,15 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">AI / Leadership</span>
       </div>
     </button>
-
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#8B008B">PLATINUM — FOUNDATIONS</span><span class="coll-cat-line"></span></div>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="platinum-foundations">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-label" style="color:#8B008B">PLATINUM — FOUNDATIONS</span>
+        <span class="coll-cat-count">6</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_security">
       <div class="note-icon">🔐</div>
       <div class="note-preview"><div class="note-title">Security & Authentication</div><div class="note-snippet">JWT · OAuth 2.0 · TLS/mTLS · RBAC · SSRF · XSS · Zero Trust</div></div>
@@ -476,7 +578,15 @@ document.addEventListener('DOMContentLoaded',function(){
       <div class="note-preview"><div class="note-title">Interview Framework</div><div class="note-snippet">Requirements · Estimation · 45-min Plan · Common Mistakes</div></div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Process</span></div>
     </button>
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#2c3e50">FULL SYSTEM WALKTHROUGHS</span><span class="coll-cat-line"></span></div>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="system-walkthroughs">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-label" style="color:#2c3e50">FULL SYSTEM WALKTHROUGHS</span>
+        <span class="coll-cat-count">5</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_design_twitter">
       <div class="note-icon">🐦</div>
       <div class="note-preview"><div class="note-title">Design Twitter / X</div><div class="note-snippet">Feed · Fan-out · Celebrity Problem · Redis ZSET</div></div>
@@ -502,7 +612,15 @@ document.addEventListener('DOMContentLoaded',function(){
       <div class="note-preview"><div class="note-title">Design Dropbox</div><div class="note-snippet">Delta Sync · Deduplication · Chunked Upload · Conflict Resolution</div></div>
       <div class="note-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;"><span class="coll-tag">Walkthrough</span></div>
     </button>
-    <div class="coll-cat-divider"><span class="coll-cat-line"></span><span class="coll-cat-label" style="color:#1a6b6b">AGENTIC AI MASTERY</span><span class="coll-cat-line"></span></div>
+      </div>
+    </details>
+    <details class="coll-cat" data-cat="agentic-ai-mastery">
+      <summary class="coll-cat-summary">
+        <span class="coll-cat-chevron">▸</span>
+        <span class="coll-cat-label" style="color:#1a6b6b">AGENTIC AI MASTERY</span>
+        <span class="coll-cat-count">2</span>
+      </summary>
+      <div class="coll-cat-items">
     <button class="note-row" id="btn_coll_module01_llm_foundations">
       <div class="note-icon">🧠</div>
       <div class="note-preview">
@@ -523,6 +641,8 @@ document.addEventListener('DOMContentLoaded',function(){
         <span class="coll-tag">Module 02</span>
       </div>
     </button>
+      </div>
+    </details>
   </div>
 </div>
 <!-- MY COLLECTION — item viewer panel -->
