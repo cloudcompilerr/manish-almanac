@@ -165,7 +165,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Message Queues<br><em>SQS, RabbitMQ vs Kafka</em></h1>
@@ -192,6 +192,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="concept-row"><div class="concept-term">Event Stream</div><div class="concept-def"><strong>Messages are retained. Multiple independent consumers can read all messages, each at their own pace.</strong>
         <span class="concept-note good">✓ Replay: Flink crashed? Replay from last offset. Multiple consumers: Flink, ClickHouse, and S3 all read the same stream independently.</span>
       <span class="concept-note muted">Examples: Kafka, Kinesis, Pulsar. Use for: event sourcing, streaming analytics, audit logs, feeding multiple downstream systems.</span></div></div>
+  </div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'll use Kafka as my task queue" or "I'll use SQS to feed my analytics pipeline" — proposing either without justifying it is the tell. <strong>Kafka and SQS are not interchangeable "message queue" products — they encode fundamentally different delivery models.</strong> SQS deletes a message once one consumer processes it: exactly the semantics you want for "resize this image once." Feed the same event to three analytics consumers that each need to read it independently and at their own pace, and SQS forces you into fragile workarounds (separate queues per consumer, manual fan-out) that Kafka gives you for free via consumer groups and retention. The strong answer names which property the problem actually needs — single-consumer task distribution, or multi-consumer replayable broadcast — before naming a product.</p>
   </div>
 </section>
 
@@ -229,7 +233,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <tbody>
       <tr><td class="row-head">Type</td><td>Fully managed, serverless</td><td>Self-managed broker</td></tr>
       <tr><td class="row-head">Ordering</td><td>Standard: best-effort. FIFO: guaranteed</td><td>Per-queue FIFO guaranteed</td></tr>
-      <tr><td class="row-head">Throughput</td><td><span class="good">Unlimited (auto-scales)</span></td><td><span class="warn">~50K msg/sec per broker, cluster for more</span></td></tr>
+      <tr><td class="row-head">Throughput</td><td><span class="good">Standard: nearly unlimited (AWS quotes no fixed cap). FIFO: 3,000/sec default, tens of thousands with high-throughput mode</span></td><td><span class="warn">Commonly cited in the tens-of-thousands of msg/sec per broker range — heavily dependent on message size, durability settings, and ack mode; cluster for more</span></td></tr>
       <tr><td class="row-head">Routing</td><td>Basic (queue per destination)</td><td><span class="good">Rich exchanges: direct, fanout, topic, headers</span></td></tr>
       <tr><td class="row-head">Ops burden</td><td><span class="good">Zero</span></td><td><span class="warn">Medium — manage cluster, quorum, memory</span></td></tr>
       <tr><td class="row-head">Message retention</td><td>Up to 14 days (deleted on consume)</td><td>Configurable (deleted on consume)</td></tr>
@@ -251,8 +255,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     </div>
   </div>
 
-<div class="sec-tag">05 · More System Design Examples</div>
-  <h2>Message queue decisions in real systems</h2>
+  <h3>Notification System — Multi-Channel Fan-Out</h3>
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">Notification System — Multi-Channel Fan-Out</div><span class="sd-example-tag">FAN-OUT · SLA · ORDERING</span></div>
     <div class="sd-example-body">
@@ -266,7 +269,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 
 <section id="ordering">
-  <div class="sec-tag">03 · Message Ordering</div>
+  <div class="sec-tag">04 · Message Ordering</div>
   <h2>When order matters — and how to guarantee it</h2>
   <div class="callout cl-amber">
     <div class="cl-lbl">The interview gotcha</div>
@@ -281,7 +284,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       Message Group ID: messages with the same group ID are processed in order. Different group IDs process in parallel.<br>
       Example: all order events for order_123 share group_id="order_123" → processed in sequence. Orders 123 and 456 processed in parallel.
         <span class="concept-note good">✓ Exactly-once processing (deduplication by message ID). Order guaranteed within group. Used for: order state machines, financial transactions, any workflow where step sequence matters.</span>
-      <span class="concept-note warn">⚠ Max 3,000 transactions/sec per queue (vs unlimited for Standard). If one message in a group fails and blocks, all subsequent messages in that group wait.</span></div></div>
+      <span class="concept-note warn">⚠ Default FIFO throughput: up to 3,000 messages/sec per queue with batching (300/sec without). AWS's "high throughput mode" raises this substantially — up to tens of thousands of messages/sec — by partitioning a queue internally across message groups, so "SQS FIFO is capped at 3K/sec" is the default-config number, not a hard ceiling. Either way: if one message in a group fails and blocks, all subsequent messages in that same group wait.</span></div></div>
     <div class="concept-row"><div class="concept-term">Kafka Ordering</div><div class="concept-def"><strong>Strict ordering within a partition. No ordering guarantee across partitions.</strong><br>
       All events for user_123 → same partition (keyed by user_id) → consumed in order by the same consumer thread. Events for user_456 → different partition → parallel, independent.
         <span class="concept-note good">✓ Per-entity ordering (all of one user's events are ordered) + high parallelism (different entities processed in parallel). The right model for most real-world ordering needs.</span></div></div>
@@ -292,7 +295,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 <section id="pubsub">
-  <div class="sec-tag">04 · Pub/Sub vs Point-to-Point</div>
+  <div class="sec-tag">05 · Pub/Sub vs Point-to-Point</div>
   <h2>Two fundamentally different delivery models</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Point-to-Point<br>(Queue)</div><div class="concept-def"><strong>One producer sends, one consumer receives. Message is deleted after consumption.</strong><br>
@@ -310,7 +313,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 
 <section id="followups">
-  <div class="sec-tag">04 · Follow-ups</div>
+  <div class="sec-tag">06 · Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you guarantee exactly-once processing with SQS (which is at-least-once)?<span class="tog">+</span></div>
   <div class="faq-a"><strong>SQS Standard queues guarantee at-least-once delivery — duplicates are possible. Make your consumers idempotent.</strong><br><br>
@@ -356,7 +359,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 <section id="decision-mq">
-  <div class="sec-tag">06 · Decision Framework</div>
+  <div class="sec-tag">07 · Decision Framework</div>
   <h2>Choosing your messaging system</h2>
   <div class="step-block">
     <div class="step-block-header"><span class="sb-icon">🎯</span>Message Queue vs Event Stream — Ask in Order</div>
@@ -396,8 +399,8 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 
 <section id="mq-advanced">
-  <div class="sec-tag">09 · Advanced Patterns</div>
-  <h2>Poison pills, exactly-once, and outbox pattern</h2>
+  <div class="sec-tag">08 · Production Failure Modes</div>
+  <h2>Poison pills, exactly-once, and what actually breaks</h2>
   <div class="k-cards">
 <div class="k-card">
   <div class="k-card-head">
@@ -408,7 +411,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>A message that crashes your consumer every time it's processed. Without handling, the consumer loops forever.</strong>
-      <p>/p><p>Pattern: message → consumer fails → message returned to queue → redelivered → consumer fails again → infinite loop. The queue grows stale as the poison pill blocks processing.</p><p>Solution — Dead Letter Queue (DLQ): after N failed delivery attempts (SQS default: 3), move the message to a DLQ automatically. Consumer processes the queue normally. Poison pill lands in DLQ. Separate DLQ consumer (or a human) inspects the message → fix the bug → redeliver manually or discard.</p><p>SQS configuration: <code>maxReceiveCount=3</code> on the source queue → <code>redrivePolicy → deadLetterTargetArn → DLQ ARN</code>. Message appears in DLQ after 3 failed deliveries. DLQ retention: 14 days (gives you time to investigate).</p>
+      <p></p><p>Pattern: message → consumer fails → message returned to queue → redelivered → consumer fails again → infinite loop. The queue grows stale as the poison pill blocks processing.</p><p>Solution — Dead Letter Queue (DLQ): after N failed delivery attempts (SQS default: 3), move the message to a DLQ automatically. Consumer processes the queue normally. Poison pill lands in DLQ. Separate DLQ consumer (or a human) inspects the message → fix the bug → redeliver manually or discard.</p><p>SQS configuration: <code>maxReceiveCount=3</code> on the source queue → <code>redrivePolicy → deadLetterTargetArn → DLQ ARN</code>. Message appears in DLQ after 3 failed deliveries. DLQ retention: 14 days (gives you time to investigate).</p>
       </div>
       <div class="k-warn"><span class="k-icon">⚠</span><span>⚠ Alert on DLQ depth. A growing DLQ means messages are failing repeatedly — likely a schema change, a downstream service being down, or a code bug. Treat DLQ messages as incidents, not background noise.</span></div>
     </div>
@@ -423,9 +426,24 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Kafka's EOS (Exactly-Once Semantics) uses idempotent producers + transactional consumers.</strong>
-      <p>/p><p>Idempotent producer: each producer has a PID + sequence number. Broker deduplicates messages with the same PID+seq. Safe to retry on network failure — duplicates are dropped. Enable: <code>enable.idempotence=true</code>.</p><p>Transactional producer: producer opens a transaction, writes to multiple partitions/topics atomically, commits. Consumers with <code>isolation.level=read_committed</code> see only committed messages. Uncommitted messages from aborted transactions are hidden.</p><p>The cost: transactional commits require a coordinator round trip — adds 10–100ms per batch. Throughput reduced by ~10%. Worth it for: financial transactions, inventory updates, any "write to DB + publish event" pattern where both must succeed or both must fail.</p>
+      <p></p><p>Idempotent producer: each producer has a PID + sequence number. Broker deduplicates messages with the same PID+seq. Safe to retry on network failure — duplicates are dropped. Enable: <code>enable.idempotence=true</code>.</p><p>Transactional producer: producer opens a transaction, writes to multiple partitions/topics atomically, commits. Consumers with <code>isolation.level=read_committed</code> see only committed messages. Uncommitted messages from aborted transactions are hidden.</p><p>The cost: transactional commits require a coordinator round trip — adds 10–100ms per batch. Throughput reduced by ~10%. Worth it for: financial transactions, inventory updates, any "write to DB + publish event" pattern where both must succeed or both must fail.</p>
       </div>
       <div class="k-muted"><span class="k-icon">→</span><span>Idempotent consumers are still needed: Kafka EOS guarantees exactly-once delivery but your consumer's processing logic must also be idempotent (e.g., INSERT OR IGNORE, upsert with idempotency key) for true end-to-end exactly-once semantics.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">03</span>
+    <span class="k-title">Consumer Lag Death Spiral</span>
+
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>A consumer group falls behind the producer rate. Left unaddressed, lag doesn't just persist — it compounds.</strong>
+      <p></p><p>Pattern: a downstream dependency slows down (a DB, an external API) → consumer processing time per message rises → the consumer group falls behind the partition's write rate → lag (the gap between latest produced offset and last committed offset) grows continuously rather than draining. If the topic's retention window is shorter than the time it would take to fully drain the backlog, the oldest unconsumed messages age out and are lost before ever being processed — a silent data-loss failure mode distinct from a crash.</p><p>Detection: consumer lag (in messages or in time) is a standard metric exposed by Kafka consumer group tooling and virtually every managed-Kafka monitoring integration — alert on lag trending upward over a sustained window, not just on an absolute threshold, since a brief spike during a deploy is normal.</p>
+      </div>
+      <div class="k-warn"><span class="k-icon">⚠</span><span>Fix: scale consumer count up to (at most) the partition count — beyond that, extra consumers sit idle since a partition is only ever read by one consumer per group. If consumers are already at the partition-count ceiling and still can't keep up, the fix is either more partitions (requires planning — partition count is not trivially reducible later) or speeding up per-message processing (e.g., decoupling slow downstream calls from the consume loop). Set retention with enough headroom over your worst-case drain time so a slow period doesn't silently drop data.</span></div>
     </div>
   </div>
 </div>
@@ -439,7 +457,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Requirements & Non-Functional Constraints</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
 <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Decouple producers from consumers (async processing)</td></tr><tr><td><strong>FR2</strong></td><td>At-least-once delivery: message survives consumer crash</td></tr><tr><td><strong>FR3</strong></td><td>Dead letter queue (DLQ): quarantine poison pill messages</td></tr><tr><td><strong>FR4</strong></td><td>Fan-out: one message delivered to multiple consumers</td></tr><tr><td><strong>FR5</strong></td><td>Exactly-once processing via idempotent consumers</td></tr><tr><td><strong>FR6</strong></td><td>Visibility timeout: prevent two consumers processing same message</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>SQS: 3,000 messages/sec per queue (extendable)</td></tr><tr><td><strong>NFR2</strong></td><td>Kafka: 1M messages/sec per broker (batched, compressed)</td></tr><tr><td><strong>NFR3</strong></td><td>Delivery latency: < 100ms (SQS), < 10ms (Kafka)</td></tr><tr><td><strong>NFR4</strong></td><td>Message retention: 4 days (SQS default), 7 days (Kafka)</td></tr><tr><td><strong>NFR5</strong></td><td>Visibility timeout: 30s default (task processing window)</td></tr><tr><td><strong>NFR6</strong></td><td>DLQ after: 3 failed delivery attempts (configurable)</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>SQS FIFO: 3,000 msg/sec per queue by default with batching (300/sec without) — high-throughput mode raises this substantially by partitioning across message groups. SQS Standard: nearly unlimited, no fixed number quoted by AWS</td></tr><tr><td><strong>NFR2</strong></td><td>Kafka: commonly cited up to ~1M messages/sec per broker under favorable (batched, compressed) conditions — highly workload- and hardware-dependent, not a fixed guarantee</td></tr><tr><td><strong>NFR3</strong></td><td>Delivery latency: typically tens of ms for SQS, single-digit ms for Kafka under normal load — both vary with batching/polling configuration</td></tr><tr><td><strong>NFR4</strong></td><td>Message retention: 4 days default / up to 14 days configurable (SQS), 7 days default (Kafka, <code>log.retention.hours=168</code>)</td></tr><tr><td><strong>NFR5</strong></td><td>Visibility timeout: 30s default (task processing window)</td></tr><tr><td><strong>NFR6</strong></td><td>DLQ after: 3 failed delivery attempts (configurable)</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -447,7 +465,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
   <p>Every senior interview ends here. Know your choices and their costs.</p>
-  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">SQS vs Kafka</td><td>Kafka for event streaming</td><td><span class="dot g"></span>Replay from any offset. Log compaction for state topics. Consumer groups with offset management. 1M msg/sec</td><td><span class="dot a"></span>Operational overhead. Partition count fixed. No per-message TTL (only log-level retention)</td><td>SQS for simple task queues where replay is not needed. Kafka for event sourcing, audit logs, stream processing</td></tr><tr><td class="row-head">Queue vs Topic (pub-sub)</td><td>Topic (pub-sub) for fan-out</td><td><span class="dot g"></span>One message → N independent consumer groups each getting a copy. Natural fan-out without N sends</td><td><span class="dot a"></span>Consumer groups must be created before messages arrive (or miss old messages). Topic per concern (not per consumer)</td><td>Queue (point-to-point) for task distribution: N workers compete for messages, each processed once</td></tr><tr><td class="row-head">At-least-once vs exactly-once</td><td>At-least-once + idempotent consumer</td><td><span class="dot g"></span>Simple. No coordination overhead. Consumer handles dedup via idempotency key in DB or Redis SET</td><td><span class="dot a"></span>Consumer must handle duplicates. Not all operations are idempotent (e.g., "send email" — must deduplicate separately)</td><td>Exactly-once (Kafka EOS) only when consumer side cannot be made idempotent. ~10% throughput cost</td></tr><tr><td class="row-head">Message ordering</td><td>Partition by entity_id</td><td><span class="dot g"></span>Messages for the same entity (user, order) go to the same partition → processed in order by one consumer</td><td><span class="dot a"></span>Hot entities (celebrity user, viral item) create hot partitions. Single-partition ordering ≠ global ordering</td><td>FIFO queue (SQS FIFO) for strict global ordering at lower throughput (3000 msg/sec vs 300K for standard)</td></tr><tr><td class="row-head">DLQ strategy</td><td>After 3 failures → DLQ</td><td><span class="dot g"></span>Poison pills quarantined automatically. Main queue continues processing. DLQ gives time to investigate</td><td><span class="dot a"></span>DLQ must be monitored (alarm on DLQ depth > 0). Messages in DLQ require manual intervention or replay job</td><td>No DLQ: poison pills loop forever, blocking queue. Always configure DLQ in production.</td></tr></tbody></table>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">SQS vs Kafka</td><td>Kafka for event streaming</td><td><span class="dot g"></span>Replay from any offset. Log compaction for state topics. Consumer groups with offset management. Commonly cited at up to ~1M msg/sec per broker under favorable (batched, compressed) conditions — actual throughput is workload- and hardware-dependent</td><td><span class="dot a"></span>Operational overhead. Partition count fixed. No per-message TTL (only log-level retention)</td><td>SQS for simple task queues where replay is not needed. Kafka for event sourcing, audit logs, stream processing</td></tr><tr><td class="row-head">Queue vs Topic (pub-sub)</td><td>Topic (pub-sub) for fan-out</td><td><span class="dot g"></span>One message → N independent consumer groups each getting a copy. Natural fan-out without N sends</td><td><span class="dot a"></span>Consumer groups must be created before messages arrive (or miss old messages). Topic per concern (not per consumer)</td><td>Queue (point-to-point) for task distribution: N workers compete for messages, each processed once</td></tr><tr><td class="row-head">At-least-once vs exactly-once</td><td>At-least-once + idempotent consumer</td><td><span class="dot g"></span>Simple. No coordination overhead. Consumer handles dedup via idempotency key in DB or Redis SET</td><td><span class="dot a"></span>Consumer must handle duplicates. Not all operations are idempotent (e.g., "send email" — must deduplicate separately)</td><td>Exactly-once (Kafka EOS) only when consumer side cannot be made idempotent. ~10% throughput cost</td></tr><tr><td class="row-head">Message ordering</td><td>Partition by entity_id</td><td><span class="dot g"></span>Messages for the same entity (user, order) go to the same partition → processed in order by one consumer</td><td><span class="dot a"></span>Hot entities (celebrity user, viral item) create hot partitions. Single-partition ordering ≠ global ordering</td><td>FIFO queue (SQS FIFO) for strict global ordering: 3,000 msg/sec by default (300 without batching), tens of thousands with high-throughput mode — vs SQS Standard's "nearly unlimited" throughput at the cost of ordering</td></tr><tr><td class="row-head">DLQ strategy</td><td>After 3 failures → DLQ</td><td><span class="dot g"></span>Poison pills quarantined automatically. Main queue continues processing. DLQ gives time to investigate</td><td><span class="dot a"></span>DLQ must be monitored (alarm on DLQ depth > 0). Messages in DLQ require manual intervention or replay job</td><td>No DLQ: poison pills loop forever, blocking queue. Always configure DLQ in production.</td></tr></tbody></table>
 </section>
 
 <section id="schema-message_queues">
@@ -457,8 +475,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 </div>
 
-</div>
 <div class="footer">MESSAGE QUEUES · SQS · RABBITMQ · DLQ · FAN-OUT · AT-LEAST-ONCE · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

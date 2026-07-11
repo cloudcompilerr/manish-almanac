@@ -166,7 +166,13 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
+</style>
 </head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -179,7 +185,19 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 
 <section id="l4vsl7">
-  <div class="sec-tag">01 · L4 vs L7</div>
+  <div class="sec-tag">00 · Why Load Balancing</div>
+  <h2>The first component in every system diagram</h2>
+  <p>A single server handling all traffic is a single point of failure and a performance ceiling. Load balancers distribute traffic across a fleet of servers, enabling horizontal scaling and eliminating single points of failure. In every FAANG system design diagram, the first arrow after "Client" points to a load balancer.</p>
+  <div class="analogy">
+    <div class="analogy-label">The supermarket checkout analogy</div>
+    <div class="analogy-text">
+      A supermarket has 10 checkout lanes. A greeter (load balancer) at the entrance directs each customer to the shortest queue. Without the greeter, everyone crowds into lane 1 while lanes 2–10 sit empty.<br><br>
+      <strong>L4 load balancer</strong> = greeter who only looks at which lane is least busy (doesn't care what's in your cart).<br>
+      <strong>L7 load balancer</strong> = greeter who reads your items and sends produce-only carts to lane 3 (express), bulk items to lane 7 (large cart), etc.
+    </div>
+  </div>
+
+  <div class="sec-tag" style="margin-top:20px">01 · L4 vs L7</div>
   <h2>L4 vs L7 Load Balancing — The Critical Distinction</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">L4 (Transport Layer)</div><div class="concept-def"><strong>Routes based on IP address and TCP/UDP port only. Does not inspect packet contents.</strong><br>
@@ -194,28 +212,15 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <span class="concept-note warn">⚠ Higher CPU overhead (parses every HTTP request). Slightly higher latency. Cannot handle raw TCP/UDP workloads.</span>
       <span class="concept-note muted">Examples: AWS ALB, Nginx, Envoy, Traefik, HAProxy in HTTP mode.</span></div></div>
   </div>
-
-<div class="sec-tag">00 · Why Load Balancing</div>
-  <h2>The first component in every system diagram</h2>
-  <p>A single server handling all traffic is a single point of failure and a performance ceiling. Load balancers distribute traffic across a fleet of servers, enabling horizontal scaling and eliminating single points of failure. In every FAANG system design diagram, the first arrow after "Client" points to a load balancer.</p>
-  <div class="analogy">
-    <div class="analogy-label">The supermarket checkout analogy</div>
-    <div class="analogy-text">
-      A supermarket has 10 checkout lanes. A greeter (load balancer) at the entrance directs each customer to the shortest queue. Without the greeter, everyone crowds into lane 1 while lanes 2–10 sit empty.<br><br>
-      <strong>L4 load balancer</strong> = greeter who only looks at which lane is least busy (doesn't care what's in your cart).<br>
-      <strong>L7 load balancer</strong> = greeter who reads your items and sends produce-only carts to lane 3 (express), bulk items to lane 7 (large cart), etc.
-    </div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>Asked "where does load balancing happen," most candidates draw exactly one box labelled "Load Balancer" between the client and the app servers and stop there. <strong>Production systems load balance at multiple layers simultaneously</strong> — GeoDNS routes to a region, an L4 NLB absorbs raw connection volume at the edge, an L7 ALB/Envoy makes content-aware routing decisions, and a client-side or sidecar load balancer picks a specific downstream instance for service-to-service calls. Naming only one layer signals you haven't operated a system at this scale; naming the stack (DNS → L4 → L7 → service mesh) is the stronger answer.</p>
   </div>
 </section>
 <div style="margin:16px 0"><div style="margin:20px 0">
 <h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Load Balancer Sizing</h4>
 <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Servers needed</td><td>50K peak QPS ÷ 2,500 req/s per server (32-core @ 70% CPU)</td><td><strong>~29 servers → round to 32</strong></td><td style="color:#1a7a4a;font-size:12px">Add 20% headroom; scale horizontally not vertically for stateless app servers</td></tr><tr><td class="row-head">LB throughput</td><td>AWS ALB: 1M req/s per ALB, scales automatically</td><td><strong>Effectively unlimited</strong></td><td style="color:#1a7a4a;font-size:12px">L7 LB is never the bottleneck — your app servers and DB will fail first</td></tr><tr><td class="row-head">Health check interval</td><td>Every 5s × 3 failures = 15s to detect down</td><td><strong>15–30s detection</strong></td><td style="color:#1a7a4a;font-size:12px">Set alarms on 5xx rate not just health checks — faster signal</td></tr><tr><td class="row-head">Connection draining</td><td>30s drain × rolling 10% of fleet</td><td><strong>3 min full deploy</strong></td><td style="color:#1a7a4a;font-size:12px">Blue-green is faster (instant switch) but needs 2× capacity</td></tr></tbody></table></div></div>
-
-<div style="margin:16px 0"><div style="margin:20px 0">
-<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Load Balancer Sizing</h4>
-<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Servers needed</td><td>50K peak QPS ÷ 2,500 req/s per server (32-core @ 70% CPU)</td><td><strong>~29 servers → round to 32</strong></td><td style="color:#1a7a4a;font-size:12px">Add 20% headroom; scale horizontally not vertically for stateless app servers</td></tr><tr><td class="row-head">LB throughput</td><td>AWS ALB: 1M req/s per ALB, scales automatically</td><td><strong>Effectively unlimited</strong></td><td style="color:#1a7a4a;font-size:12px">L7 LB is never the bottleneck — your app servers and DB will fail first</td></tr><tr><td class="row-head">Health check interval</td><td>Every 5s × 3 failures = 15s to detect down</td><td><strong>15–30s detection</strong></td><td style="color:#1a7a4a;font-size:12px">Set alarms on 5xx rate not just health checks — faster signal</td></tr><tr><td class="row-head">Connection draining</td><td>30s drain × rolling 10% of fleet</td><td><strong>3 min full deploy</strong></td><td style="color:#1a7a4a;font-size:12px">Blue-green is faster (instant switch) but needs 2× capacity</td></tr></tbody></table></div></div>
+<tbody><tr><td class="row-head">Servers needed</td><td>50K peak QPS ÷ 2,500 req/s per server (32-core @ 70% CPU)</td><td><strong>~29 servers → round to 32</strong></td><td style="color:#1a7a4a;font-size:12px">Add 20% headroom; scale horizontally not vertically for stateless app servers</td></tr><tr><td class="row-head">LB throughput</td><td>AWS publishes NLB as scaling to "millions of requests per second"; ALB has no fixed advertised ceiling and scales automatically with traffic (sudden 10x+ spikes may need pre-warming via AWS support)</td><td><strong>The LB is rarely the bottleneck</strong></td><td style="color:#1a7a4a;font-size:12px">Design around your app servers' and DB's ceiling, not the LB's — but request pre-warming ahead of a known traffic spike (product launch, live event)</td></tr><tr><td class="row-head">Health check interval</td><td>Every 5s × 3 failures = 15s to detect down</td><td><strong>15–30s detection</strong></td><td style="color:#1a7a4a;font-size:12px">Set alarms on 5xx rate not just health checks — faster signal</td></tr><tr><td class="row-head">Connection draining</td><td>30s drain × rolling 10% of fleet</td><td><strong>3 min full deploy</strong></td><td style="color:#1a7a4a;font-size:12px">Blue-green is faster (instant switch) but needs 2× capacity</td></tr></tbody></table></div></div>
 
 
 <section id="algorithms">
@@ -385,7 +390,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>DNS responds with different IP addresses based on the requester's geographic location.</strong>
-      <p>/p><p>User in Mumbai queries api.myapp.com → GeoDNS determines their location → returns the IP of the Mumbai regional load balancer. User in London → returns the London LB IP. Same DNS name, different IP, routed to the nearest datacenter.</p><p>AWS Route 53 latency-based routing: measures actual latency between the user's DNS resolver and each region (not just geographic distance). Routes to the region with lowest latency, not just the nearest one. Tokyo might actually be faster than Singapore for some Australian users.</p>
+      <p></p><p>User in Mumbai queries api.myapp.com → GeoDNS determines their location → returns the IP of the Mumbai regional load balancer. User in London → returns the London LB IP. Same DNS name, different IP, routed to the nearest datacenter.</p><p>AWS Route 53 latency-based routing: measures actual latency between the user's DNS resolver and each region (not just geographic distance). Routes to the region with lowest latency, not just the nearest one. Tokyo might actually be faster than Singapore for some Australian users.</p>
       </div>
       <div class="k-muted"><span class="k-icon">→</span><span>DNS TTL = 60 seconds: if a region goes down, GeoDNS removes it from the response within 60s. But some resolvers cache longer. For fast failover: use Anycast routing instead (or both together).</span></div>
     </div>
@@ -400,7 +405,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Multiple servers share the same IP address. BGP routing sends traffic to the topologically nearest server.</strong>
-      <p>/p><p>Cloudflare uses Anycast for its 200+ PoPs. Every PoP advertises the same IP address (e.g., 1.1.1.1). BGP automatically routes each user to the nearest PoP based on network topology. No DNS magic — happens at the routing layer.</p><p>Failover: if a PoP goes down, its BGP advertisement withdraws. Traffic automatically routes to the next-nearest PoP within seconds — faster than DNS TTL-based failover.</p>
+      <p></p><p>Cloudflare uses Anycast for its 200+ PoPs. Every PoP advertises the same IP address (e.g., 1.1.1.1). BGP automatically routes each user to the nearest PoP based on network topology. No DNS magic — happens at the routing layer.</p><p>Failover: if a PoP goes down, its BGP advertisement withdraws. Traffic automatically routes to the next-nearest PoP within seconds — faster than DNS TTL-based failover.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ Used by: Cloudflare, Akamai, AWS Global Accelerator (uses Anycast to route to the nearest AWS edge node). Faster failover than GeoDNS. Used for: DDoS mitigation (absorb attack traffic across many PoPs), low-latency global routing.</span></div>
     </div>
@@ -415,7 +420,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Active-active: multiple regions serve traffic simultaneously. Active-passive: one region serves, the other is standby.</strong>
-      <p>/p><p><strong>Active-passive</strong>: all traffic goes to US-East. US-West is a warm standby. On US-East failure: DNS/Anycast switches to US-West. Recovery: 30–120 seconds. Simple. RPO/RTO: minutes. Right for: applications where global latency doesn't matter but simplicity does.</p><p><strong>Active-active</strong>: US-East serves US traffic, EU-West serves European traffic, AP-Southeast serves Asia. Each region is a full stack. DB replication: bidirectional (Cassandra's multi-datacenter replication, or CockroachDB global tables). Right for: globally distributed user bases where latency matters. Hard part: write-write conflicts across regions need careful resolution.</p>
+      <p></p><p><strong>Active-passive</strong>: all traffic goes to US-East. US-West is a warm standby. On US-East failure: DNS/Anycast switches to US-West. Recovery: 30–120 seconds. Simple. RPO/RTO: minutes. Right for: applications where global latency doesn't matter but simplicity does.</p><p><strong>Active-active</strong>: US-East serves US traffic, EU-West serves European traffic, AP-Southeast serves Asia. Each region is a full stack. DB replication: bidirectional (Cassandra's multi-datacenter replication, or CockroachDB global tables). Right for: globally distributed user bases where latency matters. Hard part: write-write conflicts across regions need careful resolution.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ Notion runs globally active-active on AWS with CockroachDB. Stripe's payments infrastructure is active-active across 3 AWS regions. Cloudflare serves from 200+ PoPs active-active. Start with active-passive — upgrade to active-active when latency SLA demands it.</span></div>
     </div>
@@ -446,11 +451,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Load Balancer Selection</h4><table class="flow-table"><thead><tr><th>Requirement</th><th>Best Choice</th><th>Notes</th></tr></thead><tbody><tr><td>HTTP/HTTPS, web applications</td><td>Nginx / AWS ALB</td><td>L7. Path routing. SSL termination. Rate limiting. WebSocket support</td></tr><tr><td>TCP, any protocol</td><td>HAProxy / AWS NLB</td><td>L4. Ultra-low overhead. Millions of connections. Static IP</td></tr><tr><td>Service mesh (k8s internal)</td><td>Envoy / Istio</td><td>mTLS, circuit breaking, distributed tracing. Sidecar injection. No app code changes</td></tr><tr><td>Global, multi-region</td><td>AWS Global Accelerator / Cloudflare</td><td>Anycast. Sub-second failover. DDoS absorption. Edge TLS termination</td></tr><tr><td>gRPC services</td><td>Envoy</td><td>HTTP/2 native. gRPC load balancing requires L7 (header-aware). Envoy handles proto routing</td></tr><tr><td>Database connections</td><td>PgBouncer / ProxySQL</td><td>Connection pooling. Reduces DB connection overhead from 1K app servers × 10 connections each</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Decision Fast Recall</h4><table class="flow-table"><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody><tr><td>L4 or L7?</td><td>L7 for HTTP-aware routing; L4 for raw TCP/UDP or absolute lowest overhead</td></tr><tr><td>Which algorithm?</td><td>Round robin for uniform requests; least-connections for variable duration; consistent hash for session/cache affinity</td></tr><tr><td>Zero-downtime deploy?</td><td>Rolling for routine releases; blue-green for high-stakes cutovers; canary to limit blast radius on risky changes</td></tr><tr><td>Global routing?</td><td>GeoDNS by default; add Anycast when you need sub-second failover</td></tr><tr><td>Nginx, Envoy, or HAProxy?</td><td>Nginx for simple edge/static; Envoy for service mesh; HAProxy for high-throughput TCP/DB proxying</td></tr></tbody></table>
 </section>
 </div>
 
-</div>
 <div class="footer">LOAD BALANCING · L4 · L7 · NGINX · ENVOY · CIRCUIT BREAKER · API GATEWAY · SERVICE MESH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

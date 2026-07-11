@@ -95,8 +95,8 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
 .k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
 .k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
 .k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
 .k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .k-point{display:flex;flex-direction:column;gap:4px;}
@@ -177,6 +177,11 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -184,7 +189,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">REST principles, pagination patterns, versioning, idempotency, GraphQL schema design, error standards — building APIs that last.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">REST</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Pagination</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Idempotency</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Versioning</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">GraphQL</span></div>
 </div></div>
-<nav class="nav"><a href="#rest-design">What makes an API genuinely good —</a><a href="#graphql-grpc-design">When REST is the wrong tool</a><a href="#sd-api">API design decisions in real system</a><a href="#followups-api">Every hard follow-up, answered</a><a href="#req-nfr-api_design">Requirements & Non-Functional Const</a><a href="#tradeoff-api_design">Trade-off Matrix — What You Gave Up</a><a href="#schema-api_design">Quick Reference</a></nav>
+<nav class="nav"><a href="#rest-design">What makes an API genuinely good —</a><a href="#graphql-grpc-design">When REST is the wrong tool</a><a href="#sd-api">API design decisions in real system</a><a href="#decision-api">REST, GraphQL, or gRPC?</a><a href="#followups-api">Every hard follow-up, answered</a><a href="#api-failures">Common failures in production</a><a href="#req-nfr-api_design">Requirements & Non-Functional Const</a><a href="#tradeoff-api_design">Trade-off Matrix — What You Gave Up</a><a href="#schema-api_design">Quick Reference</a></nav>
 <div class="wrap">
 <section id="rest-design">
   <div class="sec-tag">00 · REST API Design</div>
@@ -194,9 +199,9 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="analogy-text">A REST API is like a restaurant menu. The URL is the dish name (noun, not verb — "pasta" not "get-pasta"). HTTP methods are what you do: GET = I want this, POST = make me something new, PUT = replace my order, DELETE = cancel it.<br><br>Pagination is the waiter bringing food in courses, not everything at once. Idempotency is: ordering the same dish twice should either give you two dishes (POST) or just confirm the first order (PUT/DELETE). Versioning is like a restaurant releasing a new menu — old dishes still available for regulars who prefer them.</div>
 </div>
 
-<div class="analogy">
-  <div class="analogy-label">The restaurant menu analogy</div>
-  <div class="analogy-text">A REST API is like a restaurant menu. The URL is the dish name (noun, not verb — "pasta" not "get-pasta"). HTTP methods are what you do: GET = I want this, POST = make me something new, PUT = replace my order, DELETE = cancel it.<br><br>Pagination is the waiter bringing food in courses, not everything at once. Idempotency is: ordering the same dish twice should either give you two dishes (POST) or just confirm the first order (PUT/DELETE). Versioning is like a restaurant releasing a new menu — old dishes still available for regulars who prefer them.</div>
+<div class="callout cl-red">
+  <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+  <p>Asked to "design a REST API," candidates who jump straight to endpoint names and status codes without stating the resource model first get cut off fast. <strong>The URL and verb choices are a consequence of the resource model, not the starting point.</strong> A strong answer identifies the nouns in the system (user, order, payment), their relationships (an order belongs to a user, has many line items), and only then derives the URL hierarchy from that model. Candidates who instead reach for GraphQL immediately because "it's more flexible" without being asked about multiple client shapes are also making the same mistake in the other direction — REST is the right default until a specific requirement (mobile bandwidth, multiple client types, deeply nested data) argues otherwise.</p>
 </div>
 
   <div class="k-cards">
@@ -211,12 +216,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <div style="margin:16px 0"><div style="margin:20px 0">
 <h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">API Performance Numbers</h4>
 <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">REST JSON throughput</td><td>Node.js single process, 50KB responses</td><td><strong>~10K req/sec per core</strong></td><td style="color:#1a7a4a;font-size:12px">8-core server = 80K req/sec. Enough for most apps. Add workers before adding servers</td></tr><tr><td class="row-head">gRPC vs REST</td><td>Protobuf 5-10× smaller than JSON</td><td><strong>100 byte proto vs 600 byte JSON</strong></td><td style="color:#1a7a4a;font-size:12px">At 100K req/sec: gRPC saves 50MB/sec bandwidth. Meaningful at scale, not at startup</td></tr><tr><td class="row-head">Idempotency key TTL</td><td>Stripe: 24h window for retries</td><td><strong>24h Redis TTL</strong></td><td style="color:#1a7a4a;font-size:12px">Redis stores 10M keys × 100 bytes = 1GB — trivial. Always set TTL or keys accumulate forever</td></tr><tr><td class="row-head">API gateway rate limit</td><td>Token bucket, 1000 req/min per user</td><td><strong>~16 req/sec</strong></td><td style="color:#1a7a4a;font-size:12px">Alert at 80% utilisation. Pro tier: 10K req/min. Enterprise: custom. Expose via X-RateLimit-Remaining header</td></tr></tbody></table></div></div>
-
-<div style="margin:16px 0"><div style="margin:20px 0">
-<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">API Performance Numbers</h4>
-<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">REST JSON throughput</td><td>Node.js single process, 50KB responses</td><td><strong>~10K req/sec per core</strong></td><td style="color:#1a7a4a;font-size:12px">8-core server = 80K req/sec. Enough for most apps. Add workers before adding servers</td></tr><tr><td class="row-head">gRPC vs REST</td><td>Protobuf 5-10× smaller than JSON</td><td><strong>100 byte proto vs 600 byte JSON</strong></td><td style="color:#1a7a4a;font-size:12px">At 100K req/sec: gRPC saves 50MB/sec bandwidth. Meaningful at scale, not at startup</td></tr><tr><td class="row-head">Idempotency key TTL</td><td>Stripe: 24h window for retries</td><td><strong>24h Redis TTL</strong></td><td style="color:#1a7a4a;font-size:12px">Redis stores 10M keys × 100 bytes = 1GB — trivial. Always set TTL or keys accumulate forever</td></tr><tr><td class="row-head">API gateway rate limit</td><td>Token bucket, 1000 req/min per user</td><td><strong>~16 req/sec</strong></td><td style="color:#1a7a4a;font-size:12px">Alert at 80% utilisation. Pro tier: 10K req/min. Enterprise: custom. Expose via X-RateLimit-Remaining header</td></tr></tbody></table></div></div>
+<tbody><tr><td class="row-head">REST JSON throughput</td><td>Illustrative: single-process Node.js, ~50KB responses</td><td><strong>Order of magnitude: low thousands of req/sec per core</strong></td><td style="color:#1a7a4a;font-size:12px">Exact numbers vary hugely by runtime, payload size, and I/O pattern — treat this as "add workers/cores before adding servers," not a number to memorise</td></tr><tr><td class="row-head">gRPC vs REST payload</td><td>Protobuf binary encoding vs JSON text</td><td><strong>Commonly cited as roughly 3–10× smaller</strong></td><td style="color:#1a7a4a;font-size:12px">Benchmarks vary by payload shape; the direction (binary wins) matters more in an interview than the exact multiplier</td></tr><tr><td class="row-head">Idempotency key TTL</td><td>Stripe's documented pattern: 24h window for retries</td><td><strong>24h Redis TTL</strong></td><td style="color:#1a7a4a;font-size:12px">Redis stores 10M keys × ~100 bytes ≈ 1GB — trivial. Always set a TTL or keys accumulate forever</td></tr><tr><td class="row-head">API gateway rate limit</td><td>Token bucket, 1000 req/min per user</td><td><strong>~16.7 req/sec sustained</strong></td><td style="color:#1a7a4a;font-size:12px">Alert at 80% utilisation. Pro tier: 10K req/min. Enterprise: custom. Expose via X-RateLimit-Remaining header</td></tr></tbody></table></div></div>
 
 
 <section id="graphql-grpc-design">
@@ -238,6 +238,46 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       <div class="choice-row"><div class="choice-label">IDEMPOTENCY</div><div class="choice-val">Every mutating API requires an <code>Idempotency-Key</code> header. Network failures are safe to retry. Stripe stores (key → result) for 24h. Retry with same key: get same result. Without idempotency key: Stripe still accepts the request but warns in the response.</div></div>
       <div class="choice-row"><div class="choice-label">PAGINATION</div><div class="choice-val">Cursor-based: <code>GET /charges?starting_after=ch_abc123&limit=20</code>. Stable even as new charges are created. <code>has_more: true</code> in response. Cursor is the ID of the last item in the current page. No total count (too expensive to compute).</div></div>
       <div class="choice-row"><div class="choice-label">VERSIONING</div><div class="choice-val">Date-based versioning: <code>Stripe-Version: 2023-10-16</code> header. Breaking changes only on new API version dates. Your integration is pinned to the version when you first called the API. You explicitly opt in to new versions when ready. This is more flexible than URL versioning for rapid iteration.</div></div>
+    </div>
+  </div>
+  <div class="sd-example">
+    <div class="sd-example-head"><div class="sd-example-title">GitHub REST API Design</div><span class="sd-example-tag">HEADER VERSIONING · LINK PAGINATION</span></div>
+    <div class="sd-example-body">
+      <div class="choice-row"><div class="choice-label">VERSIONING</div><div class="choice-val">Dated header versioning: <code>X-GitHub-Api-Version: 2026-03-10</code>. Requests without the header default to a fixed baseline version. GitHub commits to supporting a previous API version for at least 24 months after a new one ships — clients get a long, predictable migration window instead of a hard cutover.</div></div>
+      <div class="choice-row"><div class="choice-label">PAGINATION</div><div class="choice-val">RFC 8288 <code>Link</code> response header carries <code>rel="next"</code>, <code>rel="prev"</code>, <code>rel="first"</code>, <code>rel="last"</code> URLs. The client never constructs page URLs itself — it follows the links GitHub hands back, which is naturally resistant to offset drift.</div></div>
+      <div class="choice-row"><div class="choice-label">DEPRECATION</div><div class="choice-val">Requesting an API version that's no longer supported returns <code>410 Gone</code> — an unambiguous, machine-checkable signal instead of a silently broken response.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY IT MATTERS FOR INTERVIEWS</div><div class="choice-val">GitHub is the counter-example to Stripe's date-based-in-body-of-header versioning: same idea (dated versions, generous support window) implemented as an explicit request header rather than a response header. Both are defensible; the interview signal is knowing there's more than one production-proven way to do dated versioning.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="decision-api">
+  <div class="sec-tag">02.5 · Interview Decision Framework</div>
+  <h2>REST, GraphQL, or gRPC? The three questions that actually decide it</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Work Through These Before Committing to a Protocol</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">1</div><div class="step-content">
+        <div class="step-q">Who are the callers, and how many different shapes of the same data do they need?</div>
+        <div class="step-options">
+          <div class="step-option opt-no"><span class="opt-arrow">One shape, external/public →</span><span class="opt-text"><strong>REST.</strong> Universal tooling, HTTP caching, curl-able, easy to document and rate-limit. The default until a specific requirement argues otherwise.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">Many client types (web, mobile, TV, partners) →</span><span class="opt-text"><strong>GraphQL becomes defensible.</strong> Each client fetches exactly the fields it needs from one schema instead of you maintaining N bespoke REST endpoints or BFFs.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-content">
+        <div class="step-q">Is this a public/external contract or an internal service-to-service call?</div>
+        <div class="step-options">
+          <div class="step-option opt-no"><span class="opt-arrow">Public / external →</span><span class="opt-text"><strong>REST or GraphQL</strong> — both are browser-native and don't require every caller to adopt special tooling. gRPC needs a gRPC-Web proxy for browsers, which is friction most public API consumers shouldn't have to accept.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">Internal, service-to-service →</span><span class="opt-text"><strong>gRPC becomes attractive.</strong> Binary Protobuf payloads, a strict <code>.proto</code> contract that catches breaking changes at compile time, and native streaming — worth the code-generation overhead once you have enough internal RPC volume for it to matter.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-content">
+        <div class="step-q">Does a mutation need a hard safety guarantee against double-execution (payments, orders)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Yes →</span><span class="opt-text"><strong>Idempotency keys are non-negotiable</strong> regardless of protocol choice. REST's POST has no built-in idempotency; GraphQL mutations have even less (everything is POST under the hood) — both need an explicit client-generated key stored server-side.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">No →</span><span class="opt-text">Standard retry semantics (idempotent GET/PUT/DELETE, or accept occasional duplicate POSTs) are fine.</span></div>
+        </div>
+      </div></div>
     </div>
   </div>
 </section>
@@ -275,6 +315,37 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>The "new items" indicator</strong>: on pull-to-refresh, return items newer than the cursor used for the FIRST page load. Show "X new items" banner. User taps → page reloads from the top. This is exactly how Twitter, Instagram, and LinkedIn handle feed pagination.</div></div>
 </section>
 
+<section id="api-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>Common API Design Failures in Production</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">N+1 Query — Silent Performance Killer</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">API fetches 20 posts, then queries the DB separately for each post's author. 20 posts = 21 DB queries. At 1,000 req/sec: 21,000 DB queries/sec instead of 1,000. DB collapses. Response time balloons from 10ms to 300ms.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Use eager loading (SQL JOIN or ORM includes). GraphQL: DataLoader batches all user fetches into one query per request. Profile with DB query logging enabled in development — catch N+1 before it hits production.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Missing Idempotency — Double Charge</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Payment API times out after 28 seconds. Client retries. Server processed the first request (28 seconds is slow but valid). Now customer is charged twice. Happens at every payment company that doesn't enforce idempotency.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Idempotency-Key header is mandatory on all POST /payments endpoints. Server stores (key → result) in Redis for 24h. On duplicate: return cached response without reprocessing. Stripe built their entire reliability on this pattern.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Versioning Neglect — Breaking Clients</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">API removes a field that a mobile app depends on. Mobile app crashes for all users on old version (30% of users). Rolling back the API is complex; forced app update takes days.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Never remove fields — only add new optional ones (additive changes). Deprecate via the <code>Deprecation</code> header (an IETF draft standard, commonly paired with the <code>Sunset</code> header from RFC 8594 to signal the actual removal date): Deprecation: Sat, 01 Jan 2026. Monitor field usage via API analytics before removing. Support N-1 version minimum (current + previous major).</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
 <section id="req-nfr-api_design">
   <div class="sec-tag">📋 · Requirements & Scale</div>
   <h2>Requirements & Non-Functional Constraints</h2>
@@ -297,73 +368,10 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>HTTP Status Code Quick Reference</h4><table class="flow-table"><thead><tr><th>Code</th><th>Meaning</th><th>Use when</th></tr></thead><tbody><tr><td>200 OK</td><td>Success with body</td><td>GET, PUT returning the updated resource</td></tr><tr><td>201 Created</td><td>Resource created</td><td>POST creating a new resource. Include Location header.</td></tr><tr><td>204 No Content</td><td>Success, no body</td><td>DELETE, PUT with no return value</td></tr><tr><td>400 Bad Request</td><td>Client sent invalid data</td><td>Validation failed. Include field-level error details.</td></tr><tr><td>401 Unauthorized</td><td>Not authenticated</td><td>Missing or invalid auth token. Include WWW-Authenticate header.</td></tr><tr><td>403 Forbidden</td><td>Authenticated but not authorized</td><td>User lacks permission for this resource.</td></tr><tr><td>404 Not Found</td><td>Resource does not exist</td><td>ID not found. Do NOT return 404 for "no results" — return 200 with empty list.</td></tr><tr><td>409 Conflict</td><td>State conflict</td><td>Duplicate create. Version mismatch for optimistic locking.</td></tr><tr><td>429 Too Many Requests</td><td>Rate limited</td><td>Include Retry-After header. Return X-RateLimit-* headers.</td></tr><tr><td>500 Internal Server Error</td><td>Server bug</td><td>Never return implementation details. Log internally, return generic message.</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Protocol & Pattern Selection</h4><table class="flow-table"><thead><tr><th>Decision</th><th>Default choice</th><th>Switch when</th></tr></thead><tbody><tr><td>Protocol</td><td>REST</td><td>GraphQL for multi-client data-shape flexibility; gRPC for internal service-to-service</td></tr><tr><td>Pagination</td><td>Cursor</td><td>Offset only for small, rarely-mutated admin datasets that need page-jump + total count</td></tr><tr><td>Versioning</td><td>URL (/v1/) or dated header (GitHub/Stripe style)</td><td>Header versioning for internal APIs with disciplined, small client sets</td></tr><tr><td>Idempotency</td><td>Client UUID key + 24h server-side cache</td><td>Never skip for payments/orders; optional for read-only or naturally idempotent calls</td></tr><tr><td>Error format</td><td>RFC 7807 Problem Details</td><td>Simple <code>{error: "message"}</code> is fine for small internal-only APIs</td></tr></tbody></table>
 </section>
 </div>
-
-
-<section id="api-failures">
-  <div class="sec-tag">⚠ · Failure Modes</div>
-  <h2>Common API Design Failures in Production</h2>
-  <div class="k-cards">
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">N+1 Query — Silent Performance Killer</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">API fetches 20 posts, then queries the DB separately for each post's author. 20 posts = 21 DB queries. At 1,000 req/sec: 21,000 DB queries/sec instead of 1,000. DB collapses. Response time balloons from 10ms to 300ms.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Use eager loading (SQL JOIN or ORM includes). GraphQL: DataLoader batches all user fetches into one query per request. Profile with DB query logging enabled in development — catch N+1 before it hits production.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Missing Idempotency — Double Charge</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Payment API times out after 28 seconds. Client retries. Server processed the first request (28 seconds is slow but valid). Now customer is charged twice. Happens at every payment company that doesn't enforce idempotency.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Idempotency-Key header is mandatory on all POST /payments endpoints. Server stores (key → result) in Redis for 24h. On duplicate: return cached response without reprocessing. Stripe built their entire reliability on this pattern.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Versioning Neglect — Breaking Clients</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">API removes a field that a mobile app depends on. Mobile app crashes for all users on old version (30% of users). Rolling back the API is complex; forced app update takes days.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Never remove fields — only add new optional ones (additive changes). Deprecate via Deprecation header (RFC 8594): Deprecation: Sat, 01 Jan 2026. Monitor field usage via API analytics before removing. Support N-1 version minimum (current + previous major).</span></div>
-  </div></div>
-</div>
-  </div>
-</section>
-
-
-<section id="api-failures">
-  <div class="sec-tag">⚠ · Failure Modes</div>
-  <h2>Common API Design Failures in Production</h2>
-  <div class="k-cards">
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">N+1 Query — Silent Performance Killer</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">API fetches 20 posts, then queries the DB separately for each post's author. 20 posts = 21 DB queries. At 1,000 req/sec: 21,000 DB queries/sec instead of 1,000. DB collapses. Response time balloons from 10ms to 300ms.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Use eager loading (SQL JOIN or ORM includes). GraphQL: DataLoader batches all user fetches into one query per request. Profile with DB query logging enabled in development — catch N+1 before it hits production.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Missing Idempotency — Double Charge</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Payment API times out after 28 seconds. Client retries. Server processed the first request (28 seconds is slow but valid). Now customer is charged twice. Happens at every payment company that doesn't enforce idempotency.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Idempotency-Key header is mandatory on all POST /payments endpoints. Server stores (key → result) in Redis for 24h. On duplicate: return cached response without reprocessing. Stripe built their entire reliability on this pattern.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Versioning Neglect — Breaking Clients</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">API removes a field that a mobile app depends on. Mobile app crashes for all users on old version (30% of users). Rolling back the API is complex; forced app update takes days.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Never remove fields — only add new optional ones (additive changes). Deprecate via Deprecation header (RFC 8594): Deprecation: Sat, 01 Jan 2026. Monitor field usage via API analytics before removing. Support N-1 version minimum (current + previous major).</span></div>
-  </div></div>
-</div>
-  </div>
-</section>
 
 <div class="footer">API DESIGN · REST · PAGINATION · VERSIONING · IDEMPOTENCY · GRAPHQL · GRPC · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+<script src="../js/speaker.js" defer></script></body></html>

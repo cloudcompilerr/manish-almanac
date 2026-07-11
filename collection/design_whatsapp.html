@@ -515,7 +515,7 @@ code {
 /* ════════════════════════════════════
    FAQ
 ════════════════════════════════════ */
-.faq-item { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+.faq { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
 .faq-q {
   padding: 14px 18px;
   display: flex;
@@ -530,7 +530,7 @@ code {
   transition: background .15s;
 }
 .faq-q:hover { background: var(--surface); }
-.faq-q .tog { font-size: 18px; color: var(--amber); flex-shrink: 0; margin-left: 12px; transition: transform .2s; font-family: var(--mono); }
+.faq-q .faq-tog { font-size: 18px; color: var(--amber); flex-shrink: 0; margin-left: 12px; transition: transform .2s; font-family: var(--mono); }
 .faq-a {
   display: none;
   padding: 18px;
@@ -540,8 +540,8 @@ code {
   line-height: 1.75;
   border-top: 1px solid var(--border);
 }
-.faq-item.open .faq-a { display: block; }
-.faq-item.open .tog { transform: rotate(45deg); }
+.faq.open .faq-a { display: block; }
+.faq.open .faq-tog { transform: rotate(45deg); }
 
 /* ════════════════════════════════════
    DIVIDERS
@@ -616,6 +616,44 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 .k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
 .k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
 .k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* ── SD Examples: deep-dive timeline (previously undefined — rendered unstyled) ── */
+.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
+.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
+.sd-example-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#f0ede6;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
+.sd-example-body{padding:0;}
+.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border-bottom:none;}
+.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
+.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
+.choice-val strong{color:var(--ink);}
+.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+/* ── Concept Grid: term/definition cards ─────────────── */
+.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.concept-grid .concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-grid .concept-def strong{color:var(--ink);font-weight:700;}
+.concept-grid .concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+/* ── Step block: interview decision framework ─────────── */
+.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
+.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;}
+.sb-icon{font-size:18px;}
+.step-block-body{padding:0;}
+.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.step-content{padding:16px 18px;}
+.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:8px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
+.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
+.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
+.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
+.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
+.opt-text{color:#2a2820;}
+.opt-text strong{color:var(--ink);}
 </style>
 </head>
 <body>
@@ -627,15 +665,15 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="db-badges"><span class="db-badge" style="background:#25D366">Erlang WS</span><span class="db-badge" style="background:#128C7E">Signal Protocol</span><span class="db-badge" style="background:#e8b84b">Cassandra</span><span class="db-badge" style="background:#2d5fa0">Redis Pub/Sub</span><span class="db-badge" style="background:#8a3a3a">E2EE</span></div>
   </div>
 </div>
-<nav class="nav"><a href="#overview">Requirements & Scale Assumptions</a><a href="#architecture">Full System — Every Component Justi</a><a href="#delivery-deep">Message Delivery — Both Online Path</a><a href="#schemas">All Schemas at a Glance</a><a href="#tradeoffs">Trade-off Matrix</a><a href="#followups">Every Question Your Interviewer Wil</a></nav>
+<nav class="nav"><a href="#overview">Requirements & Scale Assumptions</a><a href="#architecture">Full System — Every Component Justi</a><a href="#delivery-deep">Message Delivery — Both Online Path</a><a href="#hard-decisions">Erlang &amp; Signal Protocol</a><a href="#decision">Interview Decision Framework</a><a href="#failures">Production Failure Modes</a><a href="#schemas">All Schemas at a Glance</a><a href="#tradeoffs">Trade-off Matrix</a><a href="#followups">Every Question Your Interviewer Wil</a></nav>
 <div class="wrap">
 
 <section id="overview">
   <div class="sec-tag">00 · Requirements</div>
   <h2>Requirements & Scale Assumptions</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
-    <div><h4>Functional</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>1-to-1 messaging with delivery + read receipts</td></tr><tr><td><strong>FR2</strong></td><td>Group chat (≤ 256 members)</td></tr><tr><td><strong>FR3</strong></td><td>Online/last-seen presence</td></tr><tr><td><strong>FR4</strong></td><td>End-to-end encryption (server never reads content)</td></tr><tr><td><strong>FR5</strong></td><td>Media: images, video, voice messages</td></tr><tr><td><strong>FR6</strong></td><td>Offline message delivery on reconnect</td></tr></tbody></table></div>
-    <div><h4>Non-Functional</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>2B users, 100B messages/day</td></tr><tr><td><strong>NFR2</strong></td><td>Delivery latency (both online): < 500ms</td></tr><tr><td><strong>NFR3</strong></td><td>600M concurrent WebSocket connections</td></tr><tr><td><strong>NFR4</strong></td><td>At-least-once delivery. Messages never lost.</td></tr><tr><td><strong>NFR5</strong></td><td>E2EE: server stores only ciphertext</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: 99.99%</td></tr></tbody></table></div>
+    <div><h4>Functional</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>1-to-1 messaging with delivery + read receipts</td></tr><tr><td><strong>FR2</strong></td><td>Group chat (≤ 1,024 members — raised from a previous 256-member cap when WhatsApp Communities launched in Nov 2022)</td></tr><tr><td><strong>FR3</strong></td><td>Online/last-seen presence</td></tr><tr><td><strong>FR4</strong></td><td>End-to-end encryption (server never reads content)</td></tr><tr><td><strong>FR5</strong></td><td>Media: images, video, voice messages</td></tr><tr><td><strong>FR6</strong></td><td>Offline message delivery on reconnect</td></tr></tbody></table></div>
+    <div><h4>Non-Functional</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>~3B users (WhatsApp's last clearly official figure was 2 billion MAU in Feb 2020; Meta's later statements and third-party trackers put it at roughly 3–3.3 billion by 2025), 100B+ messages/day (Meta's last officially disclosed figure was "over 100 billion," Oct 2020; treat as a floor, not a current precise count)</td></tr><tr><td><strong>NFR2</strong></td><td>Delivery latency (both online): < 500ms</td></tr><tr><td><strong>NFR3</strong></td><td>600M concurrent WebSocket connections</td></tr><tr><td><strong>NFR4</strong></td><td>At-least-once delivery. Messages never lost.</td></tr><tr><td><strong>NFR5</strong></td><td>E2EE: server stores only ciphertext</td></tr><tr><td><strong>NFR6</strong></td><td>Availability: 99.99%</td></tr></tbody></table></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:20px 0">
     <div class="db-card pg"><div class="db-card-name">Messages/sec</div><div class="db-row"><div class="db-k">Avg</div><div class="db-v">1.16M/sec</div></div><div class="db-row"><div class="db-k">Storage/msg</div><div class="db-v">100 bytes</div></div><div class="db-row"><div class="db-k">Total/year</div><div class="db-v a">~3.6 PB</div></div></div>
@@ -648,6 +686,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="analogy-text">WhatsApp is like a postal service that (a) delivers letters in under a second, (b) burns them after delivery so no one can read them later, and (c) seals them in an envelope that only the recipient can open — not even the post office. Your phone is the mailbox (WebSocket connection). The post office sorting centre (Redis) knows which delivery van (Erlang server) your contact's mailbox is currently on. If your contact is offline, letters go into temporary storage (Cassandra) for up to 30 days — then shredded if uncollected.</div>
 </div>
 
+<div class="callout cl-red">
+  <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+  <p>Candidates who say "we'll encrypt messages with TLS" have described encryption <em>in transit</em>, not end-to-end encryption — and conflating the two is one of the fastest ways to lose credibility in a WhatsApp interview. TLS protects a message between the client and WhatsApp's servers; the server still sees plaintext, decrypts it, and could in principle log or read it. End-to-end encryption (Signal Protocol) means the server routes ciphertext it is structurally unable to decrypt — the key material never leaves the two participants' devices. The follow-up that separates strong candidates from ones reciting a buzzword: if the server never sees plaintext, how do search, spam detection, and content moderation work at all? The honest answer is mostly on-device (local search index) or via metadata/behavioral signals (message frequency, report rates) — not content inspection, because content inspection is exactly what E2EE rules out.</p>
+</div>
 
 <section id="architecture">
   <div class="sec-tag">01 · Architecture</div>
@@ -657,7 +699,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body"><div class="k-point">
     <div class="k-point-label">The 600M Connection Problem</div>
     <div class="k-point-text"><strong>600M concurrent WebSocket connections — solved by Erlang's actor model.</strong><br>Java thread-per-connection: 600M × 1MB stack = 600TB RAM. Not viable. Erlang lightweight process: ~300 bytes RAM each. 2M connections per Erlang node = 300 nodes for 600M connections. Each WebSocket connection is an independent Erlang process. Messages between processes use Erlang's built-in message passing — no shared state, no locks.<br>Connection metadata in Redis: <code>HSET user:conn:{user_id} server_id 47 last_seen 1742383200</code>. Any service can look up which server a user is connected to.</div>
-    <div class="k-good"><span class="k-icon">✓</span><span>WhatsApp handled 1M concurrent users with 2 engineers using Erlang/OTP. The actor model was specifically designed for this: millions of lightweight, isolated, fault-tolerant processes</span></div><div class="k-info"><span class="k-icon">ℹ</span><span>Alternative: Node.js event loop handles 10K–50K connections per process. Would need 60,000 Node processes for 600M connections. Erlang's model is orders of magnitude more efficient</span></div>
+    <div class="k-good"><span class="k-icon">✓</span><span>In a well-documented 2012 talk ("Scaling to Millions of Simultaneous Connections," Erlang Factory SF), WhatsApp engineer Rick Reed described pushing a single server from roughly 200K connections through 1 million and on to 2 million+ concurrent TCP connections by tuning Erlang/OTP and FreeBSD. WhatsApp's company-wide engineering headcount stayed famously small — commonly cited as roughly 50 engineers at the time of its 2014 Facebook acquisition, when it served ~450M monthly users. The actor model was a natural fit: millions of lightweight, isolated, fault-tolerant processes, one per connection</span></div><div class="k-info"><span class="k-icon">ℹ</span><span>Alternative: Node.js event loop handles 10K–50K connections per process. Would need 60,000 Node processes for 600M connections. Erlang's model is orders of magnitude more efficient</span></div>
   </div></div>
 </div><div class="k-card">
   <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Message Routing</span><span class="k-tag">Redis Pub/Sub + Direct Push</span></div>
@@ -684,8 +726,8 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-head"><span class="k-num">05</span><span class="k-title">Group Messaging</span><span class="k-tag">Fan-out on Write</span></div>
   <div class="k-card-body"><div class="k-point">
     <div class="k-point-label">Group Architecture</div>
-    <div class="k-point-text"><strong>256-member group: server sends individual encrypted messages to each member.</strong><br>Alice sends to group: Alice's device uses "Sender Keys" (Signal Protocol optimization) — encrypt once per group session, not once per member. Server receives one ciphertext → creates 255 delivery tasks → routes to each member's server → delivers. Kafka topic per group for ordered, at-least-once delivery to all members.<br>At scale: 100M group messages/day × 256 members = 25.6B individual deliveries/day = 296K/sec.</div>
-    <div class="k-info"><span class="k-icon">ℹ</span><span>Sender Keys optimisation: without it, Alice would need to encrypt 255 separate messages (one per member). With Sender Keys: encrypt once, each member has a pre-shared group key to decrypt. 255× less encryption CPU on sender device</span></div>
+    <div class="k-point-text"><strong>1,024-member group (WhatsApp's current cap, raised from 256 in Nov 2022): server sends individual encrypted messages to each member.</strong><br>Alice sends to group: Alice's device uses "Sender Keys" (Signal Protocol optimization) — encrypt once per group session, not once per member. Server receives one ciphertext → creates up to 1,023 delivery tasks → routes to each member's server → delivers. Kafka topic per group for ordered, at-least-once delivery to all members.<br>At an illustrative scale of 100M group messages/day and an average of ~30 active members per group (most groups are far smaller than the 1,024 cap): ~3B individual deliveries/day ≈ 35K/sec — use your own group-size assumption and show the arithmetic rather than quoting this as a real production number.</div>
+    <div class="k-info"><span class="k-icon">ℹ</span><span>Sender Keys optimisation: without it, Alice would need to separately encrypt one message per member. With Sender Keys: encrypt once, each member has a pre-shared group key to decrypt — an N× reduction in encryption CPU on the sender's device for an N-member group</span></div>
   </div></div>
 </div></div>
 </section>
@@ -694,19 +736,79 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sec-tag">02 · Deep Dive</div>
   <h2>Message Delivery — Both Online Path</h2><div class="sd-example"><div class="sd-example-head"><div class="sd-example-title">Alice sends "Hey Bob!" — T=0 to T=80ms</div></div><div class="sd-example-body"><div class="choice-row"><div class="choice-label">T+0ms</div><div class="choice-val">Alice types message, taps Send. Signal Protocol encrypts: plaintext → ciphertext (Bob's public key used). WebSocket frame sent to Chat Server A.</div></div><div class="choice-row"><div class="choice-label">T+5ms</div><div class="choice-val">Server A validates message (spam filter, size check). Generates message_id (Snowflake). Writes to Cassandra asynchronously (durability). Does NOT wait for Cassandra before routing.</div></div><div class="choice-row"><div class="choice-label">T+8ms</div><div class="choice-val">Server A: <code>HGET user:conn:bob</code> → "server_47." Publishes to <code>server:47</code> Redis channel: {message_id, sender, ciphertext, timestamp}.</div></div><div class="choice-row"><div class="choice-label">T+12ms</div><div class="choice-val">Server 47 receives via Redis subscription. Finds Bob's Erlang process. Enqueues message delivery.</div></div><div class="choice-row"><div class="choice-label">T+15ms</div><div class="choice-val">Bob's Erlang process sends ciphertext via Bob's WebSocket. Bob's device decrypts, displays "Hey Bob!".</div></div><div class="choice-row"><div class="choice-label">T+18ms</div><div class="choice-val">Bob's device sends delivery receipt: "message_id=X delivered." Server 47 → Redis → Server A → Alice's WebSocket: single grey tick becomes double grey tick.</div></div><div class="choice-row"><div class="choice-label">T+20ms</div><div class="choice-val">Bob opens the chat. App sends read receipt. Double grey → double blue tick for Alice.</div></div></div></div></section>
 
+<section id="hard-decisions">
+  <div class="sec-tag">03 · The Hard Decisions</div>
+  <h2>The Actor Model and the Signal Protocol — Term by Term</h2>
+  <p>Two independent hard problems make WhatsApp's architecture what it is: holding hundreds of millions of idle connections open cheaply, and guaranteeing a server that routes messages can never read them. Different technologies, same design philosophy — push the hard part to where it's cheapest to solve.</p>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">THE ACTOR<br>MODEL (BEAM)</div><div class="concept-def"><p><strong>Every connection is an independent, isolated Erlang process with its own private memory — no shared state, no locks, communication only via asynchronous message passing.</strong> This is why one slow or crashing connection can't corrupt or stall another: there's no shared mutable state between them to corrupt in the first place. Contrast with a thread-per-connection model, where an unbounded thread stack (often ~1MB in the JVM) times hundreds of millions of connections is not viable memory-wise, and a shared-heap crash can take down unrelated connections.</p></div></div>
+    <div class="concept-row"><div class="concept-term">"LET IT<br>CRASH"</div><div class="concept-def"><p><strong>Erlang/OTP's supervision-tree philosophy: don't write defensive code to handle every possible error — let a process crash, and let a supervisor process restart it in a known-good state.</strong> Applied to a chat server: if one connection's process hits an unexpected error, it dies and restarts cleanly; the other millions of connections on the same node are unaffected. This fault-isolation property is a major reason Erlang was picked for a system where "one bad message shouldn't take down a server" is a hard requirement.</p></div></div>
+    <div class="concept-row"><div class="concept-term">X3DH<br>KEY AGREEMENT</div><div class="concept-def"><p><strong>Extended Triple Diffie-Hellman: how two devices that have never communicated establish a shared secret before the first message is even sent.</strong> Each user publishes a bundle of public keys (an identity key, a signed prekey, and a batch of one-time prekeys) to the server ahead of time. A sender can compute a shared secret with a recipient's public key bundle even while the recipient is completely offline — this is what makes "send a message to someone who's never opened the app on this device" possible without an interactive handshake.</p></div></div>
+    <div class="concept-row"><div class="concept-term">DOUBLE<br>RATCHET</div><div class="concept-def"><p><strong>After the initial X3DH handshake, every subsequent message derives a fresh encryption key from the previous one, combined with fresh Diffie-Hellman output exchanged inline with the messages themselves.</strong> The practical payoff is forward secrecy and post-compromise security: if an attacker somehow obtains one message's key, they cannot derive past keys (forward secrecy) or, after the ratchet advances a bit further, future keys either (self-healing / post-compromise security). This is the mechanism that makes "we found one key, can we now read the whole conversation history" false by design.</p></div></div>
+  </div>
+</section>
+
+<section id="decision">
+  <div class="sec-tag">04 · Interview Decision Framework</div>
+  <h2>How Much Concurrency, and How Much Encryption?</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Four Questions That Decide the Connection and Crypto Design</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">1</div><div class="step-content">
+        <div class="step-q">Does the workload look like "millions of mostly-idle long-lived connections" or "high-throughput short-lived requests"?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Millions of idle connections (chat, presence) →</span><span class="opt-text"><strong>An actor-model / lightweight-process runtime (Erlang/OTP, or Go with goroutines as a more hireable alternative) is the right fit</strong> — cost per idle connection has to be near-zero.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Short-lived request/response →</span><span class="opt-text">A conventional thread-pool or event-loop server (Node.js, a JVM framework) is simpler to hire for and operate, and the C10M-style connection problem doesn't apply.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-content">
+        <div class="step-q">Must the server be structurally unable to read message content, or is "we promise not to look" an acceptable trust model?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Structurally unable (regulated, privacy-first product) →</span><span class="opt-text"><strong>End-to-end encryption (Signal Protocol or equivalent).</strong> Accept that server-side search, spam scanning of content, and content moderation are no longer possible — only metadata-based signals remain.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Trust-based is acceptable (enterprise tool with compliance/audit needs) →</span><span class="opt-text">Server-side encryption at rest + TLS in transit is simpler to operate and enables full-text search, content moderation, and legal e-discovery — the trade-off most enterprise chat tools (Slack, Teams) make deliberately.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-content">
+        <div class="step-q">How large can a group get before "encrypt once per member" collapses?</div>
+        <div class="step-options">
+          <div class="step-option opt-mid"><span class="opt-arrow">Hundreds to low thousands (chat groups) →</span><span class="opt-text"><strong>Sender Keys (encrypt once per group session, fan out ciphertext server-side)</strong> keeps sender-side crypto cost flat regardless of group size.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">Unbounded (broadcast channel, no interactivity needed) →</span><span class="opt-text">Drop E2EE's per-recipient model entirely — a one-way broadcast (WhatsApp Channels) is a fundamentally different problem (pub-sub, not group chat) and shouldn't be forced through the group-chat crypto path.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-content">
+        <div class="step-q">What happens to a message if the recipient never reconnects?</div>
+        <div class="step-options">
+          <div class="step-option opt-mid"><span class="opt-arrow">Bounded retention window, then drop →</span><span class="opt-text"><strong>Sets a hard ceiling on server-side storage</strong> and is defensible as a privacy feature, not just a cost optimization — this is WhatsApp's actual approach (30-day offline hold, then deleted).</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Indefinite retention until delivered →</span><span class="opt-text">Simpler guarantee ("nothing is ever lost") but unbounded storage growth for permanently-offline or deleted accounts — needs a separate cleanup policy for abandoned accounts.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Actually Breaks — Production Failure Patterns</h2>
+  <div class="k-cards">
+    <div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">Node-Level Connection Storm on Restart</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><p>When a chat server node restarts (deploy, crash, capacity rebalance), every one of its ~2M connections drops simultaneously and every one of those clients reconnects at roughly the same moment. If reconnects aren't staggered, the receiving nodes — and the connection-registry service (Redis) that has to process millions of near-simultaneous "I'm now on server X" updates — see a load spike far above steady-state.</p></div><div class="k-good"><span class="k-icon">✓</span><span>Fix: client-side reconnect with randomized jitter and exponential backoff (never reconnect instantly); drain connections from a node gradually before taking it down rather than dropping all of them at once.</span></div></div></div></div>
+    <div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Double Ratchet Desync from Out-of-Order Delivery</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><p>The Double Ratchet's key state advances with each message. If messages arrive badly out of order or one is permanently lost (not just delayed), a client can end up unable to derive the correct key for a message it does receive, since ratchet state on each side has to stay reasoned-about-consistently.</p></div><div class="k-good"><span class="k-icon">✓</span><span>Fix: the protocol itself carries enough header metadata (message numbers, previous chain length) to tolerate real-world reordering and skip ahead within a bounded window; clients cache a bounded number of skipped message keys so a message that arrives late can still be decrypted, and fall back to re-establishing a session (visible to users as a "security code changed"-style event) only when the gap is unrecoverable.</span></div></div></div></div>
+    <div class="k-card"><div class="k-card-head"><span class="k-num">03</span><span class="k-title">Push Notification Silent Failure</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><p>An offline user's push notification token (APNs/FCM) can silently go stale — the OS revoked it, the app was reinstalled, or the token simply expired — and the push provider accepts the send without complaint while the notification never arrives. The message sits correctly in Cassandra, delivery is technically "pending," but the recipient has no idea a message is waiting.</p></div><div class="k-good"><span class="k-icon">✓</span><span>Fix: treat push as a best-effort nudge, never as the delivery guarantee itself — the real guarantee comes from the client fetching any undelivered messages on every reconnect regardless of whether a push was received; monitor push-provider delivery receipts and proactively refresh tokens that look stale.</span></div></div></div></div>
+  </div>
+</section>
+
 <section id="schemas">
-  <div class="sec-tag">03 · Schemas</div>
+  <div class="sec-tag">05 · Schemas</div>
   <h2>All Schemas at a Glance</h2><h4>messages (Cassandra — offline store)</h4><table class="flow-table"><thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead><tbody><tr><td>conversation_id</td><td>UUID</td><td>Partition key: chat between Alice+Bob or group_id</td></tr><tr><td>message_id</td><td>BIGINT</td><td>Snowflake ID — clustering key (time-sortable)</td></tr><tr><td>sender_id</td><td>UUID</td><td>Sender user ID</td></tr><tr><td>recipient_id</td><td>UUID</td><td>Recipient (null for groups — use conversation_id)</td></tr><tr><td>ciphertext</td><td>BLOB</td><td>Encrypted content — server never decrypts</td></tr><tr><td>media_key</td><td>TEXT</td><td>S3 key for media (if applicable)</td></tr><tr><td>created_at</td><td>TIMESTAMPTZ</td><td>Message creation time</td></tr><tr><td>status</td><td>ENUM</td><td>PENDING, DELIVERED, READ, EXPIRED</td></tr></tbody></table><h4>Redis connection registry</h4><table class="flow-table"><thead><tr><th>Key</th><th>Type</th><th>Value</th></tr></thead><tbody><tr><td>user:conn:{user_id}</td><td>Hash</td><td>server_id, last_seen timestamp</td></tr><tr><td>server:{id}</td><td>Pub/Sub channel</td><td>Messages for this chat server</td></tr><tr><td>presence:{user_id}</td><td>String</td><td>online/away, TTL 60s (refreshed by heartbeat)</td></tr><tr><td>unread:{user_id}</td><td>Hash</td><td>conversation_id → unread_count</td></tr></tbody></table></section>
 
 <section id="tradeoffs">
-  <div class="sec-tag">04 · Trade-offs</div>
-  <h2>Trade-off Matrix</h2><table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Connection runtime</td><td>Erlang/OTP</td><td><span class="dot g"></span>2M connections/node. Fault isolation — one crash doesn't cascade. Built-in distributed messaging</td><td><span class="dot a"></span>Erlang expertise rare. Harder to hire than Go/Java engineers</td><td>Go with goroutines if Erlang expertise unavailable — similar concurrency model, easier hiring</td></tr><tr><td class="row-head">Message storage</td><td>Delete on delivery</td><td><span class="dot g"></span>Minimises server storage (99.9% of messages deleted within seconds). Privacy by design</td><td><span class="dot a"></span>No server-side message history. Backup is user's responsibility</td><td>Store messages on server (Telegram model) if users need multi-device sync and history restoration</td></tr><tr><td class="row-head">E2EE</td><td>Signal Protocol</td><td><span class="dot g"></span>Military-grade forward secrecy. Open-source audited. Widely trusted</td><td><span class="dot a"></span>No server-side content moderation possible. Illegal content can be shared</td><td>No E2EE if compliance requires content scanning (some regulated industries)</td></tr><tr><td class="row-head">Group size</td><td>256 member cap</td><td><span class="dot g"></span>Limits fan-out cost (256 deliveries/message). Manageable key distribution</td><td><span class="dot a"></span>Not suitable for broadcast channels (Telegram supports 200K). Users use WhatsApp Channels for broadcasts</td><td>Remove cap if broadcast is a requirement — changes from "group chat" to "pub-sub channel" architecture</td></tr><tr><td class="row-head">Offline retention</td><td>30 days, then delete</td><td><span class="dot g"></span>Bounded storage cost. Privacy protection</td><td><span class="dot a"></span>Users who lose devices and don't reconnect within 30 days lose messages</td><td>Longer retention (Telegram keeps messages indefinitely on their servers) if history persistence is a product requirement</td></tr></tbody></table></section>
+  <div class="sec-tag">06 · Trade-offs</div>
+  <h2>Trade-off Matrix</h2><table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Connection runtime</td><td>Erlang/OTP</td><td><span class="dot g"></span>2M connections/node. Fault isolation — one crash doesn't cascade. Built-in distributed messaging</td><td><span class="dot a"></span>Erlang expertise rare. Harder to hire than Go/Java engineers</td><td>Go with goroutines if Erlang expertise unavailable — similar concurrency model, easier hiring</td></tr><tr><td class="row-head">Message storage</td><td>Delete on delivery</td><td><span class="dot g"></span>Minimises server storage (99.9% of messages deleted within seconds). Privacy by design</td><td><span class="dot a"></span>No server-side message history. Backup is user's responsibility</td><td>Store messages on server (Telegram model) if users need multi-device sync and history restoration</td></tr><tr><td class="row-head">E2EE</td><td>Signal Protocol</td><td><span class="dot g"></span>Military-grade forward secrecy. Open-source audited. Widely trusted</td><td><span class="dot a"></span>No server-side content moderation possible. Illegal content can be shared</td><td>No E2EE if compliance requires content scanning (some regulated industries)</td></tr><tr><td class="row-head">Group size</td><td>1,024 member cap</td><td><span class="dot g"></span>Bounds fan-out cost per message (at most 1,023 deliveries). Manageable key distribution via Sender Keys</td><td><span class="dot a"></span>Not suitable for broadcast to huge audiences (Telegram channels support far larger, unbounded audiences). WhatsApp addresses that need with a separate one-way Channels product, not by raising the group cap further</td><td>Remove the cap entirely if broadcast is a requirement — that changes the problem from "group chat" to "pub-sub channel" architecture</td></tr><tr><td class="row-head">Offline retention</td><td>30 days, then delete</td><td><span class="dot g"></span>Bounded storage cost. Privacy protection</td><td><span class="dot a"></span>Users who lose devices and don't reconnect within 30 days lose messages</td><td>Longer retention (Telegram keeps messages indefinitely on their servers) if history persistence is a product requirement</td></tr></tbody></table></section>
 
 <section id="followups">
-  <div class="sec-tag">05 · Hard Follow-ups</div>
+  <div class="sec-tag">07 · Hard Follow-ups</div>
   <h2>Every Question Your Interviewer Will Ask</h2><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you guarantee message ordering in a distributed chat system?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Per-conversation ordering guaranteed by Cassandra clustering key. Cross-conversation ordering not needed.</strong><br><br>Cassandra schema: <code>PRIMARY KEY ((conversation_id), message_id)</code> where message_id is Snowflake (time-sortable). Messages within a conversation are physically sorted on disk by message_id. Queries return in order automatically.<br><br>The subtle problem: Alice sends M1, then M2. Network jitter causes M2 to arrive at Server A before M1. Solution: client-side sequence numbers. Alice's device assigns seq=1 to M1, seq=2 to M2. Server stores both. Client detects gap (received seq=2 before seq=1): buffer M2, wait 100ms for M1, then render in order. If M1 doesn't arrive: request retransmission via <code>GET /messages/{conversation_id}?since={last_seen}</code>.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you scale to 600M concurrent WebSocket connections — what does the infrastructure look like?<span class="faq-tog">+</span></div><div class="faq-a"><strong>300 Erlang nodes × 2M connections each = 600M. Each node is a single beam.smp process.</strong><br><br>Node spec: 64-core server, 512GB RAM. At 300 bytes per Erlang process: 2M connections = 600MB RAM just for processes. Add message buffers and routing tables: ~50GB per node. Well within 512GB.<br><br>Connection routing: Redis Hash <code>user:conn:{user_id} → node_id</code>. Updated on connect/disconnect. Any node can route to any other node via Redis Pub/Sub subscription. Each node subscribes to its own channel: <code>SUBSCRIBE server:{node_id}</code>.<br><br>Load balancing: GeoDNS routes users to nearest datacenter. Within a datacenter, L4 load balancer (Nginx/HAProxy) distributes WebSocket connections across Erlang nodes using consistent hashing on user_id — same user always connects to same node (reduces connection lookup overhead).</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you handle the thundering herd when a user with 10,000 contacts comes online?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Presence updates are the most expensive part of WhatsApp — send judiciously.</strong><br><br>Naive approach: user comes online → notify all 10,000 contacts → 10,000 presence updates → 10,000 × (another user's 10,000 contacts who are online) = O(N²) notifications. At scale: catastrophic.<br><br>WhatsApp's approach: presence is opt-in and lazy. User coming online: server marks them online (Redis TTL key, refreshed every 30s by heartbeat). Presence notifications sent only to users whose chat screen is currently open on that conversation. "Last seen" timestamps fetched on-demand (when you open a conversation) not pushed proactively.<br><br>Contact sync: done in the background, not at connection time. When you open the app, your contact list presence states load lazily as you scroll.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How does WhatsApp deliver messages when the recipient's device is a different phone (number ported)?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Messages are addressed to user_id (account), not phone number (device). Phone number is just a login identifier.</strong><br><br>When Alice registers: WhatsApp creates a user_id. Phone number is the login credential and verified via SMS OTP. The user_id is stored permanently.<br><br>When Bob ports his number to a new phone: new device generates new key pair. Registers the new public key with WhatsApp servers (associated with Bob's user_id, not just his phone number). Alice's device fetches Bob's updated public key before encrypting. Safety number changes (visible in WhatsApp settings) — Alice is notified if Bob's key changed, alerting her to verify with Bob in person.</div></div></section>
 </div>
 <div class="footer">DESIGN WHATSAPP · ERLANG · SIGNAL PROTOCOL · E2EE · CASSANDRA · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

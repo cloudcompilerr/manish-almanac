@@ -515,7 +515,7 @@ code {
 /* ════════════════════════════════════
    FAQ
 ════════════════════════════════════ */
-.faq-item { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+.faq { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
 .faq-q {
   padding: 14px 18px;
   display: flex;
@@ -530,7 +530,7 @@ code {
   transition: background .15s;
 }
 .faq-q:hover { background: var(--surface); }
-.faq-q .tog { font-size: 18px; color: var(--amber); flex-shrink: 0; margin-left: 12px; transition: transform .2s; font-family: var(--mono); }
+.faq-q .faq-tog { font-size: 18px; color: var(--amber); flex-shrink: 0; margin-left: 12px; transition: transform .2s; font-family: var(--mono); }
 .faq-a {
   display: none;
   padding: 18px;
@@ -540,8 +540,8 @@ code {
   line-height: 1.75;
   border-top: 1px solid var(--border);
 }
-.faq-item.open .faq-a { display: block; }
-.faq-item.open .tog { transform: rotate(45deg); }
+.faq.open .faq-a { display: block; }
+.faq.open .faq-tog { transform: rotate(45deg); }
 
 /* ════════════════════════════════════
    DIVIDERS
@@ -616,6 +616,44 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 .k-info{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#eef2fb;border-left:3px solid #1a4f8a;border-radius:0 5px 5px 0;font-size:12.5px;color:#1a2a50;line-height:1.7;}
 .k-muted{display:flex;gap:10px;margin-top:10px;padding:9px 13px;background:#f5f3ee;border-left:3px solid #c8c4bc;border-radius:0 5px 5px 0;font-size:12.5px;color:#3a3830;line-height:1.7;}
 .k-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+/* ── SD Examples: deep-dive timeline (previously undefined — rendered unstyled) ── */
+.sd-example{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0;}
+.sd-example-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--ink);}
+.sd-example-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#f0ede6;}
+.sd-example-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#6a6858;margin-left:auto;text-transform:uppercase;}
+.sd-example-body{padding:0;}
+.choice-row{display:grid;grid-template-columns:130px 1fr;border-bottom:1px solid var(--border);font-size:13px;}
+.choice-row:last-child{border-bottom:none;}
+.choice-label{background:var(--surface);padding:14px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-right:1px solid var(--border);line-height:1.5;}
+.choice-val{padding:14px 16px;line-height:1.75;color:#2a2820;}
+.choice-val strong{color:var(--ink);}
+.choice-val code{font-family:var(--mono);font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--blue);}
+/* ── Concept Grid: term/definition cards ─────────────── */
+.concept-grid{margin:24px 0;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.concept-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);}
+.concept-row:last-child{border-bottom:none;}
+.concept-term{background:var(--surface);padding:18px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.3px;line-height:1.5;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.concept-grid .concept-def{padding:18px 20px;font-size:13.5px;line-height:1.85;color:#2a2820;}
+.concept-grid .concept-def strong{color:var(--ink);font-weight:700;}
+.concept-grid .concept-def code{font-family:var(--mono);font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:3px;color:var(--blue);}
+/* ── Step block: interview decision framework ─────────── */
+.step-block{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:24px 0;}
+.step-block-header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--ink);font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0ede6;}
+.sb-icon{font-size:18px;}
+.step-block-body{padding:0;}
+.step-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.step-content{padding:16px 18px;}
+.step-q{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.step-options{display:flex;flex-direction:column;gap:8px;}
+.step-option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.65;}
+.step-option.opt-yes{background:#edf7f0;border:1px solid #b8ddc8;}
+.step-option.opt-no{background:#fdf0f0;border:1px solid #e8c4c4;}
+.step-option.opt-mid{background:#fdf5e3;border:1px solid #e8d8a0;}
+.opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
+.opt-text{color:#2a2820;}
+.opt-text strong{color:var(--ink);}
 </style>
 </head>
 <body>
@@ -623,11 +661,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="hero-inner">
     <div class="eyebrow"><span>System Design · FAANG Interview Prep · Manish-Almanac</span></div>
     <h1>Design Dropbox</h1>
-    <p class="hero-desc">Complete FAANG-level walkthrough: chunked content-addressed storage, delta sync, deduplication (2+ PB saved), conflict resolution, version history without extra cost, and 4 hard follow-ups.</p>
+    <p class="hero-desc">Complete FAANG-level walkthrough: chunked content-addressed storage, delta sync, cross-user deduplication, conflict resolution, version history without extra cost, and 4 hard follow-ups.</p>
     <div class="db-badges"><span class="db-badge" style="background:#0061FE">Delta Sync</span><span class="db-badge" style="background:#e8b84b">Deduplication</span><span class="db-badge" style="background:#3d7a52">Content-Addressed</span><span class="db-badge" style="background:#2d5fa0">Conflict Resolution</span><span class="db-badge" style="background:#8a3a3a">Version History</span></div>
   </div>
 </div>
-<nav class="nav"><a href="#overview">Requirements & Scale Assumptions</a><a href="#architecture">Full System — Every Component Justi</a><a href="#sync-deep">File Change to Sync — Complete Flow</a><a href="#schemas">All Schemas at a Glance</a><a href="#tradeoffs">Trade-off Matrix</a><a href="#followups">Every Question Your Interviewer Wil</a></nav>
+<nav class="nav"><a href="#overview">Requirements & Scale Assumptions</a><a href="#architecture">Full System — Every Component Justi</a><a href="#sync-deep">File Change to Sync — Complete Flow</a><a href="#hard-decisions">The Hard Decisions</a><a href="#decision">Interview Decision Framework</a><a href="#failures">Production Failure Modes</a><a href="#schemas">All Schemas at a Glance</a><a href="#tradeoffs">Trade-off Matrix</a><a href="#followups">Every Question Your Interviewer Wil</a></nav>
 <div class="wrap">
 
 <section id="overview">
@@ -648,6 +686,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="analogy-text">Dropbox is like a photocopier that's smart enough to only copy the pages that changed. You edit slide 3 of a 200-page document: a dumb copier copies all 200 pages (upload entire file). Dropbox copies only the 4MB chunk containing slide 3. The "deduplication" superpower: if 10,000 users upload the same Office installer, Dropbox stores it once and gives everyone a "pointer" to the same copy. Version history is free because unchanged pages are shared — storing 30 versions of a 1GB file costs only 1GB + the size of all changes across versions.</div>
 </div>
 
+<div class="callout cl-red">
+  <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+  <p>"Design Dropbox" candidates who open with "store files in S3, keep a new copy each time one changes" solve file storage but haven't actually designed sync. That model re-uploads the entire file on every edit (no delta sync), stores N full duplicate copies for N users who happen to upload the same file (no deduplication), and multiplies storage by every version retained (no cheap version history). Those aren't three separate features to bolt on — they're the same underlying decision: split every file into content-addressed chunks (hash each chunk, use the hash as its identity) and store or transfer only chunks the server doesn't already have. Naming that one decision — and that it simultaneously buys you dedup, delta sync, <em>and</em> near-free versioning — is the single strongest signal in a Dropbox system design interview.</p>
+</div>
 
 <section id="architecture">
   <div class="sec-tag">01 · Architecture</div>
@@ -657,7 +699,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body"><div class="k-point">
     <div class="k-point-label">The Core Insight</div>
     <div class="k-point-text"><strong>Files split into 4MB chunks. Each chunk identified by its SHA-256 hash. Identical chunks stored exactly once.</strong><br>Upload flow: 1. Client splits file into 4MB chunks. 2. SHA-256 hash each chunk. 3. <code>POST /chunks/check [{hash1, hash2, ...}]</code> → server returns which hashes are missing. 4. Client uploads only missing chunks to S3 (pre-signed URLs). 5. <code>POST /files</code> with {filename, [hash1, hash2, hash3, ...]} → server records file metadata.<br>Deduplication: two users upload the same 1GB video. Chunk hashes are identical. Server tells User B: "all chunks already exist." User B's upload completes in 1 second (just the metadata write). S3 stores one copy. Both users' file records point to the same chunk hashes.</div>
-    <div class="k-good"><span class="k-icon">✓</span><span>Dropbox reported 2+ PB saved via deduplication. Common files: Office templates, vendor/node_modules, OS files, software installers — thousands of users upload identical copies</span></div><div class="k-warn"><span class="k-icon">⚠</span><span>Deduplication only works for unencrypted files. If client-side E2EE is used, identical files encrypt differently → no dedup possible. This is the fundamental E2EE vs dedup tradeoff</span></div>
+    <div class="k-good"><span class="k-icon">✓</span><span>Dropbox hasn't published a specific enterprise-wide petabytes-saved figure for cross-user dedup, so treat any precise number as folklore rather than sourced fact. What is confirmed on Dropbox's own engineering blog: the 4MiB block protocol is real, and a 2020 optimization built on top of it ("Broccoli") measured ~33% average upload-bandwidth savings platform-wide, rising to ~70% for the heaviest editors of large files. Common dedup wins in practice: Office templates, vendor/node_modules directories, OS files, and software installers — thousands of users upload byte-identical copies.</span></div><div class="k-warn"><span class="k-icon">⚠</span><span>Deduplication only works for unencrypted files. If client-side E2EE is used, identical files encrypt differently → no dedup possible. This is the fundamental E2EE vs dedup tradeoff</span></div>
   </div></div>
 </div><div class="k-card">
   <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Delta Sync</span><span class="k-tag">Block-Level Diff</span></div>
@@ -694,19 +736,79 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sec-tag">02 · Deep Dive</div>
   <h2>File Change to Sync — Complete Flow</h2><div class="sd-example"><div class="sd-example-head"><div class="sd-example-title">Alice edits report.docx on her laptop — Bob sees the change on his phone</div></div><div class="sd-example-body"><div class="choice-row"><div class="choice-label">T+0s</div><div class="choice-val">Alice saves report.docx (200MB, one section edited). Dropbox desktop client detects file change via OS filesystem watcher (FSEvents on macOS, inotify on Linux).</div></div><div class="choice-row"><div class="choice-label">T+0.5s</div><div class="choice-val">Client re-chunks the file into 50 × 4MB chunks. Computes SHA-256 for each chunk. Compares against locally cached chunk hashes. Detects 2 chunks changed.</div></div><div class="choice-row"><div class="choice-label">T+1s</div><div class="choice-val"><code>POST /chunks/check [{new_hash_1, new_hash_2}]</code> → server: "hash_1 not found, hash_2 exists." Client uploads only chunk_1 to S3 via pre-signed URL (4MB upload).</div></div><div class="choice-row"><div class="choice-label">T+3s</div><div class="choice-val">Upload complete. <code>PUT /files/report.docx {version: 6, chunks: [hash_1, hash_2, ..., hash_50]}</code>. Server stores new version metadata. Publishes ChangeEvent to Redis.</div></div><div class="choice-row"><div class="choice-label">T+3.1s</div><div class="choice-val">Notification service receives ChangeEvent. Finds all of Alice's devices with open long-poll connections. Sends response to Bob's phone long-poll: "cursor 12345: report.docx updated, new chunk hashes: [...]"</div></div><div class="choice-row"><div class="choice-label">T+3.5s</div><div class="choice-val">Bob's phone: receives notification. Checks local cache: has chunk_2 (unchanged) and chunk_3..50. Missing: chunk_1 (new). Downloads chunk_1 from S3.</div></div><div class="choice-row"><div class="choice-label">T+5s</div><div class="choice-val">Bob's phone reconstructs report.docx from chunk_1 (new) + all cached chunks. File updated. Total sync time: ~5 seconds on a 50Mbps connection.</div></div></div></div></section>
 
+<section id="hard-decisions">
+  <div class="sec-tag">03 · The Hard Decisions</div>
+  <h2>Chunking, Content-Addressing, and Conflict Detection — Term by Term</h2>
+  <p>Three technical decisions do the real work in any sync system. Get the vocabulary precise — interviewers are listening for it.</p>
+  <div class="concept-grid">
+    <div class="concept-row"><div class="concept-term">FIXED-SIZE<br>CHUNKING</div><div class="concept-def"><p><strong>Splitting a file into equal-sized blocks (Dropbox uses 4MiB, per its own Magic Pocket engineering blog) so only the blocks that actually changed need to be re-hashed and re-uploaded.</strong></p><p>The known weakness: fixed-size chunking is byte-offset sensitive. Insert a single byte at the <em>start</em> of a file and every chunk boundary after it shifts — every subsequent chunk hashes differently even though almost none of the underlying bytes changed, and dedup/delta sync silently stop helping for that file.</p></div></div>
+    <div class="concept-row"><div class="concept-term">CONTENT-DEFINED<br>CHUNKING (CDC)</div><div class="concept-def"><p><strong>The fix for the boundary-shift problem: pick chunk boundaries based on the file's own content (a rolling hash, e.g. Rabin fingerprinting) instead of fixed byte offsets.</strong> A local edit only ever changes the 1–2 chunks around it — everything before and after it re-derives the same boundaries and the same hashes. rsync's rolling checksum and backup tools like Borg and restic use this technique for exactly this reason.</p><span class="concept-note info">Interview-defensible answer: name fixed-size chunking as the simple baseline, then name content-defined chunking as the refinement you'd reach for the moment you're asked "what if I insert one byte at the top of the file?"</span></div></div>
+    <div class="concept-row"><div class="concept-term">CONTENT-<br>ADDRESSING</div><div class="concept-def"><p><strong>A chunk's identity is the cryptographic hash of its bytes (SHA-256), not an arbitrary ID assigned by the server.</strong> Two users who upload byte-identical content always produce the same hash — dedup falls out for free, with no need to compare file contents directly. This is the same underlying idea as Git's object store and IPFS content identifiers: identical content is structurally indistinguishable, so it can only ever be stored once.</p></div></div>
+    <div class="concept-row"><div class="concept-term">CONFLICT<br>DETECTION</div><div class="concept-def"><p><strong>An edit counter (or vector clock) per file version detects — but does not resolve — concurrent offline edits.</strong> Detection is the easy half: both devices agree edit_counter=5 was the common ancestor, and both independently produced a conflicting edit_counter=6. Resolution is the hard half, and it's why Dropbox keeps both copies rather than attempting an automatic merge — correctly merging arbitrary binary files is, in general, impossible without file-format-specific knowledge.</p></div></div>
+  </div>
+</section>
+
+<section id="decision">
+  <div class="sec-tag">04 · Interview Decision Framework</div>
+  <h2>How Aggressively Should You Chunk, Sync, and Resolve Conflicts?</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Four Questions That Decide the Sync Design</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">1</div><div class="step-content">
+        <div class="step-q">Does the product need end-to-end encryption?</div>
+        <div class="step-options">
+          <div class="step-option opt-no"><span class="opt-arrow">No →</span><span class="opt-text"><strong>Server-side (Dropbox-managed) encryption at rest.</strong> Dedup and delta sync both work normally, because the server can see — and hash — plaintext chunks.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">Yes, non-negotiable (legal/medical, Tresorit-style) →</span><span class="opt-text"><strong>Client-side E2EE.</strong> Accept that cross-user dedup is gone — ciphertext of identical files differs per key — and size storage estimates accordingly.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-content">
+        <div class="step-q">Are most files large binaries edited in small increments (video, slide decks, CAD) or small text files (code, config)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Large binaries, small edits →</span><span class="opt-text"><strong>Delta sync pays for itself immediately</strong> — a 500MB file with a 100KB edit uploads one 4MB chunk, not 500MB.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Small files, whole-file rewrites →</span><span class="opt-text"><strong>Chunking overhead (the hash-check round trip) can cost more than it saves.</strong> A simpler whole-file upload-if-changed model is defensible for something like a codebase-sync tool.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-content">
+        <div class="step-q">Can two devices plausibly edit the same file while both offline?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Yes (consumer sync product) →</span><span class="opt-text"><strong>You need conflict detection and a "keep both, never silently discard" resolution policy.</strong></span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">No (single-writer, e.g. a backup agent) →</span><span class="opt-text">Skip conflict resolution entirely — last-writer-wins is safe when there's structurally only one writer.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-content">
+        <div class="step-q">Is near-real-time push notification worth the connection-management cost, or is polling acceptable?</div>
+        <div class="step-options">
+          <div class="step-option opt-mid"><span class="opt-arrow">30–60s sync latency is fine →</span><span class="opt-text"><strong>Long-poll.</strong> Simpler, works behind restrictive corporate firewalls, no persistent-connection fleet to operate.</span></div>
+          <div class="step-option opt-yes"><span class="opt-arrow">Sub-second latency matters (live collaboration) →</span><span class="opt-text"><strong>WebSocket or a dedicated push channel</strong> — accept the connection-management operational cost (see WhatsApp's Erlang connection layer for what that looks like at extreme scale).</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Actually Breaks — Production Failure Patterns</h2>
+  <div class="k-cards">
+    <div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">Chunk Reference Leaks (Orphaned Blocks)</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><p>Content-addressed storage means a chunk is only safe to delete once <em>zero</em> files reference its hash. A race between "file deleted" and "chunk refcount decremented" either leaks chunks forever (storage cost creeps up silently) or deletes a chunk while a live file still references it (that file corrupts).</p></div><div class="k-good"><span class="k-icon">✓</span><span>Fix: garbage-collect via a mark-and-sweep pass that snapshots live references before deleting, not a live decrement-on-delete counter; keep a grace-period window before physical deletion so a wrongly-decremented chunk is still recoverable.</span></div></div></div></div>
+    <div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Sync Loop / Phantom Re-upload</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><p>A metadata field that changes on every read (a "last accessed" timestamp some other tool writes into the file, or an editor that rewrites the whole file on every autosave) makes the client detect a "change" every sync cycle and re-chunk, re-hash, and re-upload — even though the meaningful content is identical. At scale this looks like one account silently consuming a disproportionate share of sync capacity.</p></div><div class="k-good"><span class="k-icon">✓</span><span>Fix: compare content hashes before uploading, not just an mtime check; flag accounts whose upload volume is anomalous relative to their file count for investigation.</span></div></div></div></div>
+    <div class="k-card"><div class="k-card-head"><span class="k-num">03</span><span class="k-title">Conflicted-Copy Storms</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><p>A shared folder with several active editors and a flaky connection can produce a cascade of conflicted-copy files — every reconnect after a dropped connection can look like a fresh offline edit. Users end up with a folder full of "report (Alice's conflicted copy 1).docx," "(2)," "(3)"...</p></div><div class="k-good"><span class="k-icon">✓</span><span>Fix: collapse a new conflict into an existing conflicted copy if the bytes are identical instead of creating another file; surface one merged conflict-resolution UI rather than N separate files once N crosses a small threshold.</span></div></div></div></div>
+  </div>
+</section>
+
 <section id="schemas">
-  <div class="sec-tag">03 · Schemas</div>
+  <div class="sec-tag">05 · Schemas</div>
   <h2>All Schemas at a Glance</h2><h4>files (PostgreSQL)</h4><table class="flow-table"><thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead><tbody><tr><td>id</td><td>UUID</td><td>File identity</td></tr><tr><td>user_id</td><td>UUID</td><td>Owner</td></tr><tr><td>path</td><td>TEXT</td><td>Full path e.g. /docs/report.docx</td></tr><tr><td>current_version_id</td><td>UUID</td><td>FK to file_versions</td></tr><tr><td>size_bytes</td><td>BIGINT</td><td>Total file size</td></tr><tr><td>is_deleted</td><td>BOOL</td><td>Soft delete for trash</td></tr><tr><td>created_at</td><td>TIMESTAMPTZ</td><td></td></tr><tr><td>updated_at</td><td>TIMESTAMPTZ</td><td>Indexed for change detection</td></tr></tbody></table><h4>file_versions (PostgreSQL)</h4><table class="flow-table"><thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead><tbody><tr><td>id</td><td>UUID</td><td>Version identity</td></tr><tr><td>file_id</td><td>UUID</td><td>FK to files</td></tr><tr><td>chunk_hashes</td><td>TEXT[]</td><td>[sha256_1, sha256_2, ...] — ordered list</td></tr><tr><td>created_at</td><td>TIMESTAMPTZ</td><td>Version creation time</td></tr><tr><td>device_id</td><td>UUID</td><td>Which device created this version</td></tr><tr><td>edit_counter</td><td>INT</td><td>Monotonic counter for conflict detection</td></tr></tbody></table><h4>chunks (PostgreSQL — metadata only)</h4><table class="flow-table"><thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead><tbody><tr><td>hash</td><td>CHAR(64)</td><td>SHA-256 hex — primary key</td></tr><tr><td>s3_key</td><td>TEXT</td><td>GCS/S3 path where chunk bytes are stored</td></tr><tr><td>size_bytes</td><td>INT</td><td>Chunk size (up to 4MB)</td></tr><tr><td>created_at</td><td>TIMESTAMPTZ</td><td>First time this chunk was uploaded</td></tr></tbody></table></section>
 
 <section id="tradeoffs">
-  <div class="sec-tag">04 · Trade-offs</div>
+  <div class="sec-tag">06 · Trade-offs</div>
   <h2>Trade-off Matrix</h2><table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">Chunk size</td><td>4MB</td><td><span class="dot g"></span>Good delta efficiency. Few S3 requests per file. Sweet spot for dedup hit rate</td><td><span class="dot a"></span>Small files (< 4MB) are always one chunk — no delta benefit. Large files still transfer at least 4MB on any change</td><td>Variable-size chunking (content-defined chunking / CDC) for better dedup — complex to implement but used by rsync</td></tr><tr><td class="row-head">Conflict resolution</td><td>Conflicted copy</td><td><span class="dot g"></span>Never lose data. Simple to implement. Users always have both versions</td><td><span class="dot a"></span>Requires manual merge. Frustrating UX for frequent collaborators</td><td>Operational transforms (Google Docs) for text files — but requires file-format-aware merge logic</td></tr><tr><td class="row-head">Notification</td><td>Long-poll</td><td><span class="dot g"></span>Works behind corporate firewalls. Stateless servers. Simpler than WebSocket</td><td><span class="dot a"></span>60-second maximum notification delay if connection drops at wrong moment. More HTTP overhead than persistent connections</td><td>WebSocket for near-instant sync if firewall is not a concern</td></tr><tr><td class="row-head">E2EE</td><td>Not default</td><td><span class="dot g"></span>Server-side dedup works (2+ PB saved). Server can help with recovery, sharing links, collaboration</td><td><span class="dot a"></span>Employees with sufficient access CAN read files. Compliance risk for sensitive data</td><td>Client-side E2EE (Tresorit model): zero-knowledge, no dedup, no recovery if you lose your key</td></tr><tr><td class="row-head">Version storage</td><td>Content-addressed chunks</td><td><span class="dot g"></span>Versioning is nearly free — only changed chunks stored. 30 versions of a 1GB file ≈ 1.1GB total storage</td><td><span class="dot a"></span>Complex query to reconstruct a specific version (must look up all chunk hashes and fetch each)</td><td>Store full file copies per version (simple) — prohibitively expensive at 700M users × 30 versions</td></tr></tbody></table></section>
 
 <section id="followups">
-  <div class="sec-tag">05 · Hard Follow-ups</div>
+  <div class="sec-tag">07 · Hard Follow-ups</div>
   <h2>Every Question Your Interviewer Will Ask</h2><div class="faq"><div class="faq-q" onclick="toggle(this)">How does Dropbox Smart Sync work — files appear local but aren't downloaded until you open them?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Virtual filesystem driver intercepts file system calls at the OS level.</strong><br><br>Dropbox installs a kernel extension (macOS: DropboxFS via FUSE; Windows: Cloud Files API built into Windows 10+; Linux: FUSE). This driver registers as a file system with the OS.<br><br>How it works: file "report.docx" appears in Finder with a cloud icon. Metadata exists (name, size, dates) but no local bytes. User double-clicks: OS sends <code>open("report.docx")</code> syscall → intercepted by Dropbox driver → driver downloads file from S3 → buffers to local disk → returns file handle to OS → application opens it. To the application: the file was always there.<br><br>Eviction: when local disk is full, LRU policy removes "online-only" files from disk. The file still appears in Finder (metadata stays). Next open triggers re-download. "Pinned" files (user marks as always-available) are never evicted.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you handle a user uploading 1,000 files simultaneously from a new device?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Rate limiting + parallel chunk uploads + efficient check-before-upload.</strong><br><br>Scenario: user installs Dropbox on new computer, 1TB of files needs syncing. Naive approach: upload all files simultaneously → saturate network → everything is slow for everyone on the same ISP.<br><br>Rate limiting: Dropbox desktop client limits itself to N parallel chunk uploads (N = 6 by default, configurable). This caps upload bandwidth to ~6 × chunk_upload_speed.<br><br>Check-before-upload optimisation: before uploading any chunk, check if the server has it (dedup check). For a user reinstalling Dropbox on a new device: many files haven't changed — their chunk hashes already exist on the server. <code>POST /chunks/check</code> returns "all 12,500 hashes already exist" → zero bytes uploaded. File metadata synced immediately. This is why reinstalling Dropbox on a new computer syncs in minutes, not weeks.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How do you design the sharing system — one user shares a folder with another?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Shared folders create a "namespace mount" — the folder appears in both users' Dropbox.</strong><br><br>Database model: Folder is a first-class entity. <code>folder_members(folder_id, user_id, permission: viewer|editor|admin)</code>. When Alice shares /projects/website with Bob: add (folder_id, bob_user_id, editor) to folder_members.<br><br>Bob's sync client: on next sync, receives "new shared folder mounted at /projects/website." Downloads all files in the folder (or Smart Sync: just metadata). Bob's edits propagate to Alice's devices (and all other members) through the same sync pipeline.<br><br>Permission enforcement: every file operation checks folder_members. <code>GET /files/{path}</code> → server verifies requesting user is a member of the parent folder with at least viewer permission. Revoke access: delete the folder_members row → immediate effect (next API call is denied). Dropbox does NOT invalidate already-downloaded local copies — revoked user still has local copies until their client syncs and detects the access revocation.</div></div><div class="faq"><div class="faq-q" onclick="toggle(this)">How does Dropbox handle file encryption — can Dropbox employees read your files?<span class="faq-tog">+</span></div><div class="faq-a"><strong>Standard Dropbox: files encrypted at rest with AES-256. Dropbox manages the keys. Employees with sufficient privilege CAN access files.</strong><br><br>Encryption at rest: each file's chunks are encrypted in S3 using AES-256. Dropbox's Key Management Service (KMS) manages per-file encryption keys. This protects against S3 data theft (someone steals physical drives) but not against Dropbox employees with KMS access.<br><br>Client-side E2EE (Dropbox Vault / extended access): user generates a key on their device. Files encrypted before upload. Server stores only ciphertext. Dropbox cannot decrypt. Trade-off: no deduplication (ciphertext of identical files differs), no server-side search, no web preview. If user forgets password: data is permanently unrecoverable.<br><br>The real-world position: most business users accept Dropbox-managed encryption (same as trusting Google Drive). Highly sensitive data (legal, financial, medical) requires client-side E2EE or a zero-knowledge service (Tresorit, ProtonDrive). Dropbox is working toward broader E2EE support but hasn't deployed it by default due to the dedup and collaboration trade-offs.</div></div></section>
 </div>
 <div class="footer">DESIGN DROPBOX · DELTA SYNC · DEDUP · CONTENT-ADDRESSED · VERSION HISTORY · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

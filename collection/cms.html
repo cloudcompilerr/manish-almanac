@@ -159,6 +159,29 @@
 
   .highlight strong { color: var(--accent); }
 
+  .highlight-red {
+    background: #fdf0ee;
+    border-left: 4px solid var(--red);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 14px;
+    color: #4a1410;
+    line-height: 1.7;
+  }
+
+  .highlight-red strong { color: var(--red); }
+  .highlight-red .trap-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red);
+    display: block;
+    margin-bottom: 8px;
+    opacity: .85;
+  }
+
   /* HASH DEMO */
   .hash-demo {
     background: var(--surface);
@@ -706,6 +729,10 @@
 
   <p>The highlighted cells are where "video_42" incremented. To query: look up those same cells → values are <strong style="color:var(--row0)">3</strong>, <strong style="color:var(--row1)">4</strong>, <strong style="color:var(--row2)">5</strong> → take <strong style="color:var(--green)">MIN = 3</strong>. That's our estimate.</p>
   <p style="font-size:0.9rem;color:var(--muted)">Why is Row 2's value (5) higher? Because another video happened to hash to Col 4 in Row 2 — it polluted that counter. The minimum protects us from this pollution.</p>
+  <div class="highlight-red">
+    <span class="trap-label">⚠ The interview trap that catches most candidates</span>
+    <strong>"I'll use Count-Min Sketch to find the top trending videos."</strong> Said on its own, this is incomplete in a way that a strong interviewer will immediately probe. CMS can only answer "how many times has <em>this specific item</em> occurred?" — for an item you already know to ask about. It has no way to enumerate which items exist in the grid at all; the grid stores counts, not identities. Finding the "top" anything requires a companion structure — almost always a bounded min-heap of candidate items, fed by CMS lookups as events stream in (exactly what Redis's own <code>TOPK.ADD</code> does under the hood by combining a Count-Min Sketch with a heap). Naming that companion structure unprompted is the signal that separates candidates who've memorized "CMS is for trending topics" from candidates who understand what CMS actually computes.
+  </div>
 </div>
 
 <!-- SECTION 4: INTERACTIVE DEMO -->
@@ -863,7 +890,7 @@
         <span class="faq-icon">+</span>
       </div>
       <div class="faq-a">
-        <strong>Redis</strong> uses it for frequency counting in rate limiting. <strong>Twitter/X</strong> uses it for trending hashtag detection. <strong>Networking equipment</strong> uses it to detect high-traffic IPs (DDoS detection). <strong>Database query optimizers</strong> use it to estimate row frequencies for query planning. <strong>CDNs like Akamai</strong> use it to identify hot cache objects.
+        <strong>Redis</strong> ships Count-Min Sketch natively via the RedisBloom module (<code>CMS.INITBYPROB</code>, <code>CMS.INCRBY</code>, <code>CMS.QUERY</code>, <code>CMS.MERGE</code>) — a confirmed, documented production use, commonly reached for in frequency-counting and rate-limiting scenarios. <strong>Heavy-hitter / high-traffic-flow detection in networking</strong> (e.g. spotting which IPs or flows dominate traffic) is a well-established application going back to the original Cormode–Muthukrishnan paper that introduced CMS. <strong>Trending-hashtag detection at Twitter-scale</strong> is one of the most common system-design interview illustrations of CMS — worth knowing as the textbook answer, but note Twitter's own trending algorithm (as reverse-engineered by outside researchers) actually weighs the <em>acceleration</em> of mentions over time rather than a raw frequency count, so treat "Twitter uses CMS for trending" as the illustrative interview framing rather than a confirmed detail of their real production system. Query optimizers and CDNs are a plausible general fit for the same family of sketches, but if you need a concrete, citable production example in an interview, lead with the RedisBloom case.
       </div>
     </div>
   </div>
@@ -1019,12 +1046,12 @@
   <div class="sec-tag" style="margin-top:32px">06 · System Design Examples</div>
   <h2>CMS in production systems</h2>
   <div class="sd-example">
-    <div class="sd-example-head"><div class="sd-example-title">Twitter — Trending Hashtags</div><span class="sd-example-tag">BILLIONS OF EVENTS</span></div>
+    <div class="sd-example-head"><div class="sd-example-title">Trending Hashtags at Twitter-Scale — Illustrative Design</div><span class="sd-example-tag">HYPOTHETICAL · INTERVIEW EXERCISE</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">PROBLEM</div><div class="choice-val">500M tweets/day. Count how many times each hashtag appears in the last 1 hour. Millions of distinct hashtags. A HashMap would need gigabytes. Must update in real time.</div></div>
+      <div class="choice-row"><div class="choice-label">PROBLEM</div><div class="choice-val">This is the classic interview framing, not a confirmed description of Twitter/X's actual internal system: assume a commonly-cited estimate of roughly 500M tweets/day. Count how many times each hashtag appears in the last 1 hour, across millions of distinct hashtags. A HashMap would need gigabytes. Must update in real time.</div></div>
       <div class="choice-row"><div class="choice-label">CMS SOLUTION</div><div class="choice-val"><span class="badge b-g">ε=0.01, δ=0.01 ✓</span> One CMS per 5-minute bucket. Each tweet: extract hashtag → hash into CMS → increment. At end of bucket: query CMS for candidate hashtags. Top-K via min-heap.</div></div>
       <div class="choice-row"><div class="choice-label">SIZE</div><div class="choice-val">w=272, d=5 → 1,360 cells × 4 bytes = 5.3KB per CMS. 12 buckets/hour = 64KB total. Compare: tracking all distinct hashtags by count → gigabytes.</div></div>
-      <div class="choice-row"><div class="choice-label">ERROR</div><div class="choice-val">At 500M events/hour: max error = 500M × 0.01 = 5M per hashtag. A hashtag with 100M appearances is estimated as 95M–105M. For trending (relative ranking), this error is irrelevant.</div></div>
+      <div class="choice-row"><div class="choice-label">ERROR</div><div class="choice-val">At 500M events/hour: max error = 500M × 0.01 = 5M per hashtag. A hashtag with 100M appearances is estimated as 95M–105M. For trending (relative ranking), this error is irrelevant. Worth knowing: researchers who reverse-engineered Twitter's real trending algorithm found it actually weighs the acceleration of mentions over time, not a raw frequency count like this CMS exercise — a good detail to volunteer if an interviewer pushes on "is this literally what Twitter does?"</div></div>
     </div>
   </div>
 
@@ -1073,6 +1100,37 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
     <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td>FR1</td><td>Approximate frequency counting for N distinct items in O(w×d) memory</td></tr><tr><td>FR2</td><td>O(1) update: INCR count for an item (hash + increment)</td></tr><tr><td>FR3</td><td>O(1) query: GET approximate count for any item</td></tr><tr><td>FR4</td><td>Never undercount: errors are always overcounts, bounded by ε</td></tr><tr><td>FR5</td><td>Mergeable: combine sketches from different machines</td></tr><tr><td>FR6</td><td>Complement min-heap: together produce Top-K in bounded memory</td></tr></tbody></table></div>
     <div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td>NFR1</td><td>Memory: w×d integers. Typical: 4 rows × 2048 cols = 32KB</td></tr><tr><td>NFR2</td><td>False positive: overcount ≤ ε×N with probability 1−δ</td></tr><tr><td>NFR3</td><td>Parameters: w = e/ε (width), d = ln(1/δ) (depth) — tunable</td></tr><tr><td>NFR4</td><td>For 1% error (ε=0.01): w = e/0.01 ≈ 272 columns</td></tr><tr><td>NFR5</td><td>For 99% confidence (δ=0.01): d = ln(100) ≈ 5 rows</td></tr><tr><td>NFR6</td><td>Total: 5 × 272 = 1360 counters = 5.4KB for 1% error, 99% confidence</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<section id="cms-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What actually breaks when Count-Min Sketch is running in production</h2>
+  <div class="k-cards">
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Sizing Drift — Error Silently Exceeds the Design Target</span><span class="k-tag">FAILURE MODE</span></div>
+      <div class="k-card-body"><div class="k-point">
+        <div class="k-point-label">What breaks & how</div>
+        <div class="k-point-text">Width and depth are sized for an assumed total event volume N. If real traffic grows well past that assumption — a launch goes viral, a new product 10x's event volume — the actual error bound (ε×N) grows with it, since ε is a <em>fraction</em> of total events, not a fixed absolute error. A sketch tuned for 1% error at 1B events silently degrades to a much larger absolute error at 10B events, with no crash, no exception, and no log line — counts just get quietly less accurate.</div>
+        <div class="k-warn"><span class="k-icon">⚠</span><span>Fix: re-derive width/depth whenever the assumed-N changes materially, and monitor observed error where you can (e.g. spot-check a sample of estimated counts against exact counts on a subset). Building in headroom on N at design time is cheaper than re-provisioning after the fact.</span></div>
+      </div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Predictable Hash Seeds Enable Adversarial Collisions</span><span class="k-tag">FAILURE MODE</span></div>
+      <div class="k-card-body"><div class="k-point">
+        <div class="k-point-label">What breaks & how</div>
+        <div class="k-point-text">If CMS is used for something security-adjacent — rate limiting by IP or API key, for instance — and the hash seeds are fixed/predictable, an attacker who can guess or brute-force which inputs collide with a victim's cells can deliberately inflate the victim's counter and trigger a false rate-limit block (a denial-of-service against a legitimate user), or conversely probe for a set of inputs that never collide with anything to evade rate limiting entirely.</div>
+        <div class="k-warn"><span class="k-icon">⚠</span><span>Fix: use randomized/secret hash seeds per deployment (not a fixed public seed), and if CMS is protecting something adversarial, treat it as one signal among several rather than the sole gate — the same caution that applies to any probabilistic structure used in a security-sensitive path.</span></div>
+      </div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Windowed-Sketch Bucket Drift</span><span class="k-tag">FAILURE MODE</span></div>
+      <div class="k-card-body"><div class="k-point">
+        <div class="k-point-label">What breaks & how</div>
+        <div class="k-point-text">A common pattern (as in the trending-hashtags example above) keeps one CMS per fixed time bucket and sums the last N buckets to answer "count over the last hour." If bucket retirement logic has an off-by-one, or a bucket fails to roll over on a deploy/restart, the summed window can silently include stale buckets (overcounting, window appears wider than intended) or drop a bucket (undercounting relative to what CMS itself would guarantee for a single sketch). This is an operational bug in the surrounding system, not a flaw in CMS itself — but it's the most common way CMS-based systems misbehave in practice.</div>
+        <div class="k-warn"><span class="k-icon">⚠</span><span>Fix: make bucket rollover idempotent and test it explicitly across restarts/deploys; alert if the number of active buckets ever drifts from the expected count.</span></div>
+      </div></div>
+    </div>
   </div>
 </section>
 
@@ -1136,5 +1194,5 @@
   </div>
 </section>
 
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

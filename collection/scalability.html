@@ -95,8 +95,8 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
 .k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
 .k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
 .k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
 .k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .k-point{display:flex;flex-direction:column;gap:4px;}
@@ -177,6 +177,11 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -184,7 +189,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">Back-of-envelope estimation, CQRS, Event Sourcing, Circuit Breaker, Bulkhead, and the complete scaling journey from 0 to 10M users.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">CQRS</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Event Sourcing</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Circuit Breaker</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Estimation</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Async Patterns</span></div>
 </div></div>
-<nav class="nav"><a href="#estimation">The skill that separates senior eng</a><a href="#scaling-patterns">The layered approach — how every la</a><a href="#async">When to break synchrony — the most</a><a href="#sd-scalability">Scaling decisions in real systems</a><a href="#decision-scale">The interview framework — how to st</a><a href="#followups-scale">Every hard follow-up, answered</a><a href="#req-nfr-scalability">Requirements & Non-Functional Const</a><a href="#tradeoff-scalability">Trade-off Matrix — What You Gave Up</a><a href="#schema-scalability">Quick Reference</a></nav>
+<nav class="nav"><a href="#estimation">The skill that separates senior eng</a><a href="#scaling-patterns">The layered approach — how every la</a><a href="#async">When to break synchrony — the most</a><a href="#sd-scalability">Scaling decisions in real systems</a><a href="#decision-scale">The interview framework — how to st</a><a href="#followups-scale">Every hard follow-up, answered</a><a href="#scale-failures">What actually breaks</a><a href="#req-nfr-scalability">Requirements & Non-Functional Const</a><a href="#tradeoff-scalability">Trade-off Matrix — What You Gave Up</a><a href="#schema-scalability">Quick Reference</a></nav>
 <div class="wrap">
 <section id="estimation">
   <div class="sec-tag">00 · Back-of-Envelope Estimation</div>
@@ -208,6 +213,19 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="scaling-patterns">
   <div class="sec-tag">01 · Scaling Patterns</div>
   <h2>The layered approach — how every large system actually scales</h2>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"If it's slow, add more servers" is the answer that gets a candidate stuck for the rest of the interview. Horizontal scaling works cleanly for <strong>stateless</strong> app servers — but the database underneath them is stateful, and adding more app servers just means more connections hammering the same single primary. The database is almost always the actual bottleneck, and it does not scale the same way: it scales vertically first (a bigger primary), then via read replicas (for read-heavy load), and only reaches horizontal write scaling through sharding — which is a genuinely hard, invasive change (re-partitioning data, giving up cross-shard transactions and joins). The strong answer identifies <em>which</em> tier is bottlenecked before proposing "add more servers," and knows that for the database tier, caching and read replicas are almost always the right next step before sharding.</p>
+  </div>
+  <table class="matrix" style="margin:20px 0 24px">
+    <thead><tr><th>Cache write strategy</th><th>Mechanism</th><th>Failure mode</th><th>Used by</th></tr></thead>
+    <tbody>
+      <tr><td class="rh">Cache-aside (lazy loading)</td><td>App checks cache first; on a miss, reads the DB and writes the result into the cache</td><td>First request after any cache miss/eviction pays full DB latency ("cold" cache); stale data if the DB is updated by a path that doesn't invalidate the cache</td><td>The default pattern for most read-heavy services — Redis/Memcached in front of PostgreSQL/MySQL is the textbook example</td></tr>
+      <tr><td class="rh">Write-through</td><td>Every write goes to the cache and the DB synchronously, in the same request</td><td>Adds write latency (two synchronous writes per request); cache fills with data that may never be read</td><td>Systems where read-after-write consistency matters and write volume is manageable</td></tr>
+      <tr><td class="rh">Write-behind (write-back)</td><td>Writes go to the cache immediately and are flushed to the DB asynchronously in the background</td><td>Data loss window if the cache node crashes before the flush completes — the write was acknowledged but never reached durable storage</td><td>High write-throughput systems that can tolerate a small durability risk in exchange for write latency (rare outside specialised caching layers)</td></tr>
+      <tr><td class="rh">Read-through</td><td>The cache library itself owns the DB read on a miss — application code only ever talks to the cache</td><td>Cache library becomes a dependency in the read path itself; less common in polyglot stacks</td><td>Cache libraries with a pluggable loader (e.g. Guava Cache with a `CacheLoader`, some CDN origin-fetch configurations)</td></tr>
+    </tbody>
+  </table>
   <div class="k-cards">
 <div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">The Scaling Ladder</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Scale problems are solved in layers. Add each layer only when the previous one is insufficient.</strong> Level 1: Single server + single DB. Works to ~1K req/sec and ~100GB data. Level 2: Add read replicas. 3–5 replicas handle ~5K read req/sec. Level 3: Add caching (Redis). Offloads 80–90% of read DB traffic. Works to ~50K req/sec. Level 4: Horizontal scale app servers behind a load balancer. Works to ~500K req/sec. Level 5: Database sharding. Handles unlimited write throughput and unlimited data size. Level 6: CDN for static assets + geographic distribution. Handles global scale with low latency.</div><div class="k-good"><span class="k-icon">&#10003;</span><span>✓ Most systems never need Level 5+. Jumping to sharding before exhausting caching is premature optimisation. In interviews: always state where on this ladder the system sits.</span></div></div></div></div>
 <div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Vertical vs Horizontal Scaling</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Vertical: bigger machine. Horizontal: more machines.</strong> </p><p><strong>Vertical (scale-up)</strong>: upgrade from 16-core to 64-core server. Simple — no code changes. Limit: biggest available machine is fixed (~128 cores, ~24TB RAM). Single point of failure.</p><p><strong>Horizontal (scale-out)</strong>: add more servers of the same size. Unlimited scale in theory. Requires stateless services (session state in Redis, not in-process). Complexity: load balancing, distributed coordination, consistent hashing for data.</div><div class="k-muted"><span class="k-icon">&rarr;</span><span>Databases scale vertically first (biggest possible primary), then horizontally (read replicas, then sharding). Stateless app servers scale horizontally trivially. This asymmetry is why the database is always the bottleneck.</span></div></div></div></div>
@@ -321,6 +339,16 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   Tools: gh-ost (GitHub's online schema migration for MySQL), pgroll (Postgres), Flyway/Liquibase (migration management).</div></div>
 </section>
 
+<section id="scale-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What actually breaks at scale — real incident patterns</h2>
+  <div class="k-cards">
+<div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">Cache Stampede (Thundering Herd on Expiry)</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">A hot cache key expires. In the same instant, hundreds or thousands of concurrent requests all get a cache miss and all hit the database to recompute the same value simultaneously — the exact spike in DB load the cache existed to prevent. Under enough concurrency this can take the DB down entirely, at which point every request fails and the cache never gets repopulated.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: request coalescing / single-flight (only one request per key is allowed to recompute; others wait for that result). Add jitter to TTLs so keys don't expire in lockstep. For very hot keys, refresh proactively before expiry ("early recomputation") instead of waiting for a miss.</span></div></div></div></div>
+<div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Hot Partition / Hot Key</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">A sharding or partitioning scheme distributes load by key, but real-world traffic is never uniform — a celebrity user, a viral post, or a popular product ID sends disproportionate traffic to one shard or one Redis key. That one node becomes CPU- or network-saturated while every other node sits idle, and because the system is sharded, you can't just "add more servers" to fix one hot shard.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: salt hot keys to spread them across multiple physical keys/shards (then fan-in on read). Use consistent hashing with virtual nodes so any single physical node holds many small, independently-movable shards rather than one large contiguous range. Detect hot keys with per-key traffic monitoring, not just per-node metrics.</span></div></div></div></div>
+<div class="k-card"><div class="k-card-head"><span class="k-num">03</span><span class="k-title">Auto-Scaling Lag Behind a Sudden Spike</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">Traffic spikes 10× in seconds (a flash sale, a viral link). Auto-scaling reacts to a metric crossing a threshold, then has to provision and boot new instances — a process that typically takes on the order of a minute or more depending on image size and warm-up work. During that gap, the existing fleet is overwhelmed, latency spikes, and cascading timeouts can make the system look "down" even though it's actively scaling up.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: scale on a leading indicator (queue depth, request rate) rather than a lagging one (CPU, which only rises after the fleet is already saturated). Keep warm standby capacity for known-spiky traffic patterns (scheduled sales events). Shed load gracefully (serve a cached or degraded response) rather than timing out during the scale-up window.</span></div></div></div></div>
+  </div>
+</section>
+
 <section id="req-nfr-scalability">
   <div class="sec-tag">📋 · Requirements & Scale</div>
   <h2>Requirements & Non-Functional Constraints</h2>
@@ -348,4 +376,4 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 
 <div class="footer">SCALABILITY · CQRS · EVENT SOURCING · CIRCUIT BREAKER · ESTIMATION · BULKHEAD · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+<script src="../js/speaker.js" defer></script></body></html>

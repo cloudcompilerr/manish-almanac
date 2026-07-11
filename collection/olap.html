@@ -96,8 +96,8 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
 .k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
 .k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
 .k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
 .k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .k-point{display:flex;flex-direction:column;gap:4px;}
@@ -178,6 +178,11 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
 </style>
 </head>
 <body>
@@ -221,7 +226,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <div style="margin:16px 0"><div style="margin:20px 0">
 <h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">OLAP Query Performance Benchmarks</h4>
 <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">ClickHouse scan speed</td><td>1B rows × 2 relevant columns (8 bytes each)</td><td><strong>16GB scanned in ~30s</strong></td><td style="color:#1a7a4a;font-size:12px">SSD: 500MB/s. ClickHouse uses SIMD vectorised reads. Real: ~1B rows/sec for simple aggregations</td></tr><tr><td class="row-head">BigQuery cost control</td><td>1TB scanned × $5/TB query price</td><td><strong>$5 per unoptimised query</strong></td><td style="color:#1a7a4a;font-size:12px">Partition pruning: query only last 7 days → 50GB scanned → $0.25. Always partition by date + cluster by dimension</td></tr><tr><td class="row-head">Druid rollup savings</td><td>100M raw events/day × rollup to 1M agg rows</td><td><strong>100× storage reduction</strong></td><td style="color:#1a7a4a;font-size:12px">Trade: cannot query individual raw events after rollup. Use Kafka for raw event archive alongside Druid</td></tr><tr><td class="row-head">ClickHouse ingest</td><td>Kafka → ClickHouse MaterializedView → 500K rows/sec</td><td><strong>~200MB/sec ingest</strong></td><td style="color:#1a7a4a;font-size:12px">ClickHouse compresses 5-10× → 20-40MB/sec on disk. A single server handles most analytics workloads</td></tr></tbody></table></div></div>
+<tbody><tr><td class="row-head">ClickHouse scan speed</td><td>1B rows × 2 relevant columns (8 bytes each)</td><td><strong>16GB scanned in ~30s</strong></td><td style="color:#1a7a4a;font-size:12px">SSD: 500MB/s. ClickHouse uses SIMD vectorised reads. Real: ~1B rows/sec for simple aggregations</td></tr><tr><td class="row-head">BigQuery cost control</td><td>1TB scanned at BigQuery's on-demand rate (currently $6.25/TiB, commonly rounded to "~$5-6/TB" — check Google's current pricing page, it has changed over time)</td><td><strong>~$6 per unoptimised query</strong></td><td style="color:#1a7a4a;font-size:12px">Partition pruning: query only last 7 days → a small fraction of the table scanned → proportionally small cost. Always partition by date + cluster by dimension</td></tr><tr><td class="row-head">Druid rollup savings</td><td>100M raw events/day × rollup to 1M agg rows</td><td><strong>100× storage reduction</strong></td><td style="color:#1a7a4a;font-size:12px">Trade: cannot query individual raw events after rollup. Use Kafka for raw event archive alongside Druid</td></tr><tr><td class="row-head">ClickHouse ingest</td><td>Kafka → ClickHouse MaterializedView → 500K rows/sec</td><td><strong>~200MB/sec ingest</strong></td><td style="color:#1a7a4a;font-size:12px">ClickHouse compresses 5-10× → 20-40MB/sec on disk. A single server handles most analytics workloads</td></tr></tbody></table></div></div>
 
 
 <section id="columnar">
@@ -233,6 +238,10 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
     <div class="cl-lbl">📦 The Filing Cabinet vs Spreadsheet Analogy</div>
     <p><strong>Row storage:</strong> All data for one customer is stored together — name, email, age, city, purchase_count, revenue. Like a filing cabinet where each folder contains everything about one person. Fast to get all info for one person. Slow to answer "what is the average age of all customers" — you must open every folder and extract just the age field.</p>
     <p style="margin-top:6px;"><strong>Columnar storage:</strong> All ages for all customers are stored together, all cities together, all revenues together. Like a spreadsheet where each column is stored as one contiguous block on disk. To compute average age, you read only the age column — 10× less data to scan. To compute revenue by city, you read only revenue and city — everything else is untouched.</p>
+  </div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"ClickHouse/BigQuery is so fast, why not use it for everything, including the live product?" is the trap. Columnar engines are fast at exactly one shape of query — scan many rows, touch few columns, aggregate — and slow at the opposite shape. A point lookup ("give me order #48213") or a single-row update ("mark this order shipped") is what row-oriented OLTP stores are built for: columnar formats must locate and rewrite fragments across every column file the row touches, and most OLAP engines (ClickHouse, Druid) treat updates as expensive async mutations, not first-class fast operations. A strong candidate names both directions of the trade-off — "OLAP for scan-heavy analytical reads, OLTP for row-level transactional reads and writes" — rather than treating one engine as a universal upgrade.</p>
   </div>
   <h3>Step-by-step: how columnar query execution works</h3>
   <ol class="steps">
@@ -322,9 +331,9 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
     <li><div><div class="step-title">Dremel execution model — distributed tree of workers</div><div class="step-desc">BigQuery uses Google's Dremel engine. A query fans out to thousands of workers in milliseconds.
       <ul><li>Root server receives query, distributes to intermediate servers, which distribute to leaf servers</li><li>Leaf servers read Colossus (Google's distributed file system) directly — no data movement</li><li>Results aggregate back up the tree</li><li>A query that scans 1 TB can use 2,000 workers simultaneously — each worker reads 0.5 GB</li></ul></div></div></li>
     <li><div><div class="step-title">Slots — units of compute</div><div class="step-desc">BigQuery measures compute in "slots" — a virtual CPU.
-      <ul><li>On-demand pricing: you don't manage slots — BigQuery allocates automatically, charges per TB scanned</li><li>Reservations pricing: buy a fixed number of slots (e.g., 500 slots) — predictable cost, consistent performance</li><li>A complex query might use 2,000 slots for 3 seconds — that's 6,000 slot-seconds of compute</li></ul></div></div></li>
+      <ul><li>On-demand pricing: you don't manage slots — BigQuery allocates automatically, charges per TB (technically TiB) scanned</li><li>Capacity-based pricing (BigQuery's current "Editions" model — Standard/Enterprise/Enterprise Plus, which replaced the older flat-rate reservation model in 2023): buy autoscaling slots billed per slot-hour, with discounts for 1- or 3-year commitments — predictable cost, consistent performance for steady query volume</li><li>A complex query might use thousands of slots for a few seconds — slot-seconds is the underlying unit of compute either way</li></ul></div></div></li>
     <li><div><div class="step-title">Partitioned and clustered tables for cost control</div><div class="step-desc">Critical for production BigQuery usage:
-      <ul><li><strong>Partition by date:</strong> Query <code>WHERE date = '2026-03-20'</code> reads only that date's partition — 1/365 of the data</li><li><strong>Cluster by column:</strong> Within a partition, data is co-located by cluster column. Filter on cluster column skips most blocks.</li><li>Without partitioning: a query always scans the entire table. At $5/TB, a 1 PB table = $5,000 per query. Always partition.</li></ul></div></div></li>
+      <ul><li><strong>Partition by date:</strong> Query <code>WHERE date = '2026-03-20'</code> reads only that date's partition — 1/365 of the data</li><li><strong>Cluster by column:</strong> Within a partition, data is co-located by cluster column. Filter on cluster column skips most blocks.</li><li>Without partitioning: a query always scans the entire table. At BigQuery's current on-demand rate (~$6.25/TiB), a 1 PB table scanned in full runs into the thousands of dollars for a single query — the exact number moves with pricing, the lesson (always partition) doesn't.</li></ul></div></div></li>
   </ol>
 </section>
 
@@ -337,7 +346,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       <tr><td class="rh">Storage model</td><td>Columnar MergeTree. Each column in separate compressed file. Sparse primary index.</td><td>Columnar segments with bitmap indexes. Pre-aggregated rollup at ingest.</td><td>Capacitor columnar format on Colossus (Google's GFS). Dremel execution.</td><td>Columnar, zone maps (min/max per 1MB block). Sorted by SORTKEY for fast range scans.</td></tr>
       <tr><td class="rh">Ingest speed</td><td><span class="dot g"></span>500K–1M rows/sec via Kafka engine or HTTP insert. Native Kafka consumer built in.</td><td><span class="dot g"></span>Real-time streaming via Kafka (Middle Manager). Native streaming + batch.</td><td><span class="dot a"></span>Batch (load jobs) preferred. Streaming inserts: 1 GB/s but 10× more expensive.</td><td><span class="dot a"></span>COPY command from S3 is fast (batch). Kinesis Firehose for streaming (ingestion lag).</td></tr>
       <tr><td class="rh">Query latency</td><td><span class="dot g"></span>&lt;1s on 100B rows for simple aggregations. Vectorised SIMD execution. Sub-100ms for pre-aggregated data.</td><td><span class="dot g"></span>&lt;500ms interactive — fastest for dashboard queries. Pre-aggregation makes queries fast even at petabyte scale.</td><td><span class="dot a"></span>2–30s depending on data scanned, slot availability, and query complexity.</td><td><span class="dot a"></span>2–15s for well-tuned queries. Requires SORTKEY and DISTKEY design — wrong keys = slow.</td></tr>
-      <tr><td class="rh">Cost model</td><td><span class="dot g"></span>Instance-based (EC2/bare metal). Predictable. Very cheap per TB at scale. ClickHouse Cloud also available.</td><td><span class="dot a"></span>Instance-based. Multiple node types (Historical, Broker, Coordinator) — complex sizing.</td><td><span class="dot r"></span>$5/TB scanned (on-demand). Predictable with reservations ($1,800–$2,400/slot/month). Partitioning is critical for cost control.</td><td><span class="dot a"></span>Node-based (RA3 nodes decouple compute/storage). Serverless option. Generally less expensive than BigQuery for steady workloads.</td></tr>
+      <tr><td class="rh">Cost model</td><td><span class="dot g"></span>Instance-based (EC2/bare metal). Predictable. Very cheap per TB at scale. ClickHouse Cloud also available.</td><td><span class="dot a"></span>Instance-based. Multiple node types (Historical, Broker, Coordinator) — complex sizing.</td><td><span class="dot r"></span>Roughly $5-6/TB scanned on-demand (currently priced at $6.25/TiB — check Google's current pricing, this has changed over time). More predictable with a capacity-based Editions commitment. Partitioning is critical for cost control.</td><td><span class="dot a"></span>Node-based (RA3 nodes decouple compute/storage). Serverless option. Generally less expensive than BigQuery for steady workloads.</td></tr>
       <tr><td class="rh">Ops complexity</td><td><span class="dot a"></span>Self-managed. Single binary — simple deployment. Replication, sharding need configuration. ClickHouse Cloud option.</td><td><span class="dot r"></span>High. Multiple node types (Coordinator, Overlord, Broker, Historical, MiddleManager) — complex cluster management.</td><td><span class="dot g"></span>Zero — fully serverless. No capacity planning, no patching. Just query.</td><td><span class="dot g"></span>Managed by AWS. Less ops than self-hosted, but requires SORTKEY/DISTKEY tuning.</td></tr>
       <tr><td class="rh">SQL support</td><td>SQL with extensions (ARRAY, Map, AggregateFunction types). Missing: full joins on large tables, UPDATES.</td><td>SQL (Druid SQL) or native JSON-based API. Limited SQL compared to standard — no joins across datasources.</td><td>Standard SQL (ANSI). Best SQL support of the four. Window functions, ML via BQML, geospatial, JSON.</td><td>PostgreSQL-compatible SQL. Full ANSI SQL. Joins work well if DISTKEY matches join key.</td></tr>
       <tr><td class="rh">Updates / deletes</td><td>Mutations (async ALTER TABLE UPDATE). Expensive — avoid frequent updates. Design for append-only.</td><td>Not supported natively. To update: reindex the segment. Druid is designed for immutable time-series.</td><td>DML updates/deletes supported but scan the whole partition — expensive. Use MERGE for upserts.</td><td>UPDATE/DELETE supported. Tombstone-based — old rows remain until VACUUM. Similar to Postgres.</td></tr>
@@ -421,7 +430,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       <li><strong>Partition pruning:</strong> Always add <code>WHERE _PARTITIONDATE = '2026-03-20'</code> or use partition columns in filters. Without this, every query scans the entire table. A 1 PB table with daily partitions: filtering one day = 1/365 of cost.</li>
       <li><strong>Clustering:</strong> <code>CLUSTER BY user_id</code> co-locates rows with the same user_id in the same blocks. A query filtering by user_id skips 90%+ of blocks. Combined with partitioning, you can reduce scan to &lt;1% of total data.</li>
       <li><strong>BI Engine / materialised views:</strong> Pre-compute common aggregations as materialised views. Dashboard queries hit the view (tiny) not the raw table (huge). BI Engine caches frequently-run query results in RAM — subsequent identical queries cost nothing.</li>
-      <li><strong>Reservations:</strong> Switch from on-demand to flat-rate reservations once you have predictable query volume. $1,800–$2,400/slot/month with 500 slots is predictable vs unpredictable per-TB charges. Break-even is roughly when you scan 400+ TB/month.</li>
+      <li><strong>Capacity commitments:</strong> Switch from on-demand to a capacity-based BigQuery Editions commitment (Enterprise/Enterprise Plus, billed per slot-hour with 1- or 3-year discounts) once you have predictable, high query volume — this replaced the older flat-rate reservation model in 2023. It's predictable vs unpredictable per-TB charges; the break-even point depends on current on-demand and slot pricing, so model it against your own volume rather than assuming a fixed threshold.</li>
     </ul>
     <p style="margin-top:8px;"><strong>Common interview answer:</strong> "In production, all BigQuery tables are partitioned by date and clustered by the most common filter dimension. We use materialised views for dashboard queries. Monthly cost monitoring with alerts when a query scans &gt;10 TB unexpectedly."</p>
   </div></div>
@@ -472,22 +481,6 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>Data Lakehouse</strong> (Databricks Delta Lake, Apache Iceberg on S3): combine both. S3/GCS storage cost + columnar Parquet performance + ACID transactions from Delta/Iceberg metadata layer. Query directly from S3 with warehouse-like performance. This is the modern standard — most new data platform designs use the lakehouse pattern.<br><br>
   <strong>Interview answer</strong>: "I'd start with a data lake on S3 using Parquet + Delta Lake for ACID. Query with Athena for ad-hoc, Spark for batch processing, and ClickHouse for dashboard queries. This gives warehouse performance at lake economics."</div></div>
 </section>
-
-<div class="oneliner">
-  <div class="lbl">The one rule to remember</div>
-  <blockquote>"ClickHouse: extreme ingest + fast aggregation, self-hosted. Druid: sub-second interactive dashboards, pre-aggregates at ingest. BigQuery: serverless analytics, pay per TB, zero ops. Redshift: AWS-native data warehouse. All four are columnar — the difference is when they aggregate, how they manage ops, and what they cost."</blockquote>
-</div>
-
-
-<footer>OLAP · CLICKHOUSE · DRUID · BIGQUERY · REDSHIFT · MANISH-ALMANAC</footer>
-
-
-
-
-
-
-
-
 
 <section id="concepts-olap">
   <div class="sec-tag">08 · Core Concepts</div>
@@ -567,8 +560,8 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       Create an external table pointing to S3 Parquet files. JOIN it with internal Redshift tables. Spectrum pushes predicates and column selection to the S3 layer — only relevant data is transferred.
         <span class="concept-note good">✓ Hot data in Redshift (fast). Cold/archive data in S3 (cheap). Query both in one SQL statement. Ideal for: historical analysis where only recent data needs Redshift's full speed.</span></div></div>
     <div class="concept-row"><div class="concept-term">BigQuery Slots</div><div class="concept-def"><strong>BigQuery allocates "slots" (units of compute) to each query dynamically from a shared pool.</strong><br>
-      On-demand pricing: up to 2,000 slots per project. Pay per TB scanned. Flat-rate: buy reserved slots (500 minimum) for predictable cost at high query volume. At Shopify/Airbnb scale, flat-rate is dramatically cheaper.
-        <span class="concept-note muted">Slot contention: if your project runs many concurrent queries, they compete for slots. One very large query can starve smaller dashboard queries. Use workload management (reservations + assignments) to allocate slots per team or use case.</span></div></div>
+      On-demand pricing: slots allocated dynamically per query, billed per TB (TiB) scanned. Capacity-based Editions pricing: commit to autoscaling slots billed per slot-hour, with steeper discounts for 1- or 3-year commitments — for predictable cost at high, steady query volume. At very large sustained query volume, a capacity commitment is typically far cheaper than on-demand.
+        <span class="concept-note muted">Slot contention: if your project runs many concurrent queries, they compete for slots. One very large query can starve smaller dashboard queries. Use workload management (reservation assignments) to allocate slots per team or use case.</span></div></div>
   </div>
 
 <div class="sec-tag">10 · Advanced OLAP Topics</div>
@@ -583,7 +576,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>ClickHouse's secret: sorted, compressed columnar storage with sparse indexing.</strong>
-      <p>/p><p>Insert: data written to parts (immutable, sorted by ORDER BY key). Background merge: small parts merged into larger parts. Reads: scan only parts that overlap with the query's WHERE clause (partition pruning + primary key range scan).</p><p>Sparse index: ClickHouse doesn't index every row. It keeps one index entry per "granule" (8192 rows by default). To find rows where user_id = 12345: scan the sparse index to find which granule ranges might contain it → decompress those granules → scan within. Index is small enough to fit in RAM; scanned granules are sequential reads.</p>
+      <p></p><p>Insert: data written to parts (immutable, sorted by ORDER BY key). Background merge: small parts merged into larger parts. Reads: scan only parts that overlap with the query's WHERE clause (partition pruning + primary key range scan).</p><p>Sparse index: ClickHouse doesn't index every row. It keeps one index entry per "granule" (8192 rows by default). To find rows where user_id = 12345: scan the sparse index to find which granule ranges might contain it → decompress those granules → scan within. Index is small enough to fit in RAM; scanned granules are sequential reads.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ Result: ClickHouse can scan 1 billion rows/second/server. For a query like "count events by country for the last 7 days": partition pruning eliminates all but the last 7 days' partitions → sparse index finds the relevant granules → columnar scan of just the country and timestamp columns. Often 100-1000× faster than row-oriented OLAP.</span></div>
     </div>
@@ -598,7 +591,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Iceberg brings ACID transactions and schema evolution to data lakes stored in S3.</strong>
-      <p>/p><p>Problem with plain S3 as a data lake: no transactions (concurrent writes → corrupted partitions), no schema evolution (adding a column requires full rewrite), no time travel (can't query "how did the data look last Tuesday?").</p><p>Iceberg solves this: maintains a metadata layer (JSON manifests) that tracks all files, their statistics, and versions. ACID writes: create new files, update the manifest atomically. Time travel: each manifest version is immutable — query the manifest from any point in time. Schema evolution: add/remove/rename columns by updating metadata only (no data rewrite).</p>
+      <p></p><p>Problem with plain S3 as a data lake: no transactions (concurrent writes → corrupted partitions), no schema evolution (adding a column requires full rewrite), no time travel (can't query "how did the data look last Tuesday?").</p><p>Iceberg solves this: maintains a metadata layer (JSON manifests) that tracks all files, their statistics, and versions. ACID writes: create new files, update the manifest atomically. Time travel: each manifest version is immutable — query the manifest from any point in time. Schema evolution: add/remove/rename columns by updating metadata only (no data rewrite).</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ Iceberg is the new standard for lakehouse architecture. Supported by: Snowflake, BigQuery (in preview), Athena, Spark, Flink, Trino. Paired with object storage (S3/GCS), it provides data warehouse semantics without the cost of a managed data warehouse.</span></div>
     </div>
@@ -614,7 +607,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <h2>Requirements & Non-Functional Constraints</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
 <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Analytical queries: GROUP BY, window functions, aggregations over billions of rows</td></tr><tr><td><strong>FR2</strong></td><td>Sub-second dashboards: pre-aggregated rollups for common queries</td></tr><tr><td><strong>FR3</strong></td><td>Real-time ingest: stream data into OLAP engine (Kafka → ClickHouse)</td></tr><tr><td><strong>FR4</strong></td><td>Time-series analytics: metrics over sliding and tumbling time windows</td></tr><tr><td><strong>FR5</strong></td><td>Ad-hoc queries: interactive SQL without pre-defined schemas</td></tr><tr><td><strong>FR6</strong></td><td>Data lake integration: query parquet files on S3 without loading</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Query latency: p99 < 1s for pre-aggregated, < 10s for ad-hoc (billions of rows)</td></tr><tr><td><strong>NFR2</strong></td><td>Ingest throughput: 500K rows/sec (ClickHouse), 1M rows/sec (Druid rollup)</td></tr><tr><td><strong>NFR3</strong></td><td>Data freshness: real-time path < 30s lag, batch path < 1h</td></tr><tr><td><strong>NFR4</strong></td><td>Storage efficiency: columnar compression 5–10× vs row storage</td></tr><tr><td><strong>NFR5</strong></td><td>Concurrency: 100+ simultaneous dashboard queries without degradation</td></tr><tr><td><strong>NFR6</strong></td><td>Cost: BigQuery $5/TB scanned — partition pruning essential</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Query latency: p99 < 1s for pre-aggregated, < 10s for ad-hoc (billions of rows)</td></tr><tr><td><strong>NFR2</strong></td><td>Ingest throughput: 500K rows/sec (ClickHouse), 1M rows/sec (Druid rollup)</td></tr><tr><td><strong>NFR3</strong></td><td>Data freshness: real-time path < 30s lag, batch path < 1h</td></tr><tr><td><strong>NFR4</strong></td><td>Storage efficiency: columnar compression 5–10× vs row storage</td></tr><tr><td><strong>NFR5</strong></td><td>Concurrency: 100+ simultaneous dashboard queries without degradation</td></tr><tr><td><strong>NFR6</strong></td><td>Cost: BigQuery on-demand runs roughly $5-6/TB (TiB) scanned at current published rates — partition pruning essential; verify the exact figure against current pricing before quoting it</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -627,22 +620,17 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="schema-olap">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>OLAP Engine Quick Reference</h2>
-  <h4>When to Choose Which OLAP Engine</h4><table class="flow-table"><thead><tr><th>Requirement</th><th>Best Choice</th><th>Why</th></tr></thead><tbody><tr><td>Real-time dashboard (< 1s)</td><td>Druid + pre-aggregation</td><td>Rollup at ingest. Segment-level cache. Sub-second for time-based queries</td></tr><tr><td>Ad-hoc analytics on raw events</td><td>ClickHouse</td><td>Full column scan at 1B rows/sec. No pre-aggregation needed. Flexible schema</td></tr><tr><td>Fully managed, pay-per-query</td><td>BigQuery</td><td>Serverless. Auto-scale. $5/TB scanned. Partition pruning reduces cost 10-100×</td></tr><tr><td>AWS-native data warehouse</td><td>Redshift</td><td>Columnar + row store hybrid. Spectrum for S3 queries. RA3 = decoupled compute/storage</td></tr><tr><td>Time-series metrics</td><td>Druid / TimescaleDB</td><td>Native time partitioning. Rollup for metric retention. Continuous queries</td></tr><tr><td>Data lake SQL (no loading)</td><td>Athena / BigQuery external</td><td>Query parquet/ORC in S3 directly. No ETL. Pay per query. Partition pruning essential</td></tr></tbody></table>
+  <h4>When to Choose Which OLAP Engine</h4><table class="flow-table"><thead><tr><th>Requirement</th><th>Best Choice</th><th>Why</th></tr></thead><tbody><tr><td>Real-time dashboard (< 1s)</td><td>Druid + pre-aggregation</td><td>Rollup at ingest. Segment-level cache. Sub-second for time-based queries</td></tr><tr><td>Ad-hoc analytics on raw events</td><td>ClickHouse</td><td>Full column scan at 1B rows/sec. No pre-aggregation needed. Flexible schema</td></tr><tr><td>Fully managed, pay-per-query</td><td>BigQuery</td><td>Serverless. Auto-scale. Roughly $5-6/TB scanned at current on-demand rates (verify before quoting). Partition pruning reduces cost 10-100×</td></tr><tr><td>AWS-native data warehouse</td><td>Redshift</td><td>Columnar + row store hybrid. Spectrum for S3 queries. RA3 = decoupled compute/storage</td></tr><tr><td>Time-series metrics</td><td>Druid / TimescaleDB</td><td>Native time partitioning. Rollup for metric retention. Continuous queries</td></tr><tr><td>Data lake SQL (no loading)</td><td>Athena / BigQuery external</td><td>Query parquet/ORC in S3 directly. No ETL. Pay per query. Partition pruning essential</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Failure Mode & Cost Fast Recall</h4><table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td>A single query bill spikes unexpectedly</td><td>Unpartitioned/unclustered table scanned in full (BigQuery/Redshift Spectrum)</td><td>Always partition by date, cluster by common filter column, alert on queries scanning above a threshold</td></tr><tr><td>Dashboard queries slow down under concurrent load</td><td>Every dashboard view re-runs the same raw aggregation query</td><td>Pre-aggregate top dashboard queries + cache results (Redis, BI Engine, materialized views)</td></tr><tr><td>Cannot answer "what did this one user do" after rollup</td><td>Druid-style ingest-time rollup discarded row-level detail permanently</td><td>Keep a raw-event archive (Kafka retention, S3) alongside the rolled-up OLAP store</td></tr><tr><td>ClickHouse queries slow down over time on one table</td><td>Too many small unmerged parts, or ORDER BY key doesn't match filter columns</td><td>Tune background merge settings; design ORDER BY around your actual query filters</td></tr></tbody></table>
 </section>
 
+<div class="oneliner">
+  <div class="lbl">The one rule to remember</div>
+  <blockquote>"ClickHouse: extreme ingest + fast aggregation, self-hosted. Druid: sub-second interactive dashboards, pre-aggregates at ingest. BigQuery: serverless analytics, pay per TB, zero ops. Redshift: AWS-native data warehouse. All four are columnar — the difference is when they aggregate, how they manage ops, and what they cost."</blockquote>
 </div>
+
+</div>
+<footer>OLAP · CLICKHOUSE · DRUID · BIGQUERY · REDSHIFT · MANISH-ALMANAC</footer>
 <script>function toggle(el){var item=el.parentElement;var isOpen=item.classList.contains('open');document.querySelectorAll('.faq.open').forEach(function(f){f.classList.remove('open');});if(!isOpen)item.classList.add('open');}</script>
-
-
-
-
-
-
-</div>
-
-
-
-
-
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

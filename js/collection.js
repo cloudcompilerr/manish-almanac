@@ -50,6 +50,10 @@ function closeCollection(){
   document.getElementById('list').style.display='block';
   window.scrollTo(0,0);
 }
+function injectSpeaker(html){
+  var tag='<script src="js/speaker.js" defer><\/script>';
+  return /<\/body>/i.test(html) ? html.replace(/<\/body>/i, tag+'</body>') : html+tag;
+}
 function openCollItem(id){
   var item=COLLECTION_DATA[id];
   if(!item)return;
@@ -60,12 +64,12 @@ function openCollItem(id){
   document.getElementById('coll-item').classList.add('open');
   window.scrollTo(0,0);
   if(item.srcdoc){
-    iframe.srcdoc=item.srcdoc;
+    iframe.srcdoc=injectSpeaker(item.srcdoc);
   } else {
     iframe.srcdoc='<div style="font-family:-apple-system,sans-serif;padding:40px 24px;text-align:center;color:#aaa;font-size:14px">Loading…</div>';
     fetch(item.file)
       .then(function(r){ if(!r.ok)throw new Error('HTTP '+r.status); return r.text(); })
-      .then(function(html){ iframe.srcdoc=html; })
+      .then(function(html){ iframe.srcdoc=injectSpeaker(html); })
       .catch(function(e){
         iframe.srcdoc='<div style="font-family:-apple-system,sans-serif;padding:40px 24px;color:#c00;font-size:14px">Could not load '+item.file+'.<br><small>'+e.message+'</small><br><br><small>Run via server: <code>python3 -m http.server</code></small></div>';
       });

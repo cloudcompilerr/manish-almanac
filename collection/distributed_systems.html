@@ -165,14 +165,14 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Distributed Systems<br><em>Fundamentals</em></h1>
   <p class="hero-sub">CAP theorem, PACELC, quorum reads/writes, Raft consensus, 2PC vs Saga, distributed locking with fencing tokens, vector clocks, CRDTs — from first principles to production patterns.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">CAP / PACELC</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Raft Consensus</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Saga / 2PC</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Redlock / Fencing</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">CRDTs</span></div>
 </div></div>
-<nav class="nav"><a href="#cap">The Fundamental Constraint — CAP &</a><a href="#consensus">How distributed systems agree on a</a><a href="#transactions">2PC, Saga pattern, and when to use</a><a href="#locks">Redlock, etcd, and the fencing toke</a><a href="#clocks">Why you cannot trust wall-clock tim</a><a href="#examples">Distributed systems patterns in rea</a><a href="#followups">Every hard follow-up, answered</a><a href="#crdt-gossip">CRDTs, gossip protocols, and Merkle</a><a href="#tradeoff-distributed_systems">Trade-off Matrix — What You Gave Up</a><a href="#schema-distributed_systems">Quick Reference</a></nav>
+<nav class="nav"><a href="#cap">The Fundamental Constraint — CAP &</a><a href="#consensus">How distributed systems agree on a</a><a href="#transactions">2PC, Saga pattern, and when to use</a><a href="#locks">Redlock, etcd, and the fencing toke</a><a href="#clocks">Why you cannot trust wall-clock tim</a><a href="#distsys-production">What actually breaks in production</a><a href="#examples">Distributed systems patterns in rea</a><a href="#followups">Every hard follow-up, answered</a><a href="#crdt-gossip">CRDTs, gossip protocols, and Merkle</a><a href="#tradeoff-distributed_systems">Trade-off Matrix — What You Gave Up</a><a href="#schema-distributed_systems">Quick Reference</a></nav>
 <div class="wrap">
 <section id="cap">
   <div class="sec-tag">00 · CAP Theorem</div>
@@ -186,6 +186,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <strong>AP — Availability + Partition Tolerance:</strong> Both branches stay open, serving customers independently. Service stays up. But when the line is restored, one branch shows ₹50,000 and the other ₹72,000 for the same account — they need to reconcile.<br><br>
       <strong>The question is: would you rather return an error, or return potentially stale data?</strong> Both are wrong — the choice is about which kind of wrong is less harmful to your users.
     </div>
+  </div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"CAP theorem says I can pick any 2 of 3, so I'll design for Consistency and Availability." <strong>This sentence is the tell that a candidate hasn't actually understood CAP.</strong> Partition tolerance isn't a feature you opt into — on any real network of more than one machine, partitions <em>will</em> happen (a switch fails, a cable gets cut, a GC pause makes a node unreachable for 30 seconds). You don't get to choose P; the network chooses it for you. The only real choice is what your system does <em>when</em> a partition happens: refuse requests until it heals (CP) or keep serving and reconcile afterward (AP). An interviewer asking about CAP wants to hear that framing — not "I'll have both."</p>
   </div>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">PACELC Extension</div><div class="concept-def"><strong>CAP only describes partition behaviour. PACELC adds the normal-operation trade-off.</strong><br>
@@ -212,18 +216,13 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <h2>Requirements & Non-Functional Constraints</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
 <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Consensus: multiple nodes agree on a single value despite failures</td></tr><tr><td><strong>FR2</strong></td><td>Linearisable reads: any read sees the latest committed write</td></tr><tr><td><strong>FR3</strong></td><td>Distributed transactions: multi-node atomic commit (Saga / 2PC)</td></tr><tr><td><strong>FR4</strong></td><td>Leader election: single leader per partition without split-brain</td></tr><tr><td><strong>FR5</strong></td><td>Anti-entropy: detect and repair diverged replicas (Merkle trees)</td></tr><tr><td><strong>FR6</strong></td><td>Gossip: propagate cluster state without central coordinator</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>CAP: choose Consistency or Availability during partition</td></tr><tr><td><strong>NFR2</strong></td><td>Raft consensus: leader election in 150–300ms after failure</td></tr><tr><td><strong>NFR3</strong></td><td>Cassandra repair: anti-entropy via nodetool repair (weekly)</td></tr><tr><td><strong>NFR4</strong></td><td>Gossip convergence: O(log N) rounds for N-node cluster</td></tr><tr><td><strong>NFR5</strong></td><td>CRDT merge: commutative, associative, idempotent — always correct</td></tr><tr><td><strong>NFR6</strong></td><td>Clock sync: NTP ±100ms. TrueTime (Spanner) ±7ms. HLC for causality</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>CAP: choose Consistency or Availability during partition</td></tr><tr><td><strong>NFR2</strong></td><td>Raft consensus: leader election typically completes within one to a few election-timeout intervals after failure — the interval itself is a tuned parameter (Raft paper's illustrative range: 150–300ms; etcd's actual default: 1000ms), not a fixed constant</td></tr><tr><td><strong>NFR3</strong></td><td>Cassandra repair: anti-entropy via nodetool repair (weekly)</td></tr><tr><td><strong>NFR4</strong></td><td>Gossip convergence: O(log N) rounds for N-node cluster</td></tr><tr><td><strong>NFR5</strong></td><td>CRDT merge: commutative, associative, idempotent — always correct</td></tr><tr><td><strong>NFR6</strong></td><td>Clock sync: NTP ±100ms. TrueTime (Spanner) ±7ms. HLC for causality</td></tr></tbody></table></div>
 </div>
 </section>
 <div style="margin:16px 0"><div style="margin:20px 0">
 <h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Scale Assumptions for Distributed Systems</h4>
 <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Consensus round-trip</td><td>1 leader + 2 followers, 3 AZs</td><td><strong>~5–15ms</strong></td><td style="color:#1a7a4a;font-size:12px">Use async replication for reads; sync only for writes needing linearisability</td></tr><tr><td class="row-head">Gossip convergence</td><td>log₂(100 nodes) × 1s interval</td><td><strong>~7 rounds = 7s</strong></td><td style="color:#1a7a4a;font-size:12px">Cluster state eventually consistent — do not rely on instant ring membership</td></tr><tr><td class="row-head">Cassandra repair</td><td>1B rows, Merkle comparison</td><td><strong>~30min/keyspace</strong></td><td style="color:#1a7a4a;font-size:12px">Schedule nodetool repair weekly; never skip beyond gc_grace_seconds (10 days)</td></tr><tr><td class="row-head">Saga compensation</td><td>5-step order flow, 1 failure</td><td><strong>~3 compensating writes</strong></td><td style="color:#1a7a4a;font-size:12px">Design compensating transactions as idempotent — they may be called multiple times</td></tr></tbody></table></div></div>
-
-<div style="margin:16px 0"><div style="margin:20px 0">
-<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Scale Assumptions for Distributed Systems</h4>
-<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Consensus round-trip</td><td>1 leader + 2 followers, 3 AZs</td><td><strong>~5–15ms</strong></td><td style="color:#1a7a4a;font-size:12px">Use async replication for reads; sync only for writes needing linearisability</td></tr><tr><td class="row-head">Gossip convergence</td><td>log₂(100 nodes) × 1s interval</td><td><strong>~7 rounds = 7s</strong></td><td style="color:#1a7a4a;font-size:12px">Cluster state eventually consistent — do not rely on instant ring membership</td></tr><tr><td class="row-head">Cassandra repair</td><td>1B rows, Merkle comparison</td><td><strong>~30min/keyspace</strong></td><td style="color:#1a7a4a;font-size:12px">Schedule nodetool repair weekly; never skip beyond gc_grace_seconds (10 days)</td></tr><tr><td class="row-head">Saga compensation</td><td>5-step order flow, 1 failure</td><td><strong>~3 compensating writes</strong></td><td style="color:#1a7a4a;font-size:12px">Design compensating transactions as idempotent — they may be called multiple times</td></tr></tbody></table></div></div>
+<tbody><tr><td class="row-head">Consensus round-trip</td><td>1 leader + 2 followers, 3 AZs</td><td><strong>~5–15ms</strong></td><td style="color:#1a7a4a;font-size:12px">Use async replication for reads; sync only for writes needing linearisability</td></tr><tr><td class="row-head">Gossip convergence</td><td>log₂(100 nodes) × 1s interval</td><td><strong>~7 rounds = 7s</strong></td><td style="color:#1a7a4a;font-size:12px">Cluster state eventually consistent — do not rely on instant ring membership</td></tr><tr><td class="row-head">Cassandra repair</td><td>1B rows, Merkle comparison</td><td><strong>~30min/keyspace</strong></td><td style="color:#1a7a4a;font-size:12px">Schedule nodetool repair weekly; never skip beyond gc_grace_seconds (10 days default)</td></tr><tr><td class="row-head">Saga compensation</td><td>5-step order flow, 1 failure</td><td><strong>~3 compensating writes</strong></td><td style="color:#1a7a4a;font-size:12px">Design compensating transactions as idempotent — they may be called multiple times</td></tr></tbody></table></div></div>
 
 
 <section id="consensus">
@@ -234,9 +233,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       Without consensus: node A believes X=1, node B believes X=2, node C is unreachable. What is the correct answer? Who breaks the tie? How do you ensure a decision made today is honoured after a crash and restart?
         <span class="concept-note muted">Consensus is what makes etcd, ZooKeeper, Kafka (KRaft), and CockroachDB reliable — it is the foundation every distributed database is built on.</span></div></div>
     <div class="concept-row"><div class="concept-term">Raft — Leader Election</div><div class="concept-def"><strong>Raft elects exactly one leader at a time. All writes go through the leader. Followers only accept log entries from the current leader.</strong><br>
-      Startup: all nodes start as followers with a random election timeout (150–300ms). First node to time out becomes a candidate, increments term counter, requests votes from all nodes. First to receive majority (N/2+1) becomes leader — sends heartbeats to suppress new elections.<br>
-      Leader failure: followers stop receiving heartbeats → timeout → new election → new leader. Takes 150–600ms in practice.
-        <span class="concept-note good">✓ At most one leader per term. Clear authority. Simple mental model. Used by: etcd (Kubernetes), CockroachDB, TiKV, Kafka (KRaft), Consul.</span></div></div>
+      Startup: all nodes start as followers with a randomised election timeout. First node to time out becomes a candidate, increments term counter, requests votes from all nodes. First to receive majority (N/2+1) becomes leader — sends heartbeats to suppress new elections.<br>
+      Leader failure: followers stop receiving heartbeats → timeout → new election → new leader.
+        <span class="concept-note good">✓ At most one leader per term. Clear authority. Simple mental model. Used by: etcd (Kubernetes), CockroachDB, TiKV, Kafka (KRaft), Consul.</span>
+      <span class="concept-note muted">The 150–300ms figure often quoted for this is the <em>illustrative</em> range from the original Raft paper's experiments, not a universal default — real systems tune it to their network. etcd's own default election timeout is a full 1000ms (randomised up to ~2×), because etcd's guidance is that the timeout should be at least 10× the inter-node round-trip time to avoid spurious elections on ordinary jitter.</span></div></div>
     <div class="concept-row"><div class="concept-term">Raft — Log Replication</div><div class="concept-def"><strong>Every write is appended to the leader's log as an entry. Leader replicates to all followers. Entry is committed when a majority acknowledges it.</strong><br>
       Flow: client write → leader appends entry → sends AppendEntries RPC to all followers → majority acknowledge → leader commits → applies to state machine → responds to client → followers commit on next AppendEntries.<br>
       Committed = durable. Even if the leader immediately crashes, the entry will be present on a majority of nodes and any new leader will have it.
@@ -295,6 +295,16 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
         <span class="concept-note good">✓ Correct under all scenarios. Used by: Kubernetes leader election (etcd), distributed job schedulers, Kafka broker coordination (ZooKeeper historically, now KRaft).</span>
       <span class="concept-note warn">⚠ Higher latency than Redis (Raft round trip = 5–10ms). Operational complexity of running a Raft cluster.</span></div></div>
   </div>
+  <h3>Four Ways to Lock — and When Each One Actually Fails</h3>
+  <table class="comp-table">
+    <thead><tr><th>Approach</th><th>Mechanism</th><th>Strength</th><th>Failure Mode</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Redis SETNX<br>(single node)</td><td><code>SET key val NX EX ttl</code> on one Redis instance</td><td>Sub-millisecond, trivial to operate</td><td class="bad">Redis node dies mid-lock → total loss of mutual exclusion until failover; no fencing, so a paused client can still write after its lock logically expired</td><td>Simple job dedup, cache stampede guards</td></tr>
+      <tr><td class="row-head">Redlock<br>(5 Redis nodes)</td><td>Acquire on majority (3 of 5) independent Redis instances within a timing budget</td><td>Survives loss of up to 2 of 5 nodes; no single point of failure</td><td class="warn">Kleppmann's critique: a GC pause or clock jump between acquiring and using the lock can let two clients both believe they hold it — Redlock alone has no fencing token</td><td>Non-critical mutual exclusion where brief double-execution is tolerable</td></tr>
+      <tr><td class="row-head">etcd / ZooKeeper</td><td>Raft/ZAB-backed lease or ephemeral znode; linearisable reads</td><td>Provably correct under partitions, crashes, and slow clients — the only options here with a built-in fencing/revision number</td><td class="warn">5–10ms+ per operation (consensus round trip); running and operating a Raft/ZAB cluster is real infrastructure overhead</td><td>Kubernetes leader election (etcd), Kafka broker coordination (ZooKeeper historically)</td></tr>
+      <tr><td class="row-head">Fencing Tokens<br>(pattern, not a product)</td><td>Every lock grant issues a monotonically increasing token; the protected resource itself rejects writes carrying a stale token</td><td class="good">The only pattern that is safe under GC pauses and clock skew, <em>regardless of which lock service issues the token</em> — it moves the safety check to the resource being protected</td><td>Requires the downstream resource (DB, storage) to actually check and reject old tokens — a lock alone doesn't give you this for free</td><td>S3 (ETag/If-Match), optimistic concurrency control in most relational databases, etcd revision numbers</td></tr>
+    </tbody>
+  </table>
 </section>
 
 <section id="clocks">
@@ -321,6 +331,57 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </section>
 
+<section id="distsys-production">
+  <div class="sec-tag">⚠ · Production Failure Modes</div>
+  <h2>What actually breaks in distributed systems — real incident patterns</h2>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Election Storms / Leader Flapping</span></div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>A marginal network link (high latency or intermittent packet loss to the leader, not a clean partition) causes followers to repeatedly time out and call elections, even though the leader is technically still up.</strong>
+      <p></p><p>Each election bumps the term counter and briefly halts writes while a new leader is chosen. If the flaky link doesn't heal, the cluster can cycle through elections every few seconds — burning availability on a "failure" that was never a clean crash.</p><p>Detection: watch Raft term-number growth rate and leader-change frequency in metrics (etcd exposes both). A term counter climbing steadily with no corresponding node restarts is the signature.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>Fix: widen the election timeout relative to the observed network's tail latency (etcd's guidance is at least 10× the round-trip time between members), and use pre-vote extensions (supported by etcd's Raft implementation) so a partitioned node that later rejoins can't immediately force an unnecessary election by broadcasting a stale, higher term.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Split-Brain After a Partition Heals</span></div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>An AP system (Cassandra, DynamoDB-style design) that stayed available on both sides of a partition now has two histories of writes to the same keys that must be reconciled.</strong>
+      <p></p><p>This isn't a bug — it's the deliberate cost of choosing availability. The failure mode is operational: teams that didn't design a conflict-resolution strategy up front (LWW, CRDTs, vector clocks, or an explicit merge UI) end up either silently losing writes or requiring manual, error-prone reconciliation after the fact.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>Fix: decide the conflict-resolution strategy at design time, not after the first real split-brain incident. Read repair and anti-entropy (Merkle-tree comparison) close the gap automatically once the partition heals — but only if the merge semantics were defined before the conflict happened.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Clock Skew Silently Discards Correct Writes</span></div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>A system using Last-Write-Wins conflict resolution (Cassandra's default, DynamoDB) keeps the write with the higher wall-clock timestamp — even when that write did not causally happen later.</strong>
+      <p></p><p>NTP-synchronised clocks are usually within a few milliseconds of each other, but "usually" is the trap: a node with NTP misconfigured, a VM that paused during a hypervisor migration, or a container with a skewed clock can silently overwrite a correct, later write with an earlier, incorrect one — with no error, no exception, and no log line pointing at the cause.</p>
+      </div>
+      <div class="k-warn"><span class="k-icon">⚠</span><span>This class of bug is uniquely painful because it produces no crash and no alert — just data that's quietly wrong. Fix: monitor NTP offset per node and alert on drift; for data where a silent overwrite is unacceptable, use CAS/lightweight transactions (Paxos-backed, at higher latency) or a causality-aware scheme (vector clocks, CRDTs) instead of timestamp-only LWW.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head"><span class="k-num">04</span><span class="k-title">Thundering Herd on Lock Expiry</span></div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Many clients are blocked waiting on the same distributed lock. The instant it expires or is released, all of them race to acquire it simultaneously.</strong>
+      <p></p><p>Only one wins, but the losers all just generated a burst of load against the lock service (Redis, etcd) at the same instant — and if they retry on a fixed interval, they'll collide again on the next cycle, and the one after that, in lockstep.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>Fix: jittered exponential backoff on retry (never a fixed interval), and where the lock service supports it (etcd, ZooKeeper), use a proper wait queue/watch instead of polling — waiters are notified once, in order, rather than all waking up to poll at once.</span></div>
+    </div>
+  </div>
+</div>
+</div>
+</section>
+
 <section id="examples">
   <div class="sec-tag">05 · System Design Examples</div>
   <h2>Distributed systems patterns in real production systems</h2>
@@ -344,9 +405,9 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">Google Spanner — Globally Linearisable</div><span class="sd-example-tag">CP · TRUETIME · GLOBAL</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">TRUETIME</div><div class="choice-val">GPS + atomic clocks provide bounded time uncertainty: current time is somewhere in interval [earliest, latest]. Uncertainty typically 7ms. Spanner waits out this uncertainty window before committing — ensures all nodes agree on transaction ordering without a Raft round trip per write.</div></div>
+      <div class="choice-row"><div class="choice-label">TRUETIME</div><div class="choice-val">GPS + atomic clocks provide bounded time uncertainty: current time is somewhere in interval [earliest, latest]. Google's own published figures put this uncertainty (ε) typically under 7ms, averaging closer to 4ms across their infrastructure. Spanner waits out this uncertainty window ("commit wait") before acknowledging a write — ensures all nodes agree on transaction ordering without a Raft round trip per write.</div></div>
       <div class="choice-row"><div class="choice-label">LINEARISABLE GLOBALLY</div><div class="choice-val">A transaction committed in Singapore is immediately visible to a read in Frankfurt — even though those data centres are separated by 150ms of latency. Spanner achieves this by assigning commit timestamps from TrueTime and delaying reads until their timestamp is safely in the past.</div></div>
-      <div class="choice-row"><div class="choice-label">REPLICATION</div><div class="choice-label">WHY UNIQUE</div><div class="choice-val">You cannot replicate Spanner without GPS/atomic clock hardware. CockroachDB approximates it with NTP (larger uncertainty window, uses Raft where Spanner uses TrueTime). For your system design: use Spanner for truly global ACID at the cost of 7ms commit latency. Use CockroachDB as an open-source alternative.</div></div>
+      <div class="choice-row"><div class="choice-label">WHY UNIQUE</div><div class="choice-val">You cannot replicate Spanner's guarantees without GPS/atomic clock hardware. CockroachDB approximates the same idea with NTP-synchronised clocks (a wider uncertainty window than TrueTime, and Raft per range instead of Paxos+TrueTime). For your system design: use Spanner for genuinely global strict-serializable ACID at the cost of a few milliseconds of commit-wait latency per write. Use CockroachDB as an open-source alternative that trades a wider clock-uncertainty bound for not needing Google's atomic-clock infrastructure.</div></div>
     </div>
   </div>
 </section>
@@ -405,7 +466,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Data structures that can be updated concurrently on multiple replicas and merged without conflicts.</strong>
-      <p>/p><p>The key property: merge is commutative, associative, and idempotent. Any order of merging gives the same result. No coordinator needed. No locks. Automatically eventually consistent.</p><p><strong>G-Counter (Grow-only Counter)</strong>: each replica has its own counter. Value = SUM of all replica counters. Increment: only increment your own replica's counter. Merge: take MAX of each replica's counter. Like counts, view counts — never need to decrement. Example: Redis HLL is a CRDT.</p><p><strong>LWW-Register (Last-Write-Wins)</strong>: each write tagged with a timestamp. On merge: keep the value with the larger timestamp. Risk: clock skew can cause causally-earlier writes to win. Used by: Cassandra's default conflict resolution, AWS DynamoDB.</p><p><strong>OR-Set (Observed-Remove Set)</strong>: supports add AND remove without conflicts. Each element tagged with a unique token on add. Remove removes the specific token. Merge: union of all add-tokens, remove any element whose token was removed. Used by: Riak for shopping cart (add/remove items without coordination).</p>
+      <p></p><p>The key property: merge is commutative, associative, and idempotent. Any order of merging gives the same result. No coordinator needed. No locks. Automatically eventually consistent.</p><p><strong>G-Counter (Grow-only Counter)</strong>: each replica has its own counter. Value = SUM of all replica counters. Increment: only increment your own replica's counter. Merge: take MAX of each replica's counter. Like counts, view counts — never need to decrement. Example: Redis HLL is a CRDT.</p><p><strong>LWW-Register (Last-Write-Wins)</strong>: each write tagged with a timestamp. On merge: keep the value with the larger timestamp. Risk: clock skew can cause causally-earlier writes to win. Used by: Cassandra's default conflict resolution, AWS DynamoDB.</p><p><strong>OR-Set (Observed-Remove Set)</strong>: supports add AND remove without conflicts. Each element tagged with a unique token on add. Remove removes the specific token. Merge: union of all add-tokens, remove any element whose token was removed. Used by: Riak for shopping cart (add/remove items without coordination).</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ CRDTs power: Redis HyperLogLog (approximate unique count), Riak (distributed key-value), distributed collaborative text editing (Logoot, LSEQ), real-time collaborative applications (Notion uses CRDTs for concurrent editing).</span></div>
     </div>
@@ -420,7 +481,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Epidemic information propagation: each node periodically shares state with a few random peers. Information spreads through the cluster without a central coordinator.</strong>
-      <p>/p><p>Cassandra gossip: every second, each node initiates a gossip round with 1–3 randomly selected peers. Shares: which nodes are alive/dead, ring membership, schema version, load. After N rounds (N ≈ log(cluster_size)): all nodes converge to the same view.</p><p>Convergence: with 100 nodes, each gossipping to 3 peers/second → entire cluster has consistent view within ~8 seconds (log₃(100) ≈ 4 rounds, each round ~2 seconds).</p>
+      <p></p><p>Cassandra gossip: every second, each node initiates a gossip round with 1–3 randomly selected peers. Shares: which nodes are alive/dead, ring membership, schema version, load. After N rounds (N ≈ log(cluster_size)): all nodes converge to the same view.</p><p>Convergence: with 100 nodes, each gossipping to 3 peers/second → entire cluster has consistent view within ~8 seconds (log₃(100) ≈ 4 rounds, each round ~2 seconds).</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ Used by: Cassandra (cluster membership), Redis Cluster (node state propagation), Kubernetes (Serf-based gossip for cluster membership in etcd alternatives), AWS DynamoDB (ring membership). Gossip is O(log N) convergence with no single point of failure.</span></div>
     </div>
@@ -435,7 +496,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Cassandra detects which data diverged between replicas using Merkle trees, then repairs only the divergent ranges.</strong>
-      <p>/p><p>Each replica builds a Merkle tree over its token range. The root hash represents the entire data set. Exchange root hashes: if identical → no repair needed. If different → compare child hashes, recursively narrow down the divergent token ranges. Repair only the divergent ranges by reading the correct version from a quorum and writing it back.</p><p>Why this matters: comparing two 10TB replicas row-by-row would take hours and saturate the network. Merkle tree comparison requires O(log N) hash exchanges to identify divergent ranges, then targeted repairs. <code>nodetool repair</code> runs this automatically.</p>
+      <p></p><p>Each replica builds a Merkle tree over its token range. The root hash represents the entire data set. Exchange root hashes: if identical → no repair needed. If different → compare child hashes, recursively narrow down the divergent token ranges. Repair only the divergent ranges by reading the correct version from a quorum and writing it back.</p><p>Why this matters: comparing two 10TB replicas row-by-row would take hours and saturate the network. Merkle tree comparison requires O(log N) hash exchanges to identify divergent ranges, then targeted repairs. <code>nodetool repair</code> runs this automatically.</p>
       </div>
       <div class="k-warn"><span class="k-icon">⚠</span><span>⚠ Cassandra without regular repair: over time, deleted data can re-appear (tombstones expire before repair). Run <code>nodetool repair</code> at least every gc_grace_seconds (default 10 days). In production: schedule repair weekly per keyspace.</span></div>
     </div>
@@ -450,7 +511,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Both achieve consensus. Raft was designed to be understandable; Paxos is historically foundational.</strong>
-      <p>/p><p><strong>Paxos</strong>: two phases — Prepare (elect a proposer) + Accept (propose a value). Multi-Paxos optimises by keeping the same leader for multiple rounds. Google Chubby uses Paxos. Complex to implement correctly — even Leslie Lamport acknowledged implementation subtleties.</p><p><strong>Raft</strong>: designed as Paxos equivalent but more understandable. Three roles: Leader (one per term), Follower (accept entries from leader), Candidate (during election). Leader election, log replication, and safety are explicitly separated concerns. etcd, CockroachDB, TiKV all use Raft.</p>
+      <p></p><p><strong>Paxos</strong>: two phases — Prepare (elect a proposer) + Accept (propose a value). Multi-Paxos optimises by keeping the same leader for multiple rounds. Google Chubby uses Paxos. Complex to implement correctly — even Leslie Lamport acknowledged implementation subtleties.</p><p><strong>Raft</strong>: designed as Paxos equivalent but more understandable. Three roles: Leader (one per term), Follower (accept entries from leader), Candidate (during election). Leader election, log replication, and safety are explicitly separated concerns. etcd, CockroachDB, TiKV all use Raft.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ In FAANG interviews: "I'd use etcd (Raft) for distributed coordination. Raft provides strong consistency (linearisable reads) with understandable failure semantics. For write throughput above what a single Raft group handles, I'd use Multi-Raft (partition data across Raft groups) as CockroachDB does."</span></div>
     </div>
@@ -477,8 +538,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 </div>
 
-</div>
 <div class="footer">DISTRIBUTED SYSTEMS · CAP · RAFT · SAGA · IDEMPOTENCY · VECTOR CLOCKS · CRDTs · FENCING · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

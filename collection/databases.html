@@ -98,8 +98,8 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
 .k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
 .k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
 .k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
 .k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .k-point{display:flex;flex-direction:column;gap:4px;}
@@ -180,6 +180,11 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
 </style>
 </head>
 <body>
@@ -273,7 +278,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
     <tbody>
       <tr><td class="rh">Data model</td><td>Tables, fixed schema, rows. Schema changes need migrations (ALTER TABLE).</td><td>JSON documents (BSON). No fixed schema — documents in same collection can differ completely.</td><td>Items with Partition Key + optional Sort Key. Other attributes are free-form.</td><td>Rows with Partition Key. Wide columns per row can vary. Like a multi-dimensional hashmap.</td></tr>
       <tr><td class="rh">Query language</td><td>Full SQL — JOINs, window functions, aggregations, subqueries. Most expressive.</td><td>MQL (MongoDB Query Language) — rich JSON queries, aggregation pipeline. No cross-collection joins.</td><td>GetItem/Query by PK only. For other access patterns: Global Secondary Index (GSI) at extra cost.</td><td>CQL — looks like SQL but no JOINs, no GROUP BY, no subqueries. Every query must hit partition key.</td></tr>
-      <tr><td class="rh">ACID transactions</td><td><span class="dot g"></span>Full ACID across rows and tables. Multi-table atomic commits.</td><td><span class="dot g"></span>Single-document ACID. Multi-document transactions exist (v4.0+) but cost performance.</td><td><span class="dot a"></span>Single-item ACID. Multi-item via TransactWriteItems — limited to 25 items, expensive in WCUs.</td><td><span class="dot r"></span>Lightweight transactions via Paxos (compare-and-set). 4× performance penalty. Avoid.</td></tr>
+      <tr><td class="rh">ACID transactions</td><td><span class="dot g"></span>Full ACID across rows and tables. Multi-table atomic commits.</td><td><span class="dot g"></span>Single-document ACID. Multi-document transactions exist (v4.0+) but cost performance.</td><td><span class="dot a"></span>Single-item ACID. Multi-item via TransactWriteItems — up to 100 actions per transaction (raised from an original limit of 25 in a 2022 AWS update; check current docs before quoting), expensive in WCUs.</td><td><span class="dot r"></span>Lightweight transactions via Paxos (compare-and-set). 4× performance penalty. Avoid.</td></tr>
       <tr><td class="rh">Write throughput</td><td>~5K–10K TPS single node. WAL + MVCC overhead is the bottleneck. Partitioning helps.</td><td>~20K–50K TPS with primary acknowledgement. Higher with <code>w:0</code> fire-and-forget.</td><td>Effectively unlimited — on-demand auto-scales. No pre-configuration needed.</td><td>100K–1M+ TPS cluster-wide. LSM-tree + commit log: appends never block, no locking.</td></tr>
       <tr><td class="rh">Read latency</td><td>1–10ms for indexed reads. Full table scan is slow on large tables.</td><td>1–10ms for indexed reads. Aggregation pipeline on large collections needs proper indexes.</td><td>&lt;1ms single-digit p99 for GetItem by key. Consistent at any scale.</td><td>1–5ms for partition key reads. Lower consistency level = lower latency.</td></tr>
       <tr><td class="rh">Scaling model</td><td>Vertical first (bigger machine). Read replicas for read scale. Manual sharding is complex (CitusDB, Vitess).</td><td>Built-in sharding. Shard key choice is critical — wrong key creates hotspots.</td><td>Fully managed by AWS. No ops. Hot partition design issue still exists if partition key is bad.</td><td>Masterless — every node is equal. Add a node, capacity scales linearly. No single point of failure.</td></tr>
@@ -426,7 +431,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
     <ul>
       <li><strong>Cost:</strong> Every write to the base table also writes to each GSI. 1 write = 1 + N WCUs (where N = number of GSIs). Each GSI also has its own separate read/write capacity billing.</li>
       <li><strong>Consistency:</strong> GSI replication is asynchronous — write a record, immediately query the GSI → might not see it yet (eventually consistent). This surprises many developers.</li>
-      <li><strong>Limit:</strong> Max 20 GSIs per table.</li>
+      <li><strong>Limit:</strong> 20 GSIs per table by default (a soft quota — AWS will raise it on request, but redesign your access patterns before assuming you need to).</li>
       <li><strong>Interview signal:</strong> If you find yourself adding 5+ GSIs to support different access patterns, that signals the access patterns are too varied for DynamoDB. Consider MongoDB or PostgreSQL instead.</li>
     </ul>
     <p style="margin-top:6px;"><strong>Local Secondary Index (LSI):</strong> Same partition key, different sort key. Defined at table creation only — cannot add later. Stored on same partition (no extra replication cost). Limited to 10GB per partition key value. Consistent reads allowed.</p>
@@ -484,22 +489,6 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <strong>The key point:</strong> with RF=3 and QUORUM, you can lose 1 node (out of 3) without any service impact. With RF=3 and ONE consistency, you can lose 2 nodes. Design your RF and consistency level based on your availability and consistency requirements.</div></div>
 </section>
 
-<div class="oneliner">
-  <div class="lbl">The one rule to remember</div>
-  <blockquote>"PostgreSQL for ACID and complex queries. MongoDB for flexible schema and nested documents. DynamoDB for known-key access at any scale with zero ops. Cassandra for extreme write throughput with pre-planned access patterns. The access pattern determines the database — not the other way around."</blockquote>
-</div>
-
-
-<footer>DATABASES · POSTGRESQL · MONGODB · DYNAMODB · CASSANDRA · MANISH-ALMANAC</footer>
-
-
-
-
-
-
-
-
-
 <section id="concepts-db">
   <div class="sec-tag">08 · Concepts Deep Dive</div>
   <h2>Database Internals Every Interviewer Probes</h2>
@@ -535,7 +524,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
         <div class="step-q">What is your primary access pattern?</div>
         <div class="step-options">
           <div class="step-option opt-yes"><span class="opt-arrow">Key-value / document lookups →</span><span class="opt-text"><strong>DynamoDB</strong> (fully managed, infinite scale) or <strong>MongoDB</strong> (flexible schema, rich queries). DynamoDB: design your access patterns first, denormalise aggressively. MongoDB: better for ad-hoc queries and evolving schemas.</span></div>
-          <div class="step-option opt-mid"><span class="opt-arrow">Wide column / time series →</span><span class="opt-text"><strong>Cassandra</strong> (self-managed) or <strong>ScyllaDB</strong> (Cassandra-compatible, 10x faster). Design partition key for even distribution. Never allow unbounded partition growth.</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Wide column / time series →</span><span class="opt-text"><strong>Cassandra</strong> (self-managed) or <strong>ScyllaDB</strong> (a Cassandra-wire-compatible reimplementation in C++ that markets itself on lower p99 latency and higher throughput per node — treat the exact multiplier as a vendor claim to verify against your own benchmark, not a fixed fact). Design partition key for even distribution. Never allow unbounded partition growth.</span></div>
           <div class="step-option opt-no"><span class="opt-arrow">Graph traversal →</span><span class="opt-text"><strong>Neo4j</strong> or <strong>Amazon Neptune.</strong> For: social graph (friends-of-friends), fraud detection (transaction networks), knowledge graphs. SQL with recursive CTEs handles simple graphs; dedicated graph DB needed for deep traversals.</span></div>
         </div>
       </div></div>
@@ -588,7 +577,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>B-Tree: optimised for reads. LSM Tree: optimised for writes. Every major DB chooses one.</strong>
-      <p>/p><p><strong>B-Tree (PostgreSQL, MySQL)</strong>: data stored in a balanced tree on disk. Reads: O(log N) — traverse tree to find data. Writes: random I/O — find the correct leaf node, write in place. At scale: random writes cause "write amplification" (each write updates the B-Tree index). Great for: frequent reads, mixed read-write, OLTP with read-heavy patterns.</p><p><strong>LSM Tree (Cassandra, RocksDB, LevelDB)</strong>: writes go to an in-memory buffer (MemTable) first — always sequential. MemTable flushed to SSTable on disk when full. Background compaction merges SSTables. Reads: must check MemTable + every SSTable level (mitigated by Bloom filters). Great for: write-heavy workloads (IoT, logging, time-series).</p>
+      <p></p><p><strong>B-Tree (PostgreSQL, MySQL)</strong>: data stored in a balanced tree on disk. Reads: O(log N) — traverse tree to find data. Writes: random I/O — find the correct leaf node, write in place. At scale: random writes cause "write amplification" (each write updates the B-Tree index). Great for: frequent reads, mixed read-write, OLTP with read-heavy patterns.</p><p><strong>LSM Tree (Cassandra, RocksDB, LevelDB)</strong>: writes go to an in-memory buffer (MemTable) first — always sequential. MemTable flushed to SSTable on disk when full. Background compaction merges SSTables. Reads: must check MemTable + every SSTable level (mitigated by Bloom filters). Great for: write-heavy workloads (IoT, logging, time-series).</p>
       </div>
       <div class="k-muted"><span class="k-icon">→</span><span>Write amplification: B-Tree writes amplify by 2–10× (update the page + write-ahead log). LSM writes amplify by 10–30× during compaction. But LSM writes are sequential (fast SSD I/O) vs B-Tree random writes. Net effect: LSM is faster for write throughput on modern SSDs.</span></div>
     </div>
@@ -603,7 +592,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Expand-Contract pattern: never ALTER TABLE on a live table with millions of rows.</strong>
-      <p>/p><p>Example: rename column <code>user_name</code> → <code>display_name</code> on 100M row table.</p><p><strong>Step 1 — Expand</strong>: <code>ALTER TABLE users ADD COLUMN display_name VARCHAR(255)</code>. PostgreSQL 11+: instant (no table rewrite for nullable columns). Start writing BOTH columns in application code.</p><p><strong>Step 2 — Backfill</strong>: background job: <code>UPDATE users SET display_name = user_name WHERE display_name IS NULL LIMIT 1000</code>. Repeat with 100ms sleep between batches. Runs in background for hours — zero user impact.</p><p><strong>Step 3 — Switch</strong>: once backfill complete, switch reads to display_name. Deploy. Verify for 1 week.</p><p><strong>Step 4 — Contract</strong>: <code>ALTER TABLE users DROP COLUMN user_name</code>. Done.</p>
+      <p></p><p>Example: rename column <code>user_name</code> → <code>display_name</code> on 100M row table.</p><p><strong>Step 1 — Expand</strong>: <code>ALTER TABLE users ADD COLUMN display_name VARCHAR(255)</code>. PostgreSQL 11+: instant (no table rewrite for nullable columns). Start writing BOTH columns in application code.</p><p><strong>Step 2 — Backfill</strong>: background job: <code>UPDATE users SET display_name = user_name WHERE display_name IS NULL LIMIT 1000</code>. Repeat with 100ms sleep between batches. Runs in background for hours — zero user impact.</p><p><strong>Step 3 — Switch</strong>: once backfill complete, switch reads to display_name. Deploy. Verify for 1 week.</p><p><strong>Step 4 — Contract</strong>: <code>ALTER TABLE users DROP COLUMN user_name</code>. Done.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>Tools: gh-ost (GitHub's online schema migration for MySQL), pgroll (Postgres), Liquibase/Flyway for migration management.</span></div>
     </div>
@@ -618,7 +607,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Replica lag is the delay between a write on the primary and it being visible on a replica.</strong>
-      <p>/p><p>Measuring lag: <code>SHOW SLAVE STATUS</code> → Seconds_Behind_Master. Or: write a heartbeat row to primary every second, read it from replica, compare timestamps. Alert if lag > 5 seconds.</p><p>Causes: replica on underpowered hardware, long-running transactions on primary holding replication slot, high write throughput saturating replica's single-threaded replay (PostgreSQL parallel apply helps).</p><p><strong>Read-your-own-writes with replicas</strong>: after a write, subsequent reads must go to the primary (or a replica that has caught up). Pattern: track the LSN (log sequence number) of the last write per session. Before reading from a replica, verify it has replayed up to that LSN. If not: route to primary.</p>
+      <p></p><p>Measuring lag: <code>SHOW SLAVE STATUS</code> → Seconds_Behind_Master. Or: write a heartbeat row to primary every second, read it from replica, compare timestamps. Alert if lag > 5 seconds.</p><p>Causes: replica on underpowered hardware, long-running transactions on primary holding replication slot, high write throughput saturating replica's single-threaded replay (PostgreSQL parallel apply helps).</p><p><strong>Read-your-own-writes with replicas</strong>: after a write, subsequent reads must go to the primary (or a replica that has caught up). Pattern: track the LSN (log sequence number) of the last write per session. Before reading from a replica, verify it has replayed up to that LSN. If not: route to primary.</p>
       </div>
       <div class="k-warn"><span class="k-icon">⚠</span><span>⚠ Common bug: user updates their profile → reads from replica → sees old data → "the update didn't work!" → contacts support. Always route reads to primary for a few seconds after a user-visible write.</span></div>
     </div>
@@ -633,7 +622,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>DynamoDB shards data by partition key. A "hot" partition key sends all traffic to one shard.</strong>
-      <p>/p><p>Example: <code>partition_key = user_id</code>, but user:123 is a celebrity with 50M followers. All writes for user:123 go to one DynamoDB partition. That partition has a throughput limit of 3,000 RCUs / 1,000 WCUs. Exceeded = throttling errors.</p><p><strong>Solutions:</strong></p><p>(1) <strong>Key sharding</strong>: append a random suffix to the partition key: <code>user:123#1</code>, <code>user:123#2</code>, ..., <code>user:123#10</code>. Writes distributed across 10 partitions. Reads: query all 10 suffixes + merge. Cost: 10× read units for hot keys.</p><p>(2) <strong>DynamoDB Adaptive Capacity</strong>: automatically redistributes capacity across partitions. Enables a single partition to use up to 2× its provisioned throughput for a short burst. Handles temporary spikes but not sustained hot keys.</p><p>(3) <strong>Application-level caching</strong>: cache hot partition reads in Redis. Dramatically reduces RCU consumption for the hot partition.</p>
+      <p></p><p>Example: <code>partition_key = user_id</code>, but user:123 is a celebrity with 50M followers. All writes for user:123 go to one DynamoDB partition. That partition has a throughput limit of 3,000 RCUs / 1,000 WCUs. Exceeded = throttling errors.</p><p><strong>Solutions:</strong></p><p>(1) <strong>Key sharding</strong>: append a random suffix to the partition key: <code>user:123#1</code>, <code>user:123#2</code>, ..., <code>user:123#10</code>. Writes distributed across 10 partitions. Reads: query all 10 suffixes + merge. Cost: 10× read units for hot keys.</p><p>(2) <strong>DynamoDB Adaptive Capacity</strong>: automatically redistributes capacity across partitions. Enables a single partition to use up to 2× its provisioned throughput for a short burst. Handles temporary spikes but not sustained hot keys.</p><p>(3) <strong>Application-level caching</strong>: cache hot partition reads in Redis. Dramatically reduces RCU consumption for the hot partition.</p>
       </div>
     </div>
   </div>
@@ -663,23 +652,16 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>When to Choose Which Database</h4><table class="flow-table"><thead><tr><th>Requirement</th><th>Best Choice</th><th>Why</th></tr></thead><tbody><tr><td>User profiles, posts, relational data</td><td>PostgreSQL</td><td>ACID, JOINs, JSONB, rich indexes. Scales to 10TB with sharding</td></tr><tr><td>Social graph (follower/following)</td><td>PostgreSQL + Redis cache</td><td>Simple lookups. PG for truth. Redis SET for O(1) membership check</td></tr><tr><td>Time-series events (logs, metrics, IoT)</td><td>Cassandra / TimescaleDB</td><td>Append-only writes. Time-ordered reads by partition key. Compaction strategies for time data</td></tr><tr><td>Key-value at internet scale</td><td>DynamoDB / Cassandra</td><td>1ms latency, unlimited throughput. No JOINs needed. Access pattern known upfront</td></tr><tr><td>Search / full-text</td><td>Elasticsearch</td><td>Inverted index. BM25 scoring. Aggregations. Not a primary DB — sync from PG via CDC</td></tr><tr><td>Session / cache</td><td>Redis</td><td>Sub-ms. Eviction policies. Rich data structures. Pub/Sub.</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Failure Mode Fast Recall</h4><table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td>User's own write appears to vanish right after saving</td><td>Read routed to a lagging replica (read-your-own-writes problem)</td><td>Route reads to primary for a few seconds post-write, or track LSN and wait for replica to catch up</td></tr><tr><td>One user's traffic throttles or one shard is overloaded</td><td>Hot partition key — a single celebrity/tenant key concentrates load</td><td>Key salting/sharding with suffix + scatter-read, or rely on adaptive capacity as a stopgap, not a fix</td></tr><tr><td>Table file size far exceeds live data size, writes slow down</td><td>MVCC table bloat — autovacuum not keeping up with dead tuples</td><td>Tune autovacuum aggressiveness, monitor bloat, consider partitioning very large hot tables</td></tr><tr><td>Cassandra reads get slower over time on a specific table</td><td>Tombstone accumulation from a high-delete or TTL-heavy workload</td><td>Avoid using Cassandra as a queue; tune gc_grace_seconds deliberately; monitor tombstone warnings</td></tr></tbody></table>
 </section>
 
+<div class="oneliner">
+  <div class="lbl">The one rule to remember</div>
+  <blockquote>"PostgreSQL for ACID and complex queries. MongoDB for flexible schema and nested documents. DynamoDB for known-key access at any scale with zero ops. Cassandra for extreme write throughput with pre-planned access patterns. The access pattern determines the database — not the other way around."</blockquote>
 </div>
+
+</div>
+<footer>DATABASES · POSTGRESQL · MONGODB · DYNAMODB · CASSANDRA · MANISH-ALMANAC</footer>
 <script>function toggle(el){var item=el.parentElement;var isOpen=item.classList.contains('open');document.querySelectorAll('.faq.open').forEach(function(f){f.classList.remove('open');});if(!isOpen)item.classList.add('open');}</script>
-
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

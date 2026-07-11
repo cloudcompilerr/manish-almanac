@@ -513,10 +513,11 @@
   <p>The naive answer — "just put everything in" — fails for three reasons:</p>
 
   <ul style="padding-left:24px; margin-bottom: 18px;">
-    <li style="margin-bottom:10px;"><strong>It's impossible.</strong> 2M tokens don't fit in 128k. You physically cannot.</li>
-    <li style="margin-bottom:10px;"><strong>It's expensive.</strong> Even if you had a 2M context model, each query would cost ~$20–60 in API fees at scale.</li>
+    <li style="margin-bottom:10px;"><strong>It's impossible — for this window size.</strong> 2M tokens don't fit in 128k. You physically cannot, on this model.</li>
+    <li style="margin-bottom:10px;"><strong>It's expensive.</strong> Even on a model whose window is large enough, each query at that size would cost tens of dollars in API fees at scale — and volume, not window size, is usually the binding constraint at 10,000 concurrent users.</li>
     <li style="margin-bottom:10px;"><strong>It degrades quality.</strong> LLMs lose focus in extremely long contexts — they hallucinate more, and "forget" content in the middle (the "lost-in-the-middle" problem).</li>
   </ul>
+  <div class="callout"><strong>A note on the number 128k:</strong> it's used here as a realistic, round mid-tier figure — some current frontier models now ship context windows well past 1M tokens (and some vendors advertise far larger). That doesn't retire this problem, it just moves the threshold: whatever the window size, a large enough enterprise corpus will always exceed it, cost scales linearly with tokens sent regardless of the ceiling, and "lost-in-the-middle" quality degradation gets <em>worse</em>, not better, as you stuff more tokens into a bigger window. The funnel architecture below is the answer at 128k and at 1M+ alike — only the exact numbers in the constraint grid change.</div>
 
   <!-- SECTION 2 -->
   <h2 class="section-head" id="why-hard"><span class="num">02</span> Why Is This Actually Hard?</h2>
@@ -824,5 +825,5 @@
   LLM Architecture Notes · Context Window Selection · Enterprise RAG Systems
 </div>
 
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

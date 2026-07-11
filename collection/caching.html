@@ -179,7 +179,13 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
+</style>
 </head>
 <body>
 <div class="hero">
@@ -242,6 +248,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="callout cl-amber">
     <div class="cl-lbl">The interview framing</div>
     <p>Never say "I'll add a cache" without answering: <strong>(1) What exactly gets cached?</strong> (2) What is the cache key? (3) When does it get invalidated? (4) What is the consistency trade-off? Interviewers give no credit for "add Redis" — they want the strategy.</p>
+  </div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'll cache the database query results" sounds right and is dangerously incomplete. The trap is treating the cache as a passive speed-up instead of designing for the moment it fails. Three questions a strong candidate answers unprompted, that a weak candidate never reaches: <strong>What happens when the cache is completely empty (cold start after a deploy or a Redis failover)?</strong> If nothing protects the DB, a cold cache means 100% of traffic hits a database sized for 1–5% of it — this is a self-inflicted outage, not a hypothetical. <strong>What happens when a single key gets far more traffic than the rest (a viral post, a celebrity profile, a flash-sale SKU)?</strong> A cache with a uniform hashing scheme still puts that one key on one shard — the fix is application-level (local caching of just that key, key splitting, or request coalescing), not "add more Redis nodes." <strong>Is the cache ever allowed to become the source of truth, even briefly?</strong> It should never be — if the DB write fails after the cache write succeeds (or vice versa), you need a defined recovery path, not an assumption that both always succeed together.</p>
   </div>
 </section>
 
@@ -311,7 +321,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <div class="concept-term">Cache Stampede<br><span style="font-size:10px;font-weight:400;color:#6a6458">(Thundering Herd)</span></div>
       <div class="concept-def"><strong>A popular key expires → thousands of simultaneous requests all miss → all hit the DB simultaneously → DB falls over.</strong><br>
         Scenario: trending video cached with 10-minute TTL. At expiry, 50K requests/sec all miss simultaneously.
-        <span class="concept-note warn">⚠ The cache that was protecting your DB is now the reason your DB dies.</span></p><p><strong>Fixes:</strong><br>
+        <span class="concept-note warn">⚠ The cache that was protecting your DB is now the reason your DB dies.</span><br><br><strong>Fixes:</strong><br>
         • <strong>Mutex lock</strong>: first thread to miss acquires a lock, fetches DB, populates cache. Others wait, then read from cache.<br>
         • <strong>Probabilistic early expiry</strong>: slightly before TTL, a fraction of requests proactively refresh.<br>
         • <strong>Jitter</strong>: randomise TTL (±10%) so not all keys expire simultaneously.<br>
@@ -469,7 +479,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sec-tag">07 · Interview Follow-ups</div>
   <h2>Every hard follow-up, answered</h2>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">Redis is single-threaded — how does it handle 1M requests/sec?<span class="tog">+</span></div>
-  <div class="faq-a"><strong>Redis's event loop is single-threaded for command processing, but that is actually its strength, not its weakness.</strong><br><br>Since commands execute serially, there are no lock contention or deadlock issues. Redis commands are in-memory operations taking microseconds — the bottleneck is never CPU, it is always network I/O. Redis 6+ added multithreaded I/O for reading/writing the network buffers, while keeping command execution single-threaded. Result: 1–10M operations/sec on a single instance depending on command complexity and payload size.<br><br>When you need more throughput: Redis Cluster shards load across multiple independent single-threaded instances. 10 nodes = ~10M ops/sec aggregate throughput.</div></div>
+  <div class="faq-a"><strong>Redis's event loop is single-threaded for command processing, but that is actually its strength, not its weakness.</strong><br><br>Since commands execute serially, there are no lock contention or deadlock issues. Redis commands are in-memory operations taking microseconds — the bottleneck is never CPU, it is always network I/O. Redis 6.0 added optional multithreaded I/O for reading and writing the network buffers (disabled by default, opt in with <code>io-threads</code>), while command execution itself stays single-threaded. Result: Redis's own published benchmarks show over a million SET/GET ops/sec on a single instance with pipelining on commodity hardware, and 100K+ ops/sec unpipelined is typical for simple GET/SET — the real number depends heavily on pipelining, payload size, and command mix, so don't quote a single figure without those caveats.<br><br>When you need more throughput than one instance gives you: Redis Cluster shards load across multiple independent single-threaded instances, so aggregate throughput scales roughly linearly with node count for well-distributed key access.</div></div>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">How do you handle cache consistency in a microservices architecture?<span class="tog">+</span></div>
   <div class="faq-a"><strong>This is one of the hardest distributed systems problems. Three patterns, in order of complexity:</strong><br><br><strong>1. TTL + eventual consistency</strong>: Each service caches with a short TTL (30s–5min). Stale data is guaranteed to expire. Simple, no coordination. Works for most social/media use cases where slight staleness is acceptable.<br><br><strong>2. Event-driven invalidation</strong>: When Service A updates user data, it publishes a <code>UserUpdated</code> event to Kafka. Service B consumes the event and deletes/updates its cache. Consistent eventually. Risk: if the event is lost, cache stays stale indefinitely — mitigate with TTL as backup.<br><br><strong>3. Cache ownership</strong>: Each data domain is owned by one service. Other services must call that service's API to read data — they cannot cache it themselves. Eliminates invalidation problem entirely at the cost of added latency on every cross-service read.</div></div>
   <div class="faq-item"><div class="faq-q" onclick="toggle(this)">What is the difference between Redis and Memcached? When do you pick each?<span class="tog">+</span></div>
@@ -500,7 +510,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Four strategies, in order of complexity:</strong>
-      <p>/p><p><strong>1. Mutex/Lock (simplest)</strong>: when cache miss detected, acquire a Redis distributed lock for that key. Only one request rebuilds the cache; others wait. On rebuild complete, release lock. Others get the freshly cached value.</p><p><code>result = cache.get(key)</code></p><p><code>if not result:</code></p><p><code>&nbsp;&nbsp;if redis.set(f"lock:{key}", 1, nx=True, ex=30):</code></p><p><code>&nbsp;&nbsp;&nbsp;&nbsp;result = db.query(); cache.set(key, result)</code></p><p><code>&nbsp;&nbsp;else: time.sleep(0.1); result = cache.get(key)</code></p><p><strong>2. Probabilistic early expiry</strong>: before TTL expires, each request has a small probability of refreshing early. At TTL-30s: 1% chance of refresh. At TTL-5s: 50% chance. Refresh happens without blocking other requests. The first probabilistic refresh populates the cache before expiry.</p><p><strong>3. Background refresh</strong>: a background thread monitors keys approaching expiry. At 80% of TTL, asynchronously refresh. Cache never actually expires for live traffic. Serves stale data for milliseconds during the async refresh — acceptable for most use cases.</p><p><strong>4. Stale-while-revalidate</strong>: return the expired value immediately (stale), trigger async refresh in the background. HTTP Cache-Control header: <code>max-age=60, stale-while-revalidate=30</code>. Zero latency impact on the user.</p>
+      <p></p><p><strong>1. Mutex/Lock (simplest)</strong>: when cache miss detected, acquire a Redis distributed lock for that key. Only one request rebuilds the cache; others wait. On rebuild complete, release lock. Others get the freshly cached value.</p><p><code>result = cache.get(key)</code></p><p><code>if not result:</code></p><p><code>&nbsp;&nbsp;if redis.set(f"lock:{key}", 1, nx=True, ex=30):</code></p><p><code>&nbsp;&nbsp;&nbsp;&nbsp;result = db.query(); cache.set(key, result)</code></p><p><code>&nbsp;&nbsp;else: time.sleep(0.1); result = cache.get(key)</code></p><p><strong>2. Probabilistic early expiry</strong>: before TTL expires, each request has a small probability of refreshing early. At TTL-30s: 1% chance of refresh. At TTL-5s: 50% chance. Refresh happens without blocking other requests. The first probabilistic refresh populates the cache before expiry.</p><p><strong>3. Background refresh</strong>: a background thread monitors keys approaching expiry. At 80% of TTL, asynchronously refresh. Cache never actually expires for live traffic. Serves stale data for milliseconds during the async refresh — acceptable for most use cases.</p><p><strong>4. Stale-while-revalidate</strong>: return the expired value immediately (stale), trigger async refresh in the background. HTTP Cache-Control header: <code>max-age=60, stale-while-revalidate=30</code>. Zero latency impact on the user.</p>
       </div>
     </div>
   </div>
@@ -508,15 +518,15 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 <div class="k-card">
   <div class="k-card-head">
     <span class="k-num">02</span>
-    <span class="k-title">Thundering Herd (Facebook Memcached Paper)</span>
-    
+    <span class="k-title">Thundering Herd — Facebook's "Leases" Mechanism</span>
+
   </div>
   <div class="k-card-body">
     <div class="k-point">
-      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>A real incident that led to Facebook's "lease" mechanism — now the industry standard.</strong>
-      <p>/p><p>Facebook 2013: a popular Memcached key expires (a user's profile with 10M followers). 10M requests/second simultaneously cache-miss and hit MySQL. MySQL collapses. User's profile is unavailable for 30 seconds while MySQL recovers.</p><p>Facebook's solution — <strong>leases</strong>: on cache miss, Memcached grants a "lease" token to one client. Only the lease holder queries MySQL and repopulates. Other clients receive a "wait" response — they retry after 10ms. Simple, effective, built into Memcached.</p>
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>The industry-standard fix for thundering herds, documented in Facebook's 2013 NSDI paper "Scaling Memcache at Facebook."</strong>
+      <p></p><p>The general pattern: a hot key undergoes heavy concurrent read and write activity, or expires while under heavy read load, and every client that misses goes to the backing store (MySQL) at once. Facebook's published fix — <strong>leases</strong>: when memcached serves a cache miss, it also hands the requesting client a lease token, and rate-limits how often it hands out a new token for the same key — the paper describes a default of once every 10 seconds per key. Any other client that misses on that key within the window gets told to wait a short time instead of being allowed to query the DB; the lease holder is expected to populate the value within milliseconds. The same mechanism doubles as a fix for "stale sets": a lease token is invalidated if a delete arrives for that key while the lease is outstanding, so a slow writer can't clobber a fresher value.</p><p>The paper reports this mechanism, together with a related "stale value" strategy, cutting peak database load from roughly 17,000 queries/sec to about 1,300 queries/sec during a stress test of a real thundering-herd scenario at Facebook's scale — a concrete, published number worth citing directly instead of inventing your own.</p>
       </div>
-      <div class="k-good"><span class="k-icon">✓</span><span>✓ The lesson: cache stampede is a systemic failure mode, not a code bug. It requires architectural solutions (leases, background refresh, mutex) — not faster code.</span></div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ The lesson: cache stampede is a systemic failure mode, not a code bug. It requires architectural solutions (leases, background refresh, mutex) — not faster code. Redis doesn't ship leases natively, but the same idea is implementable with <code>SET key val NX EX ttl</code> as a coarse-grained lock.</span></div>
     </div>
   </div>
 </div>
@@ -529,7 +539,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>A freshly deployed cache has 0% hit rate. All traffic hits the DB until the cache warms up.</strong>
-      <p>/p><p>Scenarios: new deployment, Redis restart after failure, new Redis cluster added for scaling.</p><p><strong>Warming strategies:</strong></p><p>(1) <strong>Pre-warm from DB</strong>: before cutover, run a job that reads the top-1000 most-accessed keys from DB analytics → populates cache. Used when you know the hot set.</p><p>(2) <strong>Shadow traffic</strong>: replay production traffic against the new cache instance before switching. Cache warms from real traffic patterns without affecting users.</p><p>(3) <strong>Gradual ramp</strong>: route 1% of traffic to the new cache → 5% → 25% → 100%. Cache gradually warms. DB handles the slightly elevated load at each step. Never a cold-start cliff.</p><p>(4) <strong>Dual-write</strong>: write to both old and new cache for 1 hour before switching reads to new cache. New cache is warm before any reads are sent to it.</p>
+      <p></p><p>Scenarios: new deployment, Redis restart after failure, new Redis cluster added for scaling.</p><p><strong>Warming strategies:</strong></p><p>(1) <strong>Pre-warm from DB</strong>: before cutover, run a job that reads the top-1000 most-accessed keys from DB analytics → populates cache. Used when you know the hot set.</p><p>(2) <strong>Shadow traffic</strong>: replay production traffic against the new cache instance before switching. Cache warms from real traffic patterns without affecting users.</p><p>(3) <strong>Gradual ramp</strong>: route 1% of traffic to the new cache → 5% → 25% → 100%. Cache gradually warms. DB handles the slightly elevated load at each step. Never a cold-start cliff.</p><p>(4) <strong>Dual-write</strong>: write to both old and new cache for 1 hour before switching reads to new cache. New cache is warm before any reads are sent to it.</p>
       </div>
     </div>
   </div>
@@ -543,7 +553,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Two-tier caching: L1 in-process cache (nanoseconds) + L2 Redis (milliseconds).</strong>
-      <p>/p><p>In-process cache: a Guava LoadingCache or Caffeine cache on each application server. Stores ~1,000 ultra-hot entries. Access time: 100ns (no network). Limited to what fits in one server's RAM.</p><p>Redis: distributed, shared across all app servers. Stores millions of entries. Access time: 0.5–1ms (network round trip).</p><p>Pattern: request → check L1 (Caffeine) → hit: return (100ns). L1 miss → check L2 (Redis) → hit: populate L1, return (1ms). L2 miss → query DB → populate L2 + L1, return (10ms).</p>
+      <p></p><p>In-process cache: a Guava LoadingCache or Caffeine cache on each application server. Stores ~1,000 ultra-hot entries. Access time: 100ns (no network). Limited to what fits in one server's RAM.</p><p>Redis: distributed, shared across all app servers. Stores millions of entries. Access time: 0.5–1ms (network round trip).</p><p>Pattern: request → check L1 (Caffeine) → hit: return (100ns). L1 miss → check L2 (Redis) → hit: populate L1, return (1ms). L2 miss → query DB → populate L2 + L1, return (10ms).</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ Used by: Uber (two-tier caching for driver surge multipliers), Netflix (local cache for frequently-accessed config), Facebook (mcrouter handles two-tier Memcached). The key: L1 is per-server and inconsistent across servers — only safe for data where staleness within a few seconds is acceptable.</span></div>
     </div>
@@ -558,9 +568,24 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Sentinel: HA for a single Redis instance. Cluster: horizontal scaling across multiple Redis nodes.</strong>
-      <p>/p><p><strong>Redis Sentinel</strong>: 3+ sentinel processes monitor 1 Redis primary + N replicas. If primary fails, sentinels elect a new primary in ~30 seconds. No data sharding — all data on one primary. Right for: high availability on a single dataset that fits in one machine's RAM.</p><p><strong>Redis Cluster</strong>: data sharded across 3+ primaries using 16,384 hash slots. Each primary has replicas. If a primary fails, its replica is promoted. Right for: datasets too large for one machine, or write throughput too high for one primary.</p>
+      <p></p><p><strong>Redis Sentinel</strong>: 3+ sentinel processes monitor 1 Redis primary + N replicas. If primary fails, sentinels elect a new primary in ~30 seconds. No data sharding — all data on one primary. Right for: high availability on a single dataset that fits in one machine's RAM.</p><p><strong>Redis Cluster</strong>: data sharded across 3+ primaries using 16,384 hash slots. Each primary has replicas. If a primary fails, its replica is promoted. Right for: datasets too large for one machine, or write throughput too high for one primary.</p>
       </div>
       <div class="k-muted"><span class="k-icon">→</span><span>Common mistake: using Redis Sentinel when you actually need Redis Cluster (dataset is 500GB, single primary is the bottleneck). And vice versa: using Redis Cluster for a 2GB dataset that one primary handles fine — added operational complexity for no benefit.</span></div>
+    </div>
+  </div>
+</div>
+<div class="k-card">
+  <div class="k-card-head">
+    <span class="k-num">06</span>
+    <span class="k-title">Hot Key / Hot Partition</span>
+
+  </div>
+  <div class="k-card-body">
+    <div class="k-point">
+      <div class="k-point-label">What it is</div><div class="k-point-text"><strong>One key gets far more traffic than the sharding scheme was designed for, and consistent hashing can't fix it — it only decides which single shard absorbs the whole spike.</strong>
+      <p></p><p>A celebrity's profile, a viral post, a single flash-sale SKU, or a globally-shared config key can drive orders of magnitude more requests per second than any other key. Redis Cluster and Memcached both shard by key, so all of that traffic lands on <em>one</em> node no matter how evenly the rest of the keyspace is distributed — the node saturates its CPU or network link while every other shard sits idle. This is a fundamentally different failure from cache stampede: the cache is still serving hits, but one physical node can't keep up with the request rate for a single logical key.</p><p><strong>Detection:</strong> per-key or per-shard traffic monitoring (Redis <code>MONITOR</code> in short bursts, or slot-level metrics in Redis Cluster / Enterprise) showing one node's CPU or ops/sec far above its siblings while aggregate cluster load looks unremarkable — the classic false signal is "the cluster looks healthy on average" while one node is pegged.</p>
+      </div>
+      <div class="k-good"><span class="k-icon">✓</span><span>✓ Fixes, roughly in order of how often they're used: (1) <strong>local/L1 caching of just the hot keys</strong> on each app server, so the shard only sees a fraction of the traffic (the two-tier pattern above); (2) <strong>key splitting</strong> — replicate the hot value under N suffixed keys (<code>product:sku123:0</code>..<code>:9</code>) and pick one at random on read, trading a little staleness risk for spreading load across N shards; (3) client-side or proxy-side (mcrouter, Twemproxy) request coalescing so concurrent reads for the same key collapse into one backend call.</span></div>
     </div>
   </div>
 </div>
@@ -582,11 +607,12 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Redis Key Patterns</h4><table class="flow-table"><thead><tr><th>Pattern</th><th>Type</th><th>TTL</th><th>Use case</th></tr></thead><tbody><tr><td>tweet:{id}</td><td>Hash</td><td>1h</td><td>Tweet content — enriched on cache-aside miss</td></tr><tr><td>feed:user:{id}</td><td>List</td><td>24h</td><td>Pre-computed feed: 800 tweet_ids, newest first</td></tr><tr><td>user:{id}</td><td>Hash</td><td>30m</td><td>Profile data: name, avatar, follower_count</td></tr><tr><td>session:{token}</td><td>String</td><td>24h</td><td>Session token → user_id mapping</td></tr><tr><td>rate:ip:{ip}</td><td>String</td><td>60s</td><td>INCR counter for rate limiting (sliding window)</td></tr><tr><td>lock:{key}</td><td>String</td><td>30s</td><td>Distributed mutex via SET NX EX for stampede prevention</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Write Strategy & Eviction Fast Recall</h4><table class="flow-table"><thead><tr><th>Need</th><th>Reach for</th><th>Watch out for</th></tr></thead><tbody><tr><td>Read-heavy, occasional writes</td><td>Cache-aside + TTL</td><td>Race on concurrent misses — add a short lock for hot keys</td></tr><tr><td>Reads must always be fresh</td><td>Write-through</td><td>Every write pays two hops (cache + DB); wastes space on rarely-read data</td></tr><tr><td>High write frequency, some loss tolerable</td><td>Write-behind</td><td>Cache crash before flush = lost writes; never use for money</td></tr><tr><td>Cache is nearly full</td><td>allkeys-lru (default) or allkeys-lfu for stable hot sets</td><td>A single big sequential scan under LRU can evict your real hot keys</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Failure Mode Fast Recall</h4><table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td>DB falls over right after a popular key expires</td><td>Cache stampede / thundering herd on one key</td><td>Mutex lock, leases, probabilistic early expiry, or stale-while-revalidate</td></tr><tr><td>DB falls over right after a deploy or Redis failover</td><td>Cold cache — 0% hit rate, all traffic passes through</td><td>Pre-warm from analytics, shadow traffic, or gradual traffic ramp before cutover</td></tr><tr><td>One Redis/Memcached node is pegged while the cluster average looks fine</td><td>Hot key / hot partition — sharding can't split one key's traffic</td><td>Local L1 cache for the hot key, key splitting, or request coalescing (mcrouter, Twemproxy)</td></tr><tr><td>Two services show different values for the same entity</td><td>Cache and DB write not atomic, or a missed invalidation event</td><td>Delete-after-commit ordering, transactional outbox, or short TTL as a safety net</td></tr></tbody></table>
 </section>
 </div>
 
-</div>
 <div class="footer">CACHING · REDIS · MEMCACHED · EVICTION · INVALIDATION · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

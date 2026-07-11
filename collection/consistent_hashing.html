@@ -165,7 +165,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Consistent Hashing<br><em>Partitioning at Scale</em></h1>
@@ -385,7 +385,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>More virtual nodes = more uniform distribution. But: more metadata to store and more keys to move on node addition/removal.</strong>
-      <p>/p><p>With 3 nodes and 1 virtual node each: each node owns 1/3 of the ring. Token assignment might be 33%, 35%, 32% (slightly uneven due to hash function distribution).</p><p>With 3 nodes and 150 virtual nodes each: each node owns ~1/3 of 450 ring positions. Statistical uniformity: ±2% variance. Adding a 4th node: it claims 150 ring positions from ALL other nodes (not just its neighbours). Keys migrate from all existing nodes, not one. 25% of keys move — exactly what you want.</p>
+      <p></p><p>With 3 nodes and 1 virtual node each: each node owns 1/3 of the ring. Token assignment might be 33%, 35%, 32% (slightly uneven due to hash function distribution).</p><p>With 3 nodes and 150 virtual nodes each: each node owns ~1/3 of 450 ring positions. Statistical uniformity: ±2% variance. Adding a 4th node: it claims 150 ring positions from ALL other nodes (not just its neighbours). Keys migrate from all existing nodes, not one. 25% of keys move — exactly what you want.</p>
       </div>
       <div class="k-muted"><span class="k-icon">→</span><span>Cassandra default: 256 virtual nodes (vnodes) per node. This means a new node steals a small amount of data from every existing node simultaneously — parallelising the data migration and rebalancing faster than stealing all data from one neighbour.</span></div>
     </div>
@@ -400,7 +400,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Real incident pattern: a node's virtual nodes cluster together, creating an uneven load distribution.</strong>
-      <p>/p><p>With bad luck in random virtual node placement: Node A gets token positions [0, 1, 3, 5, 8]. Node B gets [10, 15, 25, 50, 100]. Node C gets [2, 4, 6, 7, 9]. The "space" between positions is uneven — B owns huge ranges (10→15, 50→100), A owns tiny ranges. B gets 60% of traffic, A and C share 40%.</p><p>Detection: monitor "data skew" — compare data size across nodes. If any node holds 2× the average data, the vnode placement is causing skew.</p><p>Fix: Cassandra's "token allocation algorithm" (vnodes=256 + Cassandra 3.0+) generates virtual node positions that are mathematically guaranteed to produce balanced token ranges. Earlier versions used random placement — skew was possible.</p>
+      <p></p><p>With bad luck in random virtual node placement: Node A gets token positions [0, 1, 3, 5, 8]. Node B gets [10, 15, 25, 50, 100]. Node C gets [2, 4, 6, 7, 9]. The "space" between positions is uneven — B owns huge ranges (10→15, 50→100), A owns tiny ranges. B gets 60% of traffic, A and C share 40%.</p><p>Detection: monitor "data skew" — compare data size across nodes. If any node holds 2× the average data, the vnode placement is causing skew.</p><p>Fix: Cassandra's "token allocation algorithm" (vnodes=256 + Cassandra 3.0+) generates virtual node positions that are mathematically guaranteed to produce balanced token ranges. Earlier versions used random placement — skew was possible.</p>
       </div>
     </div>
   </div>
@@ -414,7 +414,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Node failure → neighbour takes extra load → neighbour fails → cascade until cluster collapse.</strong>
-      <p>/p><p>Consistent hashing ring: Node A fails. Its token range transfers to Node B. Node B now handles 2× its normal load. If Node B was already at 70% capacity → now at 140% → Node B fails. Node C gets 3× normal load. Cascade.</p><p>Prevention: capacity planning — never run nodes above 50% utilisation. The extra 50% headroom absorbs a neighbour's load without pushing into failure. Admission control: when a node's CPU > 80%, start rejecting new requests (503) rather than accepting them and degrading further. Circuit breaker at the client: stop sending traffic to an overloaded node.</p>
+      <p></p><p>Consistent hashing ring: Node A fails. Its token range transfers to Node B. Node B now handles 2× its normal load. If Node B was already at 70% capacity → now at 140% → Node B fails. Node C gets 3× normal load. Cascade.</p><p>Prevention: capacity planning — never run nodes above 50% utilisation. The extra 50% headroom absorbs a neighbour's load without pushing into failure. Admission control: when a node's CPU > 80%, start rejecting new requests (503) rather than accepting them and degrading further. Circuit breaker at the client: stop sending traffic to an overloaded node.</p>
       </div>
     </div>
   </div>
@@ -440,8 +440,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 </div>
 
-</div>
 <div class="footer">CONSISTENT HASHING · PARTITIONING · VNODES · REDIS CLUSTER · CASSANDRA · HOT SPOTS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

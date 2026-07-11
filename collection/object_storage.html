@@ -165,14 +165,20 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
+</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Object Storage<br><em>S3 & Blob Store</em></h1>
   <p class="hero-sub">S3 vs block vs file storage, multipart uploads, pre-signed URLs, storage classes, and CDN integration — everything for media and data lake system designs.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">S3 / GCS</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Multipart Upload</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Pre-Signed URLs</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Storage Classes</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">CDN Origin</span></div>
 </div></div>
-<nav class="nav"><a href="#what">S3 vs Block Storage vs File Storage</a><a href="#internals">How S3 actually works under the hoo</a><a href="#examples">Object Storage in Real Systems</a><a href="#data-lake">S3 as the foundation of every moder</a><a href="#followups">Every hard follow-up, answered</a><a href="#obj-advanced">Erasure coding, multipart upload, a</a><a href="#req-nfr-object_storage">Requirements & Non-Functional Const</a><a href="#tradeoff-object_storage">Trade-off Matrix — What You Gave Up</a><a href="#schema-object_storage">Quick Reference</a></nav>
+<nav class="nav"><a href="#what">S3 vs Block Storage vs File Storage</a><a href="#internals">How S3 actually works under the hoo</a><a href="#decision-storage">Object, block, or file — decision f</a><a href="#examples">Object Storage in Real Systems</a><a href="#data-lake">S3 as the foundation of every moder</a><a href="#followups">Every hard follow-up, answered</a><a href="#obj-advanced">Erasure coding, multipart upload, a</a><a href="#req-nfr-object_storage">Requirements & Non-Functional Const</a><a href="#tradeoff-object_storage">Trade-off Matrix — What You Gave Up</a><a href="#schema-object_storage">Quick Reference</a></nav>
 <div class="wrap">
 <section id="what">
   <div class="sec-tag">00 · What Is Object Storage</div>
@@ -181,11 +187,10 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="analogy-label">The infinite warehouse analogy</div>
   <div class="analogy-text">S3 is like an infinite warehouse where every box has a unique address label (the key). You can store any size box. Finding a specific box is O(1) — you just read the label. Unlike a filing cabinet (block storage), you can't open a box and change page 5 — you must take out the whole box, modify it, and put back a new box.<br><br>The warehouse clerk (CDN) keeps copies of popular boxes near each customer's city. When someone requests a box, the clerk checks their local copy first — only fetching from the warehouse on a miss.</div>
 </div>
-
-<div class="analogy">
-  <div class="analogy-label">The infinite warehouse analogy</div>
-  <div class="analogy-text">S3 is like an infinite warehouse where every box has a unique address label (the key). You can store any size box. Finding a specific box is O(1) — you just read the label. Unlike a filing cabinet (block storage), you can't open a box and change page 5 — you must take out the whole box, modify it, and put back a new box.<br><br>The warehouse clerk (CDN) keeps copies of popular boxes near each customer's city. When someone requests a box, the clerk checks their local copy first — only fetching from the warehouse on a miss.</div>
-</div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'll store the files in S3" is an incomplete answer the moment there's more than one client involved. The trap: candidates route every upload and download through their own application server — "client uploads to my server, my server uploads to S3" — because it feels like the safe, controlled way to do it. That design doubles your bandwidth bill (every byte crosses your server twice) and turns your app servers into the bottleneck for the least CPU-intensive part of the system. The strong answer is pre-signed URLs: the client uploads and downloads directly against S3, and your server's only job is issuing a short-lived signed URL scoped to exactly one object. The follow-up an interviewer will ask immediately: "how do you validate the upload before trusting it?" — the answer is server-side validation on the S3 event notification (check content-type, size, run a virus/format scan) after the fact, not by proxying the bytes.</p>
+  </div>
 
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Object Storage (S3)</div><div class="concept-def"><strong>Stores data as flat objects — each object is a file with a key (path), value (bytes), and metadata.</strong> No directory hierarchy (though keys can have slashes to simulate it).<br>
@@ -195,7 +200,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="concept-row"><div class="concept-term">Block Storage (EBS)</div><div class="concept-def"><strong>Raw storage volumes attached to a VM. The OS sees it as a disk — format with any filesystem.</strong><br>
       Sub-millisecond latency. Random reads/writes. Required for databases (PostgreSQL, MySQL need a filesystem).
         <span class="concept-note good">✓ Low latency. Random access. Required for any software that needs a real filesystem (databases, OS volumes).</span>
-      <span class="concept-note warn">⚠ Attached to one instance at a time. Fixed capacity (must resize manually). Expensive ($0.10/GB/month vs S3's $0.023).</span></div></div>
+      <span class="concept-note warn">⚠ Attached to one instance at a time. Fixed capacity (must resize manually). Meaningfully more expensive per GB than object storage — e.g. AWS's current gp3 EBS baseline runs about $0.08/GB/month vs roughly $0.023/GB/month for S3 Standard (check current pricing pages before quoting exact figures — both change over time).</span></div></div>
     <div class="concept-row"><div class="concept-term">File Storage (EFS/NFS)</div><div class="concept-def"><strong>Shared filesystem mounted by multiple instances simultaneously. Files, directories, locking semantics.</strong><br>
       Multiple EC2 instances can read/write the same files concurrently.
         <span class="concept-note good">✓ Shared access across instances. POSIX filesystem. No refactoring of existing code that uses files.</span>
@@ -228,15 +233,50 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
         <span class="concept-note muted">Use Lifecycle Policies to automatically transition objects: new uploads → Standard → after 30 days → IA → after 1 year → Glacier. Common for log files and video archives.</span></div></div>
   </div>
 </section>
-<div style="margin:16px 0"><div style="margin:20px 0">
-<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Object Storage Sizing</h4>
-<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Instagram photos/year</td><td>1B uploads/day × 200KB average</td><td><strong>~70TB/year</strong></td><td style="color:#1a7a4a;font-size:12px">S3 Standard: $0.023/GB = ~$1,600/month. Use Intelligent Tiering after 30 days → saves 40%</td></tr><tr><td class="row-head">YouTube videos/year</td><td>500 hrs/min × 5 quality variants × 1GB/hr</td><td><strong>~1.3 PB/year</strong></td><td style="color:#1a7a4a;font-size:12px">S3 costs ~$30K/month at full price; real cost covered by CDN cache hits (95% miss protection)</td></tr><tr><td class="row-head">Multipart threshold</td><td>Files > 100MB → mandatory multipart</td><td><strong>At 10 parallel parts × 100MB</strong></td><td style="color:#1a7a4a;font-size:12px">10 × 100Mbps network = 1Gbps effective upload. 10GB file uploads in ~90 seconds not 15 minutes</td></tr><tr><td class="row-head">Request rate</td><td>S3 prefix partition: 3,500 PUT/5,500 GET per second</td><td><strong>Per prefix</strong></td><td style="color:#1a7a4a;font-size:12px">Shard across 10 prefixes (hash first char) → 35K PUT/55K GET/sec. No hot prefix issues</td></tr></tbody></table></div></div>
+
+<section id="decision-storage">
+  <div class="sec-tag">01b · Decision Framework</div>
+  <h2>Object, block, or file — and which storage class? The four questions</h2>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Storage Selection — Answer These in Order</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">01</div><div class="step-content">
+        <div class="step-q">Does the workload need in-place random reads/writes and POSIX filesystem semantics (a real filesystem, locking, rename)?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Block storage (EBS)</strong> for a single attached instance, or <strong>file storage (EFS/NFS)</strong> if multiple instances need concurrent shared access. Databases, OS volumes, and anything requiring a real filesystem belong here — not on S3.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO →</span><span class="opt-text">Go to Step 2. Object storage is likely the right shape.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">02</div><div class="step-content">
+        <div class="step-q">Is the object immutable once written (write-once, read-many), or close to it?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES →</span><span class="opt-text"><strong>Object storage (S3/GCS) is the natural fit.</strong> Images, videos, backups, logs, data lake files — write once, serve many times, no in-place mutation needed.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO, frequently mutated →</span><span class="opt-text">Reconsider whether this belongs in a database instead — object storage's "overwrite the whole object" model gets expensive and awkward for data that changes often.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">03</div><div class="step-content">
+        <div class="step-q">How often will this specific object actually be read after it's written?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Frequently, unpredictably →</span><span class="opt-text"><strong>Standard storage class</strong> (or Intelligent-Tiering if the access pattern is genuinely unknown upfront).</span></div>
+          <div class="step-option opt-mid"><span class="opt-arrow">Rarely, but needs to be available fast →</span><span class="opt-text"><strong>Infrequent Access or Glacier Instant Retrieval</strong> — lower storage cost, a per-GB retrieval fee, still millisecond access.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Almost never, compliance/archival only →</span><span class="opt-text"><strong>Glacier Deep Archive</strong> — cheapest tier, but retrieval takes hours, not milliseconds. Only for data you're confident you won't need urgently.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">04</div><div class="step-content">
+        <div class="step-q">Should clients read or write the object directly, without your application server in the data path?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">YES (the common case for uploads/downloads) →</span><span class="opt-text"><strong>Pre-signed URLs.</strong> Your server issues a short-lived signed URL; the client talks to S3 directly. Don't proxy bytes through your app tier.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">NO, needs server-side validation first →</span><span class="opt-text">Accept the upload server-side, or validate asynchronously via an S3 event notification after a direct client upload — still avoid proxying the bytes themselves if you can help it.</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
 
 <div style="margin:16px 0"><div style="margin:20px 0">
 <h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Object Storage Sizing</h4>
 <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Instagram photos/year</td><td>1B uploads/day × 200KB average</td><td><strong>~70TB/year</strong></td><td style="color:#1a7a4a;font-size:12px">S3 Standard: $0.023/GB = ~$1,600/month. Use Intelligent Tiering after 30 days → saves 40%</td></tr><tr><td class="row-head">YouTube videos/year</td><td>500 hrs/min × 5 quality variants × 1GB/hr</td><td><strong>~1.3 PB/year</strong></td><td style="color:#1a7a4a;font-size:12px">S3 costs ~$30K/month at full price; real cost covered by CDN cache hits (95% miss protection)</td></tr><tr><td class="row-head">Multipart threshold</td><td>Files > 100MB → mandatory multipart</td><td><strong>At 10 parallel parts × 100MB</strong></td><td style="color:#1a7a4a;font-size:12px">10 × 100Mbps network = 1Gbps effective upload. 10GB file uploads in ~90 seconds not 15 minutes</td></tr><tr><td class="row-head">Request rate</td><td>S3 prefix partition: 3,500 PUT/5,500 GET per second</td><td><strong>Per prefix</strong></td><td style="color:#1a7a4a;font-size:12px">Shard across 10 prefixes (hash first char) → 35K PUT/55K GET/sec. No hot prefix issues</td></tr></tbody></table></div></div>
+<tbody><tr><td class="row-head">Instagram-scale photos/year</td><td>1B uploads/day × 200KB average (illustrative, not a published Instagram figure)</td><td><strong>~70TB/year</strong></td><td style="color:#1a7a4a;font-size:12px">At S3 Standard's published rate (~$0.023/GB/month in most US regions as of 2026), that's roughly $1,600/month before any tiering. Intelligent-Tiering or a 30-day lifecycle to IA typically cuts this meaningfully for content that goes cold</td></tr><tr><td class="row-head">YouTube-scale videos/year</td><td>500 hrs/min × 5 quality variants × 1GB/hr (illustrative)</td><td><strong>~1.3 PB/year</strong></td><td style="color:#1a7a4a;font-size:12px">At list-price object storage rates this would run tens of thousands of dollars per month; in practice the vast majority of egress is absorbed by CDN cache hits, not served from origin storage</td></tr><tr><td class="row-head">Multipart threshold</td><td>Files > 100MB → recommended multipart (AWS recommends multipart above ~100MB and requires it above 5GB)</td><td><strong>At 10 parallel parts × 100MB</strong></td><td style="color:#1a7a4a;font-size:12px">10 parallel parts over a 100Mbps-per-connection network path can approach ~1Gbps effective aggregate throughput — the exact multiplier depends on per-connection bandwidth and how many parts your network path can sustain in parallel</td></tr><tr><td class="row-head">Request rate</td><td>S3's published baseline: 3,500 PUT/COPY/POST/DELETE and 5,500 GET/HEAD requests per second, per partitioned prefix</td><td><strong>Per prefix</strong></td><td style="color:#1a7a4a;font-size:12px">S3 automatically scales and partitions prefixes as request rate increases — you generally don't need to manually shard prefixes today, but understanding this baseline is still an interview-relevant mental model for read/write scaling limits</td></tr></tbody></table></div></div>
 
 
 <section id="examples">
@@ -280,7 +320,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">What Is a Data Lake</div><div class="concept-def"><strong>Store ALL your data in S3 in raw format first. Process later, for different purposes.</strong><br>
       Raw events → S3 in Parquet/JSON. Same S3 data is read by: Spark (ML training), Athena (ad-hoc SQL), Redshift Spectrum (BI reports), Flink (stream processing via S3 checkpoints).
-        <span class="concept-note good">✓ Schema-on-read: no predefined schema. Add new data sources without refactoring. Multiple compute engines on same data. Extremely cheap storage ($0.023/GB vs $0.10/GB for block storage).</span>
+        <span class="concept-note good">✓ Schema-on-read: no predefined schema. Add new data sources without refactoring. Multiple compute engines on same data. Extremely cheap storage (roughly $0.023/GB/month for S3 Standard vs roughly $0.08/GB/month for AWS's current gp3 EBS baseline — object storage is meaningfully cheaper per GB either way).</span>
       <span class="concept-note warn">⚠ No ACID transactions on raw S3. Small file problem: millions of 1KB files are much slower to query than thousands of 100MB files. Use Parquet + Snappy compression + file compaction jobs.</span></div></div>
     <div class="concept-row"><div class="concept-term">Delta Lake / Iceberg</div><div class="concept-def"><strong>Table formats that add ACID transactions, schema evolution, and time-travel to S3.</strong><br>
       Delta Lake (Databricks) / Apache Iceberg (Netflix, Apple): store metadata files alongside Parquet data in S3 that track which files constitute the current table version.<br>
@@ -350,7 +390,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Two ways to achieve durability. Erasure coding uses less storage for the same durability level.</strong>
-      <p>/p><p>3× replication: store 3 copies of every object. Tolerate 2 node failures. Storage overhead: 200% (3× the original size).</p><p>Erasure coding (Reed-Solomon): split data into k chunks, generate m parity chunks. Store k+m chunks. Can reconstruct from any k of k+m chunks. Tolerate m node failures.</p><p>Example: RS(10,4) — 10 data chunks + 4 parity chunks = 14 total. Tolerate 4 node failures. Storage overhead: 40% (14/10 = 1.4×). Same durability as 3× replication at 1/5 the storage cost.</p>
+      <p></p><p>3× replication: store 3 copies of every object. Tolerate 2 node failures. Storage overhead: 200% (3× the original size).</p><p>Erasure coding (Reed-Solomon): split data into k chunks, generate m parity chunks. Store k+m chunks. Can reconstruct from any k of k+m chunks. Tolerate m node failures.</p><p>Example: RS(10,4) — 10 data chunks + 4 parity chunks = 14 total. Tolerate 4 node failures. Storage overhead: 40% (14/10 = 1.4×). Same durability as 3× replication at 1/5 the storage cost.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ S3 uses erasure coding internally. GFS/Colossus (Google) uses erasure coding. The trade-off: erasure coding requires reading k chunks to reconstruct data (higher read latency for small files). For large files (videos, datasets): erasure coding is superior. For small files (&lt;1MB): replication's simplicity wins.</span></div>
     </div>
@@ -365,7 +405,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Required for files &gt;5GB. Recommended for files &gt;100MB. Enables parallel upload and resumability.</strong>
-      <p>/p><p>Flow: <code>CreateMultipartUpload</code> → get UploadId. Split file into parts (5MB–5GB each). Upload parts in parallel (up to 10,000 parts, each with a PartNumber). S3 stores each part independently. <code>CompleteMultipartUpload</code> → S3 assembles parts into final object. AbortMultipartUpload → cleanup if upload fails.</p><p>Parallelism: 10 concurrent part uploads × 100MB/s bandwidth = 1GB/s effective upload speed. Without multipart: single stream × 100MB/s = 100MB/s.</p><p>Resumability: if connection drops during part 7, only resume part 7. Parts 1-6 already committed to S3. ListParts to find which parts succeeded → resume from the first missing part.</p>
+      <p></p><p>Flow: <code>CreateMultipartUpload</code> → get UploadId. Split file into parts (5MB–5GB each). Upload parts in parallel (up to 10,000 parts, each with a PartNumber). S3 stores each part independently. <code>CompleteMultipartUpload</code> → S3 assembles parts into final object. AbortMultipartUpload → cleanup if upload fails.</p><p>Parallelism: 10 concurrent part uploads × 100MB/s bandwidth = 1GB/s effective upload speed. Without multipart: single stream × 100MB/s = 100MB/s.</p><p>Resumability: if connection drops during part 7, only resume part 7. Parts 1-6 already committed to S3. ListParts to find which parts succeeded → resume from the first missing part.</p>
       </div>
     </div>
   </div>
@@ -379,7 +419,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Since December 2020: S3 provides strong read-after-write consistency for all operations.</strong>
-      <p>/p><p>Previously: S3 was eventually consistent. A PUT followed immediately by a GET might return the old data. Applications had to add delays or use conditional operations.</p><p>Now: after a successful PUT, subsequent GETs return the new data — immediately and consistently. After a DELETE, subsequent GETs correctly return 404. LIST operations are also consistent — a newly created object appears in LIST results immediately.</p>
+      <p></p><p>Previously: S3 was eventually consistent. A PUT followed immediately by a GET might return the old data. Applications had to add delays or use conditional operations.</p><p>Now: after a successful PUT, subsequent GETs return the new data — immediately and consistently. After a DELETE, subsequent GETs correctly return 404. LIST operations are also consistent — a newly created object appears in LIST results immediately.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ This change removed the most common operational footgun in S3-based systems. If you're asked about S3 consistency in an interview: "S3 is strongly consistent since Dec 2020. I don't need to account for eventual consistency in my S3 access patterns." This shows you're current.</span></div>
     </div>
@@ -388,14 +428,43 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-
+<section id="obj-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What Breaks in Object Storage — and How to Handle It</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Orphaned Multipart Uploads — Silent Cost Bomb</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Failed or abandoned uploads leave partial parts sitting in S3 — they don't show up as objects in a normal bucket listing, so they're easy to miss. At list-price S3 Standard rates, thousands of orphaned multi-GB partial uploads can quietly add up to a real, invisible monthly bill.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Set an S3 lifecycle rule: AbortIncompleteMultipartUpload after 24h (or whatever window fits your upload pattern). Periodically audit with <code>aws s3api list-multipart-uploads</code>. This is a real, recurring production cost issue — always configure the lifecycle rule rather than relying on manual cleanup.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Hot Prefix Throttling — 503 SlowDown Errors</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Before mid-2018, S3 partitioned by key prefix, so keys sharing a prefix could bottleneck on one partition. AWS re-architected S3's request routing in 2018 so it auto-partitions based on observed access patterns, and the per-prefix baseline (3,500 PUT/COPY/POST/DELETE, 5,500 GET/HEAD per second) now applies far more flexibly. Even so, a sudden, sharp spike against a narrow key range — e.g. every request in a burst sharing a date-prefixed key like <code>2026/03/22/...</code> — can still outrun how fast S3 scales that specific partition and produce 503 SlowDown responses.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>You generally don't need to manually shard prefixes preemptively today — S3 scales automatically. But if you see sustained SlowDown errors: add request jitter/backoff, spread hot keys across a randomized prefix, and watch S3 request metrics in CloudWatch to catch it before it becomes user-visible.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Public Bucket Exposure — Data Breach</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">S3 bucket set to public by mistake — a security-industry survey by Skyhigh Networks in 2017 found roughly 7% of S3 buckets studied had unrestricted public access, and this class of misconfiguration drove a wave of high-profile leaks in 2017–2019. The most consequential real-world variant isn't even a public bucket: in the 2019 Capital One breach, an attacker exploited a server-side request forgery (SSRF) flaw in a misconfigured web application firewall to query the EC2 instance metadata service, retrieve that WAF's IAM role credentials, and use its overly broad S3 permissions to list and exfiltrate data from over 700 buckets — about 100 million customer records, including unencrypted files.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always: enable Block Public Access at the account level (this has been AWS's default for new buckets since 2023, but verify it explicitly rather than assuming). Enable S3 Access Analyzer. Follow least-privilege on every IAM role, especially ones reachable from an internet-facing service — the Capital One breach was fundamentally an over-permissioned IAM role, not a public bucket. Use bucket policies over ACLs, and block the EC2 instance metadata service (or require IMDSv2) to close off the SSRF-to-credential-theft path.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
 
 <section id="req-nfr-object_storage">
   <div class="sec-tag">📋 · Requirements & Scale</div>
   <h2>Requirements & Non-Functional Constraints</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
 <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>Store and retrieve arbitrary files (images, videos, documents)</td></tr><tr><td><strong>FR2</strong></td><td>Pre-signed URLs for direct client upload/download (no proxy)</td></tr><tr><td><strong>FR3</strong></td><td>Multipart upload for files > 100MB (parallel, resumable)</td></tr><tr><td><strong>FR4</strong></td><td>Versioning: keep all versions, enable point-in-time restore</td></tr><tr><td><strong>FR5</strong></td><td>Lifecycle policies: move cold data to cheaper storage tiers</td></tr><tr><td><strong>FR6</strong></td><td>Event notifications: trigger downstream on object create/delete</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Durability: 11 nines (S3 standard) — 0.000000001% annual loss</td></tr><tr><td><strong>NFR2</strong></td><td>Availability: 99.99% (S3 standard). 99.5% (S3 Infrequent Access)</td></tr><tr><td><strong>NFR3</strong></td><td>GET latency: 50–200ms (S3 origin). < 10ms (CloudFront edge)</td></tr><tr><td><strong>NFR4</strong></td><td>Throughput: 3,500 PUT/s and 5,500 GET/s per prefix</td></tr><tr><td><strong>NFR5</strong></td><td>Consistency: strong read-after-write (since Dec 2020 for S3)</td></tr><tr><td><strong>NFR6</strong></td><td>Multipart: up to 10,000 parts × 5GB each = 50TB single object</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>Durability: 11 nines (S3 standard) — 0.000000001% annual loss</td></tr><tr><td><strong>NFR2</strong></td><td>Availability: 99.99% (S3 standard). 99.5% (S3 Infrequent Access)</td></tr><tr><td><strong>NFR3</strong></td><td>GET latency: 50–200ms (S3 origin). < 10ms (CloudFront edge)</td></tr><tr><td><strong>NFR4</strong></td><td>Throughput: 3,500 PUT/s and 5,500 GET/s per prefix</td></tr><tr><td><strong>NFR5</strong></td><td>Consistency: strong read-after-write (since Dec 2020 for S3)</td></tr><tr><td><strong>NFR6</strong></td><td>Multipart: up to 10,000 parts, 5MB–5GB each (last part may be smaller) — but S3's documented maximum single-object size is 5TB regardless of part math, so don't extrapolate 10,000 × 5GB as the real ceiling</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -403,82 +472,18 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
   <p>Every senior interview ends here. Know your choices and their costs.</p>
-  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">S3 vs Block storage</td><td>S3 (object) for static assets</td><td><span class="dot g"></span>Infinite scale. Cheap ($0.023/GB vs $0.10/GB for EBS). No filesystem semantics needed. HTTP access</td><td><span class="dot a"></span>Cannot partially update — must upload entire object to modify. No random access within object. No locking</td><td>Block storage (EBS) for databases, VM disks where POSIX filesystem and random writes are required</td></tr><tr><td class="row-head">Erasure coding vs replication</td><td>Erasure coding (S3 internals)</td><td><span class="dot g"></span>RS(10,4): 40% storage overhead for same durability as 3× replication (200% overhead). 2.86× cheaper</td><td><span class="dot a"></span>Read requires 10 chunks (vs 1 for replication). Small files (<1MB) have higher relative overhead</td><td>S3 uses erasure coding internally — you don't choose. Self-built: erasure coding for large cold objects, replication for hot small objects</td></tr><tr><td class="row-head">Storage tiers</td><td>Intelligent Tiering</td><td><span class="dot g"></span>Automatic tier migration based on access patterns. No retrieval fee for Frequent Access tier. Zero management</td><td><span class="dot a"></span>Monthly monitoring fee ($0.0025/1000 objects). Not cost-effective for objects < 128KB</td><td>S3 Standard for hot data. Standard-IA for infrequent (30-day minimum). Glacier for archive. Intelligent Tiering when access patterns are unknown</td></tr><tr><td class="row-head">Upload method</td><td>Multipart for > 100MB</td><td><span class="dot g"></span>Parallel parts: 10 parts × 100Mbps = 1Gbps effective throughput. Resume on failure. No timeout on large uploads</td><td><span class="dot a"></span>More API calls (initiate + upload parts + complete). Must clean up failed multipart uploads (lifecycle policy)</td><td>Single PUT for < 100MB. Multipart mandatory for > 5GB. Pre-signed URL for both — client uploads direct to S3</td></tr><tr><td class="row-head">CDN caching</td><td>CloudFront in front of S3</td><td><span class="dot g"></span>p99 latency 200ms→10ms. Bandwidth costs cut by 80% (CDN serves from edge). Origin protected from traffic spikes</td><td><span class="dot a"></span>Cache invalidation: purge costs $0.005 per path. Use versioned URLs instead (app.v3f9a.js) for zero invalidation</td><td>CDN for any file accessed > once globally. Direct S3 only for unique one-time downloads (generated reports)</td></tr></tbody></table>
+  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">S3 vs Block storage</td><td>S3 (object) for static assets</td><td><span class="dot g"></span>Infinite scale. Cheap (roughly $0.023/GB/month vs roughly $0.08/GB/month for EBS gp3). No filesystem semantics needed. HTTP access</td><td><span class="dot a"></span>Cannot partially update — must upload entire object to modify. No random access within object. No locking</td><td>Block storage (EBS) for databases, VM disks where POSIX filesystem and random writes are required</td></tr><tr><td class="row-head">Erasure coding vs replication</td><td>Erasure coding (S3 internals)</td><td><span class="dot g"></span>RS(10,4): 40% storage overhead for same durability as 3× replication (200% overhead). 2.86× cheaper</td><td><span class="dot a"></span>Read requires 10 chunks (vs 1 for replication). Small files (<1MB) have higher relative overhead</td><td>S3 uses erasure coding internally — you don't choose. Self-built: erasure coding for large cold objects, replication for hot small objects</td></tr><tr><td class="row-head">Storage tiers</td><td>Intelligent Tiering</td><td><span class="dot g"></span>Automatic tier migration based on access patterns. No retrieval fee for Frequent Access tier. Zero management</td><td><span class="dot a"></span>Monthly monitoring fee ($0.0025/1000 objects). Not cost-effective for objects < 128KB</td><td>S3 Standard for hot data. Standard-IA for infrequent (30-day minimum). Glacier for archive. Intelligent Tiering when access patterns are unknown</td></tr><tr><td class="row-head">Upload method</td><td>Multipart for > 100MB</td><td><span class="dot g"></span>Parallel parts: 10 parts × 100Mbps = 1Gbps effective throughput. Resume on failure. No timeout on large uploads</td><td><span class="dot a"></span>More API calls (initiate + upload parts + complete). Must clean up failed multipart uploads (lifecycle policy)</td><td>Single PUT for < 100MB. Multipart mandatory for > 5GB. Pre-signed URL for both — client uploads direct to S3</td></tr><tr><td class="row-head">CDN caching</td><td>CloudFront in front of S3</td><td><span class="dot g"></span>p99 latency 200ms→10ms. Bandwidth costs cut by 80% (CDN serves from edge). Origin protected from traffic spikes</td><td><span class="dot a"></span>Cache invalidation: purge costs $0.005 per path. Use versioned URLs instead (app.v3f9a.js) for zero invalidation</td><td>CDN for any file accessed > once globally. Direct S3 only for unique one-time downloads (generated reports)</td></tr></tbody></table>
 </section>
 
 <section id="schema-object_storage">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>S3 Key Structure Best Practices</h4><table class="flow-table"><thead><tr><th>Pattern</th><th>Example</th><th>Why</th></tr></thead><tbody><tr><td>Versioned static assets</td><td>assets/app.{hash}.js</td><td>Immutable URL → TTL=1year → zero cache invalidation</td></tr><tr><td>User uploads</td><td>uploads/{user_id}/{uuid}/{filename}</td><td>user_id prefix enables IAM prefix-level access control</td></tr><tr><td>Date-partitioned data</td><td>data/2026/03/22/{batch_id}.parquet</td><td>Enables Athena/Glue partition pruning for analytics queries</td></tr><tr><td>Random prefix (legacy)</td><td>1a2b/image_name.jpg</td><td>Old S3 needed random prefix to avoid partition hotspot — no longer needed since 2018</td></tr><tr><td>Multipart staging</td><td>tmp/uploads/{upload_id}/part_{n}</td><td>Temporary prefix for in-progress uploads, lifecycle policy cleans up after 24h</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Failure Mode Fast Recall</h4><table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td>Storage bill grows with no matching visible object count</td><td>Orphaned multipart uploads left by failed/abandoned uploads</td><td>Lifecycle rule: AbortIncompleteMultipartUpload after N hours; audit periodically</td></tr><tr><td>503 SlowDown errors under a traffic burst</td><td>A sharp spike concentrated on one narrow key prefix outruns auto-partitioning</td><td>Randomize hot key prefixes, add backoff/jitter, watch CloudWatch request metrics</td></tr><tr><td>Sensitive data accessible without authentication</td><td>Bucket or object ACL/policy grants public access, intentionally or not</td><td>Block Public Access at account level; S3 Access Analyzer; bucket policies over ACLs</td></tr><tr><td>Internal data exfiltrated via an internet-facing service</td><td>An over-permissioned IAM role reachable via SSRF against the metadata service</td><td>Least-privilege IAM roles; require IMDSv2; treat any internet-facing service as untrusted</td></tr></tbody></table>
 </section>
 </div>
-
-</div>
-
-<section id="obj-failures">
-  <div class="sec-tag">⚠ · Failure Modes</div>
-  <h2>What Breaks in Object Storage — and How to Handle It</h2>
-  <div class="k-cards">
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Orphaned Multipart Uploads — Silent Cost Bomb</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Failed uploads leave partial data in S3. At $0.023/GB, 10,000 failed 1GB uploads = 10TB = $230/month in zombie storage. Invisible in normal S3 size metrics.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Set S3 lifecycle rule: AbortIncompleteMultipartUpload after 24h. Run monthly audit: aws s3api list-multipart-uploads. This is a real production cost issue — always configure it.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Hot Prefix Throttling — 503 SlowDown Errors</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Pre-2018 S3: all keys starting with the same prefix hit the same partition. At >3,500 PUT/s: 503 SlowDown errors. Common cause: date-prefixed keys (2026/03/22/...) — all day's traffic hits one partition.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Post-2018: S3 auto-partitions based on access patterns — no manual sharding needed. But if you see SlowDown: add random prefix (hash of object ID as first 4 chars). Monitor S3 request metrics in CloudWatch.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Public Bucket Exposure — Data Breach</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">S3 bucket set to public by mistake. At AWS re:Invent 2017: 30% of S3 buckets were publicly readable. Capital One breach: SSRF + IAM role → attacker accessed S3 directly.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Always: Block Public Access at account level (AWS default since 2023). Enable S3 Access Analyzer. Never put secrets or PII in bucket names (they appear in CloudTrail logs). Use bucket policies not ACLs.</span></div>
-  </div></div>
-</div>
-  </div>
-</section>
-
-
-<section id="obj-failures">
-  <div class="sec-tag">⚠ · Failure Modes</div>
-  <h2>What Breaks in Object Storage — and How to Handle It</h2>
-  <div class="k-cards">
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Orphaned Multipart Uploads — Silent Cost Bomb</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Failed uploads leave partial data in S3. At $0.023/GB, 10,000 failed 1GB uploads = 10TB = $230/month in zombie storage. Invisible in normal S3 size metrics.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Set S3 lifecycle rule: AbortIncompleteMultipartUpload after 24h. Run monthly audit: aws s3api list-multipart-uploads. This is a real production cost issue — always configure it.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Hot Prefix Throttling — 503 SlowDown Errors</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Pre-2018 S3: all keys starting with the same prefix hit the same partition. At >3,500 PUT/s: 503 SlowDown errors. Common cause: date-prefixed keys (2026/03/22/...) — all day's traffic hits one partition.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Post-2018: S3 auto-partitions based on access patterns — no manual sharding needed. But if you see SlowDown: add random prefix (hash of object ID as first 4 chars). Monitor S3 request metrics in CloudWatch.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Public Bucket Exposure — Data Breach</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">S3 bucket set to public by mistake. At AWS re:Invent 2017: 30% of S3 buckets were publicly readable. Capital One breach: SSRF + IAM role → attacker accessed S3 directly.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Always: Block Public Access at account level (AWS default since 2023). Enable S3 Access Analyzer. Never put secrets or PII in bucket names (they appear in CloudTrail logs). Use bucket policies not ACLs.</span></div>
-  </div></div>
-</div>
-  </div>
-</section>
 
 <div class="footer">OBJECT STORAGE · S3 · GCS · MULTIPART UPLOAD · PRE-SIGNED URLs · CDN · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

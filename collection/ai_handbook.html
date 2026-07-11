@@ -1354,12 +1354,12 @@ WITH (m = 16, ef_construction = 64);</code></pre>
       <li><strong>Model routing:</strong> simple tasks → cheaper model. Can reduce average cost by 60-80% with smart routing.</li>
       <li><strong>Batch embedding jobs:</strong> avoid real-time embedding generation; batch at off-peak hours; 50% cheaper with batch API.</li>
     </ul></div>
-    <p><strong>Quick reference costs (early 2025):</strong></p>
+    <p><strong>Quick reference costs (checked as of mid-2026; model line-ups shift, re-verify before quoting exact numbers in an interview):</strong></p>
     <div class="table-wrap"><table><thead><tr><th>Service</th><th>Approx cost</th><th>Notes</th></tr></thead><tbody>
-      <tr><td>GPT-4o input</td><td>~$2.50 / 1M tokens</td><td>Standard; cached tokens 50% cheaper</td></tr>
+      <tr><td>GPT-4o input</td><td>~$2.50 / 1M tokens</td><td>Standard; cached tokens 50% cheaper — still the quoted rate as of mid-2026</td></tr>
       <tr><td>GPT-4o-mini input</td><td>~$0.15 / 1M tokens</td><td>16x cheaper for simple tasks</td></tr>
-      <tr><td>Claude Sonnet 3.5 input</td><td>~$3.00 / 1M tokens</td><td>Comparable to GPT-4o</td></tr>
-      <tr><td>text-embedding-3-small</td><td>~$0.02 / 1M tokens</td><td>Default choice for cost</td></tr>
+      <tr><td>Claude Sonnet (mid-tier) input</td><td>~$3.00 / 1M tokens</td><td>The $3/$15 in-out price point has held across several Sonnet generations — check the current model name (Sonnet 4.x as of mid-2026), the per-token rate has been stable</td></tr>
+      <tr><td>text-embedding-3-small</td><td>~$0.02 / 1M tokens</td><td>Default choice for cost — unchanged as of mid-2026</td></tr>
       <tr><td>H100 80GB cloud</td><td>~$2-3 / GPU-hour</td><td>Self-hosting break-even calc</td></tr>
       <tr><td>Cohere Rerank</td><td>~$1 / 1000 searches</td><td>Managed reranker</td></tr>
     </tbody></table></div>
@@ -1583,18 +1583,21 @@ WITH (m = 16, ef_construction = 64);</code></pre>
       <tr><td>Minimal risk</td><td>Most consumer AI, spam filters</td><td>Voluntary codes of conduct</td></tr>
     </tbody></table></div>
     <p>As a Director at a company serving EU customers, you should know your product's risk tier and what engineering obligations follow. This signals regulatory maturity in a panel interview.</p>
+    <div class="box bonus"><div class="box-title"><span class="box-icon">★</span>CLAUDE BONUS — The Timeline Moved: Know the 2026 Delay</div>
+    <p>The Act entered into force in August 2024 on a phased timeline: prohibited-practice bans took effect February 2025, and GPAI transparency obligations took effect August 2025 — both already live. But the highest-stakes date, <strong>high-risk system obligations (Annex III — hiring, credit scoring, medical diagnosis) originally due August 2026, has been pushed back roughly 16 months to December 2027</strong> via a 2026 "Omnibus" simplification agreement; high-risk systems embedded in regulated products (Annex I) moved from August 2027 to August 2028. A separate new prohibition — AI-generated non-consensual intimate imagery and CSAM — takes effect December 2026.</p>
+    <p>Saying "high-risk obligations were originally due this August but got pushed to December 2027" in an interview signals you're tracking the regulation in real time, not reciting a 2024 explainer. Always caveat with "as of my last check" — omnibus-style delays are exactly the kind of thing that moves again.</p></div>
 
     <h2 class="section-title" id="ch12-4">12.4 Numbers Every Director Should Know</h2>
-    <div class="table-wrap"><table><thead><tr><th>Metric</th><th>Approximate value (early 2025)</th><th>Interview relevance</th></tr></thead><tbody>
-      <tr><td>GPT-4o input cost</td><td>~$2.50 / 1M tokens</td><td>Cost-per-query baseline</td></tr>
+    <div class="table-wrap"><table><thead><tr><th>Metric</th><th>Approximate value (checked mid-2026)</th><th>Interview relevance</th></tr></thead><tbody>
+      <tr><td>GPT-4o input cost</td><td>~$2.50 / 1M tokens</td><td>Cost-per-query baseline — unchanged as of mid-2026</td></tr>
       <tr><td>GPT-4o-mini input</td><td>~$0.15 / 1M tokens</td><td>16x cheaper for simple tasks</td></tr>
       <tr><td>H100 80GB cloud rent</td><td>~$2-3 / GPU-hour</td><td>Self-hosting break-even calc</td></tr>
-      <tr><td>Llama 3 70B on 2×H100</td><td>~30-50 tokens/sec</td><td>Self-hosted latency expectation</td></tr>
+      <tr><td>Llama 3 70B on 2×H100</td><td>~30-50 tokens/sec</td><td>Self-hosted latency expectation — treat the model as illustrative, not the current Llama generation</td></tr>
       <tr><td>LoRA fine-tune, 7B, 10k samples</td><td>~2-4 hours on 1×A100</td><td>Fine-tune iteration speed</td></tr>
-      <tr><td>MMLU score, frontier models</td><td>~85-90%</td><td>Benchmark to calibrate capability claims</td></tr>
+      <tr><td>MMLU score, frontier models</td><td>~92-93%+, and considered saturated</td><td>By 2026 frontier models cluster within a couple points of each other on MMLU — the benchmark itself is now widely seen as too easy to differentiate frontier capability; MMLU-Pro and other harder benchmarks are the more current reference point. Saying this signals you're tracking the field, not quoting a stale number.</td></tr>
       <tr><td>RAGAS faithfulness, good RAG</td><td>&gt; 0.85</td><td>Quality bar for production RAG</td></tr>
       <tr><td>RAG retrieval latency</td><td>50-200ms P50</td><td>Latency budget planning</td></tr>
-      <tr><td>Embedding cost (3-small)</td><td>~$0.02 / 1M tokens</td><td>Indexing cost at scale</td></tr>
+      <tr><td>Embedding cost (3-small)</td><td>~$0.02 / 1M tokens</td><td>Indexing cost at scale — unchanged as of mid-2026</td></tr>
       <tr><td>Semantic cache hit rate</td><td>40-70% for FAQ systems</td><td>Cost reduction potential</td></tr>
     </tbody></table></div>
 
@@ -1711,5 +1714,5 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 </script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

@@ -61,6 +61,10 @@ code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1p
 .matrix th{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;}
 .matrix td{padding:11px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
 .matrix .rh{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface);color:var(--ink);}
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
 .dot.g{background:var(--green);}.dot.a{background:var(--amber);}.dot.r{background:var(--red);}
 .badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid;font-weight:500;vertical-align:middle;margin:2px;}
@@ -95,8 +99,8 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
 .k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
 .k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
 .k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
 .k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .k-point{display:flex;flex-direction:column;gap:4px;}
@@ -184,7 +188,7 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
   <p class="hero-sub">Bloom filters, Tries, Merkle trees, Quadtrees, Skip lists — the data structures that power production systems at FAANG scale.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Bloom Filter</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Trie</span><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Merkle Tree</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Quadtree</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Skip List</span></div>
 </div></div>
-<nav class="nav"><a href="#bloom">Probabilistic membership testing —</a><a href="#trie">Prefix tree — the data structure be</a><a href="#merkle">Cryptographic data integrity — the</a><a href="#quadtree">Finding things near a location — Ub</a><a href="#skiplist">Redis ZSET's secret — why it beats</a><a href="#sd-ds">Data structures in production</a><a href="#followups-ds">Every hard follow-up, answered</a><a href="#req-nfr-data_structures">Requirements & Non-Functional Const</a><a href="#tradeoff-data_structures">Trade-off Matrix — What You Gave Up</a><a href="#schema-data_structures">Quick Reference</a></nav>
+<nav class="nav"><a href="#bloom">Probabilistic membership testing —</a><a href="#trie">Prefix tree — the data structure be</a><a href="#merkle">Cryptographic data integrity — the</a><a href="#quadtree">Finding things near a location — Ub</a><a href="#skiplist">Redis ZSET's secret — why it beats</a><a href="#sd-ds">Data structures in production</a><a href="#followups-ds">Every hard follow-up, answered</a><a href="#req-nfr-data_structures">Requirements & Non-Functional Const</a><a href="#ds-failures">When data structures fail in produ</a><a href="#tradeoff-data_structures">Trade-off Matrix — What You Gave Up</a><a href="#schema-data_structures">Quick Reference</a></nav>
 <div class="wrap">
 <section id="bloom">
   <div class="sec-tag">00 · Bloom Filter</div>
@@ -195,6 +199,10 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       A Bloom filter is like a bouncer who checks a blacklist. If the blacklist says someone is banned, they might actually be banned — OR it might be a false positive (wrong person). But if the blacklist says someone is NOT banned, they are <strong>definitely not banned</strong>. No false negatives.<br><br>
       This asymmetry — perfect recall, imperfect precision — is exactly what makes Bloom filters useful. "Is this item in the set?" → "Definitely not" (perfect) or "Probably yes" (with a known false positive rate).
     </div>
+  </div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'll use a Bloom filter to store the set of banned users, then check it before letting someone log in." <strong>This is backwards from what a Bloom filter can safely guarantee.</strong> A Bloom filter can tell you "definitely not banned" with certainty, but "probably banned" always carries a false-positive risk — some fraction of legitimate users will be wrongly flagged as banned and locked out. The correct answer names the asymmetry explicitly: use a Bloom filter as a fast <em>pre-filter</em> before an expensive, authoritative check (skip a disk read, skip a network call) — never as the final source of truth for anything where a false positive has a real cost (security denials, billing, exact deduplication). If false positives are unacceptable, that's a signal you need an exact structure (hash set, or a Cuckoo filter if you also need deletion), not a Bloom filter.</p>
   </div>
   <div class="k-cards">
 <div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">How It Works</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>A bit array of size m, with k independent hash functions.</strong> Insert "redis": hash<sub>1</sub>("redis")=42, hash<sub>2</sub>("redis")=891, hash<sub>3</sub>("redis")=3042 → set bits 42, 891, 3042 to 1. Query "redis": hash all 3 positions → if ALL bits are 1 → "probably in set." If ANY bit is 0 → "definitely not in set." False positive: "kafka" happens to hash to positions where all bits are 1 (set by other items) → reports "probably yes" even though "kafka" was never inserted. False negative: impossible — inserted items always set their bits. Those bits stay 1 forever.</div></div></div></div>
@@ -207,6 +215,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="trie">
   <div class="sec-tag">01 · Trie</div>
   <h2>Prefix tree — the data structure behind autocomplete</h2>
+  <div class="analogy">
+    <div class="analogy-label">The dictionary-by-spelling analogy</div>
+    <div class="analogy-text">
+      Imagine sorting words not alphabetically in a list, but by building a physical structure: a box labelled "C", inside it a box labelled "A" (for words starting "CA"), inside that a fork — one path labelled "T" (for "cat"), another labelled "R" (for "car", and inside that, one more box "D" for "card").<br><br>
+      To find every word starting with "ca", you don't scan every word in the dictionary — you walk straight to the "C" → "A" box and grab everything inside it. <strong>The shared prefix "ca" is stored exactly once, as a location in the structure, not repeated in every word.</strong> That's a trie: a tree where the path from the root spells out a prefix, and everything below a given node shares that prefix.
+    </div>
+  </div>
   <div class="k-cards">
 <div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">How It Works</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>A tree where each node represents one character. Every path from root to a leaf node represents a word.</strong> Words "cat", "car", "card": root→c→a→t (end), root→c→a→r (end)→d (end). The prefix "ca" is shared — stored once. Prefix search: traverse to the node for the last char of your prefix ("ca") → return all words in the subtree below it. O(L + R) where L is prefix length and R is result count.</div><div class="k-good"><span class="k-icon">&#10003;</span><span>✓ O(L) lookup regardless of vocabulary size. Memory-efficient for shared prefixes. Every IP routing table in routers uses a trie variant (Patricia trie). DNS resolution uses tries for domain suffix matching.</span></div></div></div></div>
 <div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Autocomplete Design</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Trie + frequency scores = autocomplete system.</strong> Each end-of-word node stores a popularity score. Query "redis" → traverse to 's' node → return top-K words in subtree by score (use a min-heap of size K during traversal). At FAANG scale (1M+ vocabulary): store trie in memory on dedicated autocomplete servers. Update scores in background from click-through logs. Shard by first letter if needed (26 shards, each holds 1/26 of vocabulary). Alternative at scale: Elasticsearch Completion Suggester (FST in memory), or Redis ZSET prefix trick for simpler cases.</div></div></div></div>
@@ -237,6 +252,13 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="skiplist">
   <div class="sec-tag">04 · Skip List</div>
   <h2>Redis ZSET's secret — why it beats a balanced BST</h2>
+  <div class="analogy">
+    <div class="analogy-label">The express-train analogy</div>
+    <div class="analogy-text">
+      A subway line has a local train that stops at every station, and an express train that only stops at every 4th station. To get from station 1 to station 19, you don't ride the local the whole way — you take the express to the station nearest your destination, then switch to the local for the last few stops.<br><br>
+      A skip list is a sorted linked list with several of these "express lines" stacked on top of the base list, each skipping more stations than the one below it. <strong>Searching starts on the fastest express line and drops down a level every time it overshoots</strong> — reaching any element in roughly logarithmic time without ever needing to rebalance a tree.
+    </div>
+  </div>
   <div class="k-cards">
 <div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">How It Works</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>A sorted linked list with multiple "express lanes" that skip over elements for faster traversal.</strong> Level 0: every element → [1] → [3] → [7] → [12] → [19] → [25] Level 1: every 2nd element → [1] → [7] → [19] → [25] Level 2: every 4th element → [1] → [19] Find 12: start at highest level, jump to 19 (too big), drop to level 1, jump to 7, drop to level 0, walk to 12. O(log N) expected.</div><div class="k-good"><span class="k-icon">&#10003;</span><span>✓ Same O(log N) as a balanced BST. But skip list is lock-free for concurrent access (CAS on pointers). Simpler to implement correctly. Cache-friendlier (linked list, not tree nodes scattered in memory). Redis chose skip list for ZSET for exactly these reasons.</span></div></div></div></div>
 <div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Redis ZSET Internals</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Redis Sorted Sets use a skip list + hash table hybrid.</strong> Hash table: O(1) score lookup by member ("what is user:123's score?"). Skip list: O(log N) rank queries ("what rank is user:123?") and range queries ("return members with score 100–200"). ZADD: O(log N). ZRANK: O(log N). ZRANGEBYSCORE: O(log N + result size). ZSCORE: O(1).</div><div class="k-muted"><span class="k-icon">&rarr;</span><span>The skip list is why ZREVRANGE (return top-K by score) is efficient. A simple sorted array would be O(1) read but O(N) insert. The skip list gives O(log N) for both — the right trade-off for a leaderboard that's constantly updated and queried.</span></div></div></div></div>
@@ -246,12 +268,6 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Memory Cost of Each Data Structure</h4>
 <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
 <tbody><tr><td class="row-head">Bloom filter</td><td>1B URLs × 9.6 bits (1% FP rate)</td><td><strong>1.2GB</strong></td><td style="color:#1a7a4a;font-size:12px">vs 32GB for a HashSet. Use when membership check is frequent and false positives are acceptable</td></tr><tr><td class="row-head">Trie (autocomplete)</td><td>1M words × avg 5 chars × 50 bytes/node</td><td><strong>250MB</strong></td><td style="color:#1a7a4a;font-size:12px">Compact trie (Patricia): 60MB. Elasticsearch Completion Suggester: stores in RAM, fits 10M entries in ~2GB</td></tr><tr><td class="row-head">Count-Min Sketch</td><td>d=5 rows × w=272 cols × 4 bytes/counter</td><td><strong>5.4KB</strong></td><td style="color:#1a7a4a;font-size:12px">Counts frequency for ANY vocabulary size. 1M or 1B distinct items — same 5.4KB</td></tr><tr><td class="row-head">Skip list (Redis ZSET)</td><td>1M members × ~100 bytes per node (value + pointers)</td><td><strong>~100MB</strong></td><td style="color:#1a7a4a;font-size:12px">Redis ZSET with 1M members: monitor memory. At 100M members: consider sharding across multiple Redis instances</td></tr><tr><td class="row-head">Geohash/S2 index</td><td>1M drivers × 50 bytes (geohash string + metadata)</td><td><strong>50MB</strong></td><td style="color:#1a7a4a;font-size:12px">Fits in RAM on a single Redis instance. Uber handles 1M concurrent drivers with city-sharded Redis GEO keys</td></tr></tbody></table></div></div>
-
-<div style="margin:16px 0"><div style="margin:20px 0">
-<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Memory Cost of Each Data Structure</h4>
-<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Bloom filter</td><td>1B URLs × 9.6 bits (1% FP rate)</td><td><strong>1.2GB</strong></td><td style="color:#1a7a4a;font-size:12px">vs 32GB for a HashSet. Use when membership check is frequent and false positives are acceptable</td></tr><tr><td class="row-head">Trie (autocomplete)</td><td>1M words × avg 5 chars × 50 bytes/node</td><td><strong>250MB</strong></td><td style="color:#1a7a4a;font-size:12px">Compact trie (Patricia): 60MB. Elasticsearch Completion Suggester: stores in RAM, fits 10M entries in ~2GB</td></tr><tr><td class="row-head">Count-Min Sketch</td><td>d=5 rows × w=272 cols × 4 bytes/counter</td><td><strong>5.4KB</strong></td><td style="color:#1a7a4a;font-size:12px">Counts frequency for ANY vocabulary size. 1M or 1B distinct items — same 5.4KB</td></tr><tr><td class="row-head">Skip list (Redis ZSET)</td><td>1M members × ~100 bytes per node (value + pointers)</td><td><strong>~100MB</strong></td><td style="color:#1a7a4a;font-size:12px">Redis ZSET with 1M members: monitor memory. At 100M members: consider sharding across multiple Redis instances</td></tr><tr><td class="row-head">Geohash/S2 index</td><td>1M drivers × 50 bytes (geohash string + metadata)</td><td><strong>50MB</strong></td><td style="color:#1a7a4a;font-size:12px">Fits in RAM on a single Redis instance. Uber handles 1M concurrent drivers with city-sharded Redis GEO keys</td></tr></tbody></table></div></div>
-
 
 <section id="sd-ds">
   <div class="sec-tag">05 · System Design Examples</div>
@@ -270,6 +286,50 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
       <div class="choice-row"><div class="choice-label">DATA MODEL</div><div class="choice-val">Redis GEO key per city: <code>GEOADD drivers:bangalore 77.5946 12.9716 driver:123</code>. Each driver update (every 4 seconds): <code>GEOADD drivers:bangalore {lng} {lat} {driver_id}</code> — updates position in the geo index.</div></div>
       <div class="choice-row"><div class="choice-label">QUERY</div><div class="choice-val"><code>GEORADIUS drivers:bangalore 77.5946 12.9716 2 km ASC COUNT 10</code> → 10 nearest drivers sorted by distance. Returns in &lt;1ms. Redis GEO uses a geohash-based sorted set internally — Geohash encoded as ZSET score.</div></div>
       <div class="choice-row"><div class="choice-label">SHARDING</div><div class="choice-val">One Redis key per city holds all drivers in that city. At 50,000 drivers per city, the ZSET has 50K members — trivially fast. Cities are natural shards: Bangalore drivers never need to be co-located with Mumbai drivers.</div></div>
+    </div>
+  </div>
+  <h3>Five Data Structures Compared</h3>
+  <table class="comp-table">
+    <thead><tr><th>Structure</th><th>Answers</th><th>Strength</th><th>Real Failure Mode</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">Bloom Filter</td><td>"Is X definitely not in the set?"</td><td>Sub-linear space (bits, not bytes) for approximate membership; O(k) constant-time check</td><td class="warn">False positives climb silently once the filter is undersized for its item count — no error, just degraded hit rate</td><td>Cassandra/HBase SSTable filtering, Chrome Safe Browsing</td></tr>
+      <tr><td class="row-head">Trie</td><td>"What matches this prefix?"</td><td>O(L) lookup independent of vocabulary size; shared prefixes stored once</td><td class="warn">Memory overhead per node adds up for sparse, high-cardinality vocabularies with little prefix sharing</td><td>Autocomplete engines, IP routing tables (Patricia trie)</td></tr>
+      <tr><td class="row-head">Merkle Tree</td><td>"Which specific data diverged?"</td><td>O(log N) proof/comparison instead of comparing every record</td><td class="warn">Comparison and repair cost scales with how divergent replicas actually are — a long-neglected repair window means a large, expensive catch-up</td><td>Cassandra anti-entropy repair, Git, Bitcoin block verification</td></tr>
+      <tr><td class="row-head">Quadtree / Geohash</td><td>"What's near this location?"</td><td>Adapts cell size to data density; simple string-prefix proximity (geohash)</td><td class="bad">Geohash cells are rectangular and boundary-unaware — a naive single-cell lookup misses points just across a cell edge</td><td>Uber/Lyft driver proximity, Yelp nearby search</td></tr>
+      <tr><td class="row-head">Skip List</td><td>"What's ranked/ordered near this value?"</td><td>O(log N) average for insert/search/range, lock-free concurrent access</td><td class="warn">Probabilistic balance, not guaranteed — pathological input can (rarely) degrade toward O(N), and unbounded growth risks OOM</td><td>Redis ZSET (sorted sets, leaderboards)</td></tr>
+    </tbody>
+  </table>
+  <div class="step-block">
+    <div class="step-block-header"><span class="sb-icon">🎯</span>Which Structure for This Problem?</div>
+    <div class="step-block-body">
+      <div class="step-row"><div class="step-num">1</div><div class="step-content">
+        <div class="step-q">Do you need an exact answer, or is a bounded error acceptable in exchange for far less memory?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Approximate is fine →</span><span class="opt-text"><strong>Probabilistic structure.</strong> Bloom filter for membership, Count-Min Sketch for frequency, HyperLogLog for cardinality — all trade a small, tunable error rate for orders-of-magnitude less memory than an exact structure.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Must be exact →</span><span class="opt-text">Go to Step 2 — pick among the exact structures based on the query shape you actually need.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-content">
+        <div class="step-q">Is the query "give me everything sharing this prefix"?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Yes →</span><span class="opt-text"><strong>Trie.</strong> Autocomplete, IP routing, any domain where keys naturally share prefixes and you want O(L) lookup regardless of vocabulary size.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">No →</span><span class="opt-text">Go to Step 3.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-content">
+        <div class="step-q">Do you need to detect exactly which records diverged between two large replicas or datasets?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Yes →</span><span class="opt-text"><strong>Merkle tree.</strong> Anti-entropy repair, content-addressed storage, any "prove/find the difference without comparing everything" problem.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">No →</span><span class="opt-text">Go to Step 4.</span></div>
+        </div>
+      </div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-content">
+        <div class="step-q">Is the query fundamentally spatial ("what's near this point") or ordinal ("what's ranked near this value")?</div>
+        <div class="step-options">
+          <div class="step-option opt-yes"><span class="opt-arrow">Spatial →</span><span class="opt-text"><strong>Quadtree or geohash/S2.</strong> Proximity search, geospatial indexing — pick geohash for simplicity and library support, S2 when sphere accuracy near poles or at large radius matters.</span></div>
+          <div class="step-option opt-no"><span class="opt-arrow">Ordinal / ranked →</span><span class="opt-text"><strong>Skip list.</strong> Sorted sets, leaderboards, range queries with concurrent access — this is exactly why Redis chose it for ZSET over a balanced BST.</span></div>
+        </div>
+      </div></div>
     </div>
   </div>
 </section>
@@ -311,6 +371,45 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </section>
 
 
+<section id="ds-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>When data structures fail in production</h2>
+  <div class="k-cards">
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Bloom Filter False Positive Avalanche</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">The filter was sized for N items but keeps taking inserts past that — every additional item sets more bits to 1, and the false-positive rate climbs, potentially far past its designed target. In Cassandra, an under-sized bloom filter means far more reads incorrectly fail to skip the SSTable that doesn't contain the key — you don't lose data, but you pay the disk read the filter was supposed to save you, and read latency degrades cluster-wide.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Monitor the filter's observed false-positive rate against its design target (Cassandra exposes bloom filter false-positive ratio per table via nodetool tablestats/cfstats). Size the filter for expected item count with headroom, and re-run compaction/upgradesstables if the table has grown well past the original sizing assumption.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Skip List Memory Explosion — Redis OOM</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">A Redis ZSET leaderboard with no cap on membership (every user who ever scored, never trimmed) grows unbounded. Once it approaches the instance's maxmemory, Redis either evicts keys (if a maxmemory-policy is set) or starts rejecting writes with OOM errors (if it isn't) — and if Redis crashes or is killed by the OS OOM killer, every other key on that instance goes down with it, not just the oversized ZSET.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always set maxmemory and an explicit maxmemory-policy. Cap leaderboard size at write time with ZADD followed by ZREMRANGEBYRANK 0 -(K+1) to keep only the top K. Monitor memory via INFO memory in production, not just at deploy time — organic growth is the usual culprit, not a single bad deploy.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Geohash Boundary Problem — Missing Nearby Points</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">A driver sits just across a geohash cell boundary from the rider — geographically 50 metres away, but in a cell whose string prefix shares nothing with the rider's cell. A naive "search this cell only" implementation misses them entirely, even though they're the closest driver available.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Always search the cell plus its 8 neighbours (9 cells total) for proximity queries, then merge and deduplicate by driver id. Redis's own GEORADIUS/GEOSEARCH commands handle this correctly internally — the failure mode shows up specifically in hand-rolled geohash-prefix lookups that skip this step.</span></div>
+  </div></div>
+</div>
+    <div class="k-card">
+  <div class="k-card-head"><span class="k-num">04</span><span class="k-title">Merkle Tree Repair Storms</span><span class="k-tag">FAILURE MODE</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Anti-entropy repair (Cassandra's nodetool repair) walks Merkle trees across replicas and streams every divergent range it finds. If repair has been skipped for too long, or a node was down for an extended window, the divergent range can be large — the resulting repair streams heavy data and consumes significant CPU/network on every replica involved, degrading read/write latency for unrelated queries hitting the same nodes during the repair window.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Run repair on a predictable schedule (before gc_grace_seconds elapses — 10 days by default) rather than reactively. Use incremental or subrange repair to bound the blast radius of any single repair run, and schedule repairs to avoid overlapping with peak traffic windows.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
 <section id="tradeoff-data_structures">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
@@ -326,70 +425,6 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 </section>
 </div>
 
-
-<section id="ds-failures">
-  <div class="sec-tag">⚠ · Failure Modes</div>
-  <h2>When Data Structures Fail in Production</h2>
-  <div class="k-cards">
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Bloom Filter False Positive Avalanche</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Bloom filter reaches capacity (too many items inserted). False positive rate climbs from 1% to 30%+. In Cassandra: 30% of reads incorrectly skip the right SSTable → data appears missing → application errors.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Monitor bloom filter fill rate. Cassandra: BF FP rate exposed via nodetool cfstats. Rebuild filter (nodetool upgradesstables) when FP rate > 5%. Size filter at 2× expected item count for headroom.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Skip List Memory Explosion — Redis OOM</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Redis ZSET with 100M members (leaderboard without TTL) consumes 10GB+ RAM. Redis tries to allocate more than available memory → OOM → Redis crashes → all cached data lost → DB gets thundering herd.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Always set maxmemory + maxmemory-policy in Redis config. Use ZREMRANGEBYRANK to cap leaderboard size (ZADD + ZREMRANGEBYRANK 0 -(K+1) keeps only top K). Monitor Redis memory via INFO memory on every deploy.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Geohash Boundary Problem — Missing Nearby Points</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Driver is at the edge of a geohash cell. GEORADIUS query searches only within the radius — but a driver just across the cell boundary (50 metres away) has a completely different geohash prefix and is missed.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Always search adjacent geohash cells (8 neighbours + center = 9 cells) for proximity queries. Redis GEORADIUS handles this correctly internally. If building custom: query all 9 adjacent cells and merge, deduplicate by driver_id.</span></div>
-  </div></div>
-</div>
-  </div>
-</section>
-
-
-<section id="ds-failures">
-  <div class="sec-tag">⚠ · Failure Modes</div>
-  <h2>When Data Structures Fail in Production</h2>
-  <div class="k-cards">
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Bloom Filter False Positive Avalanche</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Bloom filter reaches capacity (too many items inserted). False positive rate climbs from 1% to 30%+. In Cassandra: 30% of reads incorrectly skip the right SSTable → data appears missing → application errors.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Monitor bloom filter fill rate. Cassandra: BF FP rate exposed via nodetool cfstats. Rebuild filter (nodetool upgradesstables) when FP rate > 5%. Size filter at 2× expected item count for headroom.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Skip List Memory Explosion — Redis OOM</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Redis ZSET with 100M members (leaderboard without TTL) consumes 10GB+ RAM. Redis tries to allocate more than available memory → OOM → Redis crashes → all cached data lost → DB gets thundering herd.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Always set maxmemory + maxmemory-policy in Redis config. Use ZREMRANGEBYRANK to cap leaderboard size (ZADD + ZREMRANGEBYRANK 0 -(K+1) keeps only top K). Monitor Redis memory via INFO memory on every deploy.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Geohash Boundary Problem — Missing Nearby Points</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Driver is at the edge of a geohash cell. GEORADIUS query searches only within the radius — but a driver just across the cell boundary (50 metres away) has a completely different geohash prefix and is missed.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Always search adjacent geohash cells (8 neighbours + center = 9 cells) for proximity queries. Redis GEORADIUS handles this correctly internally. If building custom: query all 9 adjacent cells and merge, deduplicate by driver_id.</span></div>
-  </div></div>
-</div>
-  </div>
-</section>
-
 <div class="footer">DATA STRUCTURES · BLOOM FILTER · TRIE · MERKLE TREE · QUADTREE · SKIP LIST · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+<script src="../js/speaker.js" defer></script></body></html>

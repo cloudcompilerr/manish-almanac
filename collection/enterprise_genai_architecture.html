@@ -624,7 +624,7 @@
   <section class="layer" id="layer-8">
     <div class="layer-eyebrow"><span class="num">08</span> Foundation Models</div>
     <h2>The Cognitive Core</h2>
-    <div class="components">GPT-5.x, Claude Opus/Sonnet, Gemini 1.5 Pro, Llama 4, Mistral, DeepSeek V3/V4.</div>
+    <div class="components">GPT-5.x, Claude Opus/Sonnet, Gemini 3.x, Llama 4, Mistral, DeepSeek V3/V4.</div>
 
     <div class="block">
       <div class="block-label">What It Means</div>
@@ -632,7 +632,7 @@
     </div>
     <div class="block">
       <div class="block-label">Why It's Needed</div>
-      <p>This is the primary engine for reasoning, translation, and structured output formatting. Selecting a model is a permanent balancing act: proprietary models (GPT-5.x, Claude Opus/Sonnet) offer state-of-the-art coding and math reasoning, while open weights (Llama 4, DeepSeek V3/V4) allow for zero-licensing overhead, infinite fine-tuning control, and local deployment.</p>
+      <p>This is the primary engine for reasoning, translation, and structured output formatting. Selecting a model is a permanent balancing act: proprietary models (GPT-5.x, Claude Opus/Sonnet) offer state-of-the-art coding and math reasoning, while open weights (DeepSeek V3/V4, Llama 4) allow for zero-licensing overhead, infinite fine-tuning control, and local deployment. Worth tracking: as of mid-2026, Meta's own actively-developed flagship (Muse Spark, announced April 2026 via its new Meta Superintelligence Labs group) is <em>closed</em>, not open-weight — a real strategic reversal from the Llama era. Llama 3/4 weights remain available and deployable, but they're now a legacy open-weight snapshot rather than Meta's current frontier; DeepSeek is the more actively-updated open-weight option for this layer as of this writing.</p>
     </div>
   </section>
 
@@ -779,7 +779,7 @@
       <div class="block-title">Topology 3 — The Sovereign On-Premises Fortress</div>
       <div class="block">
         <div class="block-label">E2E Stack</div>
-        <p>React UI → RabbitMQ → Haystack / LlamaIndex → MCP (local) → self-hosted Milvus → vLLM serving Meta Llama 4 (open) → Arize Phoenix &amp; NeMo Guardrails.</p>
+        <p>React UI → RabbitMQ → Haystack / LlamaIndex → MCP (local) → self-hosted Milvus → vLLM serving an open-weight model (DeepSeek V4 or legacy Llama 4 — Meta's own current flagship, Muse Spark, is closed-weight as of April 2026) → Arize Phoenix &amp; NeMo Guardrails.</p>
       </div>
       <div class="block">
         <div class="block-label">Use Case</div>
@@ -807,5 +807,5 @@
   </div>
 
 </div>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

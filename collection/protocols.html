@@ -209,7 +209,13 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
+</style>
 </head>
 <body>
 
@@ -229,7 +235,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   </div>
 </div>
 
-<nav class="nav"><a href="#mental-model">The mental model before memorising</a><a href="#request-response">REST, gRPC, and GraphQL — the three</a><a href="#realtime">WebSocket, SSE, and Long Polling —</a><a href="#comparison">Every dimension that matters in an</a><a href="#combos">Protocols that work together — not</a><a href="#examples">Which protocol wins in which system</a><a href="#decision">How to pick in an interview — in 60</a><a href="#followups">Every hard follow-up, answered</a><a href="#grpc-streaming">All four streaming types — with rea</a><a href="#req-nfr-protocols">Requirements & Non-Functional Const</a><a href="#tradeoff-protocols">Trade-off Matrix — What You Gave Up</a><a href="#schema-protocols">Quick Reference</a></nav>
+<nav class="nav"><a href="#mental-model">The mental model before memorising</a><a href="#request-response">REST, gRPC, and GraphQL — the three</a><a href="#realtime">WebSocket, SSE, and Long Polling —</a><a href="#comparison">Every dimension that matters in an</a><a href="#combos">Protocols that work together — not</a><a href="#examples">Which protocol wins in which system</a><a href="#decision">How to pick in an interview — in 60</a><a href="#followups">Every hard follow-up, answered</a><a href="#grpc-streaming">All four streaming types — with rea</a><a href="#protocol-failures">What actually breaks in production</a><a href="#req-nfr-protocols">Requirements & Non-Functional Const</a><a href="#tradeoff-protocols">Trade-off Matrix — What You Gave Up</a><a href="#schema-protocols">Quick Reference</a></nav>
 
 <div class="wrap">
 
@@ -258,6 +264,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <strong>SSE</strong> is a radio broadcast — the server talks continuously to all listeners, but listeners can't transmit back on the same channel.<br><br>
       <strong>Long Polling</strong> is repeatedly calling the kitchen and asking "is my order ready yet?" — the kitchen keeps you on hold until it is, then hangs up. You immediately call back.
     </div>
+  </div>
+
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'd use WebSocket for everything, it's the most powerful" is the answer that gets a candidate cut off fast. <strong>Persistent, bidirectional connections are a cost, not a free upgrade</strong> — they're stateful (breaking trivial load balancing), they bypass standard HTTP caching and status-code semantics, and they need custom retry/idempotency logic that REST gets for free. The candidates who score well default to the simplest protocol that satisfies the requirement (usually REST) and only reach for WebSocket, SSE, or gRPC streaming when a specific, stated requirement — genuine bidirectional real-time, server push, or internal RPC volume — demands it. Naming the cost of the "powerful" option is exactly what separates a senior answer from a junior one.</p>
   </div>
 
   <h3>The Two Families</h3>
@@ -773,7 +784,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       </div>
       <div class="choice-row">
         <div class="choice-label">MOBILE APP API</div>
-        <div class="choice-val"><span class="badge b-gql">GraphQL ✓</span> Mobile on 4G/5G with limited bandwidth. GraphQL lets the app fetch exactly the fields it needs — no wasted data. One query fetches feed + stories + story counts instead of 3 REST calls. Instagram's move to GraphQL reduced API response sizes by 30–50%.</div>
+        <div class="choice-val"><span class="badge b-gql">GraphQL ✓</span> Mobile on 4G/5G with limited bandwidth. GraphQL lets the app fetch exactly the fields it needs — no wasted data. One query fetches feed + stories + story counts instead of 3 REST calls. Field-level selection commonly cuts mobile payload size meaningfully versus a fixed REST response, though the exact percentage depends heavily on how over-fetched the original REST shape was.</div>
       </div>
       <div class="choice-row">
         <div class="choice-label">PARTNER API</div>
@@ -971,7 +982,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
         <li><strong>Parsing:</strong> JSON parsing is string scanning and Unicode handling. Protobuf parsing is integer-indexed field lookup. 5–10x faster deserialization.</li>
         <li><strong>HTTP/2 multiplexing:</strong> gRPC reuses one TCP connection for all RPCs between two services. HTTP/1.1 REST requires a connection per request or connection pooling.</li>
       </ul>
-      <strong>Real-world numbers (Google's internal benchmarks):</strong> gRPC serialization is ~7x faster than JSON, payloads are ~3.5x smaller, leading to ~2–4x fewer CPU cycles per RPC.<br><br>
+      <strong>Real-world numbers:</strong> published third-party benchmarks vary by payload shape and tooling, but a consistent pattern shows up across them — Protobuf messages typically run 30–40% smaller than equivalent JSON (some report more, some less depending on field types), and Protobuf serialization is commonly 2–6x faster than JSON parsing, with the gap widening for larger payloads. Treat any single multiplier as illustrative, not a number to quote precisely in an interview.<br><br>
       <strong>When the difference matters:</strong> At 10K RPC/sec between services, the CPU savings from Protobuf are measurable in infra cost. At 100 RPC/sec, use REST — the operational simplicity outweighs any performance gain.
     </div>
   </div>
@@ -1090,7 +1101,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>One request → one response. The standard call.</strong>
-      <p>/p><p><code>rpc GetUser(GetUserRequest) returns (User);</code></p><p>Use for: any operation where you have one question and need one answer. 90% of RPC calls. Same semantics as REST but with Protocol Buffers and HTTP/2.</p>
+      <p></p><p><code>rpc GetUser(GetUserRequest) returns (User);</code></p><p>Use for: any operation where you have one question and need one answer. 90% of RPC calls. Same semantics as REST but with Protocol Buffers and HTTP/2.</p>
       </div>
     </div>
   </div>
@@ -1104,7 +1115,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>One request → stream of responses. Server sends multiple messages for a single client request.</strong>
-      <p>/p><p><code>rpc WatchFeed(WatchRequest) returns (stream FeedEvent);</code></p><p>Use cases: real-time feed subscription (client subscribes once, server pushes new items as they arrive), large data download (server streams chunks), log tailing (client requests logs, server streams them continuously). gRPC keeps the HTTP/2 stream open until the server signals completion. Client reads from the stream in a loop.</p>
+      <p></p><p><code>rpc WatchFeed(WatchRequest) returns (stream FeedEvent);</code></p><p>Use cases: real-time feed subscription (client subscribes once, server pushes new items as they arrive), large data download (server streams chunks), log tailing (client requests logs, server streams them continuously). gRPC keeps the HTTP/2 stream open until the server signals completion. Client reads from the stream in a loop.</p>
       </div>
     </div>
   </div>
@@ -1118,7 +1129,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Stream of requests → one response. Client sends multiple messages, server responds once at the end.</strong>
-      <p>/p><p><code>rpc UploadFile(stream FileChunk) returns (UploadResult);</code></p><p>Use cases: chunked file upload (client streams 4MB chunks, server assembles), sensor data batch ingestion (IoT device streams 1,000 readings, server processes and returns aggregate), speech-to-text (client streams audio chunks, server returns transcript when done).</p>
+      <p></p><p><code>rpc UploadFile(stream FileChunk) returns (UploadResult);</code></p><p>Use cases: chunked file upload (client streams 4MB chunks, server assembles), sensor data batch ingestion (IoT device streams 1,000 readings, server processes and returns aggregate), speech-to-text (client streams audio chunks, server returns transcript when done).</p>
       </div>
     </div>
   </div>
@@ -1132,7 +1143,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Stream of requests ↔ stream of responses. Full duplex. Both sides can send at any time.</strong>
-      <p>/p><p><code>rpc Chat(stream ChatMessage) returns (stream ChatMessage);</code></p><p>Use cases: real-time chat between services (internal Slack-like communication between microservices), collaborative editing (both sides stream cursor positions and edits), online gaming (client streams player input, server streams game state updates), live translation (client streams audio, server streams translated text in real time).</p>
+      <p></p><p><code>rpc Chat(stream ChatMessage) returns (stream ChatMessage);</code></p><p>Use cases: real-time chat between services (internal Slack-like communication between microservices), collaborative editing (both sides stream cursor positions and edits), online gaming (client streams player input, server streams game state updates), live translation (client streams audio, server streams translated text in real time).</p>
       </div>
       <div class="k-muted"><span class="k-icon">→</span><span>Bidirectional streaming is gRPC's most powerful feature — enabling true full-duplex communication over a single HTTP/2 stream. WebSocket achieves similar for browser clients. For server-to-server: bidirectional gRPC is preferred over WebSocket due to Protocol Buffer efficiency and built-in load balancing.</span></div>
     </div>
@@ -1141,14 +1152,23 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </div>
 </section>
 
-
+<section id="protocol-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What actually breaks in production — real incident patterns</h2>
+  <div class="k-cards">
+<div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">WebSocket Connection Storms on Deploy</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">A rolling deploy or a load balancer failover drops every WebSocket connection pinned to the recycled instances at once. Every client's reconnect logic fires within the same few seconds, hammering the connection-accept path and the auth/handshake layer simultaneously — a self-inflicted thundering herd triggered by your own deploy, not an attacker.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: jittered client-side reconnect backoff (never reconnect instantly and in lockstep), connection draining during deploys (stop accepting new connections on the old instance before killing it, let existing ones finish naturally), and rolling deploys in small batches rather than all-at-once so the reconnect wave is spread out.</span></div></div></div></div>
+<div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">gRPC Deadline Propagation Gaps</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">Service A calls B with a 500ms deadline. B calls C but forgets to propagate the remaining deadline — C keeps working long after A has already given up and returned an error to its caller. The wasted work compounds under load: upstream retries pile more traffic onto a downstream that's still burning CPU on requests nobody is waiting for anymore.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: propagate the remaining deadline (not a fresh one) on every hop — most gRPC client libraries do this automatically if you pass the incoming context through, but it's silently lost the moment a handler constructs a new context instead of deriving one. Alert on "deadline exceeded" rates per service, not just error rates.</span></div></div></div></div>
+<div class="k-card"><div class="k-card-head"><span class="k-num">03</span><span class="k-title">GraphQL Resolver Fan-Out Collapse</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">A single, innocent-looking client query with a few nested fields resolves into hundreds of downstream calls once you count every resolver invocation per list item. Under normal load this is invisible; under a traffic spike, or when a malicious client sends a deliberately deep nested query, the downstream services (or the DB) see a multiplicative traffic spike that the edge-level rate limiter — which only sees "1 request" — never catches.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: DataLoader batching to collapse duplicate resolver calls, query complexity/depth limits enforced at the gateway (reject before executing, not after), and per-field or per-resolver rate limiting in addition to per-request rate limiting.</span></div></div></div></div>
+<div class="k-card"><div class="k-card-head"><span class="k-num">04</span><span class="k-title">SSE/Long-Poll Connection Exhaustion Behind a Proxy</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">A reverse proxy or corporate firewall silently caps idle HTTP connections per client or buffers the response instead of streaming it. SSE events queue up on the proxy and arrive in a delayed burst instead of in real time, or long-poll connections get killed mid-wait and clients spin in a fast reconnect loop that looks like a self-inflicted DDoS on your own edge.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: explicitly disable response buffering on the reverse proxy for streaming routes (e.g. Nginx's <code>proxy_buffering off</code>), send periodic keep-alive comments/heartbeats over SSE so idle-timeout logic downstream doesn't trigger, and cap long-poll hold time comfortably under any known proxy/firewall timeout in your infra.</span></div></div></div></div>
+  </div>
+</section>
 
 <section id="req-nfr-protocols">
   <div class="sec-tag">📋 · Requirements & Scale</div>
   <h2>Requirements & Non-Functional Constraints</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
 <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>FR1</strong></td><td>REST: stateless request/response for CRUD operations</td></tr><tr><td><strong>FR2</strong></td><td>gRPC: efficient binary RPC for service-to-service</td></tr><tr><td><strong>FR3</strong></td><td>WebSocket: full-duplex real-time communication</td></tr><tr><td><strong>FR4</strong></td><td>SSE: server-push for one-directional streams (notifications)</td></tr><tr><td><strong>FR5</strong></td><td>GraphQL: client-specified fields, single round trip for complex UIs</td></tr><tr><td><strong>FR6</strong></td><td>Long polling: real-time when WebSocket unavailable (firewalls)</td></tr></tbody></table></div>
-<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>REST: 10K–100K req/sec per server (HTTP/2 multiplexing)</td></tr><tr><td><strong>NFR2</strong></td><td>gRPC: 10× less bandwidth vs JSON REST (Protobuf encoding)</td></tr><tr><td><strong>NFR3</strong></td><td>WebSocket: 10K–1M concurrent connections per server</td></tr><tr><td><strong>NFR4</strong></td><td>SSE: simpler than WebSocket, unidirectional only</td></tr><tr><td><strong>NFR5</strong></td><td>GraphQL: flexible but adds resolver complexity and N+1 risk</td></tr><tr><td><strong>NFR6</strong></td><td>Latency: WebSocket 50ms, REST 50ms, gRPC 20ms (binary)</td></tr></tbody></table></div>
+<div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td><strong>NFR1</strong></td><td>REST: 10K–100K req/sec per server (HTTP/2 multiplexing)</td></tr><tr><td><strong>NFR2</strong></td><td>gRPC: 10× less bandwidth vs JSON REST (Protobuf encoding)</td></tr><tr><td><strong>NFR3</strong></td><td>WebSocket: 10K–1M concurrent connections per server</td></tr><tr><td><strong>NFR4</strong></td><td>SSE: simpler than WebSocket, unidirectional only</td></tr><tr><td><strong>NFR5</strong></td><td>GraphQL: flexible but adds resolver complexity and N+1 risk</td></tr><tr><td><strong>NFR6</strong></td><td>Latency budget: state one explicitly (e.g. p99 &lt; 200ms for REST, sub-100ms for WebSocket after connect) — the absolute numbers depend entirely on network path and payload, but gRPC's binary encoding and WebSocket's persistent connection both remove per-request overhead that REST pays every time</td></tr></tbody></table></div>
 </div>
 </section>
 
@@ -1163,12 +1183,12 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Protocol Selection Guide</h4><table class="flow-table"><thead><tr><th>Use case</th><th>Protocol</th><th>Why</th></tr></thead><tbody><tr><td>Mobile app API</td><td>REST/HTTP2</td><td>Universal support. Cacheable. Simple debugging. CDN-friendly</td></tr><tr><td>Service-to-service RPC</td><td>gRPC</td><td>Binary efficiency. Typed contracts. Streaming support. Generated clients</td></tr><tr><td>Live chat / game state</td><td>WebSocket</td><td>Full-duplex. Low overhead. Sub-100ms latency</td></tr><tr><td>Stock ticker / notifications</td><td>SSE</td><td>Server-push only. Simple. Works through proxies. Auto-reconnect built-in</td></tr><tr><td>Mobile app with complex data needs</td><td>GraphQL</td><td>Fetch exactly what the screen needs. Single round trip. Strong typing</td></tr><tr><td>Batch data transfer</td><td>REST with streaming</td><td>Range requests. Resumable. CDN-cacheable chunks</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Failure Mode Fast Recall</h4><table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td>Reconnect wave hammers the server right after a deploy</td><td>Every WebSocket client reconnects in lockstep with no jitter</td><td>Jittered client backoff + connection draining + small-batch rolling deploys</td></tr><tr><td>Downstream keeps working on requests the caller already gave up on</td><td>gRPC deadline not propagated hop-to-hop</td><td>Derive context/deadline from the incoming request on every call, don't construct a fresh one</td></tr><tr><td>One GraphQL query causes a disproportionate spike in DB load</td><td>Nested resolver fan-out not batched or depth-limited</td><td>DataLoader batching + query depth/complexity limits at the gateway</td></tr><tr><td>SSE/long-poll clients reconnect in a tight loop</td><td>A proxy buffers streamed responses or kills idle connections early</td><td>Disable proxy response buffering for streaming routes; send heartbeats; keep long-poll timeout under the proxy's</td></tr></tbody></table>
 </section>
 </div>
 
-</div>
 <div class="footer">PROTOCOLS · REST · GRPC · GRAPHQL · WEBSOCKET · SSE · LONG POLLING · MANISH-ALMANAC</div>
 
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

@@ -103,6 +103,15 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .run-box .rb-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
 .run-cmd{display:block;background:var(--ink);color:#c8c4b8;font-family:var(--mono);font-size:11.5px;padding:9px 13px;border-radius:5px;margin:6px 0;overflow-x:auto;white-space:pre;}
 .run-note{font-size:12.5px;color:var(--muted);margin-top:6px;}
+.faq-item{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:white;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.5;}
+.faq-q:hover{background:var(--surface);}
+.faq-tog{font-size:20px;color:#b8720a;transition:transform .2s;flex-shrink:0;margin-left:12px;font-weight:300;}
+.faq-item.open .faq-tog{transform:rotate(45deg);}
+.faq-a{display:none;padding:18px 20px;background:var(--surface);border-top:1px solid var(--border);font-size:13.5px;line-height:1.85;color:#2a2820;}
+.faq-item.open .faq-a{display:block;}
+.faq-a strong{color:var(--ink);}
+.faq-a code{font-family:var(--mono);font-size:11.5px;background:white;padding:1px 5px;border-radius:3px;color:var(--blue);border:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -129,6 +138,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
   <a href="#productionbar">Production-Grade Bar</a>
   <a href="#deepdives">Real Decisions</a>
   <a href="#capstone">EngOrgAI v0.1</a>
+  <a href="#followups">Hard Follow-ups</a>
   <a href="#tradeoffs">Trade-off Matrix</a>
   <a href="#reference">Reference & Run It</a>
 </nav>
@@ -653,6 +663,22 @@ pytest</div>
   </div>
 </section>
 
+<section id="followups">
+  <div class="sec-tag">⚡ · Follow-ups</div>
+  <h2>Hard Follow-ups — What a Staff Engineer Asks Next</h2>
+  <p>The Rosetta Stone and Production-Grade Bar above answer "what did you build." These are the questions that come after the walkthrough — the ones that probe whether the design decisions actually hold up.</p>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">Constructor injection for <code>ChatClient</code> — why not a static singleton or field injection?<span class="faq-tog">+</span></div>
+  <div class="faq-a">Constructor injection makes the dependency explicit and testable: <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module01/LlmFoundationsService.java#L21-L25" style="color:var(--blue);">LlmFoundationsService</a>'s test mocks <code>ChatClient</code> directly through the constructor — no Spring context, no reflection tricks, no static state to reset between tests. A static singleton would work at runtime but makes every test either share global state or reach for a mocking framework that can stub statics (Mockito's static mocking is possible but noticeably more awkward than a plain constructor mock). Field injection (<code>@Autowired private ChatClient chatClient</code>) hides the dependency from the class's own public contract — you can't tell what a class needs just by reading its constructor. It also makes the field non-<code>final</code>, so nothing stops later code from reassigning it. The one shared <code>AiConfig</code> bean (Decision 03 above) plus constructor injection everywhere is what lets <code>DirectorAssistantService</code> reuse the exact same <code>ChatClient</code> without any of these problems.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">Python pins <code>temperature=0</code> for "deterministic, repeatable answers." Is that actually true?<span class="faq-tog">+</span></div>
+  <div class="faq-a"><strong>Not fully — this is a common oversimplification worth being precise about in an interview.</strong> Temperature 0 makes the <em>sampling step</em> deterministic: greedy decoding always picks the highest-probability token instead of sampling from a distribution. But production LLM serving engines continuously rebatch incoming requests for throughput, and GPU reduction kernels (matrix multiply, softmax, attention) tile their floating-point accumulation differently depending on the current batch size. Because floating-point addition is not associative, the exact same prompt can produce logits that differ in the last few bits depending on what else is being processed alongside it that millisecond — occasionally enough to flip a near-tied token choice. <br><br>The honest claim for this module is "temperature 0 removes sampling randomness and gets you close to repeatable," not "temperature 0 guarantees identical output every time." For an engineering-leadership assistant giving qualitative recommendations, that's a fine trade. For anything doing exact-match testing against a fixed expected string, it's a trap — assert on structure and key fields (see Module 2's typed schema), not exact prose.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">Both services block on <code>.call()</code>/<code>.invoke()</code>. What breaks if a director asks a question that takes 15 seconds to answer?<span class="faq-tog">+</span></div>
+  <div class="faq-a">Nothing breaks silently, but the request holds a thread (Spring MVC) or blocks the whole process (the Python CLI script) for the full round trip — fine for a single-user CLI demo, a real availability risk for a web-facing assistant under concurrent load. Spring AI's <code>ChatClient</code> exposes a <code>.stream()</code> variant that returns a <code>Flux&lt;ChatResponse&gt;</code> instead of blocking, and LangChain's <code>ChatAnthropic</code> supports <code>.stream()</code> / async invocation the same way. Neither is used yet in this module, deliberately — Module 1's job is the mental model (tokens, roles, temperature), not streaming plumbing. The honest answer in an interview is naming the gap and the fix, not pretending it's already handled: today, a slow model response ties up one request thread per call, and the fix is switching the hot paths to the streaming API before this goes past a single-user demo.</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">The retry config is 3 attempts, 1000ms→5000ms exponential backoff. Does that actually help against a 529 (overloaded) from Claude?<span class="faq-tog">+</span></div>
+  <div class="faq-a">Partially, and it's worth knowing the distinction. A <strong>529</strong> means Anthropic's API is at capacity across all callers — it isn't this service's rate limit and doesn't count against its quota, so a bounded exponential backoff (a few seconds, a few attempts) is the correct, polite response: back off, retry once or twice, then surface the failure rather than hammering an already-overloaded endpoint. A <strong>429</strong> (this caller's own rate limit) behaves the same way from the client's perspective but for a different underlying reason. Where backoff-and-retry does <em>not</em> help: a malformed request (400) or an auth failure (401) — retrying those just wastes the retry budget on an error that will never succeed. The framework-native retry here (Spring's <code>spring.ai.retry.*</code>, LangChain's <code>max_retries=3</code>) doesn't distinguish between these cases out of the box, which is exactly the gap called out in the trade-off row below — "no per-error-type control yet (429 vs 5xx)."</div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggle(this)">Every fluent-chain link is mocked individually in the Java test. Why not a real integration test against a stub server instead?<span class="faq-tog">+</span></div>
+  <div class="faq-a">Both have a place, and this module deliberately only ships the first one. The Mockito unit test proves the service's <em>own</em> logic — extract text, log usage fields, wrap failures in <code>LlmCallException</code> — in milliseconds, with no network, no API key, and no flakiness from an external dependency. What it can't catch: a real change in Anthropic's response shape, a serialization edge case, or a genuine network timeout. That's what an integration test against a recorded/stubbed HTTP layer (WireMock, or Spring's own <code>@RestClientTest</code>-style slices) is for — record a real response once, replay it in CI without hitting the live API or paying for tokens on every build. Module 1 ships only the unit layer because the fluent chain itself is what's being taught here; a stub-server integration test is the natural next layer to add once the call pattern is stable across more modules.</div></div>
+</section>
+
 <section id="tradeoffs">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
@@ -715,5 +741,6 @@ pytest     # unittest.mock, no live calls</span>
 
 </div>
 <div class="footer">MODULE 1 · LLM FOUNDATIONS · SPRING AI · LANGCHAIN · CLAUDE · ENGORGAI · MANISH-ALMANAC</div>
-</body>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+<script src="../js/speaker.js" defer></script></body>
 </html>

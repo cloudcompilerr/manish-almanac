@@ -109,8 +109,8 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
 .k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
 .k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
 .k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
 .k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .k-point{display:flex;flex-direction:column;gap:4px;}
@@ -191,7 +191,13 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
+</style>
 </head>
 <body>
 <div class="hero">
@@ -229,6 +235,10 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
     <p><strong>Kafka</strong> = the highway. Events from users flow in, get durably stored, and multiple consumers can read them independently and at their own pace.</p>
     <p><strong>Flink</strong> = the factory. Consumes from Kafka, applies the Count-Min Sketch, maintains the local heap, and every 30 seconds flushes the Top-K results to Redis and Cassandra.</p>
     <p>You <strong>always use a transport layer AND a processing layer</strong> together. They're complementary, not competitive.</p>
+  </div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'll use Kafka for real-time processing" is the sentence that gets a candidate stopped mid-answer. <strong>Kafka doesn't process anything — it's a durable log.</strong> Something still has to consume from it, compute over it, and write results somewhere. Candidates who reach for Kafka Streams, Flink, or Spark as if they were interchangeable are making the same category error in reverse: Kafka Streams is a lightweight library that runs inside your own service (no separate cluster), while Flink and Spark Streaming are dedicated processing clusters with very different latency and operational profiles. The strong answer names both the transport AND the processor, and explains why that specific processor fits the latency requirement — not just "I'll use Kafka."</p>
   </div>
 </section>
 
@@ -461,7 +471,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
 <div class="k-card"><div class="k-card-head"><span class="k-num">05</span><span class="k-title">Watermarks &amp; Late Data</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Event time vs processing time: events arrive out of order. Watermarks tell Flink when a time window is "complete enough" to compute.</strong> Watermark = current_event_time - allowed_lateness. When watermark passes window end time, Flink triggers the window computation. Example: 1-minute tumbling window with 5-second allowed lateness. Window closes at 14:01:00. Flink waits until it sees events with timestamps ≥ 14:01:05 before computing. Events up to 5 seconds late are included.</div><div class="k-good"><span class="k-icon">&#10003;</span><span>✓ Handles network delays and out-of-order mobile events gracefully. Later events (beyond allowed lateness) go to a side output for separate handling.</span></div></div></div></div>
 <div class="k-card"><div class="k-card-head"><span class="k-num">06</span><span class="k-title">Kafka Consumer Lag</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Consumer lag = the difference between the latest offset in a partition and the consumer's current offset. The most important Kafka operational metric.</strong> Lag = 0: consumer is keeping up with producers in real time. Lag growing: consumer is falling behind. Causes: slow processing logic, insufficient consumer parallelism, downstream bottleneck (DB writes too slow).</div><div class="k-good"><span class="k-icon">&#10003;</span><span>Monitor with: Kafka's consumer-groups.sh, Burrow (LinkedIn's open-source lag monitor), or CloudWatch (MSK). Alert when lag &gt; N minutes worth of events — this defines your data staleness SLO.</span></div></div></div></div>
 <div class="k-card"><div class="k-card-head"><span class="k-num">07</span><span class="k-title">Flink State Backends</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Flink's stateful operations (aggregations, joins, windows) store state in a configurable backend.</strong> </p><p><strong>HashMap (in-memory)</strong>: fastest, state in JVM heap. Limited by available RAM. Use for: small state (&lt;1GB), latency-sensitive operations.</p><p><strong>RocksDB (on-disk)</strong>: state on local SSD, spills to disk. Handles terabytes of state. Slightly slower than HashMap. Use for: large state (user session data, 30-day aggregations).</div><div class="k-muted"><span class="k-icon">&rarr;</span><span>RocksDB is the production default for most Flink jobs. RAM is the bottleneck in streaming systems — RocksDB removes that constraint at the cost of ~2x latency (SSD read vs RAM read).</span></div></div></div></div>
-<div class="k-card"><div class="k-card-head"><span class="k-num">08</span><span class="k-title">Kinesis vs Kafka</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Both are event streaming systems — the choice is almost always cloud commitment and ops budget.</strong> </p><p><strong>Kinesis</strong>: fully managed, AWS-native, limited to 7-day retention, max 1MB/record, shard-based scaling (manual). Simple, zero ops. Best for: AWS-native orgs, moderate throughput (&lt;1GB/sec per stream).</p><p><strong>Kafka (MSK or self-managed)</strong>: configurable retention (unlimited), higher throughput, richer ecosystem (Kafka Connect, Kafka Streams, ksqlDB, Flink). Best for: complex streaming pipelines, multi-cloud, high throughput, need replay.</div><div class="k-muted"><span class="k-icon">&rarr;</span><span>At FAANG scale: Kafka. For simple AWS pipelines at moderate scale: Kinesis. For new systems with limited ops capacity: consider Confluent Cloud (managed Kafka without the operational burden).</span></div></div></div></div>
+<div class="k-card"><div class="k-card-head"><span class="k-num">08</span><span class="k-title">Kinesis vs Kafka</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Both are event streaming systems — the choice is almost always cloud commitment and ops budget.</strong> </p><p><strong>Kinesis</strong>: fully managed, AWS-native, 24h retention by default (extendable to 7 days at extra cost, or up to 365 days with long-term retention), max 1MB/record, shard-based scaling (manual, though on-demand mode auto-scales). Simple, zero ops. Best for: AWS-native orgs, moderate throughput (&lt;1GB/sec per stream).</p><p><strong>Kafka (MSK or self-managed)</strong>: configurable retention (unlimited), higher throughput, richer ecosystem (Kafka Connect, Kafka Streams, ksqlDB, Flink). Best for: complex streaming pipelines, multi-cloud, high throughput, need replay.</div><div class="k-muted"><span class="k-icon">&rarr;</span><span>At FAANG scale: Kafka. For simple AWS pipelines at moderate scale: Kinesis. For new systems with limited ops capacity: consider Confluent Cloud (managed Kafka without the operational burden).</span></div></div></div></div>
 </div>
 
   <div class="step-block">
@@ -482,18 +492,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--surface2);padding
           <div class="step-option opt-no"><span class="opt-arrow">Minutes (batch-ish) →</span><span class="opt-text"><strong>Spark batch on incremental data or Flink batch mode.</strong> Read new S3 partitions every N minutes. Simplest operational model — no streaming state to manage.</span></div>
         </div>
       </div></div>
-    </di
-  <div class="concept-grid" style="margin-top:16px;">
-    <div class="concept-row"><div class="concept-term">Kafka Consumer<br>Lag</div><div class="concept-def"><strong>Consumer lag = the difference between the latest offset in a partition and the consumer's current offset. The most important Kafka operational metric.</strong><br>
-      Lag = 0: consumer is keeping up with producers in real time.<br>
-      Lag growing: consumer is falling behind. Causes: slow processing logic, insufficient consumer parallelism, downstream bottleneck (DB writes too slow).
-        <span class="concept-note good">Monitor with: Kafka's consumer-groups.sh, Burrow (LinkedIn's open-source lag monitor), or CloudWatch (MSK). Alert when lag &gt; N minutes worth of events — this defines your data staleness SLO.</span></div></div>
-    <div class="concept-row"><div class="concept-term">Flink State<br>Backends</div><div class="concept-def"><strong>Flink's stateful operations (aggregations, joins, windows) store state in a configurable backend.</strong></p><p><strong>HashMap (in-memory)</strong>: fastest, state in JVM heap. Limited by available RAM. Use for: small state (&lt;1GB), latency-sensitive operations.</p><p><strong>RocksDB (on-disk)</strong>: state on local SSD, spills to disk. Handles terabytes of state. Slightly slower than HashMap. Use for: large state (user session data, 30-day aggregations).
-        <span class="concept-note muted">RocksDB is the production default for most Flink jobs. RAM is the bottleneck in streaming systems — RocksDB removes that constraint at the cost of ~2x latency (SSD read vs RAM read).</span></div></div>
-    <div class="concept-row"><div class="concept-term">Kinesis vs Kafka</div><div class="concept-def"><strong>Both are event streaming systems — the choice is almost always cloud commitment and ops budget.</strong></p><p><strong>Kinesis</strong>: fully managed, AWS-native, limited to 7-day retention, max 1MB/record, shard-based scaling (manual). Simple, zero ops. Best for: AWS-native orgs, moderate throughput (&lt;1GB/sec per stream).</p><p><strong>Kafka (MSK or self-managed)</strong>: configurable retention (unlimited), higher throughput, richer ecosystem (Kafka Connect, Kafka Streams, ksqlDB, Flink). Best for: complex streaming pipelines, multi-cloud, high throughput, need replay.
-        <span class="concept-note muted">At FAANG scale: Kafka. For simple AWS pipelines at moderate scale: Kinesis. For new systems with limited ops capacity: consider Confluent Cloud (managed Kafka without the operational burden).</span></div></div>
-  </div>
-v>
+    </div>
   </div>
 </section>
 
@@ -519,13 +518,6 @@ v>
   <h4>Kafka Topic Design</h4><table class="flow-table"><thead><tr><th>Topic</th><th>Partitions</th><th>Key</th><th>Retention</th><th>Consumer</th></tr></thead><tbody><tr><td>user.events</td><td>100</td><td>user_id (ordering per user)</td><td>7 days</td><td>Flink (stateful aggregation)</td></tr><tr><td>order.created</td><td>50</td><td>order_id (unique)</td><td>30 days</td><td>Fulfillment service, email service</td></tr><tr><td>item.views</td><td>200</td><td>item_id (count per item)</td><td>24h</td><td>Top-K Flink job</td></tr><tr><td>payments.completed</td><td>20</td><td>payment_id</td><td>1 year</td><td>Accounting, fraud ML, audit</td></tr><tr><td>db.changes (CDC)</td><td>varies</td><td>table.pk</td><td>7 days (compacted)</td><td>Search indexer, cache warmer</td></tr></tbody></table>
 </section>
 
-
-
-</div>
-
-<div class="footer">STREAMING · KAFKA · FLINK · KINESIS · SPARK · MANISH-ALMANAC</div>
-<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-
 <section id="kafka-deep">
   <div class="sec-tag">09 · Kafka Internals Deep Dive</div>
   <h2>The settings interviewers probe — ISR, acks, min.insync.replicas</h2>
@@ -543,5 +535,12 @@ v>
       During rebalance: all consumers stop consuming and commit their offsets. The group coordinator assigns partitions to consumers. Consumers resume. Duration: 100ms–30s depending on group size and coordinator load.</p><p><strong>Cooperative rebalancing</strong> (Kafka 2.4+, incremental rebalance): only partitions that need to move are revoked. Other consumers continue consuming unaffected partitions. Reduces pause from "all stop" to "only affected partitions stop." Use <code>CooperativeStickyAssignor</code>.
         <span class="concept-note muted">Production issue: a consumer that processes messages too slowly triggers heartbeat timeout → kicked from group → rebalance → partition reassigned → rebalance again → "rebalance storm." Fix: increase max.poll.interval.ms, reduce processing time, or add more consumers.</span></div></div>
   </div>
-</section></body>
+  <h4 style="margin-top:20px">Producer/Consumer Safety Settings — Fast Recall</h4><table class="flow-table"><thead><tr><th>Setting</th><th>Safe production default</th><th>Why</th></tr></thead><tbody><tr><td>acks</td><td>all (-1)</td><td>Waits for every ISR replica — the only setting that avoids data loss on leader failure</td></tr><tr><td>min.insync.replicas</td><td>2 (with replication.factor=3)</td><td>Tolerates exactly one broker failure without blocking writes or losing data</td></tr><tr><td>enable.idempotence</td><td>true</td><td>Prevents duplicate writes from producer retries — prerequisite for exactly-once</td></tr><tr><td>isolation.level (consumer)</td><td>read_committed</td><td>Consumer only sees transactionally-committed records, completing the exactly-once picture</td></tr></tbody></table>
+</section>
+
+</div>
+
+<div class="footer">STREAMING · KAFKA · FLINK · KINESIS · SPARK · MANISH-ALMANAC</div>
+<script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
+<script src="../js/speaker.js" defer></script></body>
 </html>

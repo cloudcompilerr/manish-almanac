@@ -165,14 +165,20 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
+</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Rate Limiting & Throttling<br><em>Every algorithm from token bucket to sliding window counter, distributed implementation with Redis, multi-layer enforcement, and production system design examples.</em></h1>
   <p class="hero-sub">Every algorithm from token bucket to sliding window counter, distributed implementation with Redis, multi-layer enforcement, and production system design examples.</p>
   <div class="db-pills"><span class="db-pill" style="border-color:#1a7a4a;color:#1a7a4a;background:#1a7a4a18">Token Bucket</span><span class="db-pill" style="border-color:#c0392b;color:#c0392b;background:#c0392b18">Sliding Window</span><span class="db-pill" style="border-color:#1a4f8a;color:#1a4f8a;background:#1a4f8a18">Redis INCR/Lua</span><span class="db-pill" style="border-color:#b8720a;color:#b8720a;background:#b8720a18">Leaky Bucket</span><span class="db-pill" style="border-color:#6040a0;color:#6040a0;background:#6040a018">Circuit Breaker</span></div>
 </div></div>
-<nav class="nav"><a href="#why">What collapses without it — the thr</a><a href="#algorithms">Token bucket, leaky bucket, fixed w</a><a href="#distributed">Distributed Enforcement — Across Se</a><a href="#examples">Rate limiting in production systems</a><a href="#decision">Choose the right algorithm for your</a><a href="#followups">Every hard follow-up, answered</a><a href="#rl-redis-impl">How to implement rate limiting corr</a><a href="#req-nfr-rate_limiting">Requirements & Non-Functional Const</a><a href="#tradeoff-rate_limiting">Trade-off Matrix — What You Gave Up</a></nav>
+<nav class="nav"><a href="#why">What collapses without it — the thr</a><a href="#algorithms">Token bucket, leaky bucket, fixed w</a><a href="#distributed">Distributed Enforcement — Across Se</a><a href="#examples">Rate limiting in production systems</a><a href="#decision">Choose the right algorithm for your</a><a href="#followups">Every hard follow-up, answered</a><a href="#rl-redis-impl">How to implement rate limiting corr</a><a href="#rl-failures">What actually breaks in production</a><a href="#req-nfr-rate_limiting">Requirements & Non-Functional Const</a><a href="#tradeoff-rate_limiting">Trade-off Matrix — What You Gave Up</a><a href="#schema-rate_limiting">Quick Reference</a></nav>
 <div class="wrap">
 <section id="why">
   <div class="sec-tag">00 · Why Rate Limiting</div>
@@ -183,8 +189,12 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="analogy-text">
       <strong>1. Accidental overload</strong>: A customer's backend has a bug — their retry loop goes infinite. They go from 10 req/sec to 100,000 req/sec. Without rate limiting: your API goes down for all customers. With it: their requests get 429s, your other customers are unaffected.<br><br>
       <strong>2. Abuse / scraping</strong>: A competitor scrapes your entire product catalogue. Without limits: they steal your data and you pay the egress bill. With it: they hit limits at 1,000 requests/minute and give up.<br><br>
-      <strong>3. Brute force</strong>: An attacker tries 10M password combinations against your login endpoint. Without limits: they eventually succeed. With per-IP limits (5 attempts/minute): they'd need 32 years to try 10M passwords.
+      <strong>3. Brute force</strong>: An attacker tries 10M password combinations against your login endpoint. Without limits: they eventually succeed. With per-IP limits (5 attempts/minute → 7,200 attempts/day): trying all 10M combinations takes roughly 3.8 years — and a per-account lockout after a handful of failures makes it far worse for the attacker than that.
     </div>
+  </div>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'll rate limit by IP address" is the answer that gets a candidate cut off fast. <strong>IP is the weakest possible identity to rate limit on</strong>: NAT means thousands of legitimate users (an entire corporate office, a university, a mobile carrier's CGNAT pool) can share one IP, so a per-IP limit either starves them collectively or has to be set so loose it stops nothing. It's also trivially evaded — an attacker with a botnet or a residential proxy pool rotates IPs faster than any reasonable window resets. The strong answer rate-limits on <em>authenticated identity</em> (user ID from a validated token) as the primary key, with IP-based limiting layered on top only for unauthenticated endpoints (login, signup) where no user ID exists yet.</p>
   </div>
 </section>
 
@@ -197,7 +207,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <div class="concept-def"><strong>A bucket holds up to N tokens. Tokens refill at rate R per second. Each request consumes 1 token. Empty bucket = rejected request.</strong><br>
         Example: capacity=100 tokens, refill=10/sec. A burst of 100 requests is served immediately (empties the bucket). Then max 10/sec sustained.<br>
         Implementation: store <code>(token_count, last_refill_time)</code>. On each request: <code>tokens = min(capacity, stored_tokens + (now - last_refill) × rate)</code>. If tokens ≥ 1: decrement and allow. Else: reject.
-        <span class="concept-note good">✓ Allows legitimate burst traffic. O(1) memory per user. Smooth average enforcement. The AWS API Gateway, Stripe, and Twilio algorithm.</span>
+        <span class="concept-note good">✓ Allows legitimate burst traffic. O(1) memory per user. Smooth average enforcement. AWS API Gateway's throttling and Stripe's rate limiter are both explicitly documented as token bucket implementations — it's the default answer for "which algorithm" in an interview unless a specific requirement argues otherwise.</span>
         <span class="concept-note warn">⚠ Two users can both exhaust their buckets at the same moment and both immediately refill — two full bursts back-to-back at window boundaries.</span>
       </div>
     </div>
@@ -232,7 +242,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
         <code>count = prev_window_count × (1 - elapsed/window_size) + curr_window_count</code><br>
         Example: window=1min, 40% through current minute. prev_window had 80 requests, current has 30.<br>
         Estimated rolling count: <code>80 × 0.6 + 30 = 78</code>. Compare to limit.
-        <span class="concept-note good">✓ O(1) memory (two counters per user). Accurate enough: Cloudflare uses this and measured &lt;0.003% incorrect rate limiting decisions. The practical production algorithm at scale.</span>
+        <span class="concept-note good">✓ O(1) memory (two counters per user). Accurate enough: Cloudflare's own published analysis of this algorithm found a 0.003% wrongly-allowed/rate-limited rate across roughly 400 million sampled requests. The practical production algorithm at scale.</span>
       </div>
     </div>
   </div>
@@ -240,7 +250,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 <div style="margin:16px 0"><div style="margin:20px 0">
 <h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Rate Limiting at Scale</h4>
 <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Redis check overhead</td><td>1 Lua script = 1 round trip × 0.5ms network</td><td><strong>< 1ms per request</strong></td><td style="color:#1a7a4a;font-size:12px">Rate limiting adds < 0.5% to a 200ms request. Zero excuse not to implement it</td></tr><tr><td class="row-head">Key space size</td><td>10M users × 10 endpoints × 1 window = 100M keys</td><td><strong>~10GB Redis RAM</strong></td><td style="color:#1a7a4a;font-size:12px">At 100 bytes per key-value: 10GB. Affordable on a $200/month Redis instance. Set TTL = window duration</td></tr><tr><td class="row-head">Burst handling</td><td>Token bucket: 100 req/min limit, bucket size 20</td><td><strong>Allows 20-req burst then 1.67/sec</strong></td><td style="color:#1a7a4a;font-size:12px">Without burst: user action that triggers 5 API calls fails. Token bucket handles real UI patterns</td></tr><tr><td class="row-head">DDoS threshold</td><td>Login endpoint: 5 failures/account/15min</td><td><strong>Max 720 guesses/day per account</strong></td><td style="color:#1a7a4a;font-size:12px">At 8-char alphanumeric password: 10^14 combinations ÷ 720/day = 380 billion years to brute-force</td></tr></tbody></table></div></div>
+<tbody><tr><td class="row-head">Redis check overhead</td><td>1 Lua script = 1 round trip × 0.5ms network</td><td><strong>< 1ms per request</strong></td><td style="color:#1a7a4a;font-size:12px">Rate limiting adds < 0.5% to a 200ms request. Zero excuse not to implement it</td></tr><tr><td class="row-head">Key space size</td><td>10M users × 10 endpoints × 1 window = 100M keys</td><td><strong>~10GB Redis RAM</strong></td><td style="color:#1a7a4a;font-size:12px">At 100 bytes per key-value: 10GB. Affordable on a $200/month Redis instance. Set TTL = window duration</td></tr><tr><td class="row-head">Burst handling</td><td>Token bucket: 100 req/min limit, bucket size 20</td><td><strong>Allows 20-req burst then 1.67/sec</strong></td><td style="color:#1a7a4a;font-size:12px">Without burst: user action that triggers 5 API calls fails. Token bucket handles real UI patterns</td></tr><tr><td class="row-head">DDoS threshold</td><td>Login endpoint: 5 failures/account/15min = 96 windows/day × 5</td><td><strong>Max 480 guesses/day per account</strong></td><td style="color:#1a7a4a;font-size:12px">An 8-char alphanumeric password space is ~2.2×10^14 combinations; at 480 guesses/day that's roughly 1.2 billion years to exhaust — the rate limit, not the password strength, is doing the real work</td></tr></tbody></table></div></div>
 
 
 <section id="distributed">
@@ -381,7 +391,7 @@ end</pre>
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Lua scripts in Redis execute atomically — multiple Redis commands as one atomic operation.</strong>
-      <p>/p><p>The race condition without Lua: (1) GET count (2) if count &lt; limit → INCR (3) SET expiry. Between steps 1 and 2, another request can GET the same count and both increment — exceeding the limit.</p><p>The Lua solution (runs as a single atomic transaction):</p><p><code>local key = KEYS[1]</code></p><p><code>local limit = tonumber(ARGV[1])</code></p><p><code>local window = tonumber(ARGV[2])</code></p><p><code>local current = redis.call('INCR', key)</code></p><p><code>if current == 1 then redis.call('EXPIRE', key, window) end</code></p><p><code>if current > limit then return 0 else return 1 end</code></p><p>Redis executes this Lua script as one atomic unit — no other commands can interleave. No race condition possible.</p>
+      <p></p><p>The race condition without Lua: (1) GET count (2) if count &lt; limit → INCR (3) SET expiry. Between steps 1 and 2, another request can GET the same count and both increment — exceeding the limit.</p><p>The Lua solution (runs as a single atomic transaction):</p><p><code>local key = KEYS[1]</code></p><p><code>local limit = tonumber(ARGV[1])</code></p><p><code>local window = tonumber(ARGV[2])</code></p><p><code>local current = redis.call('INCR', key)</code></p><p><code>if current == 1 then redis.call('EXPIRE', key, window) end</code></p><p><code>if current > limit then return 0 else return 1 end</code></p><p>Redis executes this Lua script as one atomic unit — no other commands can interleave. No race condition possible.</p>
       </div>
     </div>
   </div>
@@ -395,7 +405,7 @@ end</pre>
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Precise token bucket using Redis MULTI/EXEC or Lua for atomicity:</strong>
-      <p>/p><p>Key: <code>ratelimit:{user_id}</code> → Hash with fields: tokens (current bucket level), last_refill (timestamp).</p><p>On each request: calculate tokens to add since last_refill (rate × elapsed seconds). Cap at bucket capacity. Check if tokens ≥ 1. If yes: decrement tokens, allow request. If no: reject with 429.</p><p>All of the above in a single Lua script to ensure atomicity. Returns: allowed (1) or rejected (0) + current token count + time until next token.</p><p><code>Retry-After</code> header: include <code>X-RateLimit-Reset: {unix_timestamp}</code> in 429 responses. Client knows exactly when to retry. Prevents exponential backoff pileup — all clients retry at the same informed time instead of random exponential times.</p>
+      <p></p><p>Key: <code>ratelimit:{user_id}</code> → Hash with fields: tokens (current bucket level), last_refill (timestamp).</p><p>On each request: calculate tokens to add since last_refill (rate × elapsed seconds). Cap at bucket capacity. Check if tokens ≥ 1. If yes: decrement tokens, allow request. If no: reject with 429.</p><p>All of the above in a single Lua script to ensure atomicity. Returns: allowed (1) or rejected (0) + current token count + time until next token.</p><p><code>Retry-After</code> header: include <code>X-RateLimit-Reset: {unix_timestamp}</code> in 429 responses. Client knows exactly when to retry. Prevents exponential backoff pileup — all clients retry at the same informed time instead of random exponential times.</p>
       </div>
     </div>
   </div>
@@ -409,7 +419,7 @@ end</pre>
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>When Redis is unavailable: fail open vs fail closed — a critical production decision.</strong>
-      <p>/p><p>Fail open: if Redis is unavailable, allow requests through. Rate limiting is a best-effort feature. Service stays available. Risk: unprotected during Redis outage — a DDoS during a Redis outage can overwhelm the service.</p><p>Fail closed: if Redis is unavailable, reject all requests (or allow only a local-cache-based limit). Service is protected but unavailable. For authentication endpoints (brute force protection): fail closed is correct. For API quota limiting: fail open is usually correct.</p><p>Local fallback: each app server maintains a local rate limiter (Guava RateLimiter) as a fallback. Less accurate (doesn't coordinate across servers) but better than either extreme.</p>
+      <p></p><p>Fail open: if Redis is unavailable, allow requests through. Rate limiting is a best-effort feature. Service stays available. Risk: unprotected during Redis outage — a DDoS during a Redis outage can overwhelm the service.</p><p>Fail closed: if Redis is unavailable, reject all requests (or allow only a local-cache-based limit). Service is protected but unavailable. For authentication endpoints (brute force protection): fail closed is correct. For API quota limiting: fail open is usually correct.</p><p>Local fallback: each app server maintains a local rate limiter (Guava RateLimiter) as a fallback. Less accurate (doesn't coordinate across servers) but better than either extreme.</p>
       </div>
       <div class="k-muted"><span class="k-icon">→</span><span>Circuit breaker on the rate limiter itself: if Redis is returning errors, switch to local limiter automatically. When Redis recovers, switch back. The rate limiter protecting your service must itself be resilient.</span></div>
     </div>
@@ -418,7 +428,15 @@ end</pre>
 </div>
 </section>
 
-
+<section id="rl-failures">
+  <div class="sec-tag">⚠ · Failure Modes</div>
+  <h2>What actually breaks in production — real incident patterns</h2>
+  <div class="k-cards">
+<div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">The Global Limit That Isn't Global</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">A team sets "100 req/min per user" but implements it as an in-process counter on each app server instead of a shared store. With 50 app servers behind the load balancer, the effective limit becomes 5,000 req/min per user — 50x too permissive — and nobody notices until a single account's traffic spike takes down a downstream dependency the rate limit was supposed to protect.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: enforce on a shared store (Redis) with an atomic script, not per-process counters. If you must tolerate Redis outages, fail over to <code>limit / server_count</code> locally — over-permissive but bounded, not unbounded.</span></div></div></div></div>
+<div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Thundering Herd at the Reset Boundary</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">Fixed-window rate limiting resets every client's counter at the same wall-clock boundary. A large fleet of clients that all got throttled near the end of one window retry the instant the next window opens — a self-synchronized burst that looks identical to an attack, aimed squarely at the moment your system is least prepared for it (right after a quiet, throttled period).</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: sliding window (log or counter) instead of fixed window removes the hard reset boundary entirely. If fixed window is unavoidable, add jittered retry-after guidance in the 429 response so clients don't all retry at exactly :00.</span></div></div></div></div>
+<div class="k-card"><div class="k-card-head"><span class="k-num">03</span><span class="k-title">The Rate Limiter Becomes the Outage</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What breaks & how</div><div class="k-point-text">Redis — now in the critical path of every single request — has a brief network blip. A rate limiter configured fail-closed rejects 100% of traffic during the blip, turning a 10-second infrastructure hiccup into a full outage for every customer, which is a strictly worse outcome than the abuse scenario the rate limiter exists to prevent.</div><div class="k-warn"><span class="k-icon">⚠</span><span>Fix: fail-closed only where the cost of under-protection (brute force on auth) clearly exceeds the cost of an outage. Everywhere else, fail open or fall back to a local approximate limiter, and alert loudly on the fallback so the degraded accuracy window is short and visible.</span></div></div></div></div>
+  </div>
+</section>
 
 <section id="req-nfr-rate_limiting">
   <div class="sec-tag">📋 · Requirements & Scale</div>
@@ -440,11 +458,11 @@ end</pre>
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference</h2>
   <h4>Redis Key Patterns for Rate Limiting</h4><table class="flow-table"><thead><tr><th>Key pattern</th><th>Type</th><th>Value</th><th>TTL</th></tr></thead><tbody><tr><td>rate:{user_id}:{endpoint}</td><td>String</td><td>Request count</td><td>Window duration (60s, 3600s)</td></tr><tr><td>rate:token:{user_id}</td><td>Hash</td><td>tokens (current), last_refill (unix timestamp)</td><td>None (never expires — state persists)</td></tr><tr><td>rate:ip:{hashed_ip}</td><td>String</td><td>Request count</td><td>60 seconds</td></tr><tr><td>block:{user_id}</td><td>String</td><td>1 (exists = blocked)</td><td>Lockout duration (300s, 3600s)</td></tr><tr><td>quota:month:{user_id}:{year_month}</td><td>String</td><td>API calls used this month</td><td>End of month (set at first write)</td></tr></tbody></table>
+  <h4 style="margin-top:24px">Failure Mode Fast Recall</h4><table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td>Global limit is far too permissive despite a strict per-server config</td><td>Rate limiting locally per app server instead of on a shared counter</td><td>Move enforcement to Redis (or equivalent shared store) with an atomic Lua script</td></tr><tr><td>Two concurrent requests both get allowed when only one should</td><td>Check-then-increment race condition (GET, compare, INCR as separate steps)</td><td>Atomic Lua script combining check + increment + expire in one round trip</td></tr><tr><td>Legitimate burst traffic (page load firing 5 calls at once) gets throttled</td><td>Fixed window or leaky bucket with no burst allowance</td><td>Token bucket sized for realistic UI burst patterns</td></tr><tr><td>Rate limiter itself becomes the outage</td><td>Fail-closed behavior when the Redis/store dependency is down, with no local fallback</td><td>Circuit-break to a local approximate limiter on store failure; reserve fail-closed for auth-only endpoints</td></tr></tbody></table>
 </section>
 </div>
 
-</div>
 <div class="footer">RATE LIMITING · TOKEN BUCKET · SLIDING WINDOW · REDIS · CIRCUIT BREAKER · TIERED PLANS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>

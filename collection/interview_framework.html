@@ -95,8 +95,8 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .k-cards{display:flex;flex-direction:column;gap:16px;margin:24px 0;}
 .k-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:white;}
 .k-card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border);}
-.k-card-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
-.k-card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
+.k-num{font-family:var(--mono);font-size:10px;font-weight:700;color:white;background:var(--ink);padding:3px 8px;border-radius:3px;letter-spacing:1px;flex-shrink:0;}
+.k-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);}
 .k-card-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;background:white;border:1px solid var(--border);padding:2px 8px;border-radius:3px;flex-shrink:0;}
 .k-card-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .k-point{display:flex;flex-direction:column;gap:4px;}
@@ -177,6 +177,11 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 .concept-note.info{background:#eef2fb;color:#1a2a50;border-left:3px solid #1a4f8a;}
 .concept-note.muted{background:var(--surface);color:#3a3830;border-left:3px solid var(--border);}
 .concept-def br+br{display:none;}
+/* ── Flow table (Requirements / Quick Reference) ───────── */
+.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}
+.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}
+.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}
+.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}
 </style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
@@ -218,6 +223,10 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 <section id="common-mistakes">
   <div class="sec-tag">02 · Common Mistakes</div>
   <h2>What kills good candidates — and how to avoid each</h2>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"I'll use Kafka, Redis, Cassandra, Kubernetes, and a microservices architecture" — said in the first two minutes, before a single requirement has been clarified — is the single most common way strong-on-paper candidates fail this interview. It reads as pattern-matching against a mental checklist of "big company tech," not reasoning about this problem. The tell is that the same toolset gets proposed whether the system needs to handle 1,000 users or 100 million: the technology list didn't come from the numbers, so it can't be defended when the interviewer asks "why Cassandra and not just PostgreSQL with a read replica here?" The fix isn't to name fewer tools — it's to never name one before the requirement that justifies it exists on the board.</p>
+  </div>
   <div class="k-cards">
 <div class="k-card"><div class="k-card-head"><span class="k-num">01</span><span class="k-title">Starting with a Solution</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>"I'll use Kafka, Redis, Cassandra, Kubernetes, and a microservices architecture."</strong> Said before understanding the problem. This is the #1 negative signal. Why it hurts: you're pattern-matching, not problem-solving. A system for 1,000 users that uses Kafka and Cassandra is over-engineered. An interviewer sees you don't understand trade-offs. Fix: start with requirements. Let the scale drive the technology choices. "At 50K QPS, a single PostgreSQL won't suffice — I'd add Redis for caching." Not: "I'll use Redis because Redis is good."</div></div></div></div>
 <div class="k-card"><div class="k-card-head"><span class="k-num">02</span><span class="k-title">Designing in Silence</span></div><div class="k-card-body"><div class="k-point"><div class="k-point-label">What it is</div><div class="k-point-text"><strong>Drawing a diagram for 5 minutes without speaking.</strong> The interviewer is assessing your reasoning. Silent drawing gives them nothing to evaluate. They cannot probe your thought process. You cannot demonstrate depth. Fix: narrate continuously. "I'm adding a load balancer here because we have multiple app servers. I'm choosing to put Redis in front of the DB because our read:write ratio is 10:1 and most reads are for the same hot data..."</div></div></div></div>
@@ -303,4 +312,4 @@ footer{background:var(--ink);text-align:center;padding:32px 20px;font-family:var
 
 <div class="footer">INTERVIEW FRAMEWORK · ESTIMATION · REQUIREMENTS · TRADE-OFFS · SYSTEM DESIGN PROCESS · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body></html>
+<script src="../js/speaker.js" defer></script></body></html>

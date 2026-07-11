@@ -165,7 +165,7 @@ span.concept-note.good{background:#edf7f0;color:#1a4a30;border-color:#1a7a4a;}
 span.concept-note.warn{background:#fdf0f0;color:#5a1a1a;border-color:#b83030;}
 span.concept-note.info{background:#eef2fb;color:#1a2a50;border-color:#1a4f8a;}
 span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
-.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}</style></head><body>
+.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}.matrix th{background:#1a1814;color:#e8b84b;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;}.matrix td{padding:10px 12px;border-bottom:1px solid var(--border,#e0dbd0);vertical-align:top;line-height:1.6;}.matrix .row-head{font-weight:700;color:#1a1814;white-space:nowrap;}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}.dot.g{background:#1a7a4a;}.dot.a{background:#b83030;}.flow-table{width:100%;border-collapse:collapse;margin:8px 0 4px;font-size:12.5px;}.flow-table th{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-transform:uppercase;text-align:left;}.flow-table td{padding:10px 12px;border:1px solid var(--border);color:#3a3830;vertical-align:top;line-height:1.6;}.flow-table tr td:first-child{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--surface);}</style></head><body>
 <div class="hero"><div class="hero-inner">
   <div class="hero-tag">System Design · FAANG Interview Prep · Manish-Almanac</div>
   <h1>Search<br><em>Elasticsearch & Inverted Index</em></h1>
@@ -177,8 +177,17 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 
 <section id="inverted">
-  <div class="sec-tag">01 · Inverted Index</div>
-  <h2>The Inverted Index — Why Databases Can't Do This</h2>
+  <div class="sec-tag">00 · The Core Problem</div>
+  <h2>Why a database cannot do what a search engine does</h2>
+  <p>A SQL database index finds exact values fast: <code>WHERE user_id = 123</code>. But <code>WHERE body LIKE '%distributed systems%'</code> requires a full table scan — every row, every time. At 1 billion documents, that takes minutes. A search engine can answer this in milliseconds because it inverts the problem entirely.</p>
+  <div class="analogy">
+    <div class="analogy-label">The book index analogy</div>
+    <div class="analogy-text">
+      A database is a book read cover-to-cover to find a word. Slow.<br><br>
+      A search engine is a book with an index at the back: "distributed systems → pages 12, 47, 203, 891." You go directly to those pages. That back-of-book index is an <strong>inverted index</strong> — and it is the entire secret of how search works.
+    </div>
+  </div>
+  <h3>How the inverted index actually works</h3>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">How It Works</div><div class="concept-def"><strong>An inverted index maps each unique term to the list of documents containing it.</strong><br>
       Documents: Doc1="Redis is fast", Doc2="Redis scales well", Doc3="Kafka is fast"<br>
@@ -201,32 +210,20 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     <div class="concept-row"><div class="concept-term">TF-IDF / BM25</div><div class="concept-def"><strong>Relevance scoring: not all matches are equal.</strong></p><p><strong>TF (Term Frequency)</strong>: how often does the term appear in this document? More occurrences = more relevant.</p><p><strong>IDF (Inverse Document Frequency)</strong>: how rare is the term across all documents? "the" appears everywhere — low IDF, low importance. "Kafka" appears rarely — high IDF, high importance.</p><p><strong>BM25</strong>: modern improvement over TF-IDF used by Elasticsearch. Prevents very long documents from dominating just because they mention a term more times.
         <span class="concept-note muted">Elasticsearch uses BM25 by default. You can boost specific fields (title matches worth 3x body matches).</span></div></div>
   </div>
-
-<div class="sec-tag">00 · Core Intuition</div>
-  <h2>Why a database cannot do what a search engine does</h2>
-  <p>A SQL database index finds exact values fast: <code>WHERE user_id = 123</code>. But <code>WHERE body LIKE '%distributed systems%'</code> requires a full table scan — every row, every time. At 1 billion documents, that takes minutes. A search engine can answer this in milliseconds because it inverts the problem entirely.</p>
-  <div class="analogy">
-    <div class="analogy-label">The book index analogy</div>
-    <div class="analogy-text">
-      A database is a book read cover-to-cover to find a word. Slow.<br><br>
-      A search engine is a book with an index at the back: "distributed systems → pages 12, 47, 203, 891." You go directly to those pages. That back-of-book index is an <strong>inverted index</strong> — and it is the entire secret of how search works.
-    </div>
-  </div>
 </section>
 <div style="margin:16px 0"><div style="margin:20px 0">
-<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Search System Sizing (Twitter Scale)</h4>
+<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Search System Sizing (Illustrative, Twitter-Scale)</h4>
 <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Index size</td><td>500M tweets × 300 bytes indexed content</td><td><strong>150GB</strong></td><td style="color:#1a7a4a;font-size:12px">10 Elasticsearch shards × 15GB each = manageable per node</td></tr><tr><td class="row-head">Write throughput</td><td>6,000 tweets/sec → ES after CDC lag</td><td><strong>~6K docs/sec</strong></td><td style="color:#1a7a4a;font-size:12px">ES handles 10K docs/sec per node — single node sufficient for writes</td></tr><tr><td class="row-head">Query latency</td><td>BM25 on 500M docs, 3 shards queried</td><td><strong>~50ms p99</strong></td><td style="color:#1a7a4a;font-size:12px">Add ML re-ranking (100ms) for total ~150ms — within 200ms SLA</td></tr><tr><td class="row-head">Embedding storage</td><td>500M tweets × 1536 floats × 4 bytes</td><td><strong>~3TB for vector index</strong></td><td style="color:#1a7a4a;font-size:12px">Use ANN index (HNSW) — 16 bytes per vector with quantisation → 8GB</td></tr></tbody></table></div></div>
-
-<div style="margin:16px 0"><div style="margin:20px 0">
-<h4 style="font-family:'Playfair Display',serif;margin-bottom:10px">Search System Sizing (Twitter Scale)</h4>
-<table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-<tbody><tr><td class="row-head">Index size</td><td>500M tweets × 300 bytes indexed content</td><td><strong>150GB</strong></td><td style="color:#1a7a4a;font-size:12px">10 Elasticsearch shards × 15GB each = manageable per node</td></tr><tr><td class="row-head">Write throughput</td><td>6,000 tweets/sec → ES after CDC lag</td><td><strong>~6K docs/sec</strong></td><td style="color:#1a7a4a;font-size:12px">ES handles 10K docs/sec per node — single node sufficient for writes</td></tr><tr><td class="row-head">Query latency</td><td>BM25 on 500M docs, 3 shards queried</td><td><strong>~50ms p99</strong></td><td style="color:#1a7a4a;font-size:12px">Add ML re-ranking (100ms) for total ~150ms — within 200ms SLA</td></tr><tr><td class="row-head">Embedding storage</td><td>500M tweets × 1536 floats × 4 bytes</td><td><strong>~3TB for vector index</strong></td><td style="color:#1a7a4a;font-size:12px">Use ANN index (HNSW) — 16 bytes per vector with quantisation → 8GB</td></tr></tbody></table></div></div>
+<tbody><tr><td class="row-head">Index size</td><td>500M tweets × 300 bytes indexed content</td><td><strong>150GB</strong></td><td style="color:#1a7a4a;font-size:12px">10 Elasticsearch shards × 15GB each = manageable per node</td></tr><tr><td class="row-head">Write throughput</td><td>6,000 tweets/sec → ES after CDC lag</td><td><strong>~6K docs/sec</strong></td><td style="color:#1a7a4a;font-size:12px">A commonly-cited rough figure for ES is on the order of 10K docs/sec per node under favorable conditions — actual throughput depends heavily on document size, hardware, and refresh interval</td></tr><tr><td class="row-head">Query latency</td><td>BM25 on 500M docs, 3 shards queried</td><td><strong>~50ms p99</strong></td><td style="color:#1a7a4a;font-size:12px">Add ML re-ranking (100ms) for total ~150ms — within 200ms SLA</td></tr><tr><td class="row-head">Embedding storage</td><td>500M tweets × 1536 floats × 4 bytes</td><td><strong>~3TB for vector index</strong></td><td style="color:#1a7a4a;font-size:12px">Use ANN index (HNSW) with quantisation to cut this dramatically — exact ratio depends on the quantisation scheme chosen</td></tr></tbody></table></div></div>
 
 
 <section id="elasticsearch">
-  <div class="sec-tag">02 · Elasticsearch Architecture</div>
+  <div class="sec-tag">01 · Elasticsearch Architecture</div>
   <h2>How ES scales to billions of documents</h2>
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap that catches most candidates</div>
+    <p>"Elasticsearch is fast and scales horizontally — I'll just use it as my main database and skip the separate data store." <strong>This is the mistake that gets candidates cut in a system design interview, and it has burned real production teams.</strong> Elasticsearch is not ACID — it guarantees atomicity per document, not across a transaction, and it has no joins. Elastic's own long-standing guidance is that your source of truth should live somewhere else, with Elasticsearch as a secondary, rebuildable index. The correct architecture: a proper database (Postgres, DynamoDB, whatever fits your access patterns) as the system of record, with a CDC pipeline (Debezium + Kafka is the common pattern) keeping Elasticsearch in sync as a read-optimized search layer you could, in principle, delete and rebuild from the source of truth without losing data.</p>
+  </div>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Index → Shards</div><div class="concept-def"><strong>An Elasticsearch index is split into N primary shards. Each shard is a complete, independent Lucene index.</strong><br>
       Index "tweets" with 5 shards: each shard holds ~20% of documents. Queries fan out to all 5 shards in parallel, results merged by the coordinator.
@@ -243,10 +240,21 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       New documents → write buffer → periodic flush → new immutable segment. Background merges combine small segments into larger ones (like Cassandra SSTables, like ClickHouse parts).
         <span class="concept-note muted">Deletes are soft-deletes (marked, not removed) until a merge happens. This is why delete-heavy workloads require periodic forced merges to reclaim space.</span></div></div>
   </div>
+  <h3>Search Infrastructure Options Compared</h3>
+  <table class="comp-table">
+    <thead><tr><th>Option</th><th>Mechanism</th><th>Strength</th><th>Failure Mode</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr><td class="row-head">SQL <code>LIKE</code> / full scan</td><td>Pattern match against every row, no index structure for substrings</td><td>Zero extra infrastructure; fine at small scale</td><td class="bad">Full table scan on every query — minutes at billions of rows</td><td>Small apps, admin tooling, low-QPS internal search</td></tr>
+      <tr><td class="row-head">Postgres full-text search</td><td>Built-in <code>tsvector</code>/<code>tsquery</code> with GIN index — an inverted index inside the relational database</td><td>No separate system to run; transactionally consistent with the source data</td><td class="warn">Weaker relevance tuning and scaling ceiling than a dedicated search engine; not built for faceting at scale</td><td>Apps already on Postgres with moderate search needs</td></tr>
+      <tr><td class="row-head">Elasticsearch / OpenSearch</td><td>Sharded, replicated Lucene indexes with a REST query DSL, aggregations, and near-real-time refresh</td><td>Rich relevance tuning (BM25, boosting), faceted search, horizontal scale to billions of docs</td><td class="warn">Not ACID, not a system of record — Elastic's own long-standing guidance is to keep your source of truth elsewhere and treat ES as a secondary, rebuildable index</td><td>Most large-scale full-text search deployments; the default choice absent a specific reason otherwise</td></tr>
+      <tr><td class="row-head">Managed search (Algolia and similar)</td><td>Hosted, typo-tolerant search-as-a-service with a simplified relevance model tuned for instant-search UX</td><td>Fast to integrate, strong out-of-the-box typo tolerance and instant-search feel, zero ops</td><td class="warn">Less control over relevance internals than self-hosted; cost scales with record count and query volume</td><td>Product search and instant-search UIs where speed-to-ship matters more than deep relevance customisation</td></tr>
+      <tr><td class="row-head">Dedicated vector DB (Pinecone, Weaviate, Milvus)</td><td>Purpose-built ANN indexes (HNSW and variants) over dense embeddings, usually alongside metadata filtering</td><td>Optimised specifically for semantic/embedding search at scale; often outperforms bolt-on vector support</td><td class="warn">A second system to keep in sync with the primary index if you also need keyword/BM25 search — hence the popularity of hybrid search combining both</td><td>Semantic search, RAG retrieval layers, recommendation systems</td></tr>
+    </tbody>
+  </table>
 </section>
 
 <section id="typeahead">
-  <div class="sec-tag">03 · Typeahead / Autocomplete</div>
+  <div class="sec-tag">02 · Typeahead / Autocomplete</div>
   <h2>Design: search-as-you-type at FAANG scale</h2>
   <div class="concept-grid">
     <div class="concept-row"><div class="concept-term">Prefix Trie</div><div class="concept-def"><strong>A tree where each node is a character. Every path from root to leaf is a word. O(L) lookup for a prefix of length L — regardless of vocabulary size.</strong><br>
@@ -266,7 +274,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 
 <section id="examples">
-  <div class="sec-tag">04 · System Design Examples</div>
+  <div class="sec-tag">03 · System Design Examples</div>
   <h2>Search Architecture in Real Systems</h2>
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">Twitter Search</div><span class="sd-example-tag">500M TWEETS/DAY</span></div>
@@ -278,8 +286,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     </div>
   </div>
 
-<div class="sec-tag">05 · More System Design Examples</div>
-  <h2>Search architecture in Uber, LinkedIn, and GitHub</h2>
+  <h3>Search architecture at Uber and LinkedIn</h3>
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">Uber — Driver and Restaurant Search</div><span class="sd-example-tag">GEO-SPATIAL · REAL-TIME</span></div>
     <div class="sd-example-body">
@@ -291,7 +298,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="sd-example">
     <div class="sd-example-head"><div class="sd-example-title">LinkedIn — People and Job Search</div><span class="sd-example-tag">PERSONALISED · SOCIAL GRAPH</span></div>
     <div class="sd-example-body">
-      <div class="choice-row"><div class="choice-label">PEOPLE SEARCH</div><div class="choice-val">LinkedIn's Galene search engine (Elasticsearch-based): indexes 900M+ member profiles. Query "data scientist in Bangalore" → BM25 retrieval → ML re-ranking using network distance (1st/2nd degree connections ranked higher), engagement prediction, and profile completeness score.</div></div>
+      <div class="choice-row"><div class="choice-label">PEOPLE SEARCH</div><div class="choice-val">LinkedIn's Galene search engine indexes profiles for a membership base now well over 1 billion. Worth getting right in an interview: Galene is built directly on <strong>Apache Lucene</strong> — the same underlying library Elasticsearch itself is built on — not on Elasticsearch as a product. LinkedIn deliberately moved off a stack of Lucene-adjacent tools (Sensei, Zoie, Bobo) onto a purpose-built Lucene layer for tighter control at their scale. Query "data scientist in Bangalore" → BM25-style retrieval → ML re-ranking using network distance (1st/2nd degree connections ranked higher), engagement prediction, and profile completeness score.</div></div>
       <div class="choice-row"><div class="choice-label">JOB SEARCH</div><div class="choice-val">Semantic matching: your profile embedding (skills, title, experience) is compared to job embedding using cosine similarity (vector search). Keyword match + semantic similarity combined (hybrid search). Jobs at companies where you have connections get a boost.</div></div>
       <div class="choice-row"><div class="choice-label">TYPEAHEAD</div><div class="choice-val">Job title suggestions: Redis ZSET with ~50K common job titles, scored by global frequency. Prefix query on typed characters returns top 5 suggestions in &lt;5ms. Personalised layer re-ranks suggestions based on user's profile and connections.</div></div>
     </div>
@@ -344,7 +351,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 
 
 <section id="vector-search">
-  <div class="sec-tag">09 · Vector Search & ML Ranking</div>
+  <div class="sec-tag">06 · Vector Search & ML Ranking</div>
   <h2>Beyond keyword matching — the AI layer modern search requires</h2>
   <div class="k-cards">
 <div class="k-card">
@@ -356,7 +363,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Convert text to dense vectors. Find semantically similar documents even without keyword overlap.</strong>
-      <p>/p><p>Query "cheap flights to goa" → embed with text-embedding-3-small → 1536-dimensional vector [0.23, -0.91, ...]. Documents in the index also embedded at index time. Find documents whose embedding is cosine-closest to the query embedding. Returns results about "affordable airfare Goa" even with zero keyword overlap.</p><p>Index: FAISS (Facebook AI Similarity Search), pgvector (PostgreSQL extension), Pinecone, Weaviate, or Elasticsearch's dense_vector field. All support approximate nearest neighbour (ANN) with HNSW index. O(log N) search over billions of vectors.</p>
+      <p></p><p>Query "cheap flights to goa" → embed with text-embedding-3-small → 1536-dimensional vector [0.23, -0.91, ...]. Documents in the index also embedded at index time. Find documents whose embedding is cosine-closest to the query embedding. Returns results about "affordable airfare Goa" even with zero keyword overlap.</p><p>Index: FAISS (Facebook AI Similarity Search), pgvector (PostgreSQL extension), Pinecone, Weaviate, or Elasticsearch's dense_vector field. All support approximate nearest neighbour (ANN) with HNSW index. O(log N) search over billions of vectors.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ Hybrid search: combine BM25 (keyword) score + vector similarity score with a weighted sum. BM25 wins for exact product codes and names. Vectors win for semantic and intent-based queries. LinkedIn People Search, Notion AI Search, and Google Shopping all use hybrid.</span></div>
     </div>
@@ -371,7 +378,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Narrow from billions to thousands (retrieval) → score thousands (ranking) → rerank top-100 (re-ranking).</strong>
-      <p>/p><p><strong>Stage 1 — Retrieval</strong>: BM25 or ANN vector search. Fast, approximate. Returns 1,000 candidates from billions of documents in &lt;50ms.</p><p><strong>Stage 2 — Ranking</strong>: ML model (gradient boosted trees or a small neural net) scores each candidate on: relevance signals (BM25 score, vector score, freshness), behavioural signals (CTR for this query, dwell time, position bias-corrected), personalisation (user's historical preferences). Scores 1,000 candidates in &lt;100ms.</p><p><strong>Stage 3 — Re-ranking</strong>: large cross-encoder model (BERT-based) scores top-100 pairs (query, document) together — captures deep semantic interaction. Expensive but only for 100 items. Runs in &lt;200ms on GPU.</p><p>Total pipeline: 350ms. Parallelise stages 1+2, run stage 3 on stage 2 top-100.</p>
+      <p></p><p><strong>Stage 1 — Retrieval</strong>: BM25 or ANN vector search. Fast, approximate. Returns 1,000 candidates from billions of documents in &lt;50ms.</p><p><strong>Stage 2 — Ranking</strong>: ML model (gradient boosted trees or a small neural net) scores each candidate on: relevance signals (BM25 score, vector score, freshness), behavioural signals (CTR for this query, dwell time, position bias-corrected), personalisation (user's historical preferences). Scores 1,000 candidates in &lt;100ms.</p><p><strong>Stage 3 — Re-ranking</strong>: large cross-encoder model (BERT-based) scores top-100 pairs (query, document) together — captures deep semantic interaction. Expensive but only for 100 items. Runs in &lt;200ms on GPU.</p><p>Total pipeline: 350ms. Parallelise stages 1+2, run stage 3 on stage 2 top-100.</p>
       </div>
     </div>
   </div>
@@ -385,46 +392,13 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>How fast do new documents appear in search results? The answer changes the architecture.</strong>
-      <p>/p><p><strong>Batch indexing</strong>: rebuild the full index nightly. Freshness: 24h lag. Simple. Right for: product catalogs with daily updates, static content.</p><p><strong>Near-real-time (NRT)</strong>: Elasticsearch refreshes the in-memory index segment every 1 second (<code>index.refresh_interval=1s</code>). New documents visible in 1 second. Default Elasticsearch behaviour. Right for: most applications.</p><p><strong>Real-time</strong>: Elasticsearch with <code>refresh=true</code> on write (forces immediate segment refresh). Visible immediately. Cost: 10–100× more write overhead. Right for: financial transactions, legal documents where freshness is critical.</p><p><strong>Dual-index</strong>: a large, rarely-updated "base index" + a small, frequently-updated "delta index." Merge results at query time. Right for: trillion-document indexes where full daily rebuilds take days.</p>
+      <p></p><p><strong>Batch indexing</strong>: rebuild the full index nightly. Freshness: 24h lag. Simple. Right for: product catalogs with daily updates, static content.</p><p><strong>Near-real-time (NRT)</strong>: Elasticsearch refreshes the in-memory index segment every 1 second (<code>index.refresh_interval=1s</code>). New documents visible in 1 second. Default Elasticsearch behaviour. Right for: most applications.</p><p><strong>Real-time</strong>: Elasticsearch with <code>refresh=true</code> on write (forces immediate segment refresh). Visible immediately. Cost: 10–100× more write overhead. Right for: financial transactions, legal documents where freshness is critical.</p><p><strong>Dual-index</strong>: a large, rarely-updated "base index" + a small, frequently-updated "delta index." Merge results at query time. Right for: trillion-document indexes where full daily rebuilds take days.</p>
       </div>
     </div>
   </div>
 </div>
 </div>
 </section>
-
-<section id="search-failures">
-  <div class="sec-tag">⚠ · Failure Modes</div>
-  <h2>What Breaks in Search — and How to Handle It</h2>
-  <div class="k-cards">
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Index Lag — New Content Not Searchable</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">CDC pipeline falls behind: tweet posted but not searchable for 30+ seconds. Causes: Kafka consumer lag, ES backpressure, disk I/O saturation during bulk indexing.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Set alert: consumer lag > 10K messages. Mitigation: dedicated ES indexing nodes separate from query nodes. Increase refresh_interval from 1s to 5s during ingestion bursts.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Mapping Explosion — Cardinality Bomb</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">Dynamic mapping adds a new field for every unique key in JSON documents. 10K unique keys × 5 shards = 50K field mappings → Elasticsearch heap exhausted → OOM crash.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Always use explicit mapping (no dynamic=true in production). Use keyword type for all ID fields. Alert when field count > 1,000 per index.</span></div>
-  </div></div>
-</div>
-    <div class="k-card">
-  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Hot Shard — Uneven Query Distribution</span><span class="k-tag">FAILURE MODE</span></div>
-  <div class="k-card-body"><div class="k-point">
-    <div class="k-point-label">What breaks & how</div>
-    <div class="k-point-text">All queries for trending topics hash to the same shard. One shard at 100% CPU, others idle. p99 latency spikes while p50 is fine.</div>
-    <div class="k-warn"><span class="k-icon">⚠</span><span>Use custom routing with multiple routing keys. Add _routing randomisation for read-heavy indices. Monitor per-shard query rates in ES cluster stats.</span></div>
-  </div></div>
-</div>
-  </div>
-</section>
-
-
 
 <section id="search-failures">
   <div class="sec-tag">⚠ · Failure Modes</div>
@@ -484,8 +458,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 </section>
 </div>
 
-</div>
 <div class="footer">SEARCH · ELASTICSEARCH · INVERTED INDEX · BM25 · TYPEAHEAD · VECTOR SEARCH · MANISH-ALMANAC</div>
 <script>function toggle(el){el.parentElement.classList.toggle('open');}</script>
-</body>
+<script src="../js/speaker.js" defer></script></body>
 </html>
