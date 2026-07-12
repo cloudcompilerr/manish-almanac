@@ -56,13 +56,13 @@
   <div id="setup" class="setup-box" style="display:none;margin-top:12px">
     <div class="setup-lbl">🤖 AI Provider</div>
     <div class="setup-desc">Pick a provider, paste your key. Stored locally in this browser only.</div>
-    <select id="providerSel" onchange="onProviderChange()" style="width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:#fff;color:var(--tp);outline:none;margin-bottom:7px;-webkit-appearance:none;">
+    <select id="providerSel" onchange="onProviderChange()" style="width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:var(--sf);color:var(--tp);outline:none;margin-bottom:7px;-webkit-appearance:none;">
       <option value="anthropic">Anthropic — Claude</option>
       <option value="openai">OpenAI — GPT</option>
       <option value="gemini">Google — Gemini</option>
       <option value="groq">Groq — Llama / Mixtral (fast)</option>
     </select>
-    <select id="modelSel" style="width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:#fff;color:var(--tp);outline:none;margin-bottom:7px;-webkit-appearance:none;"></select>
+    <select id="modelSel" style="width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:var(--sf);color:var(--tp);outline:none;margin-bottom:7px;-webkit-appearance:none;"></select>
     <div id="keyHint" class="setup-desc" style="margin-bottom:6px">Key from console.anthropic.com</div>
     <input type="password" id="apikey" placeholder="sk-ant-…" autocomplete="off"/>
     <button onclick="saveKey()">Save & Close</button>
