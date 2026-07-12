@@ -795,6 +795,9 @@ hr.section-hr { border: none; border-top: 1px solid #E2E8F0; margin: 28px 0; }
     <p>This question appears in almost every senior AI interview. The key is to anchor your answer to a clean mental model before diving into specifics.</p>
     <div class="power-statement"><p>I think about it as knowledge vs behavior. RAG is for accessing dynamic knowledge. Fine-tuning is for changing how the model behaves.</p></div>
 
+    <div class="box info"><div class="box-title"><span class="box-icon">🪪</span>The new-hire analogy</div>
+    <p>Imagine onboarding a brilliant new employee. <strong>Fine-tuning</strong> is sending them through months of training on how your company writes reports — the tone, the structure, the level of formality, the way arguments get made. After that training, they're genuinely better at producing your house style. But ask them "what's in this year's Q3 budget?" and they still have to go look it up — that fact was never part of the training, no matter how long the course ran. <strong>RAG</strong> is the opposite move: skip the months of training, and instead just hand the new hire a login to the shared drive and a good search bar. Ask about the Q3 budget, and they open the file and read you the number — instantly, and correctly, because they looked rather than guessed. Most real employees need both: some onboarding to communicate the right way, and ongoing access to actual company documents to communicate the right facts. That's exactly why production AI systems usually combine fine-tuning and RAG rather than picking one.</p></div>
+
     <h2 class="section-title" id="ch1-2">1.2 When to Use RAG</h2>
     <p>Choose RAG when the problem is about <strong>knowledge retrieval</strong>, not changing model behavior. The model itself is fine — it just doesn't have your data.</p>
     <div class="table-wrap"><table><thead><tr><th>Scenario</th><th>Example use case</th><th>Why RAG wins</th></tr></thead><tbody>
@@ -1611,7 +1614,7 @@ WITH (m = 16, ef_construction = 64);</code></pre>
         <li>Can you explain what a reranker does and why it improves over vector search alone?</li>
         <li>Can you name 3 RAGAS metrics and what each one catches?</li>
         <li>Do you have a point of view on build vs buy for your target company's domain?</li>
-        <li>Do you know the EU AI Act risk tiers and whether your target product falls in high-risk?</li>
+        <li>Do you know the EU AI Act risk tiers, whether your target product falls in high-risk, and that the high-risk deadline itself has already moved once (originally August 2026, now December 2027)?</li>
         <li>Can you describe test-time compute scaling in plain language?</li>
         <li>Can you tell the "how do you stay current?" story with specific, named sources?</li>
         <li>Do you have a structured answer for the "AI bias incident" and "build your own model" scenarios?</li>

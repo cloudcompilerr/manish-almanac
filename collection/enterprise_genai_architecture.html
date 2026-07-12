@@ -388,6 +388,95 @@
     .wrap { padding: 36px 18px 80px; }
     .rosetta-table { font-size: 12px; }
   }
+
+  /* ── ANALOGY BLOCK ── */
+  .analogy {
+    background: linear-gradient(135deg, #fdf8ee 0%, #f8f0e0 100%);
+    border: 1px solid var(--amber-border);
+    border-radius: 8px;
+    padding: 24px 26px;
+    margin: 28px 0 44px;
+  }
+  .analogy-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .analogy-text { font-size: 15.5px; line-height: 1.8; color: var(--ink); }
+  .analogy-text strong { color: var(--amber); }
+
+  /* ── TRAP CALLOUT ── */
+  .callout {
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin: 24px 0;
+    border-left: 4px solid;
+  }
+  .callout.cl-red { background: var(--red-bg); border-color: var(--red); }
+  .callout .cl-lbl {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--red);
+  }
+  .callout p { color: var(--ink); font-size: 14.5px; line-height: 1.75; margin: 0; }
+
+  /* ── QUICK REFERENCE TABLE ── */
+  .ref-table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: 13px; }
+  .ref-table th {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 9px 12px;
+    background: var(--ink);
+    color: #fff;
+    text-align: left;
+  }
+  .ref-table td {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--ink);
+    background: var(--surface);
+    line-height: 1.65;
+  }
+  .ref-table td.row-head {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11.5px;
+    background: var(--amber-bg);
+    color: var(--text-on-amber);
+    white-space: nowrap;
+  }
+
+  /* ── FAILURE MODES ── */
+  .fail-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: 0 6px 6px 0;
+    padding: 18px 22px;
+    margin-bottom: 16px;
+  }
+  .fail-card .fail-title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-style: italic;
+    font-size: 17px;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+  .fail-card p { margin: 0 0 8px; font-size: 14.5px; line-height: 1.7; }
+  .fail-card p:last-child { margin-bottom: 0; }
+  .fail-card .fail-fix { color: var(--green); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -417,6 +506,18 @@
     </div>
   </div>
 
+  <div class="analogy">
+    <div class="analogy-label">The general contractor analogy</div>
+    <div class="analogy-text">
+      Shipping a GenAI feature is like building a custom house. The <strong>architecture firm</strong> (orchestration layer) draws the plan and coordinates every trade. <strong>Subcontractors</strong> (foundation models) do the specialized work — framing, electrical, plumbing — but none of them knows what the house next door looks like, and swapping the electrician shouldn't require re-pouring the foundation. The <strong>materials supplier</strong> (the RAG/data layer) has to deliver the right lumber and wiring on schedule, or the crew stands around with nothing to build. A <strong>universal permit and inspection standard</strong> (protocols like MCP) means any subcontractor can plug into any job site without a bespoke contract negotiated from scratch each time. And a <strong>building inspector</strong> (LLMOps, guardrails, and evaluation) signs off at every stage — foundation, framing, final walkthrough — because nobody wants to discover the wiring was unsafe after the family has moved in. Skip the inspector to ship faster, and the failures don't disappear — they just show up later, as fires instead of punch-list items.
+    </div>
+  </div>
+
+  <div class="callout cl-red">
+    <div class="cl-lbl">⚠ The interview trap</div>
+    <p>Candidates who open a system design answer by reciting all ten layers regardless of what's actually being asked get cut off fast. A two-person startup shipping an MVP support chatbot doesn't provision a low-code automation layer, a dedicated protocol layer, and a full LLMOps firewall on day one — those are layers you add as team size, traffic, or compliance surface grows, not layers you default to. <strong>The strong answer names the one or two layers that are actually load-bearing for the specific ask, and explicitly defers the rest with a stated trigger for when they'd get added</strong> — e.g., "I'd skip a dedicated protocol layer until we have more than one team building tools independently; hand-wired integration is fine below that." Listing the full stack for every question signals template memorization, not judgment.</p>
+  </div>
+
   <div class="flow-title">The stack — jump to any layer</div>
   <div class="flow">
     <a href="#overview">Overview</a>
@@ -432,6 +533,9 @@
     <a href="#layer-10"><span class="n">10</span> QA</a>
     <a href="#rosetta">Rosetta Stone</a>
     <a href="#topologies">Topologies</a>
+    <a href="#tradeoffs">Trade-offs</a>
+    <a href="#failures">Failure Modes</a>
+    <a href="#quickref">Quick Reference</a>
   </div>
 
   <!-- EXECUTIVE VISUAL SUMMARY -->
@@ -794,6 +898,74 @@
         </ul>
       </div>
     </div>
+  </section>
+
+  <!-- TRADE-OFF MATRIX -->
+  <section class="layer" id="tradeoffs">
+    <div class="layer-eyebrow"><span class="num">⚖</span> Trade-off Matrix</div>
+    <h2>What you gave up</h2>
+    <div class="components">Every choice in the stack above is a trade, not a strictly-better option. State the cost plainly, and know when you'd switch.</div>
+    <table class="ref-table">
+      <tr><th>Choice</th><th>Gained</th><th>Accepted</th><th>Switch when</th></tr>
+      <tr><td class="row-head">MaaS (Bedrock/Vertex) vs. self-hosted (vLLM)</td><td>Zero ops burden, instant scalability, no GPU procurement</td><td>Pay-per-token cost compounds at high, steady volume; less control over exact serving config</td><td>Sustained high QPS makes owned GPU throughput cheaper than metered tokens, or data sovereignty is a hard requirement</td></tr>
+      <tr><td class="row-head">Proprietary model (GPT-5.x, Claude) vs. open-weight (DeepSeek, legacy Llama)</td><td>State-of-the-art reasoning/coding without training infra</td><td>Ongoing per-token cost, vendor roadmap risk (see the Muse Spark reversal above), no weight-level fine-tuning</td><td>Fine-tuning control or zero-external-API requirements outweigh the capability gap to frontier proprietary models</td></tr>
+      <tr><td class="row-head">Python AI ecosystem vs. Spring/Java</td><td>Python: fastest research-pattern adoption. Java: compile-time type safety, native DI into existing Boot services</td><td>Python: weaker static guarantees at scale. Java: smaller pool of AI-native libraries, more boilerplate for fast-moving patterns</td><td>Team's existing platform investment should decide this before framework popularity does — retrofitting later is expensive</td></tr>
+      <tr><td class="row-head">Shared vector index vs. per-tenant index</td><td>Shared: operational simplicity, one thing to scale. Per-tenant: strict data isolation</td><td>Shared: a filtering bug is a cross-tenant data leak. Per-tenant: N times the indexes to operate and keep in sync</td><td>Regulatory/compliance requirements around tenant data isolation are non-negotiable, not just a preference</td></tr>
+      <tr><td class="row-head">Full 10-layer stack vs. minimal subset</td><td>Every layer's capability is available when needed</td><td>Operational surface, cost, and cognitive overhead scale with every layer provisioned, whether or not it's load-bearing yet</td><td>Team size, traffic, or compliance scope crosses the threshold that specific layer exists to solve — see the interview trap above</td></tr>
+    </table>
+  </section>
+
+  <!-- FAILURE MODES -->
+  <section class="layer" id="failures">
+    <div class="layer-eyebrow ops"><span class="num">⚠</span> Failure Modes</div>
+    <h2>What actually breaks in production</h2>
+    <div class="components">Real incident patterns across this stack — not a specific fabricated outage, but the shape production failures in each of these layers actually takes.</div>
+
+    <div class="fail-card">
+      <div class="fail-title">Silent gateway drift</div>
+      <p>The whole point of Layer 5 (model gateways like LiteLLM/Portkey) is that swapping providers is a config change. The failure mode is the same abstraction cutting the other way: a provider silently changes a model's default sampling behavior, deprecates an endpoint, or degrades under load, and because every call routes through one shared gateway config, the blast radius is every feature at once — not one team's isolated incident.</p>
+      <p><span class="fail-fix">Fix:</span> pin exact model versions (not floating aliases) in the gateway config, run a small canary eval suite against the pinned version on every gateway config change, and alert on latency/error-rate/output-shape drift per model id, not just per endpoint.</p>
+    </div>
+
+    <div class="fail-card">
+      <div class="fail-title">Orchestration loops that don't terminate</div>
+      <p>Layer 2's planner/actor/critic pattern and Layer 6's tool-calling protocols make it easy for an agent to call the same tool repeatedly with slightly different parameters, never converging — burning tokens and API budget with nothing to show for it. This is especially common when a tool's description is ambiguous enough that the model can't tell whether its last call actually succeeded.</p>
+      <p><span class="fail-fix">Fix:</span> hard step-count and wall-clock limits per agent run, loop detection on repeated tool calls with near-identical arguments, and mandatory spend caps tied to the calling identity — not just the account.</p>
+    </div>
+
+    <div class="fail-card">
+      <div class="fail-title">Embedding-index mismatch after a silent redeploy</div>
+      <p>Layer 4's RAG engine depends entirely on every vector in the index coming from the same embedding model. If a deploy bumps the embedding model version without a full re-embed of the corpus, the index now holds vectors from two incompatible semantic spaces — retrieval doesn't error, it just quietly returns worse and worse results, which is far harder to catch than a hard failure.</p>
+      <p><span class="fail-fix">Fix:</span> version-tag every vector with the embedding model id that produced it, and make the deploy pipeline refuse to serve a mixed-version index — either block the deploy until re-embedding finishes, or route queries only to the fully-migrated shard.</p>
+    </div>
+
+    <div class="fail-card">
+      <div class="fail-title">Guardrail false-positive cascades</div>
+      <p>Layer 9's PII/content filters are a hard stop by design — that's the point. But an overly aggressive filter tuned for one use case (say, blocking anything that looks like a SSN) can silently truncate or reject legitimate output in an adjacent use case (a support agent quoting a case number in the same numeric format), and because the block happens post-generation, the user just sees a degraded or empty response with no visible error.</p>
+      <p><span class="fail-fix">Fix:</span> log every guardrail intervention with the rule that fired, track false-positive rate as its own monitored metric (not just "did we block something"), and route borderline blocks to a caveat instead of a silent hard stop.</p>
+    </div>
+  </section>
+
+  <!-- QUICK REFERENCE -->
+  <section class="layer" id="quickref">
+    <div class="layer-eyebrow"><span class="num">🗃</span> Quick Reference</div>
+    <h2>The whole stack, one table</h2>
+    <div class="components">Review this the night before — every layer, its job, and the one line worth saying out loud if asked to defend it.</div>
+    <table class="ref-table">
+      <tr><th>Layer</th><th>Its job</th><th>Say this if asked to justify it</th></tr>
+      <tr><td class="row-head">01 Edge</td><td>Streams tokens, manages sessions, renders AI output as UI</td><td>Perceived latency, not raw latency, is what the streaming layer buys you</td></tr>
+      <tr><td class="row-head">02 Orchestration</td><td>Gives a stateless model memory, tool calls, and multi-step workflows</td><td>The model doesn't remember anything between calls — this layer is where "memory" actually lives</td></tr>
+      <tr><td class="row-head">03 Low-Code</td><td>Lets non-engineers adjust routing/business logic without a deploy</td><td>Add this when prompt/routing tweaks are blocked on an engineering release cycle, not before</td></tr>
+      <tr><td class="row-head">04 RAG / Data</td><td>Grounds the model in private data it wasn't trained on</td><td>Chunking strategy is the single biggest lever in this layer, and the most expensive to change later</td></tr>
+      <tr><td class="row-head">05 Gateways</td><td>Abstracts the model vendor behind a config value</td><td>Hard-coding one vendor's SDK is the liability this layer exists to remove</td></tr>
+      <tr><td class="row-head">06 Protocols</td><td>Standardizes agent-to-tool and agent-to-agent connections</td><td>Without a shared protocol it's an M-tools × N-frameworks integration problem</td></tr>
+      <tr><td class="row-head">07 Serving</td><td>Hosts the weights — managed API or self-hosted GPUs</td><td>MaaS trades cost-at-scale for zero ops burden; self-hosting is the opposite trade</td></tr>
+      <tr><td class="row-head">08 Foundation Models</td><td>The actual reasoning engine</td><td>Proprietary vs. open-weight is a permanent trade, not a one-time pick — track which vendors are actually still shipping open weights</td></tr>
+      <tr><td class="row-head">09 LLMOps/Guardrails</td><td>Measures cost, latency, and blocks unsafe input/output</td><td>You cannot manage what you don't measure — this is what makes an incident debuggable instead of mysterious</td></tr>
+      <tr><td class="row-head">10 Evaluation</td><td>Catches quality regressions before they reach production</td><td>Non-deterministic systems need regression tests that check faithfulness and relevance, not just "did it crash"</td></tr>
+      <tr><td class="row-head">Rosetta Stone</td><td>Same 10 layers, different ecosystem</td><td>Python wins on velocity and research adoption; Spring/Java wins on type-safety and enterprise ops fit — pick per your team's existing investment, not per hype</td></tr>
+      <tr><td class="row-head">3 Topologies</td><td>Enterprise engine / research loop / sovereign fortress</td><td>Each topology is driven by one non-negotiable constraint — name the constraint first, and let it pick the stack</td></tr>
+    </table>
   </section>
 
   <!-- CLOSING -->

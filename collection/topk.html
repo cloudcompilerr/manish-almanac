@@ -659,6 +659,8 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <a href="#tradeoffs">Trade-offs</a>
   <a href="#followups">Follow-ups</a>
   <a href="#concepts-topk">Core Concepts</a>
+  <a href="#topk-failures">Failure Modes</a>
+  <a href="#schema-topk">Quick Reference</a>
 </nav>
 
 <div class="wrap">
@@ -687,25 +689,25 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
       <h4>Functional Requirements</h4>
       <table class="flow-table">
         <tbody>
-          <tr><td><strong>FR1</strong></td><td>Return Top-K entities (videos/hashtags/docs) by count</td></tr>
-          <tr><td><strong>FR2</strong></td><td>Support multiple time windows: last 1h, 24h, 7d</td></tr>
-          <tr><td><strong>FR3</strong></td><td>Support regional Top-K (IN, US, Global)</td></tr>
-          <tr><td><strong>FR4</strong></td><td>Unique-user deduplication (for "views" not "clicks")</td></tr>
-          <tr><td><strong>FR5</strong></td><td>Historical Top-K queries (what was #1 last Tuesday?)</td></tr>
-          <tr><td><strong>FR6</strong></td><td>Analytics: count breakdown by hour, device, region</td></tr>
+          <tr><td><strong>FR1</strong></td><td>The system must return the K entities (videos, hashtags, documents) with the highest interaction count for a given scope, ranked, on demand — the core "what's trending" query.</td></tr>
+          <tr><td><strong>FR2</strong></td><td>The system must answer that query over multiple, independently selectable time windows (e.g. last hour, last 24h, last 7 days), because "trending now" and "popular this week" are different questions with different staleness tolerances.</td></tr>
+          <tr><td><strong>FR3</strong></td><td>The system must be able to scope the ranking to a region (a country, or global) rather than only ever returning one global list, since what's trending in one market is often not what's trending in another.</td></tr>
+          <tr><td><strong>FR4</strong></td><td>The system must count each distinct user's interaction with an entity at most once per window for "views," so a single user refreshing a page repeatedly can't inflate a ranking that's meant to reflect distinct audience size, not raw click volume.</td></tr>
+          <tr><td><strong>FR5</strong></td><td>The system must be able to answer historical queries about what was trending at a past point in time (e.g. "what was #1 last Tuesday at 3pm"), not just the current live ranking — which is why a warm/cold storage tier exists behind the hot real-time path.</td></tr>
+          <tr><td><strong>FR6</strong></td><td>The system must support breaking counts down by dimension (hour, device, region) for analytics use, not just surface the final ranked list — which is why an OLAP layer exists alongside the ranking-serving path.</td></tr>
         </tbody>
       </table>
     </div>
     <div>
-      <h4>Non-Functional Requirements</h4>
+      <h4>Non-Functional Requirements <span style="font-weight:400;font-size:11px;color:var(--muted)">(design targets for this exercise, not vendor specs)</span></h4>
       <table class="flow-table">
         <tbody>
-          <tr><td><strong>NFR1</strong></td><td>Read latency: p99 &lt; 50ms</td></tr>
-          <tr><td><strong>NFR2</strong></td><td>Write throughput: 500K events/sec</td></tr>
-          <tr><td><strong>NFR3</strong></td><td>Freshness: Top-K updated within 30–60s</td></tr>
-          <tr><td><strong>NFR4</strong></td><td>Availability: 99.9% (reads); eventual consistency OK</td></tr>
-          <tr><td><strong>NFR5</strong></td><td>Approximate counts acceptable (±1%) for trending</td></tr>
-          <tr><td><strong>NFR6</strong></td><td>Historical analytics queries: &lt; 2s</td></tr>
+          <tr><td><strong>NFR1</strong></td><td>Read latency target: p99 &lt; 50ms for the hot-path query — a target you set because it's a live, user-facing "what's trending" surface, not a benchmark cited from any specific vendor.</td></tr>
+          <tr><td><strong>NFR2</strong></td><td>Write throughput target: 500K events/sec is this document's chosen illustrative scale (roughly YouTube- or Twitter-scale order of magnitude) — state and justify your own assumed scale in an interview rather than reusing this number verbatim.</td></tr>
+          <tr><td><strong>NFR3</strong></td><td>Freshness target: the live Top-K should reflect events from within the last 30–60 seconds — this is a target derived from how Flink's micro-batch window is sized in this design (see the Processing section), not an externally-imposed constant.</td></tr>
+          <tr><td><strong>NFR4</strong></td><td>Availability target: 99.9% for reads, with eventual consistency accepted on the write/aggregation side — a defensible target for a discovery/ranking feature (unlike a payments system) precisely because a briefly stale ranking has low user-facing cost.</td></tr>
+          <tr><td><strong>NFR5</strong></td><td>Approximate counts (bounded error, illustratively ±1% here) are an explicit, accepted trade-off for this system — the actual error bound is whatever ε you choose for the Count-Min Sketch (see the CMS math in Processing), not a fixed constant.</td></tr>
+          <tr><td><strong>NFR6</strong></td><td>Historical analytics query latency target: &lt;2s — looser than the hot-path target because these are typically operator/analyst-facing queries, not the live user-facing ranking surface, so the latency budget can reasonably be looser.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1414,7 +1416,7 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
       <tr>
         <td class="row-head">OLAP choice</td>
         <td>ClickHouse</td>
-        <td><span class="dot g"></span>500K rows/sec ingest; 2s queries on 100B rows; cheap storage</td>
+        <td><span class="dot g"></span>Single-node ingest in the hundreds of thousands to low millions of rows/sec is consistent with ClickHouse's own published benchmarks (batched inserts, not per-row); sub-few-second aggregate queries over very large tables; cheap columnar storage</td>
         <td><span class="dot a"></span>Operational overhead vs managed (BigQuery). No ACID transactions.</td>
         <td>BigQuery/Redshift if ops team is small or already in cloud ecosystem</td>
       </tr>
@@ -1428,7 +1430,7 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
       <tr>
         <td class="row-head">Deduplication</td>
         <td>Bloom filter</td>
-        <td><span class="dot g"></span>~1GB for 100M pairs; fast O(1) lookup</td>
+        <td><span class="dot g"></span>~180MB for 100M pairs at a 0.1% FP rate (standard sizing formula); O(1) lookup</td>
         <td><span class="dot a"></span>0.1% false positive → rare under-count</td>
         <td>Exact set (Redis SET or HBase) if unique-user guarantee is a product promise</td>
       </tr>
@@ -1697,6 +1699,80 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
       </div></div>
     </div>
   </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION: FAILURE MODES
+══════════════════════════════════ -->
+<section id="topk-failures">
+  <div class="sec-tag">13 · Failure Modes</div>
+  <h2>What actually breaks in a Top-K pipeline — real incident patterns</h2>
+  <div class="k-cards">
+<div class="k-card">
+  <div class="k-card-head"><span class="k-num">01</span><span class="k-title">Hot Entity Overwhelms a Single Flink Task</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">Kafka partitioning by <code>entity_id</code> guarantees every event for one entity lands on the same partition — which is exactly what makes a single viral entity dangerous. When one video or hashtag goes viral, every event for it routes to one Kafka partition and is processed by one Flink task, while the other partitions carry normal load. That one task's CPU and network saturate while the rest of the cluster idles, and the aggregation window for the hottest entity in the whole system — the one everyone is about to ask about — starts lagging behind the others.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Fix: detect hot keys via per-partition lag/throughput monitoring, not just cluster-wide metrics. Salt the hottest entity_ids across multiple partitions temporarily (fan the writes out, then merge on read) rather than repartitioning the whole topic. This is the same hot-partition problem sharded databases hit, applied to a Kafka+Flink pipeline.</span></div>
+  </div></div>
+</div>
+<div class="k-card">
+  <div class="k-card-head"><span class="k-num">02</span><span class="k-title">Post-Crash Recovery Produces a Stale or Spiky Trending List</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">A Flink worker crashes and resumes from its last S3 checkpoint (up to 60 seconds old, per the checkpoint interval described in the Processing section). Two visible symptoms follow: the live Redis ZSET stops updating for that entity range until the worker replays forward — the trending list looks frozen or stale during recovery — and because recovery is at-least-once, events between the checkpoint and the crash get reprocessed, briefly inflating counts until the extra increments age out of the window.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Fix: alert on per-partition consumer lag specifically (not just overall pipeline health) so a stalled recovery is visible immediately. Keep checkpoint intervals short enough that the replay window — and the double-counting it causes — stays small relative to the window size the ranking is computed over. Treat a transient post-recovery count spike as expected behaviour, not a data-quality bug, and don't page on it if it self-corrects within one window.</span></div>
+  </div></div>
+</div>
+<div class="k-card">
+  <div class="k-card-head"><span class="k-num">03</span><span class="k-title">Bloom Filter Undercounts Silently as Traffic Outgrows Its Sizing</span></div>
+  <div class="k-card-body"><div class="k-point">
+    <div class="k-point-label">What breaks & how</div>
+    <div class="k-point-text">The dedup Bloom filter is sized for an assumed number of unique (user, entity, window) pairs at a target false-positive rate. If real traffic grows past that assumption — more users, more entities, or a viral spike that multiplies unique pairs — the false-positive rate climbs well above its designed target as the filter saturates, and every false positive is a genuinely new event wrongly discarded as a duplicate. There's no exception or error when this happens; counts simply drift low, and because it degrades gradually rather than failing outright, it's easy to miss until rankings look subtly wrong.</div>
+    <div class="k-warn"><span class="k-icon">⚠</span><span>Fix: monitor the Bloom filter's actual fill ratio / estimated false-positive rate in production, not just its configured target — most Bloom filter libraries expose this. Size filters for peak (not average) unique-pair volume with headroom, and prefer a scaling/rotation strategy (e.g. a fresh filter per window) over a single filter sized once and never revisited.</span></div>
+  </div></div>
+</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION: QUICK REFERENCE
+══════════════════════════════════ -->
+<section id="schema-topk">
+  <div class="sec-tag">🗃️ · Reference</div>
+  <h2>Quick Reference</h2>
+  <p>A scannable summary of the whole design — the night-before-the-interview version.</p>
+
+  <h4>Pipeline Stage Reference</h4>
+  <table class="flow-table"><thead><tr><th>Stage</th><th>Technology</th><th>Job</th></tr></thead><tbody>
+    <tr><td>Ingestion</td><td>Kafka, partitioned by <code>entity_id</code></td><td>Durable, ordered-per-entity event buffer decoupling producers from the processing layer</td></tr>
+    <tr><td>Processing</td><td>Flink</td><td>Per-window dedup (Bloom filter) → approximate count (Count-Min Sketch) → local top-K (min-heap) → merge across partitions</td></tr>
+    <tr><td>Hot store</td><td>Redis ZSET</td><td>Sub-millisecond reads of the current live ranking</td></tr>
+    <tr><td>Warm store</td><td>Cassandra</td><td>Recent-history Top-K, partitioned by (date, granularity), for lookback queries</td></tr>
+    <tr><td>OLAP</td><td>ClickHouse</td><td>Deep analytics — breakdowns by hour/device/region, ad-hoc aggregation</td></tr>
+    <tr><td>Cold store</td><td>S3 / object storage</td><td>Immutable raw event log — source of truth, replay source for reprocessing</td></tr>
+  </table>
+
+  <h4 style="margin-top:24px">Decision Framework Fast Recall</h4>
+  <table class="flow-table"><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>
+    <tr><td>Freshness needed &lt;30s?</td><td>Flink streaming → Redis ZSET. Minutes-scale? Flink micro-batch → ClickHouse. Hours/daily? Batch job, no streaming infra needed.</td></tr>
+    <tr><td>Exact counts required?</td><td>No (approximate OK) → CMS + min-heap, bounded memory regardless of cardinality. Yes → exact aggregation in ClickHouse/Cassandra, only while cardinality stays tractable.</td></tr>
+  </table>
+
+  <h4 style="margin-top:24px">Failure Mode Fast Recall</h4>
+  <table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody>
+    <tr><td>One Flink task pegged at 100% while others idle</td><td>A viral entity's events all land on one Kafka partition (hot key)</td><td>Monitor per-partition lag; salt the hottest entity_ids across multiple partitions</td></tr>
+    <tr><td>Trending list frozen or briefly spiky after a worker restart</td><td>Recovery replaying from the last checkpoint (at-least-once reprocessing)</td><td>Alert on per-partition consumer lag; keep checkpoint intervals short; tolerate small transient spikes</td></tr>
+    <tr><td>Rankings drift low with no visible error</td><td>Dedup Bloom filter saturating as real traffic exceeds its sized capacity</td><td>Monitor actual fill ratio / false-positive rate, not just the configured target; size for peak with headroom</td></tr>
+  </table>
+
+  <h4 style="margin-top:24px">Trade-off Fast Recall</h4>
+  <table class="flow-table"><thead><tr><th>Choice</th><th>Gave up</th><th>Switch when</th></tr></thead><tbody>
+    <tr><td>Count-Min Sketch over exact HashMap</td><td>~1% controlled overcounting (never undercounts from the sketch itself)</td><td>Exact counts are a legal/billing requirement</td></tr>
+    <tr><td>Eventual (at-least-once) consistency</td><td>Possible brief double-counting across a checkpoint boundary</td><td>Financial-grade accuracy needed → exactly-once Flink + Kafka transactions</td></tr>
+    <tr><td>Tumbling 30s windows</td><td>Counts reset at each boundary — trending can look jumpy</td><td>Smoother trend curves needed → sliding windows</td></tr>
+    <tr><td>Bloom filter for dedup</td><td>Small, tunable false-positive rate → rare under-count, never over-count</td><td>Unique-user dedup is an explicit product guarantee → exact set (Redis SET/HBase)</td></tr>
+  </table>
 </section>
 </div>
 

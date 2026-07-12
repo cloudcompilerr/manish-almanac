@@ -21,11 +21,16 @@ A reader who may know nothing about the topic going in, and needs to walk out ab
 9. **Production failure modes** (`.k-cards`) — what actually breaks, how it's detected, how it's mitigated. Real incident *patterns*, not invented specific incidents presented as fact.
 10. **Trade-off matrix** (`.matrix`, "what you gave up") — every real choice has a cost; state it plainly, and state when you'd switch.
 11. **Quick reference** (closing table) — a scannable summary a reader can review the night before an interview.
+12. **Requirements & Non-Functional Constraints** (`FR`/`NFR` tables) — this section has a specific, recurring failure mode (found across nearly every file in the 2026-07 rollout, including the exemplar): FRs written as bare restatements of pattern names ("Saga: coordinate multi-step distributed transactions") instead of actual capability statements a candidate would say out loud, and NFRs asserting precise numbers with zero hedging or sourcing ("Redis GET latency: p99 < 1ms", "Kafka: 1M messages/sec per broker") as if they were verified facts rather than either (a) a target the candidate is choosing and should be able to defend, or (b) a real vendor number that needs the same web-verification as every other concrete claim in this document. Fix both: rewrite each FR as a full sentence describing what the system must do and why, and for every NFR either verify the number against a current source or make clear it's a design target you're proposing, not a citation.
 
 **As-applicable** (skip or lighten for docs where it doesn't fit — meta/framework docs like `interview_framework.html`, or module-style docs like `module01_llm_foundations.html`, get a lighter structural bar than a deep system-internals doc; use judgment, but if you skip one of the 11, know why):
 
 - Depth of "named production internals" scales down for docs that are inherently conceptual rather than about a specific system.
 - Format may follow an established alternate convention already used by a document family (e.g. the Java/Python "rosetta stone" format in the module docs) rather than forcing `.concept-grid` where it doesn't fit — consistency within a document family beats forcing every doc into one template.
+
+## Quick Reference must stay in sync with the whole document
+
+The Quick Reference section is written once, early, and then the rest of the document grows around it — new sections get added (an interview-trap callout, a decision framework, a failure-modes section) and Quick Reference doesn't get revisited, so it goes stale: it summarizes what the document used to say, not what it says now. Every time you add or substantially change a section, ask whether Quick Reference should gain a row or a table reflecting it. `topk.html` was found with no Quick Reference section at all as of 2026-07 — check every file actually has one, not just that the existing one looks fine.
 
 ## Depth and density
 
