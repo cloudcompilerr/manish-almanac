@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var t=localStorage.getItem('nt_v6_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <link rel="stylesheet" href="css/app.css?v=2">
 <title>Almanac — AI-Assisted Engineering Practice</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231a1916'/><text x='32' y='45' font-family='Georgia,serif' font-size='36' font-weight='700' fill='%23c8a96e' text-anchor='middle'>A</text></svg>">
@@ -12,6 +13,7 @@
 <!-- LIST -->
 <div id="list">
   <div class="app-header">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
     <div class="app-title">Almanac</div>
     <div class="note-count">AI-assisted engineering practice</div>
   </div>
@@ -124,8 +126,27 @@
 <script src="js/debate.js?v=2"></script>
 <script src="js/collection.js?v=2"></script>
 <script>
+/* ═══ THEME TOGGLE ═══ */
+function currentTheme(){
+  return document.documentElement.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function syncThemeIcon(){
+  var btn=document.getElementById('themeToggle');
+  if(btn) btn.textContent = currentTheme()==='dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  var next = currentTheme()==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{localStorage.setItem('nt_v6_theme', next);}catch(e){}
+  syncThemeIcon();
+}
+
 /* ═══ HOME BUTTONS + INIT ═══ */
 document.addEventListener('DOMContentLoaded',function(){
+  syncThemeIcon();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){
+    if(!document.documentElement.getAttribute('data-theme')) syncThemeIcon();
+  });
   var bc=document.getElementById('btn_coding');
   var bs=document.getElementById('btn_sd');
   var bd=document.getElementById('btn_debate');

@@ -13,7 +13,7 @@
   --sh-hd:0 1px 0 rgba(26,25,22,.05),0 4px 12px rgba(26,25,22,.04);
 }
 @media(prefers-color-scheme:dark){
-  :root{
+  :root:not([data-theme="light"]){
     --bg:#131210;--sf:#201d18;--br:#38332b;--bg-rgb:19,18,16;
     --tp:#efe9dc;--ts:#a49c8c;
     --ac:#c8a96e;--as:#2b2519;
@@ -24,6 +24,17 @@
     --sh-md:0 2px 10px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
     --sh-hd:0 1px 0 rgba(0,0,0,.2),0 4px 12px rgba(0,0,0,.25);
   }
+}
+:root[data-theme="dark"]{
+  --bg:#131210;--sf:#201d18;--br:#38332b;--bg-rgb:19,18,16;
+  --tp:#efe9dc;--ts:#a49c8c;
+  --ac:#c8a96e;--as:#2b2519;
+  --ink:#c8a96e;--ink-tx:#1a1916;
+  --green:#5fbf82;--blue:#4d8fd6;--red:#e08080;--purple:#a98ae0;--orange:#e0a060;
+  --gs:#152820;--bs:#141f30;--rs:#301c1c;--ps:#251935;--os:#332114;
+  --sh-sm:0 1px 2px rgba(0,0,0,.2);
+  --sh-md:0 2px 10px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
+  --sh-hd:0 1px 0 rgba(0,0,0,.2),0 4px 12px rgba(0,0,0,.25);
 }
 body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--tp);min-height:100vh;margin:0;padding:0 0 80px;width:100%;}
 button,input,textarea,select{font-family:inherit;}
@@ -39,6 +50,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @media(min-width:1024px){.app-header{padding:52px 40px 14px;}}
 .app-title{font-size:28px;font-weight:700;letter-spacing:-.5px;}
 .note-count{font-size:13px;color:var(--ts);margin-top:3px;}
+.theme-toggle{position:absolute;top:52px;right:24px;width:38px;height:38px;border-radius:50%;border:1px solid var(--br);background:var(--sf);color:var(--tp);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,background-color .15s;}
+.theme-toggle:hover{border-color:var(--ac);background:var(--as);}
+@media(min-width:640px){.theme-toggle{top:52px;right:32px;}}
+@media(min-width:1024px){.theme-toggle{top:52px;right:40px;}}
 .note-row{padding:16px 24px;border-bottom:1px solid var(--br);display:flex;gap:14px;align-items:flex-start;cursor:pointer;width:100%;background:none;border-left:none;border-right:none;border-top:none;text-align:left;transition:background-color .12s;}
 .note-row[hidden]{display:none;}
 @media(min-width:1024px){.note-row{padding:18px 40px;gap:18px;}}
