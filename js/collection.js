@@ -67,7 +67,7 @@ function openCollItem(id){
     iframe.srcdoc=injectSpeaker(item.srcdoc);
   } else {
     iframe.srcdoc='<div style="font-family:-apple-system,sans-serif;padding:40px 24px;text-align:center;color:#aaa;font-size:14px">Loading…</div>';
-    fetch(item.file)
+    fetch(item.file, {cache: 'no-store'})
       .then(function(r){ if(!r.ok)throw new Error('HTTP '+r.status); return r.text(); })
       .then(function(html){ iframe.srcdoc=injectSpeaker(html); })
       .catch(function(e){
