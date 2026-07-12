@@ -634,7 +634,7 @@
     <div class="layer-eyebrow"><span class="num">🗃</span> Quick Reference</div>
     <h2>All eight layers, one table</h2>
     <div class="components">Review this the night before — the dial that matters most at each layer, and the one line worth saying if you're pushed to defend it.</div>
-    <table class="ref-table">
+    <div style="overflow-x:auto"><table class="ref-table">
       <tr><th>Layer</th><th>The dial that matters most</th><th>Say this if pushed</th></tr>
       <tr><td class="row-head">01 Ingestion</td><td>Chunk size (typically 200–500 tokens) — the single biggest precision/recall lever in this layer</td><td>An embedding-model swap is a capacity-planning event, not a config change — it means a full-corpus re-embed</td></tr>
       <tr><td class="row-head">02 Query Processing</td><td>Gate rewriting/expansion on retrieval confidence — don't run it unconditionally</td><td>It's a recall lever, but also a latency and cost multiplier sitting in the critical path</td></tr>
@@ -645,7 +645,7 @@
       <tr><td class="row-head">07 Validation</td><td>Confidence score gates the response: show as-is / show with caveat / fallback</td><td>This is what separates a RAG demo from a production system — trust as an engineered, measured property</td></tr>
       <tr><td class="row-head">08 Observability</td><td>Per-stage cost/latency attribution — not one number for the whole pipeline</td><td>The eval flywheel: production issue → user feedback → new eval case → regression-gated CI → fewer issues</td></tr>
       <tr><td class="row-head">The 3 axes</td><td>Quality, latency, cost are one budget spent differently at each stage — not three separate concerns</td><td>The director-level job isn't picking the "best" algorithm per layer; it's making the trade-offs explicit, measurable, and owned</td></tr>
-    </table>
+    </table></div>
   </section>
 
   <!-- CLOSING -->

@@ -778,7 +778,7 @@
     <h2>Python vs. Spring/Java</h2>
     <div class="components">Same architectural concepts, two production ecosystems — rapid prototyping on one side, enterprise scale on the other.</div>
 
-    <table class="rosetta-table">
+    <div style="overflow-x:auto"><table class="rosetta-table">
       <tr>
         <th class="concept">Architectural Concept</th>
         <th class="py">Python AI Ecosystem</th>
@@ -829,7 +829,7 @@
         <td>Hugging Face Transformers / Unsloth</td>
         <td><em>No native equivalent — training stays in Python regardless of serving language.</em></td>
       </tr>
-    </table>
+    </table></div>
   </section>
 
   <!-- PART 3: TOPOLOGIES -->
@@ -905,14 +905,14 @@
     <div class="layer-eyebrow"><span class="num">⚖</span> Trade-off Matrix</div>
     <h2>What you gave up</h2>
     <div class="components">Every choice in the stack above is a trade, not a strictly-better option. State the cost plainly, and know when you'd switch.</div>
-    <table class="ref-table">
+    <div style="overflow-x:auto"><table class="ref-table">
       <tr><th>Choice</th><th>Gained</th><th>Accepted</th><th>Switch when</th></tr>
       <tr><td class="row-head">MaaS (Bedrock/Vertex) vs. self-hosted (vLLM)</td><td>Zero ops burden, instant scalability, no GPU procurement</td><td>Pay-per-token cost compounds at high, steady volume; less control over exact serving config</td><td>Sustained high QPS makes owned GPU throughput cheaper than metered tokens, or data sovereignty is a hard requirement</td></tr>
       <tr><td class="row-head">Proprietary model (GPT-5.x, Claude) vs. open-weight (DeepSeek, legacy Llama)</td><td>State-of-the-art reasoning/coding without training infra</td><td>Ongoing per-token cost, vendor roadmap risk (see the Muse Spark reversal above), no weight-level fine-tuning</td><td>Fine-tuning control or zero-external-API requirements outweigh the capability gap to frontier proprietary models</td></tr>
       <tr><td class="row-head">Python AI ecosystem vs. Spring/Java</td><td>Python: fastest research-pattern adoption. Java: compile-time type safety, native DI into existing Boot services</td><td>Python: weaker static guarantees at scale. Java: smaller pool of AI-native libraries, more boilerplate for fast-moving patterns</td><td>Team's existing platform investment should decide this before framework popularity does — retrofitting later is expensive</td></tr>
       <tr><td class="row-head">Shared vector index vs. per-tenant index</td><td>Shared: operational simplicity, one thing to scale. Per-tenant: strict data isolation</td><td>Shared: a filtering bug is a cross-tenant data leak. Per-tenant: N times the indexes to operate and keep in sync</td><td>Regulatory/compliance requirements around tenant data isolation are non-negotiable, not just a preference</td></tr>
       <tr><td class="row-head">Full 10-layer stack vs. minimal subset</td><td>Every layer's capability is available when needed</td><td>Operational surface, cost, and cognitive overhead scale with every layer provisioned, whether or not it's load-bearing yet</td><td>Team size, traffic, or compliance scope crosses the threshold that specific layer exists to solve — see the interview trap above</td></tr>
-    </table>
+    </table></div>
   </section>
 
   <!-- FAILURE MODES -->
@@ -951,7 +951,7 @@
     <div class="layer-eyebrow"><span class="num">🗃</span> Quick Reference</div>
     <h2>The whole stack, one table</h2>
     <div class="components">Review this the night before — every layer, its job, and the one line worth saying out loud if asked to defend it.</div>
-    <table class="ref-table">
+    <div style="overflow-x:auto"><table class="ref-table">
       <tr><th>Layer</th><th>Its job</th><th>Say this if asked to justify it</th></tr>
       <tr><td class="row-head">01 Edge</td><td>Streams tokens, manages sessions, renders AI output as UI</td><td>Perceived latency, not raw latency, is what the streaming layer buys you</td></tr>
       <tr><td class="row-head">02 Orchestration</td><td>Gives a stateless model memory, tool calls, and multi-step workflows</td><td>The model doesn't remember anything between calls — this layer is where "memory" actually lives</td></tr>
@@ -965,7 +965,7 @@
       <tr><td class="row-head">10 Evaluation</td><td>Catches quality regressions before they reach production</td><td>Non-deterministic systems need regression tests that check faithfulness and relevance, not just "did it crash"</td></tr>
       <tr><td class="row-head">Rosetta Stone</td><td>Same 10 layers, different ecosystem</td><td>Python wins on velocity and research adoption; Spring/Java wins on type-safety and enterprise ops fit — pick per your team's existing investment, not per hype</td></tr>
       <tr><td class="row-head">3 Topologies</td><td>Enterprise engine / research loop / sovereign fortress</td><td>Each topology is driven by one non-negotiable constraint — name the constraint first, and let it pick the stack</td></tr>
-    </table>
+    </table></div>
   </section>
 
   <!-- CLOSING -->

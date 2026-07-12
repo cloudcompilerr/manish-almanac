@@ -598,7 +598,7 @@ EXAMPLE_OUTPUT = <span class="s">"""{
 <section id="rosetta">
   <div class="sec-tag">04 · Cross-Stack Mapping</div>
   <h2>The Rosetta Stone — Module 2</h2>
-  <table class="comp-table">
+  <div style="overflow-x:auto"><table class="comp-table">
     <thead><tr><th>Concept</th><th>Spring AI 2.0</th><th>LangChain (Python)</th></tr></thead>
     <tbody>
       <tr><td class="row-head">Structured schema</td><td>Java <code>record SprintVelocityAnalysis(...)</code></td><td>Pydantic <code>class SprintVelocityAnalysis(BaseModel)</code></td></tr>
@@ -611,14 +611,14 @@ EXAMPLE_OUTPUT = <span class="s">"""{
       <tr><td class="row-head">Parsing error</td><td>Jackson exception thrown directly from <code>.convert()</code></td><td><code>result["parsing_error"]</code> — checked explicitly, never silent</td></tr>
       <tr><td class="row-head">Testing</td><td>Mockito stubs <code>chatClient.prompt(any(Prompt.class))</code></td><td><code>@patch</code> on <code>ChatAnthropic</code>, stub <code>with_structured_output(...).invoke(...)</code></td></tr>
     </tbody>
-  </table>
+  </table></div>
 </section>
 
 <section id="productionbar">
   <div class="sec-tag">05 · Quality Bar</div>
   <h2>Production-Grade Bar — Module 2</h2>
   <p>Same bar as Module 1, applied to a structured-output service this time. Every row is a real, checkable line in the repo — no estimated numbers here; live verified numbers are in the capstone section below.</p>
-  <table class="comp-table">
+  <div style="overflow-x:auto"><table class="comp-table">
     <thead><tr><th>Concern</th><th>Spring AI</th><th>Python</th></tr></thead>
     <tbody>
       <tr><td class="row-head">Config externalization</td><td>Inherited from Module 1 — <code>application.yml</code> reads <code>${ANTHROPIC_API_KEY}</code></td><td>Inherited from Module 1 — <code>.env</code> via <code>load_dotenv(dotenv_path=...)</code></td></tr>
@@ -630,7 +630,7 @@ EXAMPLE_OUTPUT = <span class="s">"""{
       <tr><td class="row-head">Retries</td><td>Inherited — <code>spring.ai.retry.*</code></td><td>Inherited — <code>max_retries=3</code></td></tr>
       <tr><td class="row-head">Docs</td><td>Javadoc</td><td>Docstrings</td></tr>
     </tbody>
-  </table>
+  </table></div>
 </section>
 
 <section id="decisions">
@@ -856,7 +856,7 @@ logger = logging.getLogger(__name__)
 <section id="tradeoffs">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
-  <table class="matrix">
+  <div style="overflow-x:auto"><table class="matrix">
     <thead><tr><th>Decision</th><th>Choice Made</th><th>Gained</th><th>Accepted</th><th>Revisit When</th></tr></thead>
     <tbody>
       <tr><td class="row-head">Structured output (Java)</td><td><code>BeanOutputConverter</code> manually</td><td><span class="dot g"></span>Single API call, full token tracking, no double-billing</td><td><span class="dot a"></span>More boilerplate than <code>.entity()</code></td><td>If Spring AI fixes spring-ai#3895 in a future release</td></tr>
@@ -866,14 +866,14 @@ logger = logging.getLogger(__name__)
       <tr><td class="row-head">Cross-module imports (Python)</td><td><code>sys.path.insert()</code></td><td><span class="dot g"></span>Simple, transparent, works immediately</td><td><span class="dot a"></span>Not how production Python packages resolve imports</td><td>Module 11 — proper <code>pyproject.toml</code> + <code>pip install -e .</code></td></tr>
       <tr><td class="row-head">Temperature (Java, inherited gap)</td><td>Still unset in <code>application.yml</code></td><td><span class="dot g"></span>Zero extra config so far</td><td><span class="dot r"></span>Measurably contributes to wording drift vs. the Python side — see capstone callout above</td><td>Add <code>spring.ai.anthropic.chat.options.temperature: 0</code> — overdue since Module 1</td></tr>
     </tbody>
-  </table>
+  </table></div>
 </section>
 
 <section id="reference">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference & Run It Yourself</h2>
   <p>Every file touched in Module 2 and EngOrgAI v0.2, confirmed against the repo at commit <code>3ed1d76</code>. Every endpoint below was actually called while building this page — outputs above are copied from those runs, not guessed.</p>
-  <table class="comp-table">
+  <div style="overflow-x:auto"><table class="comp-table">
     <thead><tr><th>File</th><th>Purpose</th></tr></thead>
     <tbody>
       <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/module02/SprintVelocityAnalysis.java" style="color:var(--blue);">module02/SprintVelocityAnalysis.java</a></td><td>Structured output schema — Java record</td></tr>
@@ -888,7 +888,7 @@ logger = logging.getLogger(__name__)
       <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/capstone/engorgai/sprint_velocity_capability.py" style="color:var(--blue);">capstone/engorgai/sprint_velocity_capability.py</a></td><td>Python EngOrgAI v0.2 — sprint capability facade</td></tr>
       <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/requirements.txt" style="color:var(--blue);">requirements.txt</a></td><td>Adds <code>pydantic</code> for the structured-output schema</td></tr>
     </tbody>
-  </table>
+  </table></div>
 
   <div class="run-box">
     <div class="rb-lbl">Run everything locally</div>

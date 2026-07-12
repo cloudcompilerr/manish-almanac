@@ -601,7 +601,7 @@
   <!-- SECTION 4 -->
   <h2 class="section-head" id="strategies"><span class="num">04</span> The 5 Core Strategies, Compared</h2>
 
-  <table class="strategy-table">
+  <div style="overflow-x:auto"><table class="strategy-table">
     <thead>
       <tr>
         <th>Strategy</th>
@@ -642,7 +642,7 @@
         <td>More complex offline indexing pipeline</td>
       </tr>
     </tbody>
-  </table>
+  </table></div>
 
   <p>In a real system, you combine these. The FAANG-level answer layers them: <strong>hybrid first-stage → cross-encoder re-rank → MMR selection → contextual compression → grounded generation.</strong></p>
 
@@ -698,7 +698,7 @@
 
   <p>The scale constraint adds an engineering dimension. Here is what changes at 10,000 concurrent users:</p>
 
-  <table class="strategy-table">
+  <div style="overflow-x:auto"><table class="strategy-table">
     <thead>
       <tr>
         <th>Component</th>
@@ -733,7 +733,7 @@
         <td>Incremental indexing pipeline; document versioning; ACL-aware retrieval (user can only see docs they have access to)</td>
       </tr>
     </tbody>
-  </table>
+  </table></div>
 
   <div class="callout">
     <strong>Critical for enterprise:</strong> Access Control. Before any document chunk lands in a context window, verify the querying user has read permission for that document. A mis-retrieval that exposes a confidential HR document to a junior employee is a compliance failure, not just a quality issue.
@@ -763,7 +763,7 @@
 
   <h3 class="sub">Follow-up Questions They'll Ask — and Your Answers</h3>
 
-  <table class="strategy-table">
+  <div style="overflow-x:auto"><table class="strategy-table">
     <thead>
       <tr><th>They'll ask</th><th>You say</th></tr>
     </thead>
@@ -785,7 +785,7 @@
         <td>Use <strong>iterative RAG</strong> or <strong>agentic retrieval</strong>: the LLM generates sub-queries, retrieves for each, then synthesizes — rather than one-shot retrieval. IRCoT (Interleaved Retrieval + Chain-of-Thought) is the research formulation.</td>
       </tr>
     </tbody>
-  </table>
+  </table></div>
 
   <!-- SECTION 8 -->
   <h2 class="section-head" id="tldr"><span class="num">08</span> TL;DR — The One-Pager</h2>

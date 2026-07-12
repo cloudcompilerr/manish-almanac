@@ -705,7 +705,7 @@
   <p>A grid of <strong>depth × width</strong>. Each row has its own independent hash function. The grid starts at all zeros.</p>
 
   <div class="grid-wrapper">
-    <table class="cms-grid" id="staticGrid">
+    <div style="overflow-x:auto"><table class="cms-grid" id="staticGrid">
       <thead>
         <tr>
           <th></th>
@@ -726,7 +726,7 @@
           <td>2</td><td>0</td><td>0</td><td>1</td><td class="cell-highlight">5</td><td>0</td>
         </tr>
       </tbody>
-    </table>
+    </table></div>
   </div>
 
   <p>The highlighted cells are where "video_42" incremented. To query: look up those same cells → values are <strong style="color:var(--row0)">3</strong>, <strong style="color:var(--row1)">4</strong>, <strong style="color:var(--row2)">5</strong> → take <strong style="color:var(--green)">MIN = 3</strong>. That's our estimate.</p>
@@ -755,7 +755,7 @@
     </div>
 
     <div class="grid-wrapper">
-      <table class="cms-grid" id="liveGrid">
+      <div style="overflow-x:auto"><table class="cms-grid" id="liveGrid">
         <thead>
           <tr>
             <th></th>
@@ -763,7 +763,7 @@
           </tr>
         </thead>
         <tbody id="gridBody"></tbody>
-      </table>
+      </table></div>
     </div>
 
     <div class="query-result" id="queryResult"></div>
@@ -779,7 +779,7 @@
   <div class="section-tag">05 — Key Properties</div>
   <h2>What to say in your interview</h2>
 
-  <table class="props-table">
+  <div style="overflow-x:auto"><table class="props-table">
     <thead><tr><th>Property</th><th>Detail</th><th>Implication</th></tr></thead>
     <tbody>
       <tr>
@@ -808,7 +808,7 @@
         <td>Counters only go up</td>
       </tr>
     </tbody>
-  </table>
+  </table></div>
 
   <div class="highlight">
     <strong>The formula:</strong> Width = ⌈e/ε⌉ where ε is acceptable error rate. Depth = ⌈ln(1/δ)⌉ where δ is acceptable failure probability.<br><br>
@@ -909,8 +909,8 @@
   <h2>Memory &amp; Error Trade-offs</h2>
   <div style="margin:20px 0">
     <h4>Count-Min Sketch vs Exact Counting</h4>
-    <table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
-    <tbody><tr><td>1B distinct hashtags, exact</td><td>HashMap: 1B keys × 50 bytes avg</td><td><strong>50GB RAM</strong></td><td style="color:var(--green);font-size:12px">Not feasible for a streaming pipeline that must stay in-memory</td></tr><tr><td>1B distinct hashtags, CMS (1% error)</td><td>d=5 rows × w=272 cols × 4 bytes</td><td><strong>5.4KB</strong></td><td style="color:var(--green);font-size:12px">9 million times more memory efficient</td></tr><tr><td>Twitter trending (real)</td><td>~500M unique hashtags × sliding window</td><td><strong>CMS: 5.4KB per window</strong></td><td style="color:var(--green);font-size:12px">12 × 5-min windows = 65KB total. Merge via element-wise sum</td></tr><tr><td>Error guarantee</td><td>ε=1%, N=1B total events</td><td><strong>Max overcount = 10M</strong></td><td style="color:var(--green);font-size:12px">Never undercounted. Safe for Top-K ranking</td></tr></tbody></table>
+    <div style="overflow-x:auto"><table class="flow-table"><thead><tr><th>Metric</th><th>Calculation</th><th>Result</th><th>Design implication</th></tr></thead>
+    <tbody><tr><td>1B distinct hashtags, exact</td><td>HashMap: 1B keys × 50 bytes avg</td><td><strong>50GB RAM</strong></td><td style="color:var(--green);font-size:12px">Not feasible for a streaming pipeline that must stay in-memory</td></tr><tr><td>1B distinct hashtags, CMS (1% error)</td><td>d=5 rows × w=272 cols × 4 bytes</td><td><strong>5.4KB</strong></td><td style="color:var(--green);font-size:12px">9 million times more memory efficient</td></tr><tr><td>Twitter trending (real)</td><td>~500M unique hashtags × sliding window</td><td><strong>CMS: 5.4KB per window</strong></td><td style="color:var(--green);font-size:12px">12 × 5-min windows = 65KB total. Merge via element-wise sum</td></tr><tr><td>Error guarantee</td><td>ε=1%, N=1B total events</td><td><strong>Max overcount = 10M</strong></td><td style="color:var(--green);font-size:12px">Never undercounted. Safe for Top-K ranking</td></tr></tbody></table></div>
   </div>
 </section>
 
@@ -1100,8 +1100,8 @@
   <div class="sec-tag">📋 · Requirements &amp; Scale</div>
   <h2>Requirements &amp; Non-Functional Constraints</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
-    <div><h4>Functional Requirements</h4><table class="flow-table"><tbody><tr><td>FR1</td><td>The system must estimate how many times each of a potentially unbounded number of distinct items has occurred, using a fixed memory footprint that does not grow as new distinct items appear — the entire reason to reach for CMS over a HashMap.</td></tr><tr><td>FR2</td><td>Recording an occurrence of an item must be a fast, constant-time operation (hash into each row, increment each cell) so it can sit directly in a high-throughput ingest path without becoming the bottleneck.</td></tr><tr><td>FR3</td><td>Querying the estimated count for any item must also be constant-time and require no scan of the structure — read the same d cells the update path would write to, and return their minimum.</td></tr><tr><td>FR4</td><td>The estimate returned must never be lower than the true count — callers can safely treat the result as "at least this many," which matters for use cases like rate limiting where undercounting would be the dangerous failure direction.</td></tr><tr><td>FR5</td><td>Sketches built independently on different machines (e.g. one per stream partition) must be combinable into a single accurate global sketch by simple element-wise addition, with no need to reprocess the original events.</td></tr><tr><td>FR6</td><td>CMS alone cannot answer "which items are most frequent" since it doesn't store item identities — the system must pair it with a bounded structure (a min-heap of candidate items) to produce a Top-K list without tracking every distinct item ever seen.</td></tr></tbody></table></div>
-    <div><h4>Non-Functional Requirements</h4><table class="flow-table"><tbody><tr><td>NFR1</td><td>Total memory is w×d integer counters — a direct, recomputable consequence of the width and depth you choose for your target error rate and confidence, not a fixed number. Using this document's own running example (ε=0.01, δ=0.01 → w≈272, d≈5): 272×5 = 1,360 counters ≈ 5.4KB. A looser or tighter target changes this proportionally — e.g. a much smaller ε (tighter error bound) or smaller δ (higher confidence) both push memory up.</td></tr><tr><td>NFR2</td><td>The overcount on any query is bounded by ε×N with probability at least 1−δ — this is CMS's core mathematical correctness guarantee (from the Cormode–Muthukrishnan construction), not a vendor-specific claim.</td></tr><tr><td>NFR3</td><td>Width and depth are derived directly from your error targets: w = ⌈e/ε⌉ (ε = acceptable error as a fraction of total events), d = ⌈ln(1/δ)⌉ (δ = acceptable failure probability) — pick your own ε and δ and recompute; these are formulas, not fixed constants.</td></tr><tr><td>NFR4</td><td>Worked example at ε=0.01 (1% error): w = ⌈e/0.01⌉ ≈ 272 columns — shown here as one illustrative operating point, not a universal setting.</td></tr><tr><td>NFR5</td><td>Worked example at δ=0.01 (99% confidence): d = ⌈ln(100)⌉ ≈ 5 rows — again, one illustrative operating point paired with the ε above; scale both together when you change your target.</td></tr><tr><td>NFR6</td><td>Total for this document's running example (ε=0.01, δ=0.01): 5 rows × 272 columns = 1,360 counters × 4 bytes/counter ≈ 5.4KB — small enough to fit comfortably in L1/L2 cache, which is part of why CMS updates are so fast in practice.</td></tr></tbody></table></div>
+    <div><h4>Functional Requirements</h4><div style="overflow-x:auto"><table class="flow-table"><tbody><tr><td>FR1</td><td>The system must estimate how many times each of a potentially unbounded number of distinct items has occurred, using a fixed memory footprint that does not grow as new distinct items appear — the entire reason to reach for CMS over a HashMap.</td></tr><tr><td>FR2</td><td>Recording an occurrence of an item must be a fast, constant-time operation (hash into each row, increment each cell) so it can sit directly in a high-throughput ingest path without becoming the bottleneck.</td></tr><tr><td>FR3</td><td>Querying the estimated count for any item must also be constant-time and require no scan of the structure — read the same d cells the update path would write to, and return their minimum.</td></tr><tr><td>FR4</td><td>The estimate returned must never be lower than the true count — callers can safely treat the result as "at least this many," which matters for use cases like rate limiting where undercounting would be the dangerous failure direction.</td></tr><tr><td>FR5</td><td>Sketches built independently on different machines (e.g. one per stream partition) must be combinable into a single accurate global sketch by simple element-wise addition, with no need to reprocess the original events.</td></tr><tr><td>FR6</td><td>CMS alone cannot answer "which items are most frequent" since it doesn't store item identities — the system must pair it with a bounded structure (a min-heap of candidate items) to produce a Top-K list without tracking every distinct item ever seen.</td></tr></tbody></table></div></div>
+    <div><h4>Non-Functional Requirements</h4><div style="overflow-x:auto"><table class="flow-table"><tbody><tr><td>NFR1</td><td>Total memory is w×d integer counters — a direct, recomputable consequence of the width and depth you choose for your target error rate and confidence, not a fixed number. Using this document's own running example (ε=0.01, δ=0.01 → w≈272, d≈5): 272×5 = 1,360 counters ≈ 5.4KB. A looser or tighter target changes this proportionally — e.g. a much smaller ε (tighter error bound) or smaller δ (higher confidence) both push memory up.</td></tr><tr><td>NFR2</td><td>The overcount on any query is bounded by ε×N with probability at least 1−δ — this is CMS's core mathematical correctness guarantee (from the Cormode–Muthukrishnan construction), not a vendor-specific claim.</td></tr><tr><td>NFR3</td><td>Width and depth are derived directly from your error targets: w = ⌈e/ε⌉ (ε = acceptable error as a fraction of total events), d = ⌈ln(1/δ)⌉ (δ = acceptable failure probability) — pick your own ε and δ and recompute; these are formulas, not fixed constants.</td></tr><tr><td>NFR4</td><td>Worked example at ε=0.01 (1% error): w = ⌈e/0.01⌉ ≈ 272 columns — shown here as one illustrative operating point, not a universal setting.</td></tr><tr><td>NFR5</td><td>Worked example at δ=0.01 (99% confidence): d = ⌈ln(100)⌉ ≈ 5 rows — again, one illustrative operating point paired with the ε above; scale both together when you change your target.</td></tr><tr><td>NFR6</td><td>Total for this document's running example (ε=0.01, δ=0.01): 5 rows × 272 columns = 1,360 counters × 4 bytes/counter ≈ 5.4KB — small enough to fit comfortably in L1/L2 cache, which is part of why CMS updates are so fast in practice.</td></tr></tbody></table></div></div>
   </div>
 </section>
 
@@ -1140,14 +1140,14 @@
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
   <p>Every senior interview ends here. Know your choices and their costs.</p>
-  <table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">CMS vs exact HashMap</td><td>CMS when distinct items too large for exact counting</td><td><span class="dot g"></span>Fixed memory: 5.4KB for any vocab size. O(1) ops. Mergeable</td><td><span class="dot a"></span>Cannot get exact count. Cannot enumerate keys. No deletion</td><td>HashMap when distinct items &lt; 10M and exact counts required</td></tr><tr><td class="row-head">Width (w) tuning</td><td>Wider = lower error rate</td><td><span class="dot g"></span>w=272 → 1% error. w=2720 → 0.1% error. Linear tradeoff</td><td><span class="dot a"></span>Linear memory cost. Wider sketch = more cache misses</td><td>w = e/ε where ε is target error fraction</td></tr><tr><td class="row-head">Depth (d) tuning</td><td>Deeper = higher confidence</td><td><span class="dot g"></span>d=5 → 99% confidence. d=7 → 99.9%. Each row independent hash</td><td><span class="dot a"></span>Logarithmic confidence gain. Diminishing returns beyond d=7</td><td>d = ceil(ln(1/δ)). d=5 sufficient for most production cases</td></tr><tr><td class="row-head">CMS vs HyperLogLog</td><td>CMS for frequency, HLL for cardinality</td><td><span class="dot g"></span>CMS: "how many times?" HLL: "how many distinct?" Different questions</td><td><span class="dot a"></span>Cannot use CMS to count distinct items</td><td>Use both: HLL for unique viewers, CMS for most-viewed videos</td></tr><tr><td class="row-head">Top-K approach</td><td>CMS + Min-heap of size K</td><td><span class="dot g"></span>CMS gives O(1) count estimate. Heap tracks K candidates</td><td><span class="dot a"></span>Heap maintenance: O(log K) per event</td><td>Exact Top-K (MapReduce) for batch. CMS+heap for real-time</td></tr></tbody></table>
+  <div style="overflow-x:auto"><table class="matrix"><thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead><tbody><tr><td class="row-head">CMS vs exact HashMap</td><td>CMS when distinct items too large for exact counting</td><td><span class="dot g"></span>Fixed memory: 5.4KB for any vocab size. O(1) ops. Mergeable</td><td><span class="dot a"></span>Cannot get exact count. Cannot enumerate keys. No deletion</td><td>HashMap when distinct items &lt; 10M and exact counts required</td></tr><tr><td class="row-head">Width (w) tuning</td><td>Wider = lower error rate</td><td><span class="dot g"></span>w=272 → 1% error. w=2720 → 0.1% error. Linear tradeoff</td><td><span class="dot a"></span>Linear memory cost. Wider sketch = more cache misses</td><td>w = e/ε where ε is target error fraction</td></tr><tr><td class="row-head">Depth (d) tuning</td><td>Deeper = higher confidence</td><td><span class="dot g"></span>d=5 → 99% confidence. d=7 → 99.9%. Each row independent hash</td><td><span class="dot a"></span>Logarithmic confidence gain. Diminishing returns beyond d=7</td><td>d = ceil(ln(1/δ)). d=5 sufficient for most production cases</td></tr><tr><td class="row-head">CMS vs HyperLogLog</td><td>CMS for frequency, HLL for cardinality</td><td><span class="dot g"></span>CMS: "how many times?" HLL: "how many distinct?" Different questions</td><td><span class="dot a"></span>Cannot use CMS to count distinct items</td><td>Use both: HLL for unique viewers, CMS for most-viewed videos</td></tr><tr><td class="row-head">Top-K approach</td><td>CMS + Min-heap of size K</td><td><span class="dot g"></span>CMS gives O(1) count estimate. Heap tracks K candidates</td><td><span class="dot a"></span>Heap maintenance: O(log K) per event</td><td>Exact Top-K (MapReduce) for batch. CMS+heap for real-time</td></tr></tbody></table></div>
 </section>
 
 <section id="schema-cms">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference — CMS Sizing</h2>
   <p style="font-size:12.5px;color:var(--muted);margin-bottom:8px">All rows computed from w = ⌈e/ε⌉ and d = ⌈ln(1/δ)⌉, at 4 bytes/counter (decimal KB). Recompute for your own targets — these are formula outputs, not fixed settings.</p>
-  <table class="flow-table"><thead><tr><th>Error (ε)</th><th>Width (w)</th><th>Depth (d)</th><th>Memory</th><th>Confidence</th></tr></thead><tbody><tr><td>10% (coarse)</td><td>28 cols</td><td>5 rows</td><td>140 counters = 0.56KB</td><td>99%</td></tr><tr><td>1% (standard)</td><td>272 cols</td><td>5 rows</td><td>1,360 counters = 5.4KB</td><td>99%</td></tr><tr><td>0.1% (precise)</td><td>2,718 cols</td><td>5 rows</td><td>13,590 counters = 54KB</td><td>99%</td></tr><tr><td>1% (high conf)</td><td>272 cols</td><td>7 rows</td><td>1,904 counters = 7.6KB</td><td>99.9%</td></tr><tr><td>1% (very high)</td><td>272 cols</td><td>10 rows</td><td>2,720 counters = 10.8KB</td><td>99.99%</td></tr></tbody></table>
+  <div style="overflow-x:auto"><table class="flow-table"><thead><tr><th>Error (ε)</th><th>Width (w)</th><th>Depth (d)</th><th>Memory</th><th>Confidence</th></tr></thead><tbody><tr><td>10% (coarse)</td><td>28 cols</td><td>5 rows</td><td>140 counters = 0.56KB</td><td>99%</td></tr><tr><td>1% (standard)</td><td>272 cols</td><td>5 rows</td><td>1,360 counters = 5.4KB</td><td>99%</td></tr><tr><td>0.1% (precise)</td><td>2,718 cols</td><td>5 rows</td><td>13,590 counters = 54KB</td><td>99%</td></tr><tr><td>1% (high conf)</td><td>272 cols</td><td>7 rows</td><td>1,904 counters = 7.6KB</td><td>99.9%</td></tr><tr><td>1% (very high)</td><td>272 cols</td><td>10 rows</td><td>2,720 counters = 10.8KB</td><td>99.99%</td></tr></tbody></table></div>
 </section>
 
 <section id="cms-concepts-deep">

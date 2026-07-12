@@ -464,7 +464,7 @@ pytest</div>
   <div class="sec-tag">04 · Cross-Stack Mapping</div>
   <h2>The Rosetta Stone</h2>
   <p>Same concept, two idioms — corrected against the actual call chains shown above, not a simplified version of them.</p>
-  <table class="comp-table">
+  <div style="overflow-x:auto"><table class="comp-table">
     <thead><tr><th>Concept</th><th>Spring AI 2.0</th><th>LangChain (Python)</th></tr></thead>
     <tbody>
       <tr><td class="row-head">Chat client</td><td>Singleton <code>ChatClient</code> bean, built once in <code>AiConfig</code></td><td><code>ChatAnthropic(model=..., temperature=0, max_retries=3)</code> instantiated directly in each service's <code>__init__</code></td></tr>
@@ -477,14 +477,14 @@ pytest</div>
       <tr><td class="row-head">Retries</td><td><code>spring.ai.retry.*</code> — 3 attempts, 1000ms→5000ms exponential backoff</td><td><code>max_retries=3</code> constructor param</td></tr>
       <tr><td class="row-head">Testing</td><td>JUnit 5 + Mockito — every link in the fluent chain mocked individually</td><td>pytest + <code>unittest.mock.patch</code> on the whole <code>ChatAnthropic</code> class</td></tr>
     </tbody>
-  </table>
+  </table></div>
 </section>
 
 <section id="productionbar">
   <div class="sec-tag">05 · Quality Bar</div>
   <h2>Production-Grade From Day One</h2>
   <p>This course is being built as if it runs in a real retail/fintech environment — every module, not just the capstones. Every row below is a real, checkable line in the repo.</p>
-  <table class="comp-table">
+  <div style="overflow-x:auto"><table class="comp-table">
     <thead><tr><th>Concern</th><th>Spring AI</th><th>Python</th></tr></thead>
     <tbody>
       <tr><td class="row-head">Config</td><td><code>application.yml</code> reads <code>${ANTHROPIC_API_KEY}</code> straight from the environment</td><td><code>.env</code> at the project root, loaded via <code>load_dotenv(dotenv_path=...)</code> resolved from <code>__file__</code> — works regardless of which directory you run from</td></tr>
@@ -494,7 +494,7 @@ pytest</div>
       <tr><td class="row-head">Token/latency tracking</td><td>Logged on every call, no sampling</td><td>Logged on every call, no sampling</td></tr>
       <tr><td class="row-head">Testing</td><td>JUnit 5 + Mockito, zero live calls</td><td>pytest + <code>@patch</code>, zero live calls</td></tr>
     </tbody>
-  </table>
+  </table></div>
   <div class="file-head"><span class="file-path">spring/src/main/resources/application.yml</span><a class="file-link" href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/resources/application.yml" target="_blank" rel="noopener">View on GitHub →</a></div>
   <div class="codeblock"><span class="t">spring</span>:
   <span class="t">application</span>:
@@ -563,7 +563,7 @@ pytest</div>
           <div class="k-point-label">The decision</div>
           <div class="k-point-text">New to Python, strong in Java. Rather than clutter production-grade Python files with beginner-syntax comments, every code block gets a short syntax-notes table — decorators, dict literals, type hints — anchored to the Java equivalent, written to a separate companion file: <a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/PYTHON_SYNTAX_NOTES.md" style="color:var(--blue);">python/PYTHON_SYNTAX_NOTES.md</a>.
           </div>
-          <table class="comp-table" style="margin-top:14px">
+          <div style="overflow-x:auto"><table class="comp-table" style="margin-top:14px">
             <thead><tr><th>Python</th><th>What it does</th><th>Java contrast</th></tr></thead>
             <tbody>
               <tr><td class="row-head"><code>SYSTEM_PROMPT = """..."""</code> at file scope</td><td>A module-level constant — any function in the file can use it directly</td><td>Java has no true module-level fields — constants live inside a class as <code>private static final</code></td></tr>
@@ -571,7 +571,7 @@ pytest</div>
               <tr><td class="row-head"><code>if __name__ == "__main__":</code></td><td>Only runs when the file is executed directly, not when imported</td><td>Like <code>public static void main(String[] args)</code>, but every file can have one, and it's guarded</td></tr>
               <tr><td class="row-head"><code>@patch("llm_foundations.ChatAnthropic")</code></td><td>A decorator — wraps the test function, swapping in a fake <code>ChatAnthropic</code></td><td>Closest parallel is Mockito's <code>@Mock</code>, but decorators are a general language feature, not test-specific</td></tr>
             </tbody>
-          </table>
+          </table></div>
           <div class="k-good"><span class="k-icon">✓</span><span>The codebase stays interview/portfolio-clean; the learning trail stays fully intact, just in its own file — appended to as each new module ships new syntax.</span></div>
         </div>
       </div>
@@ -682,7 +682,7 @@ pytest</div>
 <section id="tradeoffs">
   <div class="sec-tag">⚖️ · Trade-off Matrix</div>
   <h2>Trade-off Matrix — What You Gave Up</h2>
-  <table class="matrix">
+  <div style="overflow-x:auto"><table class="matrix">
     <thead><tr><th>Dimension</th><th>Our Choice</th><th>Gained</th><th>Accepted</th><th>Switch When</th></tr></thead>
     <tbody>
       <tr><td class="row-head">Spring Boot baseline</td><td>4.1.x (<a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/pom.xml#L7-L13" style="color:#7aaee0;">pom.xml</a>)</td><td><span class="dot g"></span>Active support, Jackson 3, Framework 7 — matches Spring AI 2.0 GA's intended baseline</td><td><span class="dot a"></span>Newer, less battle-tested; smaller answer base than 3.x</td><td>If a critical dependency hasn't published a 4.x-compatible release</td></tr>
@@ -690,14 +690,14 @@ pytest</div>
       <tr><td class="row-head">Retry strategy</td><td>Framework-native</td><td><span class="dot g"></span>Zero custom code, consistent across both stacks</td><td><span class="dot a"></span>No per-error-type control yet (429 vs 5xx)</td><td>Module 9+ when evaluation/guardrails need provider-specific logic</td></tr>
       <tr><td class="row-head">Temperature defaults</td><td>Explicit in Python, implicit in Spring</td><td><span class="dot g"></span>Python's behavior is deterministic and self-documenting</td><td><span class="dot r"></span>Spring currently relies on Anthropic's model default — an open inconsistency, not yet closed</td><td>Before this module is called "done" — add <code>spring.ai.anthropic.chat.options.temperature: 0</code> to <code>application.yml</code></td></tr>
     </tbody>
-  </table>
+  </table></div>
 </section>
 
 <section id="reference">
   <div class="sec-tag">🗃️ · Reference</div>
   <h2>Quick Reference & Run It Yourself</h2>
   <p>Every file touched in Module 1 and EngOrgAI v0.1, confirmed against the repo at commit <code>d064277</code>. No guessed paths — these links were checked, not assumed.</p>
-  <table class="comp-table">
+  <div style="overflow-x:auto"><table class="comp-table">
     <thead><tr><th>File</th><th>Purpose</th></tr></thead>
     <tbody>
       <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/spring/src/main/java/com/manish/AgenticAiApplication.java" style="color:var(--blue);">AgenticAiApplication.java</a></td><td>Spring Boot entry point</td></tr>
@@ -719,7 +719,7 @@ pytest</div>
       <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/requirements.txt" style="color:var(--blue);">requirements.txt</a></td><td>langchain-anthropic, langchain-core, python-dotenv, pytest</td></tr>
       <tr><td class="row-head"><a href="https://github.com/cloudcompilerr/agentic-ai-mastery/blob/main/python/PYTHON_SYNTAX_NOTES.md" style="color:var(--blue);">PYTHON_SYNTAX_NOTES.md</a></td><td>Companion Python-for-Java-developers reference</td></tr>
     </tbody>
-  </table>
+  </table></div>
 
   <div class="run-box">
     <div class="rb-lbl">Run everything locally</div>

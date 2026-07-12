@@ -697,7 +697,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0">
     <div>
       <h4>Functional Requirements</h4>
-      <table class="flow-table">
+      <div style="overflow-x:auto"><table class="flow-table">
         <tbody>
           <tr><td><strong>FR1</strong></td><td>The system must return the K entities (videos, hashtags, documents) with the highest interaction count for a given scope, ranked, on demand — the core "what's trending" query.</td></tr>
           <tr><td><strong>FR2</strong></td><td>The system must answer that query over multiple, independently selectable time windows (e.g. last hour, last 24h, last 7 days), because "trending now" and "popular this week" are different questions with different staleness tolerances.</td></tr>
@@ -706,11 +706,11 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
           <tr><td><strong>FR5</strong></td><td>The system must be able to answer historical queries about what was trending at a past point in time (e.g. "what was #1 last Tuesday at 3pm"), not just the current live ranking — which is why a warm/cold storage tier exists behind the hot real-time path.</td></tr>
           <tr><td><strong>FR6</strong></td><td>The system must support breaking counts down by dimension (hour, device, region) for analytics use, not just surface the final ranked list — which is why an OLAP layer exists alongside the ranking-serving path.</td></tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
     <div>
       <h4>Non-Functional Requirements <span style="font-weight:400;font-size:11px;color:var(--muted)">(design targets for this exercise, not vendor specs)</span></h4>
-      <table class="flow-table">
+      <div style="overflow-x:auto"><table class="flow-table">
         <tbody>
           <tr><td><strong>NFR1</strong></td><td>Read latency target: p99 &lt; 50ms for the hot-path query — a target you set because it's a live, user-facing "what's trending" surface, not a benchmark cited from any specific vendor.</td></tr>
           <tr><td><strong>NFR2</strong></td><td>Write throughput target: 500K events/sec is this document's chosen illustrative scale (roughly YouTube- or Twitter-scale order of magnitude) — state and justify your own assumed scale in an interview rather than reusing this number verbatim.</td></tr>
@@ -719,7 +719,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
           <tr><td><strong>NFR5</strong></td><td>Approximate counts (bounded error, illustratively ±1% here) are an explicit, accepted trade-off for this system — the actual error bound is whatever ε you choose for the Count-Min Sketch (see the CMS math in Processing), not a fixed constant.</td></tr>
           <tr><td><strong>NFR6</strong></td><td>Historical analytics query latency target: &lt;2s — looser than the hot-path target because these are typically operator/analyst-facing queries, not the live user-facing ranking surface, so the latency budget can reasonably be looser.</td></tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 
@@ -1319,7 +1319,7 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
   <div class="sec-tag">09 · Data Contracts</div>
   <h2>All Schemas at a Glance</h2>
 
-  <table class="flow-table">
+  <div style="overflow-x:auto"><table class="flow-table">
     <thead>
       <tr>
         <th>Store</th>
@@ -1380,7 +1380,7 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
         <td>Seconds–minutes</td>
       </tr>
     </tbody>
-  </table>
+  </table></div>
 </section>
 
 <!-- ══════════════════════════════════
@@ -1391,7 +1391,7 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
   <h2>Trade-off Matrix</h2>
   <p>Every senior interview tests whether you know what you gave up. Use this table to drive that conversation.</p>
 
-  <table class="matrix">
+  <div style="overflow-x:auto"><table class="matrix">
     <thead>
       <tr>
         <th>Dimension</th>
@@ -1452,7 +1452,7 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
         <td>PostgreSQL if scale &lt;10K writes/sec and you want richer queries</td>
       </tr>
     </tbody>
-  </table>
+  </table></div>
 </section>
 
 <!-- ══════════════════════════════════
@@ -1499,7 +1499,7 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
     <div class="faq-q" onclick="toggle(this)">Why use both Cassandra AND ClickHouse? Isn't that redundant?<span class="tog">+</span></div>
     <div class="faq-a">
       <strong>They are optimised for opposite access patterns and cannot substitute each other.</strong><br><br>
-      <table class="flow-table" style="margin:0">
+      <div style="overflow-x:auto"><table class="flow-table" style="margin:0">
         <thead><tr><th></th><th>Cassandra</th><th>ClickHouse</th></tr></thead>
         <tbody>
           <tr><td>Write model</td><td>High-throughput row writes (50K/sec)</td><td>Batch columnar ingestion</td></tr>
@@ -1508,7 +1508,7 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
           <tr><td>Query flexibility</td><td>Very limited (must pre-define access patterns)</td><td>Arbitrary SQL analytics</td></tr>
           <tr><td>Primary purpose</td><td>Redis fallback, backfill, durable counts</td><td>Historical analysis, BI, ML features</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <br>
       <strong>The key distinction:</strong> Cassandra is an <em>operational database</em> optimised for the write path and specific lookups. ClickHouse is an <em>analytical database</em> optimised for reading lots of data to answer complex questions. In the simplest terms: Cassandra keeps your system running; ClickHouse makes your data useful.
     </div>
@@ -1754,35 +1754,35 @@ topk:doc:GLOBAL:7d          <span class="c">→ top Confluence docs this week</s
   <p>A scannable summary of the whole design — the night-before-the-interview version.</p>
 
   <h4>Pipeline Stage Reference</h4>
-  <table class="flow-table"><thead><tr><th>Stage</th><th>Technology</th><th>Job</th></tr></thead><tbody>
+  <div style="overflow-x:auto"><table class="flow-table"><thead><tr><th>Stage</th><th>Technology</th><th>Job</th></tr></thead><tbody>
     <tr><td>Ingestion</td><td>Kafka, partitioned by <code>entity_id</code></td><td>Durable, ordered-per-entity event buffer decoupling producers from the processing layer</td></tr>
     <tr><td>Processing</td><td>Flink</td><td>Per-window dedup (Bloom filter) → approximate count (Count-Min Sketch) → local top-K (min-heap) → merge across partitions</td></tr>
     <tr><td>Hot store</td><td>Redis ZSET</td><td>Sub-millisecond reads of the current live ranking</td></tr>
     <tr><td>Warm store</td><td>Cassandra</td><td>Recent-history Top-K, partitioned by (date, granularity), for lookback queries</td></tr>
     <tr><td>OLAP</td><td>ClickHouse</td><td>Deep analytics — breakdowns by hour/device/region, ad-hoc aggregation</td></tr>
     <tr><td>Cold store</td><td>S3 / object storage</td><td>Immutable raw event log — source of truth, replay source for reprocessing</td></tr>
-  </table>
+  </table></div>
 
   <h4 style="margin-top:24px">Decision Framework Fast Recall</h4>
-  <table class="flow-table"><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>
+  <div style="overflow-x:auto"><table class="flow-table"><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>
     <tr><td>Freshness needed &lt;30s?</td><td>Flink streaming → Redis ZSET. Minutes-scale? Flink micro-batch → ClickHouse. Hours/daily? Batch job, no streaming infra needed.</td></tr>
     <tr><td>Exact counts required?</td><td>No (approximate OK) → CMS + min-heap, bounded memory regardless of cardinality. Yes → exact aggregation in ClickHouse/Cassandra, only while cardinality stays tractable.</td></tr>
-  </table>
+  </table></div>
 
   <h4 style="margin-top:24px">Failure Mode Fast Recall</h4>
-  <table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody>
+  <div style="overflow-x:auto"><table class="flow-table"><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody>
     <tr><td>One Flink task pegged at 100% while others idle</td><td>A viral entity's events all land on one Kafka partition (hot key)</td><td>Monitor per-partition lag; salt the hottest entity_ids across multiple partitions</td></tr>
     <tr><td>Trending list frozen or briefly spiky after a worker restart</td><td>Recovery replaying from the last checkpoint (at-least-once reprocessing)</td><td>Alert on per-partition consumer lag; keep checkpoint intervals short; tolerate small transient spikes</td></tr>
     <tr><td>Rankings drift low with no visible error</td><td>Dedup Bloom filter saturating as real traffic exceeds its sized capacity</td><td>Monitor actual fill ratio / false-positive rate, not just the configured target; size for peak with headroom</td></tr>
-  </table>
+  </table></div>
 
   <h4 style="margin-top:24px">Trade-off Fast Recall</h4>
-  <table class="flow-table"><thead><tr><th>Choice</th><th>Gave up</th><th>Switch when</th></tr></thead><tbody>
+  <div style="overflow-x:auto"><table class="flow-table"><thead><tr><th>Choice</th><th>Gave up</th><th>Switch when</th></tr></thead><tbody>
     <tr><td>Count-Min Sketch over exact HashMap</td><td>~1% controlled overcounting (never undercounts from the sketch itself)</td><td>Exact counts are a legal/billing requirement</td></tr>
     <tr><td>Eventual (at-least-once) consistency</td><td>Possible brief double-counting across a checkpoint boundary</td><td>Financial-grade accuracy needed → exactly-once Flink + Kafka transactions</td></tr>
     <tr><td>Tumbling 30s windows</td><td>Counts reset at each boundary — trending can look jumpy</td><td>Smoother trend curves needed → sliding windows</td></tr>
     <tr><td>Bloom filter for dedup</td><td>Small, tunable false-positive rate → rare under-count, never over-count</td><td>Unique-user dedup is an explicit product guarantee → exact set (Redis SET/HBase)</td></tr>
-  </table>
+  </table></div>
 </section>
 </div>
 
