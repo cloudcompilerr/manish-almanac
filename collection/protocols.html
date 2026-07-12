@@ -365,7 +365,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
     </div>
     <div class="concept-row">
       <div class="concept-term">Streaming Modes</div>
-      <div class="concept-def"><strong>gRPC supports 4 modes — REST only supports request-response:</strong></p><p><strong>Unary</strong> — one request, one response (like REST)</p><p><strong>Server streaming</strong> — one request, stream of responses (like SSE)</p><p><strong>Client streaming</strong> — stream of requests, one response (uploading chunks)</p><p><strong>Bidirectional streaming</strong> — both sides stream simultaneously (like WebSocket)
+      <div class="concept-def"><p><strong>gRPC supports 4 modes — REST only supports request-response:</strong></p><p><strong>Unary</strong> — one request, one response (like REST)</p><p><strong>Server streaming</strong> — one request, stream of responses (like SSE)</p><p><strong>Client streaming</strong> — stream of requests, one response (uploading chunks)</p><p><strong>Bidirectional streaming</strong> — both sides stream simultaneously (like WebSocket)</p>
         <span class="concept-note muted">Real example: Google Maps sends your location as a client stream, receives route updates as a server stream — all over one gRPC bidirectional connection.</span>
       </div>
     </div>
@@ -1101,7 +1101,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>One request → one response. The standard call.</strong>
-      <p></p><p><code>rpc GetUser(GetUserRequest) returns (User);</code></p><p>Use for: any operation where you have one question and need one answer. 90% of RPC calls. Same semantics as REST but with Protocol Buffers and HTTP/2.</p>
+      <p><code>rpc GetUser(GetUserRequest) returns (User);</code></p><p>Use for: any operation where you have one question and need one answer. 90% of RPC calls. Same semantics as REST but with Protocol Buffers and HTTP/2.</p>
       </div>
     </div>
   </div>
@@ -1115,7 +1115,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>One request → stream of responses. Server sends multiple messages for a single client request.</strong>
-      <p></p><p><code>rpc WatchFeed(WatchRequest) returns (stream FeedEvent);</code></p><p>Use cases: real-time feed subscription (client subscribes once, server pushes new items as they arrive), large data download (server streams chunks), log tailing (client requests logs, server streams them continuously). gRPC keeps the HTTP/2 stream open until the server signals completion. Client reads from the stream in a loop.</p>
+      <p><code>rpc WatchFeed(WatchRequest) returns (stream FeedEvent);</code></p><p>Use cases: real-time feed subscription (client subscribes once, server pushes new items as they arrive), large data download (server streams chunks), log tailing (client requests logs, server streams them continuously). gRPC keeps the HTTP/2 stream open until the server signals completion. Client reads from the stream in a loop.</p>
       </div>
     </div>
   </div>
@@ -1129,7 +1129,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Stream of requests → one response. Client sends multiple messages, server responds once at the end.</strong>
-      <p></p><p><code>rpc UploadFile(stream FileChunk) returns (UploadResult);</code></p><p>Use cases: chunked file upload (client streams 4MB chunks, server assembles), sensor data batch ingestion (IoT device streams 1,000 readings, server processes and returns aggregate), speech-to-text (client streams audio chunks, server returns transcript when done).</p>
+      <p><code>rpc UploadFile(stream FileChunk) returns (UploadResult);</code></p><p>Use cases: chunked file upload (client streams 4MB chunks, server assembles), sensor data batch ingestion (IoT device streams 1,000 readings, server processes and returns aggregate), speech-to-text (client streams audio chunks, server returns transcript when done).</p>
       </div>
     </div>
   </div>
@@ -1143,7 +1143,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Stream of requests ↔ stream of responses. Full duplex. Both sides can send at any time.</strong>
-      <p></p><p><code>rpc Chat(stream ChatMessage) returns (stream ChatMessage);</code></p><p>Use cases: real-time chat between services (internal Slack-like communication between microservices), collaborative editing (both sides stream cursor positions and edits), online gaming (client streams player input, server streams game state updates), live translation (client streams audio, server streams translated text in real time).</p>
+      <p><code>rpc Chat(stream ChatMessage) returns (stream ChatMessage);</code></p><p>Use cases: real-time chat between services (internal Slack-like communication between microservices), collaborative editing (both sides stream cursor positions and edits), online gaming (client streams player input, server streams game state updates), live translation (client streams audio, server streams translated text in real time).</p>
       </div>
       <div class="k-muted"><span class="k-icon">→</span><span>Bidirectional streaming is gRPC's most powerful feature — enabling true full-duplex communication over a single HTTP/2 stream. WebSocket achieves similar for browser clients. For server-to-server: bidirectional gRPC is preferred over WebSocket due to Protocol Buffer efficiency and built-in load balancing.</span></div>
     </div>

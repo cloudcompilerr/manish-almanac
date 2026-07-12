@@ -654,12 +654,31 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
 .opt-arrow{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;white-space:nowrap;padding-top:1px;}
 .opt-text{color:#2a2820;}
 .opt-text strong{color:var(--ink);}
+
+.db-badges{display:flex;flex-wrap:wrap;gap:8px;}
+.db-badge{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;font-weight:600;letter-spacing:.5px;color:#fff;}
+.db-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:18px;position:relative;overflow:hidden;}
+.db-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.db-card.pg::before{background:var(--blue);}
+.db-card.mg::before{background:var(--green);}
+.db-card.dy::before{background:var(--amber);}
+.db-card-name{font-family:var(--head);font-size:15px;font-weight:700;margin-bottom:10px;color:var(--ink);}
+.db-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:12.5px;padding:6px 0;border-top:1px solid var(--surface);}
+.db-row:first-of-type{border-top:none;}
+.db-k{color:var(--muted);flex-shrink:0;}
+.db-v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right;flex:1;}
+.db-v.g{color:var(--green);}
+.db-v.a{color:var(--amber);}
+.analogy{background:var(--ink);color:#c8c4b8;border-radius:8px;padding:24px 28px;margin:24px 0;}
+.analogy-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:#8a8070;margin-bottom:10px;text-transform:uppercase;}
+.analogy-text{font-size:15px;line-height:1.75;color:#d8d4c8;}
+.analogy-text strong{color:#e8b84b;}
 </style>
 </head>
 <body>
 <div class="hero">
   <div class="hero-inner">
-    <div class="eyebrow"><span>System Design · FAANG Interview Prep · Manish-Almanac</span></div>
+    <div class="hero-eyebrow"><span>System Design · FAANG Interview Prep · Manish-Almanac</span></div>
     <h1>Design WhatsApp</h1>
     <p class="hero-desc">Complete FAANG-level walkthrough: Erlang 600M connections, Signal Protocol E2EE, Cassandra offline delivery, group messaging fan-out, and 4 hard follow-up questions.</p>
     <div class="db-badges"><span class="db-badge" style="background:#25D366">Erlang WS</span><span class="db-badge" style="background:#128C7E">Signal Protocol</span><span class="db-badge" style="background:#e8b84b">Cassandra</span><span class="db-badge" style="background:#2d5fa0">Redis Pub/Sub</span><span class="db-badge" style="background:#8a3a3a">E2EE</span></div>

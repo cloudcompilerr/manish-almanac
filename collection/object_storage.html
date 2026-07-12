@@ -390,7 +390,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Two ways to achieve durability. Erasure coding uses less storage for the same durability level.</strong>
-      <p></p><p>3× replication: store 3 copies of every object. Tolerate 2 node failures. Storage overhead: 200% (3× the original size).</p><p>Erasure coding (Reed-Solomon): split data into k chunks, generate m parity chunks. Store k+m chunks. Can reconstruct from any k of k+m chunks. Tolerate m node failures.</p><p>Example: RS(10,4) — 10 data chunks + 4 parity chunks = 14 total. Tolerate 4 node failures. Storage overhead: 40% (14/10 = 1.4×). Same durability as 3× replication at 1/5 the storage cost.</p>
+      <p>3× replication: store 3 copies of every object. Tolerate 2 node failures. Storage overhead: 200% (3× the original size).</p><p>Erasure coding (Reed-Solomon): split data into k chunks, generate m parity chunks. Store k+m chunks. Can reconstruct from any k of k+m chunks. Tolerate m node failures.</p><p>Example: RS(10,4) — 10 data chunks + 4 parity chunks = 14 total. Tolerate 4 node failures. Storage overhead: 40% (14/10 = 1.4×). Same durability as 3× replication at 1/5 the storage cost.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ S3 uses erasure coding internally. GFS/Colossus (Google) uses erasure coding. The trade-off: erasure coding requires reading k chunks to reconstruct data (higher read latency for small files). For large files (videos, datasets): erasure coding is superior. For small files (&lt;1MB): replication's simplicity wins.</span></div>
     </div>
@@ -405,7 +405,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Required for files &gt;5GB. Recommended for files &gt;100MB. Enables parallel upload and resumability.</strong>
-      <p></p><p>Flow: <code>CreateMultipartUpload</code> → get UploadId. Split file into parts (5MB–5GB each). Upload parts in parallel (up to 10,000 parts, each with a PartNumber). S3 stores each part independently. <code>CompleteMultipartUpload</code> → S3 assembles parts into final object. AbortMultipartUpload → cleanup if upload fails.</p><p>Parallelism: 10 concurrent part uploads × 100MB/s bandwidth = 1GB/s effective upload speed. Without multipart: single stream × 100MB/s = 100MB/s.</p><p>Resumability: if connection drops during part 7, only resume part 7. Parts 1-6 already committed to S3. ListParts to find which parts succeeded → resume from the first missing part.</p>
+      <p>Flow: <code>CreateMultipartUpload</code> → get UploadId. Split file into parts (5MB–5GB each). Upload parts in parallel (up to 10,000 parts, each with a PartNumber). S3 stores each part independently. <code>CompleteMultipartUpload</code> → S3 assembles parts into final object. AbortMultipartUpload → cleanup if upload fails.</p><p>Parallelism: 10 concurrent part uploads × 100MB/s bandwidth = 1GB/s effective upload speed. Without multipart: single stream × 100MB/s = 100MB/s.</p><p>Resumability: if connection drops during part 7, only resume part 7. Parts 1-6 already committed to S3. ListParts to find which parts succeeded → resume from the first missing part.</p>
       </div>
     </div>
   </div>
@@ -419,7 +419,7 @@ span.concept-note.muted{background:#f5f3ee;color:#3a3830;border-color:#c8c4bc;}
   <div class="k-card-body">
     <div class="k-point">
       <div class="k-point-label">What it is</div><div class="k-point-text"><strong>Since December 2020: S3 provides strong read-after-write consistency for all operations.</strong>
-      <p></p><p>Previously: S3 was eventually consistent. A PUT followed immediately by a GET might return the old data. Applications had to add delays or use conditional operations.</p><p>Now: after a successful PUT, subsequent GETs return the new data — immediately and consistently. After a DELETE, subsequent GETs correctly return 404. LIST operations are also consistent — a newly created object appears in LIST results immediately.</p>
+      <p>Previously: S3 was eventually consistent. A PUT followed immediately by a GET might return the old data. Applications had to add delays or use conditional operations.</p><p>Now: after a successful PUT, subsequent GETs return the new data — immediately and consistently. After a DELETE, subsequent GETs correctly return 404. LIST operations are also consistent — a newly created object appears in LIST results immediately.</p>
       </div>
       <div class="k-good"><span class="k-icon">✓</span><span>✓ This change removed the most common operational footgun in S3-based systems. If you're asked about S3 consistency in an interview: "S3 is strongly consistent since Dec 2020. I don't need to account for eventual consistency in my S3 access patterns." This shows you're current.</span></div>
     </div>
